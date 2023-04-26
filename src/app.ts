@@ -8,5 +8,3 @@ import "./bot/index";
 
 //run the express server
 import "./server/index";
-
-//run the web application
