@@ -1,14 +1,10 @@
-import Link from "next/link";
-
-export default function Server(): JSX.Element {
+const Server: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-xl">Players:</h1>
-      <br />
-      <Link href="/profiles/chron" className="text-blue-700 dark:text-blue-400">
-        Chron
-      </Link>
+      <h1 className="text-xl">Pokémon Turquoise</h1>
     </div>
   )
 }
+
+export default Server;

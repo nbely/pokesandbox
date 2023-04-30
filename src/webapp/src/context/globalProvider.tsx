@@ -20,9 +20,9 @@ const defaultState: IState = {
 
 const GlobalContext: React.Context<IState> = createContext<IState>(defaultState);
 
-export function GlobalProvider({ children }: PropsWithChildren): JSX.Element {
+const GlobalProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const { defaultAlgorithm, darkAlgorithm } = theme;
-    const [isDarkMode, setIsDarkMode]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(true);
 
     const toggleDarkMode = (): void => {
         setIsDarkMode(!isDarkMode);
@@ -43,6 +43,8 @@ export function GlobalProvider({ children }: PropsWithChildren): JSX.Element {
     )
 }
 
-export function useGlobalContext(): IState {
+export const useGlobalContext = (): IState => {
     return useContext(GlobalContext);
 }
+
+export default GlobalProvider;

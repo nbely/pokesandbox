@@ -1,9 +1,11 @@
-import { GlobalProvider } from '@/context/globalProvider'
-import '@/styles/globals.scss'
 import type { AppProps } from 'next/app'
+
+import '@/styles/globals.scss'
+import GlobalProvider from '@/context/globalProvider'
 import Layout from './components/layout';
 
-export default function App({ Component, pageProps }: AppProps) {
+const App: React.FC<AppProps> = ({ Component, pageProps }: AppProps) => {
+  
   return (
     <GlobalProvider>
       <Layout>
@@ -11,4 +13,6 @@ export default function App({ Component, pageProps }: AppProps) {
       </Layout>
     </GlobalProvider>
   );
-}
+};
+
+export default App;

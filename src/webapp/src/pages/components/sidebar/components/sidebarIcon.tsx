@@ -1,13 +1,12 @@
-import { AppProps } from 'next/app';
 import Link from 'next/link';
-import React from 'react';
 
 interface ISidebarIconProps {
   label: string,
   route: string
 }
 
-export default function SidebarIcon({ label, route }: ISidebarIconProps): JSX.Element {
+const SidebarIcon: React.FC<ISidebarIconProps> = ({ label, route }) => {
+  
   return (
     <Link 
       className="relative flex items-center justify-center
@@ -25,3 +24,5 @@ export default function SidebarIcon({ label, route }: ISidebarIconProps): JSX.El
     </Link>
   );
 }
+
+export default SidebarIcon;
