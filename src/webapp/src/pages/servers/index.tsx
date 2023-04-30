@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Servers(): JSX.Element {
+const Servers: React.FC = () => {
 
   return (
     <div>
@@ -12,3 +12,5 @@ export default function Servers(): JSX.Element {
     </div>
   )
 }
+
+export default Servers;

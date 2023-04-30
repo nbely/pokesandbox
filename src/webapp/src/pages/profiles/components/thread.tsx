@@ -1,8 +1,7 @@
-import React from 'react';
 import Post from './post';
 
-const temp_content = "Vivamus egestas auctor felis et lobortis. Nam dui sapien, pulvinar sed tempus mollis, consequat nec metus. Aenean volutpat metus sit amet neque tincidunt vulputate. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla tincidunt vehicula vestibulum. Morbi egestas nibh sed tincidunt mattis. Suspendisse at eros convallis, venenatis leo maximus, condimentum nibh. Praesent efficitur non nisi at ultricies. Donec interdum ligula eu odio luctus, sit amet varius ante pulvinar. Nullam sed fermentum odio. Mauris at posuere arcu. Etiam venenatis quam et porttitor ullamcorper. Suspendisse eu nisl sem. Nunc dignissim magna a tempor sollicitudin. Ut eros elit, tincidunt vel massa nec, semper volutpat ex. Mauris tincidunt purus imperdiet accumsan pulvinar.";
-export default function Thread(): JSX.Element {
+const Thread: React.FC = () => {
+  const temp_content = "Vivamus egestas auctor felis et lobortis. Nam dui sapien, pulvinar sed tempus mollis, consequat nec metus. Aenean volutpat metus sit amet neque tincidunt vulputate. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla tincidunt vehicula vestibulum. Morbi egestas nibh sed tincidunt mattis. Suspendisse at eros convallis, venenatis leo maximus, condimentum nibh. Praesent efficitur non nisi at ultricies. Donec interdum ligula eu odio luctus, sit amet varius ante pulvinar. Nullam sed fermentum odio. Mauris at posuere arcu. Etiam venenatis quam et porttitor ullamcorper. Suspendisse eu nisl sem. Nunc dignissim magna a tempor sollicitudin. Ut eros elit, tincidunt vel massa nec, semper volutpat ex. Mauris tincidunt purus imperdiet accumsan pulvinar.";
 
   return (
     <div className="Thread">
@@ -20,8 +19,10 @@ export default function Thread(): JSX.Element {
         content={temp_content}
       />
     </div>
-  )
+  );
 }
+
+export default Thread;
 
 // .Thread {
 //   background-color: darkcyan;

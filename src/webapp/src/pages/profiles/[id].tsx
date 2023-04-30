@@ -3,14 +3,12 @@ import React from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Divider, Typography } from 'antd';
 
-const { Title } = Typography;
-
-export default function Profile(): JSX.Element {
+const Profile: React.FC = () => {
   const [ profile, setProfile ] = React.useState({} as any);
+  const { Title } = Typography;
   const imgUrl = (name: string) => `/images/pokemon/pseudosprites/${name}.png`;
   const shinyImgUrl = (name: string) => `/images/pokemon/shinypseudosprites/${name}.png`;
   const dexUrl = (name: string) =>`http://turquoise.alteredorigin.net/pokemon/${name.toLocaleLowerCase()}/`;
-
 
   const fetchProfileData = React.useCallback(async () => {
     const response = await fetch('http://localhost:3000/profile/160794840815239168');
@@ -122,6 +120,8 @@ export default function Profile(): JSX.Element {
     </div>
   );
 }
+
+export default Profile;
 
 // .loadContainer {
 //   height: 100%;
