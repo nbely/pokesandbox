@@ -5,7 +5,7 @@ import Header from "./header/header";
 import { IState, useGlobalContext } from "@/context/globalProvider";
 import Sidebar from "./sidebar/sidebar";
 
-export default function Layout({ children }: PropsWithChildren): JSX.Element {
+const Layout: React.FC<PropsWithChildren> = ({ children }) => {
   const state: IState = useGlobalContext();
   return (
     <div className={`flex ${state.isDarkMode ? "dark" : ""}`}>
@@ -30,3 +30,5 @@ export default function Layout({ children }: PropsWithChildren): JSX.Element {
     </div>
   );
 }
+
+export default Layout;

@@ -1,6 +1,6 @@
 import SidebarIcon from "./components/sidebarIcon";
 
-export default function Sidebar(): JSX.Element {
+const Sidebar: React.FC = () => {
 
   return (
     <aside
@@ -15,3 +15,5 @@ export default function Sidebar(): JSX.Element {
     </aside>
   );
 }
+
+export default Sidebar;

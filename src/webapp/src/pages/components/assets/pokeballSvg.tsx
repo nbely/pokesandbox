@@ -1,11 +1,11 @@
-import * as React from "react"
+import React, { SVGProps } from "react"
 
-const PokeballSvg = ({ 
+const PokeballSvg: React.FC<SVGProps<SVGSVGElement>> = ({ 
   color="currentColor",
   height="2.5rem",
   width="2.5rem",
   ...props
-}: React.SVGProps<SVGSVGElement>): JSX.Element => (
+}) => (
   <svg
     height={height}
     viewBox="0 0 100 100"
