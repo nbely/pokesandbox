@@ -13,13 +13,10 @@ export interface SlashCommand {
 
 const getCommands = (): SlashCommand[] => {
   const commands: SlashCommand[] = [];
-  const commandsDir: string = join(__dirname, "/commands");
+  const commandsDir: string = join(__dirname, "/interactions/commands");
   
   readdirSync(commandsDir).forEach(file => {
-    if (!file.endsWith("ts")) {
-      return;
-    }
-    const command: SlashCommand = require(`${commandsDir}/${file}`).default;
+    const command: SlashCommand = require(`${commandsDir}/${file}/index.ts`).default;
     commands.push(command);
   });
   

@@ -2,15 +2,16 @@ import {
   ChatInputCommandInteraction,
   Client,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
+import { ActionRowBuilder, SelectMenuBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "@discordjs/builders";
 
-import { SlashCommand } from "../commands";
+import { SlashCommand } from "../../../commands";
+import HelloMenu1 from "../../stringSelectMenus/hello/menu1";
 
 const Hello: SlashCommand = {
   command: new SlashCommandBuilder()
     .setName("hello")
     .setDescription("Returns a greeting")
-    .addStringOption((option) => 
+    .addStringOption((option) =>
       option
         .setName("greeting")
         .setDescription("Specify a greeting type")
@@ -42,17 +43,25 @@ const Hello: SlashCommand = {
           },
         )
     ),
-  execute: async (client: Client, interaction: ChatInputCommandInteraction) => {   
+  execute: async (client: Client, interaction: ChatInputCommandInteraction) => { 
+    await interaction.deferReply({ephemeral: true});
+    
     const namePreference = interaction.options.get('name')?.value;
     let name = interaction.user.username;
     if (namePreference === "tag") {
       name = interaction.user.tag;
     }
-    const content = `${interaction.options.get('greeting')?.value}, ${name}!`;
+    const content = `${interaction.options.get('greeting')?.value}, ${name}!
+      \nHow would you like to respond?`;
+    
+    const components = [
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(HelloMenu1.component)
+    ];
 
     await interaction.followUp({
-        ephemeral: true,
-        content
+        content,
+        components,
     });
   },
 };
