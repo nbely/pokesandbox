@@ -6,11 +6,11 @@ import {
   MessageComponentInteraction
 } from "discord.js";
 
-import { commands } from "../commands";
-import { stringSelectMenus } from "../stringSelectMenus";
-import { userSelectMenus } from "../userSelectMenus";
+import { stringSelectMenus } from "../structures/managers/stringSelectMenus";
+import { userSelectMenus } from "../structures/managers/userSelectMenus";
+import { BotClient } from "@bot/index";
 
-export default (client: Client): void => {
+export default (client: BotClient): void => {
   client.on("interactionCreate", async (interaction: Interaction) => {
     if (interaction.type === InteractionType.ApplicationCommand) {
       await handleSlashCommand(client, interaction);
@@ -21,10 +21,10 @@ export default (client: Client): void => {
   });
 };
 
-const handleSlashCommand = async (client: Client, interaction: CommandInteraction): Promise<void> => {
+const handleSlashCommand = async (client: BotClient, interaction: CommandInteraction): Promise<void> => {
   if (!interaction.isChatInputCommand()) return;
 
-  const slashCommand = commands.find(command => command.command.name === interaction.commandName);
+  const slashCommand = client.slashCommands.get(interaction.commandName);
   if (!slashCommand) {
     interaction.reply({ content: "An error has ocurred", ephemeral: true });
     return;
@@ -33,7 +33,7 @@ const handleSlashCommand = async (client: Client, interaction: CommandInteractio
   slashCommand.execute(client, interaction);
 }
 
-const handleMessageInteraction = async (client: Client, interaction: MessageComponentInteraction): Promise<void> => {
+const handleMessageInteraction = async (client: BotClient, interaction: MessageComponentInteraction): Promise<void> => {
   if (interaction.isButton()) {
     console.log("Button Interaction received!");
   }

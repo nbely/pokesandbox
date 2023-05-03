@@ -11,7 +11,7 @@ export interface UserSelectMenu {
 
 const getSelectMenus = (): UserSelectMenu[] => {
   const selectMenus: UserSelectMenu[] = [];
-  const selectMenusDir: string = join(__dirname, "/interactions/stringSelectMenus");
+  const selectMenusDir: string = join(__dirname, "../../interactions/stringSelectMenus");
   
   readdirSync(selectMenusDir).forEach(subDir => {
     readdirSync(join(selectMenusDir, subDir)).forEach(file => {

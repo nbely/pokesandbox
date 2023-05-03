@@ -18,7 +18,15 @@
         "node_modules/@types",
     ],
     "sourceMap": false,
-    "baseUrl": "./",
+    "baseUrl": "./src",
+    "paths": {
+      "@bot/*": ["bot"],
+      "@events/*": ["bot/interactions/*"],
+      "@interactions/*": ["bot/interactions/*"],
+      "@structures/*": ["bot/structures/*"],
+      "@models/*": ["db/models/*"],
+      "@services/*": ["db/services/*"]
+    }
   },
   "files": [
     "src/app.ts"

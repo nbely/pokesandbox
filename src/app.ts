@@ -1,3 +1,4 @@
+require('module-alias/register')
 import "dotenv/config";
 
 //connect to the MongoDB database

@@ -4,8 +4,8 @@ import {
 } from "discord.js";
 import { ActionRowBuilder, SelectMenuBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "@discordjs/builders";
 
-import { SlashCommand } from "../../../commands";
-import HelloMenu1 from "../../stringSelectMenus/hello/menu1";
+import { SlashCommand } from "@structures/managers/slashCommands";
+import HelloMenu1 from "@interactions/stringSelectMenus/hello/menu1";
 
 const Hello: SlashCommand = {
   command: new SlashCommandBuilder()
