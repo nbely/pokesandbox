@@ -1,30 +1,25 @@
-import { Client, UserSelectMenuInteraction } from "discord.js";
 import { UserSelectMenuBuilder } from "@discordjs/builders";
-import { join } from "path";
-import { readdirSync } from "fs";
+import { UserSelectMenuInteraction } from "discord.js";
+import { statSync } from "fs";
+
+import { BotClient } from "@bot/*";
+import { getFilesAsSingleArray } from "@structures/getFiles";
 
 export interface UserSelectMenu {
   component: UserSelectMenuBuilder;
   customId: string;
-  execute: (client: Client, interaction: UserSelectMenuInteraction) => void;
+  execute: (client: BotClient, interaction: UserSelectMenuInteraction) => void;
 }
 
-const getSelectMenus = (): UserSelectMenu[] => {
-  const selectMenus: UserSelectMenu[] = [];
-  const selectMenusDir: string = join(__dirname, "../../interactions/stringSelectMenus");
-  
-  readdirSync(selectMenusDir).forEach(subDir => {
-    readdirSync(join(selectMenusDir, subDir)).forEach(file => {
-      if (!file.endsWith("ts")) {
-        return;
-      }
+const userSelectMenusManager = async (client: BotClient, rootPath: string) => {
+  const selectMenuFiles: string[] = getFilesAsSingleArray(`${rootPath}/interactions/userSelectMenus`);
+  selectMenuFiles.forEach((selectMenuFile: string) => {
+    if (statSync(selectMenuFile).isDirectory()) return;
+    const selectMenuCommand: UserSelectMenu = require(selectMenuFile).default;
+    if (!selectMenuCommand.customId || !selectMenuCommand.execute) return;
 
-      const selectMenu: UserSelectMenu = require(`${selectMenusDir}/${subDir}/${file}`).default;
-      selectMenus.push(selectMenu);
-    });
+    client.userSelectMenus.set(selectMenuCommand.customId, selectMenuCommand);
   });
-  
-  return selectMenus;
-};
+}
 
-export const userSelectMenus: UserSelectMenu[] = getSelectMenus();
+export default userSelectMenusManager;

@@ -1,24 +1,28 @@
 import {
-  Client,
   CommandInteraction,
   Interaction,
   InteractionType, 
   MessageComponentInteraction
 } from "discord.js";
 
-import { stringSelectMenus } from "../structures/managers/stringSelectMenus";
-import { userSelectMenus } from "../structures/managers/userSelectMenus";
 import { BotClient } from "@bot/index";
+import { BotEvent } from "@structures/managers/events";
+import { StringSelectMenu } from "@structures/managers/stringSelectMenus";
+import { UserSelectMenu } from "@structures/managers/userSelectMenus";
 
-export default (client: BotClient): void => {
-  client.on("interactionCreate", async (interaction: Interaction) => {
-    if (interaction.type === InteractionType.ApplicationCommand) {
-      await handleSlashCommand(client, interaction);
-    }
-    if (interaction.type === InteractionType.MessageComponent) {
-      await handleMessageInteraction(client, interaction);
-    }
-  });
+const InteractionCreate: BotEvent = {
+  name: "interactionCreate",
+  execute: (name: string, client?: BotClient) => {
+    if (!client) return;
+    client.on(name, async (interaction: Interaction) => {
+      if (interaction.type === InteractionType.ApplicationCommand) {
+        await handleSlashCommand(client, interaction);
+      }
+      if (interaction.type === InteractionType.MessageComponent) {
+        await handleMessageInteraction(client, interaction);
+      }
+    });
+  },
 };
 
 const handleSlashCommand = async (client: BotClient, interaction: CommandInteraction): Promise<void> => {
@@ -39,7 +43,8 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
   }
 
   if (interaction.isStringSelectMenu()) {
-    const stringSelectMenu = stringSelectMenus.find(menu => menu.customId === interaction.customId);
+    const stringSelectMenu: StringSelectMenu | undefined = 
+      client.stringSelectMenus.get(interaction.customId);
     if (!stringSelectMenu) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
@@ -48,7 +53,8 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
   }
 
   if (interaction.isUserSelectMenu()) {
-    const userSelectMenu = userSelectMenus.find(menu => menu.customId === interaction.customId);
+    const userSelectMenu: UserSelectMenu | undefined = 
+      client.userSelectMenus.get(interaction.customId);
     if (!userSelectMenu) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
@@ -56,3 +62,5 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
     userSelectMenu.execute(client, interaction);
   }
 }
+
+export default InteractionCreate;

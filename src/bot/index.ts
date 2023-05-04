@@ -1,16 +1,14 @@
-import { Client, Collection, GatewayIntentBits, Partials, Routes } from "discord.js";
-import { REST } from "@discordjs/rest";
+import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 
+import eventsManager, { BotEvent } from "./structures/managers/events";
 import slashCommandsManager, { SlashCommand } from "./structures/managers/slashCommands";
-import ready from "./events/ready";
-import interactionCreate from "./events/interactionCreate";
-import { StringSelectMenu } from "./structures/managers/stringSelectMenus";
-import { UserSelectMenu } from "./structures/managers/userSelectMenus";
+import stringSelectMenusManager, { StringSelectMenu } from "./structures/managers/stringSelectMenus";
+import userSelectMenusManager, { UserSelectMenu } from "./structures/managers/userSelectMenus";
 
 export class BotClient extends Client {
   // commands = new Collection<string, Command>();
   // commandAliases = new Collection<string, Command>();
-  // events = new Collection<string, BotEvent>();
+  events = new Collection<string, BotEvent>();
   // buttons = new Collection<string, ButtonCommand>();
   stringSelectMenus = new Collection<string, StringSelectMenu>();
   userSelectMenus = new Collection<string, UserSelectMenu>();
@@ -19,11 +17,7 @@ export class BotClient extends Client {
 }
 
 (async () => {
-
-  const CLIENT_ID = process.env.CLIENT_ID as string;
   const TOKEN = process.env.POKE_SANDBOT_TOKEN as string;
-  const GUILD_ID = process.env.GUILD_ID as string; // Remove for Production
-
   console.log("SandBot is initializing...");
 
   const client = new BotClient({
@@ -43,12 +37,11 @@ export class BotClient extends Client {
     partials: [Partials.Channel],
   });
 
-
-  ready(client);
-  interactionCreate(client);
-
   const rootPath: string = __dirname;
-  await slashCommandsManager(client, rootPath)
+  await eventsManager(client, rootPath);
+  await stringSelectMenusManager(client, rootPath);
+  await userSelectMenusManager(client, rootPath);
+  await slashCommandsManager(client, rootPath);
   client.login(TOKEN);
 }
 )();
