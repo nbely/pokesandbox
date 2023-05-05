@@ -2,11 +2,11 @@ import { ActivityType } from "discord.js";
 import { statSync } from "fs";
 
 import { BotClient } from "@bot/index";
-import { BotEvent } from "@structures/managers/events";
+import IBotEvent from "@structures/interfaces/botEvent";
+import ISlashCommand from "@structures/interfaces/slashCommand";
 import { getFilesAsSingleArray } from "@structures/getFiles";
-import { SlashCommand } from "@structures/managers/slashCommands";
 
-const Ready: BotEvent = {
+const Ready: IBotEvent = {
   name: "ready",
   execute: (name: string, client?: BotClient, rootPath?: string) => {
     if (!client) return;
@@ -20,7 +20,7 @@ const Ready: BotEvent = {
       const slashCommandsTotalFiles = getFilesAsSingleArray(`${rootPath}/interactions/slashCommands`);
       slashCommandsTotalFiles.forEach((cmdFile: string) => {
           if (statSync(cmdFile).isDirectory()) return;
-          const slashCmd: SlashCommand = require(cmdFile).default;
+          const slashCmd: ISlashCommand = require(cmdFile).default;
           if (!slashCmd.command.name || !slashCmd.execute) return;
           else allSlashCommands++;
       });

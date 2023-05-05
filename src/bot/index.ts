@@ -1,29 +1,35 @@
 import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 
-import buttonsManager, { ButtonCommand } from "@structures/managers/buttons";
-import eventsManager, { BotEvent } from "@structures/managers/events";
-import messageCommandsManager, { MessageCommand } from "@structures/managers/messageCommands";
-import modalFormsManager, { ModalForm } from "@structures/managers/modalForms";
-import slashCommandsManager, {
-  MessageContextCommand,
-  SlashCommand,
-  UserContextCommand
-} from "@structures/managers/slashCommands";
-import stringSelectMenusManager, { StringSelectMenu } from "@structures/managers/stringSelectMenus";
-import userSelectMenusManager, { UserSelectMenu } from "@structures/managers/userSelectMenus";
+import IButtonCommand from "@structures/interfaces/buttonCommand";
+import IBotEvent from "@structures/interfaces/botEvent";
+import IMessageCommand from "@structures/interfaces/messageCommand";
+import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
+import IModalForm from "@structures/interfaces/modalForm";
+import ISlashCommand from "@structures/interfaces/slashCommand";
+import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
+import IUserContextCommand from "@structures/interfaces/userContextCommand";
+import IUserSelectMenu from "@structures/interfaces/userSelectMenu";
+
+import buttonsManager from "@structures/managers/buttons";
+import eventsManager from "@structures/managers/events";
+import messageCommandsManager from "@structures/managers/messageCommands";
+import modalFormsManager from "@structures/managers/modalForms";
+import slashCommandsManager from "@structures/managers/slashCommands";
+import stringSelectMenusManager from "@structures/managers/stringSelectMenus";
+import userSelectMenusManager from "@structures/managers/userSelectMenus";
 
 export class BotClient extends Client {
-  buttons = new Collection<string, ButtonCommand>();
-  events = new Collection<string, BotEvent>();
-  messageCommands = new Collection<string, MessageCommand>();
+  buttons = new Collection<string, IButtonCommand>();
+  events = new Collection<string, IBotEvent>();
+  messageCommands = new Collection<string, IMessageCommand>();
   messageCommandsAliases = new Collection<string, string>();
-  modalForms = new Collection<string, ModalForm>();
-  userSelectMenus = new Collection<string, UserSelectMenu>();
-  slashCommands = new Collection<string, SlashCommand
-  | MessageContextCommand
-  | UserContextCommand
+  modalForms = new Collection<string, IModalForm>();
+  userSelectMenus = new Collection<string, IUserSelectMenu>();
+  slashCommands = new Collection<string, ISlashCommand
+  | IMessageContextCommand
+  | IUserContextCommand
   >();
-  stringSelectMenus = new Collection<string, StringSelectMenu>();
+  stringSelectMenus = new Collection<string, IStringSelectMenu>();
 }
 
 (async () => {

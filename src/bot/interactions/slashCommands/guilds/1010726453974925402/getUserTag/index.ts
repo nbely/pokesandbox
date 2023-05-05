@@ -6,9 +6,9 @@ import {
   UserContextMenuCommandInteraction,
 } from "discord.js";
 
-import { UserContextCommand } from "@structures/managers/slashCommands";
+import IUserContextCommand from "@structures/interfaces/userContextCommand";
 
-const Initialize: UserContextCommand = {
+const Initialize: IUserContextCommand = {
   command: new ContextMenuCommandBuilder()
     .setName("get_tag")
     .setType(ApplicationCommandType.User),

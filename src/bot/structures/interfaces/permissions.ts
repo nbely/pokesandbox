@@ -1,4 +1,4 @@
-type UserPermissions<T> = "AddReactions" | "Administrator" | "AttachFiles" | "BanMembers"
+type UserPermissions = "AddReactions" | "Administrator" | "AttachFiles" | "BanMembers"
   | "ChangeNickname" | "Connect" | "CreateInstantInvite" | "CreatePrivateThreads"
   | "CreatePublicThreads" | "DeafenMembers" | "EmbedLinks" | "KickMembers"
   | "ManageChannels" | "ManageEmojisAndStickers" | "ManageEvents" | "ManageGuild"

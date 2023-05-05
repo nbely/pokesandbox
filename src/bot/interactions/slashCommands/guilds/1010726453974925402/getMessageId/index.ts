@@ -5,9 +5,9 @@ import {
   MessageContextMenuCommandInteraction,
 } from "discord.js";
 
-import { MessageContextCommand } from "@structures/managers/slashCommands";
+import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 
-const Initialize: MessageContextCommand = {
+const Initialize: IMessageContextCommand = {
   command: new ContextMenuCommandBuilder()
     .setName("get_id")
     .setType(ApplicationCommandType.Message),

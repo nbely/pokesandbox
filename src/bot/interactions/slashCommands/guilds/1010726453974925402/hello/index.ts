@@ -6,10 +6,10 @@ import {
   StringSelectMenuBuilder,
 } from "discord.js";
 
-import { SlashCommand } from "@structures/managers/slashCommands";
 import HelloMenu1 from "@interactions/stringSelectMenus/hello/menu1";
+import ISlashCommand from "@structures/interfaces/slashCommand";
 
-const Hello: SlashCommand = {
+const Hello: ISlashCommand = {
   command: new SlashCommandBuilder()
     .setName("hello")
     .setDescription("Returns a greeting")

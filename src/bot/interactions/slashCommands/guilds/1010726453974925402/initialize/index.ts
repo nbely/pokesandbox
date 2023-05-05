@@ -5,11 +5,11 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { SlashCommand } from "@structures/managers/slashCommands";
 import { findServer } from "@services/server.service";
 import { IServer } from "@models/server.model";
+import ISlashCommand from "@structures/interfaces/slashCommand";
 
-const Initialize: SlashCommand = {
+const Initialize: ISlashCommand = {
   command: new SlashCommandBuilder()
     .setName("initialize")
     .setDescription("Initializes your PokeSandBox server")

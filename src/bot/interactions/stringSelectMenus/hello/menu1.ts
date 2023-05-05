@@ -5,9 +5,9 @@ import {
   StringSelectMenuOptionBuilder,
 } from "discord.js";
 
-import { StringSelectMenu } from "@structures/managers/stringSelectMenus";
+import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 
-const HelloMenu1: StringSelectMenu = {
+const HelloMenu1: IStringSelectMenu = {
   component: new StringSelectMenuBuilder()
     .setCustomId("hello_menu1")
     .setPlaceholder("Make a selection!")
