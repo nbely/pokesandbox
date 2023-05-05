@@ -2,6 +2,7 @@ import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 
 import buttonsManager, { ButtonCommand } from "@structures/managers/buttons";
 import eventsManager, { BotEvent } from "@structures/managers/events";
+import messageCommandsManager, { MessageCommand } from "@structures/managers/messageCommands";
 import modalFormsManager, { ModalForm } from "@structures/managers/modalForms";
 import slashCommandsManager, {
   MessageContextCommand,
@@ -12,17 +13,17 @@ import stringSelectMenusManager, { StringSelectMenu } from "@structures/managers
 import userSelectMenusManager, { UserSelectMenu } from "@structures/managers/userSelectMenus";
 
 export class BotClient extends Client {
-  // commands = new Collection<string, Command>();
-  // commandAliases = new Collection<string, Command>();
-  events = new Collection<string, BotEvent>();
   buttons = new Collection<string, ButtonCommand>();
-  stringSelectMenus = new Collection<string, StringSelectMenu>();
-  userSelectMenus = new Collection<string, UserSelectMenu>();
+  events = new Collection<string, BotEvent>();
+  messageCommands = new Collection<string, MessageCommand>();
+  messageCommandsAliases = new Collection<string, string>();
   modalForms = new Collection<string, ModalForm>();
+  userSelectMenus = new Collection<string, UserSelectMenu>();
   slashCommands = new Collection<string, SlashCommand
-    | MessageContextCommand
-    | UserContextCommand
+  | MessageContextCommand
+  | UserContextCommand
   >();
+  stringSelectMenus = new Collection<string, StringSelectMenu>();
 }
 
 (async () => {
@@ -49,6 +50,7 @@ export class BotClient extends Client {
   const rootPath: string = __dirname;
   await buttonsManager(client, rootPath);
   await eventsManager(client, rootPath);
+  await messageCommandsManager(client, rootPath);
   await modalFormsManager(client, rootPath);
   await stringSelectMenusManager(client, rootPath);
   await slashCommandsManager(client, rootPath);

@@ -1,13 +1,8 @@
 import { statSync } from "fs";
 
 import { BotClient } from "@bot/*";
+import BotEvent from "@structures/interfaces/botEvent";
 import { getFilesAsSingleArray } from "@structures/getFiles";
-
-export interface BotEvent {
-  customEvent?: boolean;
-  name: string;
-  execute: (name: string, client?: BotClient, rootPath?: string) => void;
-}
 
 const eventsManager = async (client: BotClient, rootPath: string) => {
   const clientEventsFiles = getFilesAsSingleArray(`${rootPath}/events`);

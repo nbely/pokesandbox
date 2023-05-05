@@ -2,11 +2,12 @@ import {
   ChatInputCommandInteraction,
   Client,
   PermissionFlagsBits,
+  SlashCommandBuilder,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { SlashCommand } from "@structures/managers/slashCommands";
 import { findServer } from "@services/server.service";
+import { IServer } from "@models/server.model";
 
 const Initialize: SlashCommand = {
   command: new SlashCommandBuilder()
@@ -16,8 +17,8 @@ const Initialize: SlashCommand = {
     .setDMPermission(false),
   execute: async (client: Client, interaction: ChatInputCommandInteraction) => {    
     await interaction.deferReply({ephemeral: true});
-    const server = await findServer({ serverId: interaction?.guild?.id});
-    const content = server 
+    const server: IServer | null = await findServer({ serverId: interaction.guild?.id});
+    const content: string = server 
       ? "Your server has already been intialized!"
       : "Your server will be initialized!";
 

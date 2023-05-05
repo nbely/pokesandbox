@@ -1,8 +1,10 @@
 import {
+  ActionRowBuilder,
   ChatInputCommandInteraction,
   Client,
+  SlashCommandBuilder,
+  StringSelectMenuBuilder,
 } from "discord.js";
-import { ActionRowBuilder, SelectMenuBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "@discordjs/builders";
 
 import { SlashCommand } from "@structures/managers/slashCommands";
 import HelloMenu1 from "@interactions/stringSelectMenus/hello/menu1";

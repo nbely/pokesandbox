@@ -1,10 +1,10 @@
 import {
   ApplicationCommandType,
   Client,
+  ContextMenuCommandBuilder,
   GuildMember,
   UserContextMenuCommandInteraction,
 } from "discord.js";
-import { ContextMenuCommandBuilder, SlashCommandBuilder } from "@discordjs/builders";
 
 import { UserContextCommand } from "@structures/managers/slashCommands";
 

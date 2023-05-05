@@ -2,6 +2,7 @@ import { HydratedDocument, Model, model, Query, Schema } from "mongoose";
 
 export interface IServer {
   avatar?: string,
+  prefixes?: string[],
 	serverId: string,
 }
 

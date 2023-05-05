@@ -8,14 +8,16 @@ import {
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
-import { BotEvent } from "@structures/managers/events";
-import { ButtonCommand } from "@structures/managers/buttons";
-import { MessageContextCommand, SlashCommand, UserContextCommand } from "@structures/managers/slashCommands";
-import { ModalForm } from "@structures/managers/modalForms";
-import { StringSelectMenu } from "@structures/managers/stringSelectMenus";
-import { UserSelectMenu } from "@structures/managers/userSelectMenus";
+import IBotEvent from "@structures/interfaces/botEvent";
+import IButtonCommand from "@structures/interfaces/buttonCommand";
+import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
+import IModalForm from "@structures/interfaces/modalForm";
+import ISlashCommand from "@structures/interfaces/slashCommand";
+import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
+import IUserContextCommand from "@structures/interfaces/userContextCommand";
+import IUserSelectMenu from "@structures/interfaces/userSelectMenu";
 
-const InteractionCreate: BotEvent = {
+const InteractionCreate: IBotEvent = {
   name: "interactionCreate",
   execute: (name: string, client?: BotClient) => {
     if (!client) return;
@@ -35,7 +37,7 @@ const InteractionCreate: BotEvent = {
 
 const handleSlashCommand = async (client: BotClient, interaction: CommandInteraction): Promise<void> => {
   if (interaction.isChatInputCommand()) {
-    const slashCommand = client.slashCommands.get(interaction.commandName) as SlashCommand | undefined;
+    const slashCommand = client.slashCommands.get(interaction.commandName) as ISlashCommand | undefined;
     if (!slashCommand || slashCommand.command.type !== ApplicationCommandType.ChatInput) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
@@ -44,7 +46,7 @@ const handleSlashCommand = async (client: BotClient, interaction: CommandInterac
   }
 
   if (interaction.isMessageContextMenuCommand()) {
-    const messageContextMenuCommand = client.slashCommands.get(interaction.commandName) as MessageContextCommand | undefined;
+    const messageContextMenuCommand = client.slashCommands.get(interaction.commandName) as IMessageContextCommand | undefined;
     if (!messageContextMenuCommand || messageContextMenuCommand.command.type !== ApplicationCommandType.Message) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
@@ -53,7 +55,7 @@ const handleSlashCommand = async (client: BotClient, interaction: CommandInterac
   }
 
   if (interaction.isUserContextMenuCommand()) {
-    const userContextCommand = client.slashCommands.get(interaction.commandName) as UserContextCommand | undefined;
+    const userContextCommand = client.slashCommands.get(interaction.commandName) as IUserContextCommand | undefined;
     if (!userContextCommand || userContextCommand.command.type !== ApplicationCommandType.User) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
@@ -64,7 +66,7 @@ const handleSlashCommand = async (client: BotClient, interaction: CommandInterac
 
 const handleMessageInteraction = async (client: BotClient, interaction: MessageComponentInteraction): Promise<void> => {
   if (interaction.isButton()) {
-    const button: ButtonCommand | undefined = 
+    const button: IButtonCommand | undefined = 
       client.buttons.get(interaction.customId);
     if (!button) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
@@ -74,7 +76,7 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
   }
 
   if (interaction.isStringSelectMenu()) {
-    const stringSelectMenu: StringSelectMenu | undefined = 
+    const stringSelectMenu: IStringSelectMenu | undefined = 
       client.stringSelectMenus.get(interaction.customId);
     if (!stringSelectMenu) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
@@ -84,7 +86,7 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
   }
 
   if (interaction.isUserSelectMenu()) {
-    const userSelectMenu: UserSelectMenu | undefined = 
+    const userSelectMenu: IUserSelectMenu | undefined = 
       client.userSelectMenus.get(interaction.customId);
     if (!userSelectMenu) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
@@ -97,7 +99,7 @@ const handleMessageInteraction = async (client: BotClient, interaction: MessageC
 const handleModalSubmitInteraction = async (client: BotClient, interaction: ModalSubmitInteraction): Promise<void> => {
   if (!interaction.isModalSubmit()) return;
   
-  const modalForm: ModalForm | undefined = 
+  const modalForm: IModalForm | undefined = 
     client.modalForms.get(interaction.customId);
   if (!modalForm) {
     interaction.reply({ content: "An error has ocurred", ephemeral: true });

@@ -1,14 +1,8 @@
-import { ButtonBuilder, ButtonInteraction } from "discord.js";
 import { statSync } from "fs";
 
-import { BotClient } from "@bot/*";
+import { BotClient } from "@bot/index";
+import ButtonCommand from "@structures/interfaces/buttonCommand";
 import { getFilesAsSingleArray } from "@structures/getFiles";
-
-export interface ButtonCommand {
-  component: ButtonBuilder;
-  customId: string;
-  execute: (client: BotClient, interaction: ButtonInteraction) => void;
-}
 
 const buttonsManager = async (client: BotClient, rootPath: string) => {
   const buttonFiles: string[] = getFilesAsSingleArray(`${rootPath}/interactions/buttons`);

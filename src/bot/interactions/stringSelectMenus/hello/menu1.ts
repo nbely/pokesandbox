@@ -1,7 +1,11 @@
-import { Client, StringSelectMenuInteraction } from "discord.js";
+import {
+  Client,
+  StringSelectMenuBuilder,
+  StringSelectMenuInteraction,
+  StringSelectMenuOptionBuilder,
+} from "discord.js";
 
 import { StringSelectMenu } from "@structures/managers/stringSelectMenus";
-import { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "@discordjs/builders";
 
 const HelloMenu1: StringSelectMenu = {
   component: new StringSelectMenuBuilder()

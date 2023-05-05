@@ -2,8 +2,8 @@ import {
   ChatInputCommandInteraction,
   Client,
   PermissionFlagsBits,
+  SlashCommandBuilder,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { SlashCommand } from "@structures/managers/slashCommands";
 import { findServer } from "@services/server.service";
