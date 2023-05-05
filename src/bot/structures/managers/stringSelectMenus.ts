@@ -1,5 +1,4 @@
-import { StringSelectMenuBuilder } from "@discordjs/builders";
-import { StringSelectMenuInteraction } from "discord.js";
+import { StringSelectMenuBuilder, StringSelectMenuInteraction } from "discord.js";
 import { statSync } from "fs";
 
 import { BotClient } from "@bot/*";

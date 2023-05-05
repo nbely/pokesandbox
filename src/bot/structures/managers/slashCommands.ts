@@ -1,8 +1,11 @@
 import {
   ChatInputCommandInteraction,
+  ContextMenuCommandBuilder,
+  MessageContextMenuCommandInteraction,
   REST,
   Routes,
   SlashCommandBuilder,
+  UserContextMenuCommandInteraction,
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
@@ -16,15 +19,27 @@ export interface SlashCommand {
   execute: (client: BotClient, interaction: ChatInputCommandInteraction) => void;
 }
 
+export interface MessageContextCommand {
+  command: ContextMenuCommandBuilder | any;
+  execute: (client: BotClient, interaction: MessageContextMenuCommandInteraction) => void;
+}
+
+export interface UserContextCommand {
+  command: ContextMenuCommandBuilder | any;
+  execute: (client: BotClient, interaction: UserContextMenuCommandInteraction) => void;
+}
+
+type Command = SlashCommand | MessageContextCommand | UserContextCommand;
+
 const slashCommandsManager = async (client: BotClient, rootPath: string) => {
   const globalSlashCommandsFiles = getFilesAsSingleArray(`${rootPath}/interactions/slashCommands/global`);
   const allGuildsSlashCommandsFiles = getFilesAsNestedArrays(`${rootPath}/interactions/slashCommands/guilds`);
   const rest = new REST({ version: '10' }).setToken(TOKEN);
 
   if (globalSlashCommandsFiles?.length > 0) {
-    let globalSlashCommands: SlashCommand[] = [];
+    let globalSlashCommands: Command[] = [];
     await globalSlashCommandsFiles.forEach(async (globalFile: string) => {
-      const globalCommand: SlashCommand = require(globalFile).default;
+      const globalCommand: Command = require(globalFile).default;
       if (!globalCommand.command || !globalCommand.execute) return;
       client.slashCommands.set(globalCommand.command.name, globalCommand);
       globalSlashCommands.push(globalCommand.command.toJSON());
@@ -38,12 +53,13 @@ const slashCommandsManager = async (client: BotClient, rootPath: string) => {
   
   if (allGuildsSlashCommandsFiles?.length > 0) {
     allGuildsSlashCommandsFiles.forEach(async (guild: any) => {
-      let guildSlashCommands: SlashCommand[] = [];
-      const guildId = guild.flat(9999)[0].split(`${rootPath}/interactions/slashCommands/guilds`)[1].split("/")[1];
+      let guildSlashCommands: Command[] = [];
+      const guildId: string = guild.flat(9999)[0].split(`${rootPath}/interactions/slashCommands/guilds`)[1].split("/")[1];
       await guild.flat(9999).forEach(async (commandFile: string) => {
-        const guildCommand: SlashCommand = require(commandFile).default;
+        const guildCommand: Command = require(commandFile).default;
         if (!guildCommand.command || !guildCommand.execute) return;
         client.slashCommands.set(guildCommand.command.name, guildCommand);
+        
         guildSlashCommands.push(guildCommand.command.toJSON());
       });
       try {
