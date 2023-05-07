@@ -14,4 +14,4 @@ app.use(cors());
 // Middleware Routes
 app.use('/user', userRoute);
 
-app.listen(port, () => console.info(`server listening on port ${port}!`));
+app.listen(port, () => console.info(`Express server is listening on port ${port}`));

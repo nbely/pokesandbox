@@ -1,10 +1,10 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 
-import User from '../../db/models/user.model';
+import User from "../../db/models/user.model";
 
 const router = express.Router();
 
-router.get('/:id', async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
   try {
       let data = await User.findOne({ userId: id });
