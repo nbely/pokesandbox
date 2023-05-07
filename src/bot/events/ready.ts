@@ -1,14 +1,42 @@
-import { Client } from "discord.js";
-import { Commands } from "../commands";
+import { ActivityType } from "discord.js";
+import { statSync } from "fs";
 
-export default (client: Client): void => {
-    client.on("ready", async () => {
-        if (!client.user || !client.application) {
-            return;
-        }
+import { BotClient } from "@bot/index";
+import IBotEvent from "@structures/interfaces/botEvent";
+import ISlashCommand from "@structures/interfaces/slashCommand";
+import { getFilesAsSingleArray } from "@structures/getFiles";
 
-        await client.application.commands.set(Commands);
+const Ready: IBotEvent = {
+  name: "ready",
+  execute: (name: string, client?: BotClient, rootPath?: string) => {
+    if (!client) return;
+    client.once(name, async () => {
+      client?.user?.setActivity("Training.", {
+        type: ActivityType.Watching
+      });
 
-        console.log(`${client.user.username} is online`);
+      let allSlashCommands = 0;
+      
+      const slashCommandsTotalFiles = getFilesAsSingleArray(`${rootPath}/interactions/slashCommands`);
+      slashCommandsTotalFiles.forEach((cmdFile: string) => {
+          if (statSync(cmdFile).isDirectory()) return;
+          const slashCmd: ISlashCommand = require(cmdFile).default;
+          if (!slashCmd.command.name || !slashCmd.execute) return;
+          else allSlashCommands++;
+      });
+
+      console.log("----------------------------------------------------");
+      console.log(`[Client] Logged into ${client?.user?.tag}`);
+      // if (client.messageCommands.size > 0) console.log(chalk.red("[MessageCommands] ") + chalk.cyanBright(`Loaded ${client.messageCommands.size} MessageCommands with ${chalk.white(`${client.messageCommandsAliases.size} Aliases`)}.`));
+      if (client.events.size > 0) console.log(`[Events] Loaded ${client.events.size} Events.`);
+      if (client.buttons.size > 0) console.log(`[ButtonCommands] Loaded ${client.buttons.size} Buttons.`);
+      if (client.stringSelectMenus.size > 0) console.log(`[StringSelectMenus] Loaded ${client.stringSelectMenus.size} StringSelectMenus.`);
+      if (client.userSelectMenus.size > 0) console.log(`[UserSelectMenus] Loaded ${client.userSelectMenus.size} UserSelectMenus.`);
+      if (client.modalForms.size > 0) console.log(`[ModalForms] Loaded ${client.modalForms.size} Modals.`);
+      if (allSlashCommands > 0) console.log(`[SlashCommands] Loaded ${allSlashCommands} SlashCommands.`);
+      console.log("----------------------------------------------------");
     });
+  },
 };
+
+export default Ready;
