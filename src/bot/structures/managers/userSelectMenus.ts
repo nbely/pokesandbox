@@ -9,9 +9,9 @@ const userSelectMenusManager = async (client: BotClient, rootPath: string) => {
   selectMenuFiles.forEach((selectMenuFile: string) => {
     if (statSync(selectMenuFile).isDirectory()) return;
     const selectMenuCommand: IUserSelectMenu = require(selectMenuFile).default;
-    if (!selectMenuCommand.customId || !selectMenuCommand.execute) return;
+    if (selectMenuCommand.ignore || !selectMenuCommand.name || !selectMenuCommand.execute) return;
 
-    client.userSelectMenus.set(selectMenuCommand.customId, selectMenuCommand);
+    client.userSelectMenus.set(selectMenuCommand.name, selectMenuCommand);
   });
 }
 

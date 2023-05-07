@@ -21,7 +21,7 @@ const slashCommandsManager = async (client: BotClient, rootPath: string) => {
     let globalSlashCommands: ChatInputCommand[] = [];
     await globalSlashCommandsFiles.forEach(async (globalFile: string) => {
       const globalCommand: ChatInputCommand = require(globalFile).default;
-      if (!globalCommand.command || !globalCommand.execute) return;
+      if (globalCommand.ignore || !globalCommand.command || !globalCommand.execute) return;
       client.slashCommands.set(globalCommand.command.name, globalCommand);
       globalSlashCommands.push(globalCommand.command.toJSON());
     });
@@ -38,7 +38,7 @@ const slashCommandsManager = async (client: BotClient, rootPath: string) => {
       const guildId: string = guild.flat(9999)[0].split(`${rootPath}/interactions/slashCommands/guilds`)[1].split("/")[1];
       await guild.flat(9999).forEach(async (commandFile: string) => {
         const guildCommand: ChatInputCommand = require(commandFile).default;
-        if (!guildCommand.command || !guildCommand.execute) return;
+        if (guildCommand.ignore || !guildCommand.command || !guildCommand.execute) return;
         client.slashCommands.set(guildCommand.command.name, guildCommand);
         
         guildSlashCommands.push(guildCommand.command.toJSON());

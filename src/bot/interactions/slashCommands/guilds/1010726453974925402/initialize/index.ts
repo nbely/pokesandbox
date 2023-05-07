@@ -10,6 +10,7 @@ import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 
 const Initialize: ISlashCommand = {
+  name: "initialize",
   command: new SlashCommandBuilder()
     .setName("initialize")
     .setDescription("Initializes your PokeSandBox server")

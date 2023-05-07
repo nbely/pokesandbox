@@ -7,9 +7,10 @@ import {
 
 import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 
-const Initialize: IMessageContextCommand = {
+const GetMessageId: IMessageContextCommand = {
+  name: "get-message-id",
   command: new ContextMenuCommandBuilder()
-    .setName("get_id")
+    .setName("get-message-id")
     .setType(ApplicationCommandType.Message),
   execute: async (client: Client, interaction: MessageContextMenuCommandInteraction) => {    
     await interaction.deferReply({ephemeral: true});
@@ -22,4 +23,4 @@ const Initialize: IMessageContextCommand = {
   },
 };
 
-export default Initialize;
+export default GetMessageId;

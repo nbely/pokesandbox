@@ -8,8 +8,9 @@ import {
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 
 const HelloMenu1: IStringSelectMenu = {
+  name: "hello-menu1",
   component: new StringSelectMenuBuilder()
-    .setCustomId("hello_menu1")
+    .setCustomId("hello-menu1")
     .setPlaceholder("Make a selection!")
     .addOptions(
       new StringSelectMenuOptionBuilder()
@@ -21,7 +22,6 @@ const HelloMenu1: IStringSelectMenu = {
         .setDescription("Send aresponse wishing a nice day.")
         .setValue("nice_day"),
     ),
-  customId: "hello_menu1",
   execute: async (client: Client, interaction: StringSelectMenuInteraction ) => { 
     await interaction.deferReply({ephemeral: true});
     

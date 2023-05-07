@@ -9,6 +9,7 @@ import ISlashCommand from "@structures/interfaces/slashCommand";
 import { findServer } from "@services/server.service";
 
 const Initialize: ISlashCommand = {
+  name: "initialize",
   command: new SlashCommandBuilder()
     .setName("initialize")
     .setDescription("Initializes your PokeSandBox server")

@@ -1,14 +1,14 @@
 import { Message } from "discord.js";
 
 import { BotClient } from "@bot/index";
-import BotEvent from "@structures/interfaces/botEvent";
+import IBotEvent from "@structures/interfaces/botEvent";
 import { IServer } from "@models/server.model";
 import commandOptionsProcessor from "@structures/commandOptions/processor";
 import { findServer } from "@services/server.service";
 
 const prefix = process.env.PREFIX as string;
 
-const MessageCreate: BotEvent = {
+const MessageCreate: IBotEvent = {
   name: "messageCreate",
   execute: (name: string, client?: BotClient) => {
     if (!client) return;

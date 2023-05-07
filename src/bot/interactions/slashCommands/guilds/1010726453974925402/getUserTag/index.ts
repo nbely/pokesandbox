@@ -8,9 +8,10 @@ import {
 
 import IUserContextCommand from "@structures/interfaces/userContextCommand";
 
-const Initialize: IUserContextCommand = {
+const GetUserTag: IUserContextCommand = {
+  name: "get-user-tag",
   command: new ContextMenuCommandBuilder()
-    .setName("get_tag")
+    .setName("get-user-tag")
     .setType(ApplicationCommandType.User),
   execute: async (client: Client, interaction: UserContextMenuCommandInteraction) => {    
     await interaction.deferReply({ephemeral: true});
@@ -23,4 +24,4 @@ const Initialize: IUserContextCommand = {
   },
 };
 
-export default Initialize;
+export default GetUserTag;

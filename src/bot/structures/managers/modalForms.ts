@@ -8,10 +8,10 @@ const modalFormsManager = async (client: BotClient, rootPath: string) => {
   const modalFormFiles: string[] = getFilesAsSingleArray(`${rootPath}/interactions/modalForms`);
   modalFormFiles.forEach((modalFormFile: string) => {
     if (statSync(modalFormFile).isDirectory()) return;
-    const modalFormComponent: IModalForm = require(modalFormFile).default;
-    if (!modalFormComponent.customId || !modalFormComponent.execute) return;
+    const modalForm: IModalForm = require(modalFormFile).default;
+    if (modalForm.ignore || !modalForm.name || !modalForm.execute) return;
 
-    client.modalForms.set(modalFormComponent.customId, modalFormComponent);
+    client.modalForms.set(modalForm.name, modalForm);
   });
 }
 

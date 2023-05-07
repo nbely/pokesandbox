@@ -4,7 +4,6 @@ import { BotClient } from "@bot/index";
 import IBaseCommand from "./baseCommand";
 
 export default interface IMessageCommand extends IBaseCommand {
-  name: string,
   aliases?: string[]
   allowBots?: boolean,
   allowInDms?: boolean,

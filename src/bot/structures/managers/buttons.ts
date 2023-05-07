@@ -9,9 +9,9 @@ const buttonsManager = async (client: BotClient, rootPath: string) => {
   buttonFiles.forEach((buttonFile: string) => {
     if (statSync(buttonFile).isDirectory()) return;
     const buttonComponent: ButtonCommand = require(buttonFile).default;
-    if (!buttonComponent.customId || !buttonComponent.execute) return;
+    if (buttonComponent.ignore || !buttonComponent.name || !buttonComponent.execute) return;
 
-    client.buttons.set(buttonComponent.customId, buttonComponent);
+    client.buttons.set(buttonComponent.name, buttonComponent);
   });
 }
 

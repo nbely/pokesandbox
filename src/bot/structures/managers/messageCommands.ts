@@ -9,7 +9,7 @@ const messageCommandsManager = async (client: BotClient, rootPath: string) => {
   messageCommandsFiles.forEach((messageCommandFile: string) => {
     if (statSync(messageCommandFile).isDirectory()) return;
     const messageCommand: IMessageCommand = require(messageCommandFile).default;
-    if (!messageCommand.name || !messageCommand.execute) return;
+    if (messageCommand.ignore || !messageCommand.name || !messageCommand.execute) return;
 
     client.messageCommands.set(messageCommand.name, messageCommand);
     if (messageCommand.aliases && messageCommand.aliases.length > 0) {

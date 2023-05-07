@@ -4,6 +4,6 @@ import { BotClient } from "@bot/index";
 import IBaseCommand from "./baseCommand";
 
 export default interface IMessageContextCommand extends IBaseCommand {
-  command: ContextMenuCommandBuilder | any;
+  command: ContextMenuCommandBuilder;
   execute: (client: BotClient, interaction: MessageContextMenuCommandInteraction) => void;
 }

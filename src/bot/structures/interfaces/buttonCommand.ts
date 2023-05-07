@@ -5,6 +5,5 @@ import IBaseCommand from "./baseCommand";
 
 export default interface IButtonCommand extends IBaseCommand {
   component: ButtonBuilder;
-  customId: string;
   execute: (client: BotClient, interaction: ButtonInteraction) => void;
 }
