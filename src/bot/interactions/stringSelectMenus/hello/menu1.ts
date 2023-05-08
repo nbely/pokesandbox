@@ -1,15 +1,16 @@
 import {
-  Client,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   StringSelectMenuOptionBuilder,
 } from "discord.js";
 
+import { BotClient } from "@bot/index";
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 
 const HelloMenu1: IStringSelectMenu = {
   name: "hello-menu1",
-  component: new StringSelectMenuBuilder()
+  create: () => {
+    return new StringSelectMenuBuilder()
     .setCustomId("hello-menu1")
     .setPlaceholder("Make a selection!")
     .addOptions(
@@ -21,14 +22,15 @@ const HelloMenu1: IStringSelectMenu = {
         .setLabel("Have a nice day!")
         .setDescription("Send aresponse wishing a nice day.")
         .setValue("nice_day"),
-    ),
-  execute: async (client: Client, interaction: StringSelectMenuInteraction ) => { 
+    )
+  },
+  execute: async (client:BotClient, interaction: StringSelectMenuInteraction ) => { 
     await interaction.deferReply({ephemeral: true});
     
     const content = `Likewise: ${interaction.values[0]}`;
 
     await interaction.followUp({
-        content
+      content
     });
   },
 };

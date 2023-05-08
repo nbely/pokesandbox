@@ -1,7 +1,12 @@
-import { FilterQuery, HydratedDocument, QueryOptions, UpdateQuery } from "mongoose";
+import {
+  FilterQuery,
+  HydratedDocument,
+  QueryOptions,
+  UpdateQuery
+} from "mongoose";
 import Server, { IServer } from "../models/server.model";
 
-export async function createUser(input: IServer) {
+export async function createServer(input: IServer) {
   const user: HydratedDocument<IServer> = new Server(input);
   return await user.save();
 }

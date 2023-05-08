@@ -12,7 +12,8 @@
   "_moduleAliases": {
     "@root": ".",
     "@bot": "src/bot",
-    "@events": "src/bot/interactions",
+    "@embeds": "src/bot/embeds",
+    "@events": "src/bot/events",
     "@interactions": "src/bot/interactions",
     "@structures": "src/bot/structures",
     "@models": "src/db/models",

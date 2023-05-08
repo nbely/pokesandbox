@@ -17,14 +17,14 @@ const Ready: IBotEvent = {
 
       let allSlashCommands = 0;
       
-      const slashCommandsTotalFiles = getFilesAsSingleArray(`${rootPath}/interactions/slashCommands`);
+      const slashCommandsTotalFiles = getFilesAsSingleArray(`${rootPath}/interactions/slashCommands`, undefined, "index.ts");
       slashCommandsTotalFiles.forEach((cmdFile: string) => {
-          if (statSync(cmdFile).isDirectory()) return;
-          const slashCmd: ISlashCommand = require(cmdFile).default;
-          if (!slashCmd.command.name || !slashCmd.execute) return;
-          else allSlashCommands++;
+        if (statSync(cmdFile).isDirectory()) return;
+        const slashCmd: ISlashCommand = require(cmdFile).default;
+        if (!slashCmd.name || !slashCmd.execute) return;
+        else allSlashCommands++;
       });
-
+``
       console.log("----------------------------------------------------");
       console.log(`[Client] Logged into ${client?.user?.tag}`);
       // if (client.messageCommands.size > 0) console.log(chalk.red("[MessageCommands] ") + chalk.cyanBright(`Loaded ${client.messageCommands.size} MessageCommands with ${chalk.white(`${client.messageCommandsAliases.size} Aliases`)}.`));

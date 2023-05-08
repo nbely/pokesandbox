@@ -4,6 +4,6 @@ import { BotClient } from "@bot/index";
 import IBaseCommand from "./baseCommand";
 
 export default interface IModalForm extends IBaseCommand {
-  component: ModalBuilder;
+  create: (options?: any) => ModalBuilder;
   execute: (client: BotClient, interaction: ModalSubmitInteraction) => void;
 }

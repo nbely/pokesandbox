@@ -5,5 +5,5 @@ import IBaseCommand from "./baseCommand";
 
 export default interface ISlashCommand extends IBaseCommand {
   command: SlashCommandBuilder | any;
-  execute: (client: BotClient, interaction: ChatInputCommandInteraction) => void;
+  execute: (client: BotClient, interaction: ChatInputCommandInteraction | any) => void;
 }

@@ -1,11 +1,11 @@
 import {
   ActionRowBuilder,
   ChatInputCommandInteraction,
-  Client,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
 } from "discord.js";
 
+import { BotClient } from "@bot/index";
 import HelloMenu1 from "@interactions/stringSelectMenus/hello/menu1";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 
@@ -46,7 +46,7 @@ const Hello: ISlashCommand = {
           },
         )
     ),
-  execute: async (client: Client, interaction: ChatInputCommandInteraction) => { 
+  execute: async (client: BotClient, interaction: ChatInputCommandInteraction) => { 
     await interaction.deferReply({ephemeral: true});
     
     const namePreference = interaction.options.get('name')?.value;
@@ -59,7 +59,7 @@ const Hello: ISlashCommand = {
     
     const components = [
       new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(HelloMenu1.component)
+        .addComponents(HelloMenu1.create())
     ];
 
     await interaction.followUp({

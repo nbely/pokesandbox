@@ -21,7 +21,8 @@
     "baseUrl": "./src",
     "paths": {
       "@bot/*": ["bot"],
-      "@events/*": ["bot/interactions/*"],
+      "@embeds/*": ["bot/embeds/*"],
+      "@events/*": ["bot/events/*"],
       "@interactions/*": ["bot/interactions/*"],
       "@structures/*": ["bot/structures/*"],
       "@models/*": ["db/models/*"],
