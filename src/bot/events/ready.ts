@@ -30,6 +30,7 @@ const Ready: IBotEvent = {
       // if (client.messageCommands.size > 0) console.log(chalk.red("[MessageCommands] ") + chalk.cyanBright(`Loaded ${client.messageCommands.size} MessageCommands with ${chalk.white(`${client.messageCommandsAliases.size} Aliases`)}.`));
       if (client.events.size > 0) console.log(`[Events] Loaded ${client.events.size} Events.`);
       if (client.buttons.size > 0) console.log(`[ButtonCommands] Loaded ${client.buttons.size} Buttons.`);
+      if (client.roleSelectMenus.size > 0) console.log(`[RoleSelectMenus] Loaded ${client.roleSelectMenus.size} RoleSelectMenus.`);
       if (client.stringSelectMenus.size > 0) console.log(`[StringSelectMenus] Loaded ${client.stringSelectMenus.size} StringSelectMenus.`);
       if (client.userSelectMenus.size > 0) console.log(`[UserSelectMenus] Loaded ${client.userSelectMenus.size} UserSelectMenus.`);
       if (client.modalForms.size > 0) console.log(`[ModalForms] Loaded ${client.modalForms.size} Modals.`);
