@@ -11,7 +11,7 @@ export function getFilesAsNestedArrays(dir: string, filesList: any[] = [], suffi
   files.forEach((file) => {
       const filePath: string = `${dir}/${file}`;
       if (fs.statSync(filePath).isDirectory()) {
-        filesList.push(getFilesAsNestedArrays(filePath));
+        filesList.push(getFilesAsNestedArrays(filePath, [], suffix));
       } else {
         if (filePath.endsWith(suffix)) {
           filesList.push(filePath);
@@ -32,7 +32,7 @@ export function getFilesAsSingleArray(dir: string, filesList: any[] = [], suffix
   files.forEach((file) => {
       const filePath: string = `${dir}/${file}`;
       if (fs.statSync(filePath).isDirectory()) {
-        filesList = filesList.concat(getFilesAsSingleArray(filePath));
+        filesList = filesList.concat(getFilesAsSingleArray(filePath, [], suffix));
       } else {
         if (filePath.endsWith(suffix)) {
           filesList.push(filePath);

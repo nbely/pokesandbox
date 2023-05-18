@@ -1,3 +1,4 @@
+import { AutocompleteInteraction, CacheType, Interaction, Message } from "discord.js";
 import IButtonCommand from "./buttonCommand";
 import IMessageCommand from "./messageCommand";
 import IMessageContextCommand from "./messageContextCommand";
@@ -20,7 +21,8 @@ export default interface IBaseCommand {
   name: string,
   onlyChannels?: string[],
   onlyGuilds?: string[],
-  onlyRoles?: string[],
+  onlyRoles?: string[] | ((guildId: string) => Promise<string[]>),
+  onlyRolesOrAnyUserPermissions?: boolean,
   onlyUsers?: string[],
   ownerOnly?: boolean,
   returnAllClientPermissionsError?: boolean,

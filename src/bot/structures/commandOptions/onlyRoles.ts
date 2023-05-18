@@ -16,9 +16,13 @@ const getOnlyRoles = async (
   command: AnyCommand,
   isInteraction?: boolean,
 ): Promise<boolean> => {
-  if (!command.onlyRoles || !Array.isArray(command.onlyRoles || !message.guild)) return true;
+  let onlyRoles: string[];
+  if (!command.onlyRoles || !message.guildId || !message.member) return true;
+  onlyRoles = Array.isArray(command.onlyRoles)
+    ? command.onlyRoles
+    : await command.onlyRoles(message.guildId);
   const member = message.member as GuildMember;
-  if (command.onlyRoles.some(roleId => member?.roles.cache.has(roleId))) return true;
+  if (onlyRoles.some(roleId => member?.roles.cache.has(roleId))) return true;
   else {
     if (command.returnErrors == false || command.returnOnlyRolesError == false) return false;
     const errorEmbed = new EmbedBuilder()
@@ -29,7 +33,7 @@ const getOnlyRoles = async (
       iconURL: member?.user.displayAvatarURL()
     })
     .setThumbnail(client.user?.displayAvatarURL() || null)
-    .setDescription(`The command you tried to execute couldn't be executed as you are missing one of these required roles:\n${command.onlyRoles.map(roleId => `↳ <@&${roleId}>`).join("\n")}`);
+    .setDescription(`The command you tried to execute couldn't be executed as you are missing one of these required roles:\n${onlyRoles.map(roleId => `↳ <@&${roleId}>`).join("\n")}`);
 
     if (isInteraction) {
       (message as Exclude<Interaction, AutocompleteInteraction<CacheType>>)

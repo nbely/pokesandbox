@@ -24,7 +24,7 @@ const Ready: IBotEvent = {
         if (!slashCmd.name || !slashCmd.execute) return;
         else allSlashCommands++;
       });
-``
+
       console.log("----------------------------------------------------");
       console.log(`[Client] Logged into ${client?.user?.tag}`);
       // if (client.messageCommands.size > 0) console.log(chalk.red("[MessageCommands] ") + chalk.cyanBright(`Loaded ${client.messageCommands.size} MessageCommands with ${chalk.white(`${client.messageCommandsAliases.size} Aliases`)}.`));

@@ -16,6 +16,7 @@
     "@events": "src/bot/events",
     "@interactions": "src/bot/interactions",
     "@structures": "src/bot/structures",
+    "@utils": "src/bot/utils",
     "@models": "src/db/models",
     "@services": "src/db/services"
   },

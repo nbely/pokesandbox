@@ -1,6 +1,6 @@
 import { statSync } from "fs";
 
-import { BotClient } from "@bot/*";
+import { BotClient } from "@bot/index";
 import IBotEvent from "@structures/interfaces/botEvent";
 import { getFilesAsSingleArray } from "@structures/getFiles";
 

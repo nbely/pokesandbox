@@ -5,5 +5,5 @@ import IBaseCommand from "./baseCommand";
 
 export default interface IButtonCommand extends IBaseCommand {
   create: (options?: any) => ButtonBuilder;
-  execute: (client: BotClient, interaction: ButtonInteraction) => void;
+  execute?: (client: BotClient, interaction: ButtonInteraction) => void;
 }
