@@ -2,6 +2,7 @@ import IButtonCommand from "./buttonCommand";
 import IMessageCommand from "./messageCommand";
 import IMessageContextCommand from "./messageContextCommand";
 import IModalForm from "./modalForm";
+import IRoleSelectMenu from "./roleSelectMenu";
 import ISlashCommand from "./slashCommand";
 import IStringSelectMenu from "./stringSelectMenu";
 import IUserContextCommand from "./userContextCommand";
@@ -38,5 +39,5 @@ export default interface IBaseCommand {
 }
 
 export type AnyCommand = IButtonCommand | IMessageCommand
-  | IMessageContextCommand | IModalForm | ISlashCommand
+  | IMessageContextCommand | IModalForm | IRoleSelectMenu | ISlashCommand
   | IStringSelectMenu | IUserContextCommand | IUserSelectMenu;

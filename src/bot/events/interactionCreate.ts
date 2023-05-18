@@ -8,15 +8,17 @@ import {
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
+import commandOptionsProcessor from "@structures/commandOptions/processor";
+
 import IBotEvent from "@structures/interfaces/botEvent";
 import IButtonCommand from "@structures/interfaces/buttonCommand";
 import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 import IModalForm from "@structures/interfaces/modalForm";
+import IRoleSelectMenu from "@bot/structures/interfaces/roleSelectMenu";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 import IUserContextCommand from "@structures/interfaces/userContextCommand";
 import IUserSelectMenu from "@structures/interfaces/userSelectMenu";
-import commandOptionsProcessor from "@structures/commandOptions/processor";
 
 const InteractionCreate: IBotEvent = {
   name: "interactionCreate",
@@ -78,6 +80,17 @@ const handleMessageComponentInteraction = async (client: BotClient, interaction:
     }
     const authenticatedCMDOptions = await commandOptionsProcessor(client, interaction, button, true, "Button");
     if (authenticatedCMDOptions) return button.execute(client, interaction);
+  }
+
+  if (interaction.isRoleSelectMenu()) {
+    const roleSelectMenu: IRoleSelectMenu | undefined = 
+      client.roleSelectMenus.get(interaction.customId);
+    if (!roleSelectMenu) {
+      interaction.reply({ content: "An error has ocurred", ephemeral: true });
+      return;
+    }
+    const authenticatedCMDOptions = await commandOptionsProcessor(client, interaction, roleSelectMenu, true, "RoleSelectMenu");
+    if (authenticatedCMDOptions) return roleSelectMenu.execute(client, interaction);
   }
 
   if (interaction.isStringSelectMenu()) {
