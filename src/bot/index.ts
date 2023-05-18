@@ -5,6 +5,7 @@ import IBotEvent from "@structures/interfaces/botEvent";
 import IMessageCommand from "@structures/interfaces/messageCommand";
 import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 import IModalForm from "@structures/interfaces/modalForm";
+import IRoleSelectMenu from "./structures/interfaces/roleSelectMenu";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 import IUserContextCommand from "@structures/interfaces/userContextCommand";
@@ -14,6 +15,7 @@ import buttonsManager from "@structures/managers/buttons";
 import eventsManager from "@structures/managers/events";
 import messageCommandsManager from "@structures/managers/messageCommands";
 import modalFormsManager from "@structures/managers/modalForms";
+import roleSelectMenusManager from "./structures/managers/roleSelectMenus";
 import slashCommandsManager from "@structures/managers/slashCommands";
 import stringSelectMenusManager from "@structures/managers/stringSelectMenus";
 import userSelectMenusManager from "@structures/managers/userSelectMenus";
@@ -24,12 +26,13 @@ export class BotClient extends Client {
   messageCommands = new Collection<string, IMessageCommand>();
   messageCommandsAliases = new Collection<string, string>();
   modalForms = new Collection<string, IModalForm>();
-  userSelectMenus = new Collection<string, IUserSelectMenu>();
+  roleSelectMenus = new Collection<string, IRoleSelectMenu>();
   slashCommands = new Collection<string, ISlashCommand
   | IMessageContextCommand
   | IUserContextCommand
   >();
   stringSelectMenus = new Collection<string, IStringSelectMenu>();
+  userSelectMenus = new Collection<string, IUserSelectMenu>();
 }
 
 (async () => {
@@ -58,8 +61,9 @@ export class BotClient extends Client {
   await eventsManager(client, rootPath);
   await messageCommandsManager(client, rootPath);
   await modalFormsManager(client, rootPath);
-  await stringSelectMenusManager(client, rootPath);
+  await roleSelectMenusManager(client, rootPath);
   await slashCommandsManager(client, rootPath);
+  await stringSelectMenusManager(client, rootPath);
   await userSelectMenusManager(client, rootPath);
   client.login(TOKEN);
 }

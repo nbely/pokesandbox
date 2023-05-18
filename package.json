@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "start": "ts-node src/app.ts",
-    "startdev": "ts-node-dev --respawn src/app.ts",
+    "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc"
   },
   "_moduleAliases": {
