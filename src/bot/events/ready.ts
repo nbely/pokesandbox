@@ -11,7 +11,7 @@ const Ready: IBotEvent = {
   execute: (name: string, client?: BotClient, rootPath?: string) => {
     if (!client) return;
     client.once(name, async () => {
-      client?.user?.setActivity("Training.", {
+      client?.user?.setActivity("Training Videos.", {
         type: ActivityType.Watching
       });
 
@@ -27,14 +27,14 @@ const Ready: IBotEvent = {
 
       console.log("----------------------------------------------------");
       console.log(`[Client] Logged into ${client?.user?.tag}`);
-      // if (client.messageCommands.size > 0) console.log(chalk.red("[MessageCommands] ") + chalk.cyanBright(`Loaded ${client.messageCommands.size} MessageCommands with ${chalk.white(`${client.messageCommandsAliases.size} Aliases`)}.`));
       if (client.events.size > 0) console.log(`[Events] Loaded ${client.events.size} Events.`);
       if (client.buttons.size > 0) console.log(`[ButtonCommands] Loaded ${client.buttons.size} Buttons.`);
+      if (client.messageCommands.size > 0) console.log(`[MessageCommands] Loaded ${client.messageCommands.size} MessageCommands with ${client.messageCommandsAliases.size} Aliases`);
+      if (client.modalForms.size > 0) console.log(`[ModalForms] Loaded ${client.modalForms.size} Modals.`);
       if (client.roleSelectMenus.size > 0) console.log(`[RoleSelectMenus] Loaded ${client.roleSelectMenus.size} RoleSelectMenus.`);
+      if (allSlashCommands > 0) console.log(`[SlashCommands] Loaded ${allSlashCommands} SlashCommands.`);
       if (client.stringSelectMenus.size > 0) console.log(`[StringSelectMenus] Loaded ${client.stringSelectMenus.size} StringSelectMenus.`);
       if (client.userSelectMenus.size > 0) console.log(`[UserSelectMenus] Loaded ${client.userSelectMenus.size} UserSelectMenus.`);
-      if (client.modalForms.size > 0) console.log(`[ModalForms] Loaded ${client.modalForms.size} Modals.`);
-      if (allSlashCommands > 0) console.log(`[SlashCommands] Loaded ${allSlashCommands} SlashCommands.`);
       console.log("----------------------------------------------------");
     });
   },

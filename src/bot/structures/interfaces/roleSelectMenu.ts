@@ -5,5 +5,5 @@ import IBaseCommand from "./baseCommand";
 
 export default interface IRoleSelectMenu extends IBaseCommand {
   create: (options?: any) => RoleSelectMenuBuilder;
-  execute: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
+  execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }

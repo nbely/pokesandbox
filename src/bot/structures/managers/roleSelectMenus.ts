@@ -9,7 +9,7 @@ const roleSelectMenusManager = async (client: BotClient, rootPath: string) => {
   selectMenuFiles.forEach((selectMenuFile: string) => {
     if (statSync(selectMenuFile).isDirectory()) return;
     const selectMenuCommand: IRoleSelectMenu = require(selectMenuFile).default;
-    if (selectMenuCommand.ignore || !selectMenuCommand.name || !selectMenuCommand.execute) return;
+    if (!selectMenuCommand || selectMenuCommand.ignore || !selectMenuCommand.name) return;
 
     client.roleSelectMenus.set(selectMenuCommand.name, selectMenuCommand);
   });

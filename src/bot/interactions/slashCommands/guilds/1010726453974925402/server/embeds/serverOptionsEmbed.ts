@@ -1,37 +1,32 @@
 import { ChatInputCommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
 
-import { IServer } from "@models/server.model";
+import { IServerMenu } from "../interfaces/menu";
 
 
 const getServerOptionsEmbed = async (
-server: IServer,
-interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-prompt: string,
+  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+  menu: IServerMenu,
 ) => {
-  const prefixes: string = (server.prefixes && server.prefixes.length > 0)
-    ? server.prefixes.map(prefix => `\`${prefix}\``).join(", ")
+  const prefixes: string = (menu.server.prefixes && menu.server.prefixes.length > 0)
+    ? menu.server.prefixes.map(prefix => `\`${prefix}\``).join(", ")
     : '\`.\` (default)';
     
-  const adminRoles: string = server.adminRoleIds
-    ? `: ${(await Promise.all(server.adminRoleIds.map(async (roleId) => 
-      interaction.guild?.roles.cache.get(roleId)
-        || await interaction.guild?.roles.fetch(roleId)
-        || roleId
-    ))).join(", ")}`
+  const adminRolesList: string = menu.adminRoles
+    ? menu.adminRoles?.join(", ")
     : "";
   
   return new EmbedBuilder()
     .setColor("Gold")
     .setTimestamp()
     .setAuthor({
-      name: `${server.name} Server Options:`,
+      name: `${menu.server.name} Server Options:`,
       iconURL: interaction.guild?.iconURL() || undefined
     })
     .setDescription(
-      `${prompt ? ("**" + prompt + "**\n\n") : ""}`
+      `${menu.prompt ? ("**" + menu.prompt + "**\n\n") : ""}`
       + `:one: Modify Message Command Prefixes: ${prefixes}`
-      + `\n:two: ${server.adminRoleIds ? "Modify" : "Add"} Admin Roles${adminRoles}`
-      + `\n:three: ${server.discoveryEnabled ? "Modify Server Discovery Settings" : "Enable Server Discovery"}`
+      + `\n:two: ${(menu.adminRoles && menu.adminRoles[0]) ? "Modify" : "Add"} Admin Roles${adminRolesList}`
+      + `\n:three: ${menu.server.discoveryEnabled ? "Modify Server Discovery Settings" : "Enable Server Discovery"}`
     );
 }
 

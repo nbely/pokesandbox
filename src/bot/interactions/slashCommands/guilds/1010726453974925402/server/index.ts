@@ -6,6 +6,7 @@ import {
   GuildMember,
   Message,
   MessageComponentInteraction,
+  Role,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -16,11 +17,13 @@ import createNewServer from "./utils/createNewServer";
 import { findServer } from "@services/server.service";
 import getInitializedEmbed from "./embeds/initializedEmbed";
 import getServerOptionsEmbed from "./embeds/serverOptionsEmbed";
+import handleUpdateAdminRoles from "./optionHandlers/handleUpdateAdminRoles";
 import handleUpdatePrefixes from "./optionHandlers/handleUpdatePrefixes";
 
 import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 import { IServerMenu } from "./interfaces/menu";
+import handleDiscoveryOptions from "./optionHandlers/handleDiscoveryOptions";
 
 const Server: ISlashCommand = {
   name: "server",
@@ -47,16 +50,23 @@ const Server: ISlashCommand = {
         embeds: [getInitializedEmbed(server, interaction)],
       });
     }
-
     if (!server) return;
-    let menu: IServerMenu = { prompt: "", server };
+
+    const adminRoles: (string | Role)[] | undefined = server.adminRoleIds
+    ? await Promise.all(server.adminRoleIds.map(async (roleId) => 
+      interaction.guild?.roles.cache.get(roleId)
+        || await interaction.guild?.roles.fetch(roleId)
+        || roleId
+    ))
+    : undefined;
+
+    let menu: IServerMenu = { adminRoles, prompt: "", server };
     const components: ActionRowBuilder<ButtonBuilder>[] = createMenuComponents();
     
     while (!menu.isCancelled) {
       const embeds: EmbedBuilder[] = [await getServerOptionsEmbed(
-        menu.server,
         interaction,
-        menu.prompt
+        menu,
       )];
       if (!menu.message) {
         menu.message = await interaction.followUp({ components, embeds });
@@ -86,17 +96,17 @@ const Server: ISlashCommand = {
             menu = await handleUpdatePrefixes(client, menu) || menu;
             break;
           case "2":
-            menu.prompt = "Option 2 Procesed";
+            menu = await handleUpdateAdminRoles(client, menu) || menu;
             break;
           case "3":
-            menu.prompt = "Option 3 Procesed";
+            menu = await handleDiscoveryOptions(client, menu) || menu;
             break;
           default:
             menu.interaction.update({embeds: [
               buildErrorEmbed(
                 client,
                 (interaction.member as GuildMember),
-                "An error occured processing your selection.",
+                "An unknown error occured while processing your selection.",
                 true
               ),
             ], components: []});
@@ -109,7 +119,7 @@ const Server: ISlashCommand = {
           buildErrorEmbed(
             client,
             interaction.member as GuildMember,
-            "Sorry, your menu has timed out. Please try the command again.",
+            "Sorry, the Server Options menu has timed out. Please try again.",
           ),
         ], components: []});
         menu.isCancelled = true;

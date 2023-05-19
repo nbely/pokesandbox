@@ -92,6 +92,7 @@ const handleMessageComponentInteraction = async (client: BotClient, interaction:
       return;
     }
     const authenticatedCMDOptions = await commandOptionsProcessor(client, interaction, roleSelectMenu, true, "RoleSelectMenu");
+    if (!roleSelectMenu.execute) return;
     if (authenticatedCMDOptions) return roleSelectMenu.execute(client, interaction);
   }
 

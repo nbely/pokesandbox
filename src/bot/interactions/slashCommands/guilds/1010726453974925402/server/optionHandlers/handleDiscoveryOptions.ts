@@ -18,7 +18,7 @@ import { upsertServer } from "@services/server.service";
 
 import { IServerMenu } from "../interfaces/menu";
 
-const handleUpdatePrefixes = async (
+const handleDiscoveryOptions = async (
   client: BotClient,
   menu: IServerMenu
 ): Promise<IServerMenu | undefined> => {
@@ -51,7 +51,7 @@ const handleUpdatePrefixes = async (
       fixedEndButtons,
     );
 
-    menu.prompt = "Add or Remove a Prefix.";
+    menu.prompt = "Handling Server Discovery Options.";
     const serverOptionsEmbed: EmbedBuilder = await getServerOptionsEmbed(
       menu.interaction as MessageComponentInteraction,
       menu
@@ -104,7 +104,7 @@ const handleUpdatePrefixes = async (
         buildErrorEmbed(
           client,
           menu.interaction?.member as GuildMember,
-          "Sorry, the Update Prefixes menu has timed out. Please try again!",
+          "Sorry, the Server Discovery Options menu has timed out. Please try again!",
         ),
       ], components: []});
       menu.isCancelled = true;
@@ -113,4 +113,4 @@ const handleUpdatePrefixes = async (
   return menu;
 }
 
-export default handleUpdatePrefixes;
+export default handleDiscoveryOptions;

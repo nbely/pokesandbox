@@ -15,7 +15,7 @@ const MessageCreate: IBotEvent = {
     client.on(name, async (message: Message) => {
       const server: IServer | null = await findServer({ serverId: message.guild?.id});
       const prefixes: string[] = server?.prefixes || [prefix]
-      // if (!Array.isArray(server?.prefixes)) return;
+
       prefixes.forEach(async botPrefix => {
         if (!message.content.startsWith(botPrefix)) return;
         const commandName = message.content.toLowerCase().slice(botPrefix.length).trim().split(" ")[0];

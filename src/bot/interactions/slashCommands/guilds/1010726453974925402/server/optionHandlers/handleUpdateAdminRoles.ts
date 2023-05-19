@@ -5,20 +5,21 @@ import {
   EmbedBuilder,
   GuildMember,
   Message,
-  MessageComponentInteraction
+  MessageComponentInteraction,
+  Role
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
 import ServerOption from "@interactions/buttons/server/option";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
 import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
-import handleAddPrefix from "./handleAddPrefix";
+import handleAddAdminRole from "./handleAddAdminRole";
 import paginateButtons from "@bot/utils/paginateButtons";
 import { upsertServer } from "@services/server.service";
 
 import { IServerMenu } from "../interfaces/menu";
 
-const handleUpdatePrefixes = async (
+const handleUpdateAdminRoles = async (
   client: BotClient,
   menu: IServerMenu
 ): Promise<IServerMenu | undefined> => {
@@ -27,17 +28,20 @@ const handleUpdatePrefixes = async (
 
   while (!menu.isCancelled && !isSelectionMade) {
     const fixedStartButtons: ButtonBuilder[] = [ServerOption.create(
-      { label: 'Add Prefix', style: ButtonStyle.Success }
+      { label: 'Add Role', style: ButtonStyle.Success }
     )];
     const fixedEndButtons: ButtonBuilder[] = [ServerOption.create(
       { label: 'Cancel', style: ButtonStyle.Secondary }
     )];
-    let removePrefixButtons: ButtonBuilder[] = [];
-    if (menu.server?.prefixes) {
-      removePrefixButtons = menu.server.prefixes.map((prefix, index) => {
+    let removeRoleButtons: ButtonBuilder[] = [];
+    if (menu.server?.adminRoleIds) {
+      removeRoleButtons = menu.server.adminRoleIds.map((roleId, index) => {
+        const roleName: string = (typeof menu.adminRoles?.[index] !== "string")
+          ? (menu.adminRoles?.[index] as Role).name
+          : ""
         return ServerOption.create(
           {
-            label: `Remove ${prefix}`,
+            label: `Remove [${roleName}]`,
             style: ButtonStyle.Danger,
             id: index,
           }
@@ -45,13 +49,13 @@ const handleUpdatePrefixes = async (
       });
     }
     const components: ActionRowBuilder<ButtonBuilder>[] = paginateButtons(
-      removePrefixButtons,
+      removeRoleButtons,
       currentPage,
       fixedStartButtons,
       fixedEndButtons,
     );
 
-    menu.prompt = "Add or Remove a Prefix.";
+    menu.prompt = "Add or Remove a Role with Bot Admin privileges.";
     const serverOptionsEmbed: EmbedBuilder = await getServerOptionsEmbed(
       menu.interaction as MessageComponentInteraction,
       menu
@@ -79,22 +83,28 @@ const handleUpdatePrefixes = async (
         case "Previous":
           currentPage = option === "Next" ? (currentPage + 1) : (currentPage - 1);
           break;
-        case "Add Prefix":
-          menu = await handleAddPrefix(client, menu) || menu;
+        case "Add Role":
+          menu = await handleAddAdminRole(client, menu) || menu;
           isSelectionMade = true;
           break;
         default:
-          menu.prompt = `Successfully removed the prefix: \`${menu.server.prefixes?.[+option]}\``;
-          const updatedPrefixes: string[] = menu.server.prefixes
-            ? [...menu.server.prefixes]
-            : [];
-          updatedPrefixes.splice(+option, 1);
-          menu.server = {
-            ...menu.server,
-            prefixes: updatedPrefixes,
-          };
-          await upsertServer({serverId: menu.server.serverId }, menu.server);
-          isSelectionMade = true;
+          menu.prompt = `Successfully removed the admin role: ${menu.adminRoles?.[+option]}`;
+          let updatedMenuAdminRoles: (string | Role)[] | undefined,
+              updatedServerAdminRoleIds: string[];
+          if (menu.server.adminRoleIds && menu.adminRoles) {
+            updatedMenuAdminRoles = [...menu.adminRoles];
+            updatedServerAdminRoleIds= [...menu.server.adminRoleIds];
+            updatedMenuAdminRoles.splice(+option, 1);
+            updatedServerAdminRoleIds.splice(+option, 1);
+
+            menu.adminRoles = updatedMenuAdminRoles;
+            menu.server = {
+              ...menu.server,
+              adminRoleIds: updatedServerAdminRoleIds,
+            };
+            await upsertServer({serverId: menu.server.serverId }, menu.server);
+            isSelectionMade = true;
+          }
           break;
       }
     }
@@ -104,7 +114,7 @@ const handleUpdatePrefixes = async (
         buildErrorEmbed(
           client,
           menu.interaction?.member as GuildMember,
-          "Sorry, the Update Prefixes menu has timed out. Please try again!",
+          "Sorry, the Update Admin Roles menu has timed out. Please try again!",
         ),
       ], components: []});
       menu.isCancelled = true;
@@ -113,4 +123,4 @@ const handleUpdatePrefixes = async (
   return menu;
 }
 
-export default handleUpdatePrefixes;
+export default handleUpdateAdminRoles;
