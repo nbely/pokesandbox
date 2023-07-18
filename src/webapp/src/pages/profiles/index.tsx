@@ -1,10 +1,5 @@
 const Profiles: React.FC = () => {
-
-  return (
-    <div>
-      Profiles
-    </div>
-  );
-}
+  return <div>Profiles</div>;
+};
 
 export default Profiles;

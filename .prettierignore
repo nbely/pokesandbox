@@ -1,1 +1,4 @@
+# Ignore artifacts:
 CODEOWNERS
+build
+coverage

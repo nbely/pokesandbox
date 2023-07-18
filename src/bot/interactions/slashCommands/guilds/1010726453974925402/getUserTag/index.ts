@@ -14,13 +14,17 @@ const GetUserTag: IUserContextCommand = {
   command: new ContextMenuCommandBuilder()
     .setName("get-user-tag")
     .setType(ApplicationCommandType.User),
-  execute: async (client: BotClient, interaction: UserContextMenuCommandInteraction) => {    
-    await interaction.deferReply({ephemeral: true});
-    const member: GuildMember | undefined = interaction.guild?.members.cache.get(interaction.targetId);
+  execute: async (
+    client: BotClient,
+    interaction: UserContextMenuCommandInteraction,
+  ) => {
+    await interaction.deferReply({ ephemeral: true });
+    const member: GuildMember | undefined =
+      interaction.guild?.members.cache.get(interaction.targetId);
 
     await interaction.followUp({
-        ephemeral: true,
-        content: `That is ${member?.user.tag}.`
+      ephemeral: true,
+      content: `That is ${member?.user.tag}.`,
     });
   },
 };

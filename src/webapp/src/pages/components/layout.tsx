@@ -29,6 +29,6 @@ const Layout: React.FC<PropsWithChildren> = ({ children }) => {
       <Sidebar />
     </div>
   );
-}
+};
 
 export default Layout;

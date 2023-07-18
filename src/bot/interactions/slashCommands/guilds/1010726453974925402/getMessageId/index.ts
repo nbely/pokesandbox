@@ -13,13 +13,16 @@ const GetMessageId: IMessageContextCommand = {
   command: new ContextMenuCommandBuilder()
     .setName("get-message-id")
     .setType(ApplicationCommandType.Message),
-  execute: async (client: BotClient, interaction: MessageContextMenuCommandInteraction) => {    
-    await interaction.deferReply({ephemeral: true});
-    const id: string =  interaction.targetId;
+  execute: async (
+    client: BotClient,
+    interaction: MessageContextMenuCommandInteraction,
+  ) => {
+    await interaction.deferReply({ ephemeral: true });
+    const id: string = interaction.targetId;
 
     await interaction.followUp({
-        ephemeral: true,
-        content: `The message id is ${id}.`
+      ephemeral: true,
+      content: `The message id is ${id}.`,
     });
   },
 };
