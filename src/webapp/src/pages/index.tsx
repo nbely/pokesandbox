@@ -11,13 +11,17 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ user }) => {
-  const avatarUrl: string = user.avatar ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png` : '';
+  const avatarUrl: string = user.avatar
+    ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png`
+    : "";
 
   return (
     <div>
-      <div className="flex flex-row w-full justify-center items-center rounded-xl p-3 mx-auto
-      bg-gray-400 dark:bg-gray-1200">
-        {avatarUrl ?
+      <div
+        className="flex flex-row w-full justify-center items-center rounded-xl p-3 mx-auto
+      bg-gray-400 dark:bg-gray-1200"
+      >
+        {avatarUrl ? (
           <Image
             alt={`${user.username} avatar`}
             className="rounded-full border-2
@@ -26,34 +30,36 @@ const Home: React.FC<HomeProps> = ({ user }) => {
             src={avatarUrl}
             width={65}
           />
-          : null
-        }
+        ) : null}
         <h1 className="text-3xl ml-4">{user.userTag}</h1>
       </div>
     </div>
   );
 };
 
-export const getServerSideProps: GetServerSideProps<HomeProps> = async function (ctx) {
-  const discordUser: DiscordUser | null = parseUser(ctx);
+export const getServerSideProps: GetServerSideProps<HomeProps> =
+  async function (ctx) {
+    const discordUser: DiscordUser | null = parseUser(ctx);
 
-  if (!discordUser) {
+    if (!discordUser) {
+      return {
+        redirect: {
+          destination: "/api/oauth",
+          permanent: false,
+        },
+      };
+    }
+
+    const dbUserResponse: Response = await fetch(
+      `http://localhost:3000/user/${discordUser.id}`,
+    );
+    const user = (await dbUserResponse.json()) as { data: IUser };
+
     return {
-      redirect: {
-        destination: "/api/oauth",
-        permanent: false,
+      props: {
+        user: user.data,
       },
     };
-  }
-
-  const dbUserResponse: Response = await fetch(`http://localhost:3000/user/${discordUser.id}`);
-  const user = await dbUserResponse.json() as { data: IUser };
-
-  return {
-    props: {
-      user: user.data,
-    },
   };
-};
 
 export default Home;

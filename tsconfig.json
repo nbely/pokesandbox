@@ -14,9 +14,7 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "removeComments": true,
-    "typeRoots": [
-        "node_modules/@types",
-    ],
+    "typeRoots": ["node_modules/@types"],
     "sourceMap": false,
     "baseUrl": "./src",
     "paths": {
@@ -30,15 +28,7 @@
       "@services/*": ["db/services/*"]
     }
   },
-  "files": [
-    "src/app.ts"
-  ],
-  "include": [
-    "./**/*.ts",
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "CODEOWNERS"
-  ],
+  "files": ["src/app.ts"],
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist", "CODEOWNERS"]
 }

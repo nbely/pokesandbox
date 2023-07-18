@@ -1,7 +1,6 @@
 import SidebarIcon from "./components/sidebarIcon";
 
 const Sidebar: React.FC = () => {
-
   return (
     <aside
       className="fixed top-0 left-0 h-screen w-16 m-0
@@ -14,6 +13,6 @@ const Sidebar: React.FC = () => {
       <SidebarIcon label="PT" route="servers/turquoise" />
     </aside>
   );
-}
+};
 
 export default Sidebar;

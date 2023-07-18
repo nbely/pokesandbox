@@ -7,29 +7,30 @@ const paginateButtons = (
   fixedStartButtons?: ButtonBuilder[],
   fixedEndButtons?: ButtonBuilder[],
 ): ActionRowBuilder<ButtonBuilder>[] => {
-  let buttonSlotCount = 10 - (fixedStartButtons?.length || 0) - (fixedEndButtons?.length || 0);
+  const buttonSlotCount =
+    10 - (fixedStartButtons?.length || 0) - (fixedEndButtons?.length || 0);
   if (buttonSlotCount <= 0) {
     console.error("No slots for paginated buttons available.");
     return [];
   }
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
-  
+
   let pageCount: number = 1,
-      isFirstPage: boolean,
-      isLastPage: boolean;
+    isFirstPage: boolean,
+    isLastPage: boolean;
   if (buttonList.length <= buttonSlotCount) {
     pageCount = 1;
     isFirstPage = true;
     isLastPage = true;
-  } else if (buttonList.length <= (2 * buttonSlotCount) - 2) {
+  } else if (buttonList.length <= 2 * buttonSlotCount - 2) {
     pageCount = 2;
     isFirstPage = page === 1 ? true : false;
     isLastPage = !isFirstPage;
   } else {
-    pageCount = Math.ceil(
-      (buttonList.length - (2 * (buttonSlotCount - 1)))
-      / (buttonSlotCount - 2)
-    ) + 2;
+    pageCount =
+      Math.ceil(
+        (buttonList.length - 2 * (buttonSlotCount - 1)) / (buttonSlotCount - 2),
+      ) + 2;
     isFirstPage = page === 1 ? true : false;
     isLastPage = page === pageCount ? true : false;
   }
@@ -39,29 +40,38 @@ const paginateButtons = (
     return [];
   }
   const currentPageButtons = fixedStartButtons ? [...fixedStartButtons] : [];
-  currentPageButtons.push(...buttonList.filter((button, index) => {
-    if (
-      (isFirstPage && isLastPage)
-      || (isFirstPage && (index + 1) <= (buttonSlotCount - 1))
-      || (isLastPage && (index + 1) >((buttonSlotCount - 1) + ((pageCount - 2) * (buttonSlotCount - 2))))
-      || (((index + 1) > ((buttonSlotCount - 1) + (page - 2) * (buttonSlotCount - 2)))
-        && ((index + 1) <= ((buttonSlotCount - 1) + (page - 1) * (buttonSlotCount - 2)))) 
-    ) return true;
-    else return false;
-  }));
+  currentPageButtons.push(
+    ...buttonList.filter((button, index) => {
+      if (
+        (isFirstPage && isLastPage) ||
+        (isFirstPage && index + 1 <= buttonSlotCount - 1) ||
+        (isLastPage &&
+          index + 1 >
+            buttonSlotCount - 1 + (pageCount - 2) * (buttonSlotCount - 2)) ||
+        (index + 1 > buttonSlotCount - 1 + (page - 2) * (buttonSlotCount - 2) &&
+          index + 1 <= buttonSlotCount - 1 + (page - 1) * (buttonSlotCount - 2))
+      )
+        return true;
+      else return false;
+    }),
+  );
   if (pageCount > 1 && !isFirstPage) {
-    currentPageButtons.push(ServerOption.create({
-      label: 'Previous',
-      style: ButtonStyle.Primary,
-    }));
+    currentPageButtons.push(
+      ServerOption.create({
+        label: "Previous",
+        style: ButtonStyle.Primary,
+      }),
+    );
   }
   if (pageCount > 1 && !isLastPage) {
-    currentPageButtons.push(ServerOption.create({
-      label: 'Next',
-      style: ButtonStyle.Primary,
-    }));
+    currentPageButtons.push(
+      ServerOption.create({
+        label: "Next",
+        style: ButtonStyle.Primary,
+      }),
+    );
   }
-  
+
   if (fixedEndButtons) {
     currentPageButtons.push(...fixedEndButtons);
   }
@@ -85,6 +95,6 @@ const paginateButtons = (
   }
 
   return components;
-}
+};
 
 export default paginateButtons;

@@ -21,16 +21,17 @@ const buildErrorEmbed = (
     .setTimestamp()
     .setAuthor({
       name: member?.user.tag || "",
-      iconURL: member?.user.displayAvatarURL()
+      iconURL: member?.user.displayAvatarURL(),
     })
     .setThumbnail(client.user?.displayAvatarURL() || null)
     .setDescription(
-      `${description}`
-      + `${addSupportInfo 
-        ? "\n\nPlease try again and reach out to the support channel on the official [PokeSandbox Server](https://discord.gg/2BDghKaGQu) if the issue persists."
-        : ""
-      }`
+      `${description}` +
+        `${
+          addSupportInfo
+            ? "\n\nPlease try again and reach out to the support channel on the official [PokeSandbox Server](https://discord.gg/2BDghKaGQu) if the issue persists."
+            : ""
+        }`,
     );
-}
+};
 
 export default buildErrorEmbed;

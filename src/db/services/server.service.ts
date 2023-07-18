@@ -2,7 +2,7 @@ import {
   FilterQuery,
   HydratedDocument,
   QueryOptions,
-  UpdateQuery
+  UpdateQuery,
 } from "mongoose";
 import Server, { IServer } from "../models/server.model";
 
@@ -17,7 +17,7 @@ export async function deleteAllServers() {
 
 export async function findServer(
   query: FilterQuery<IServer>,
-  options: QueryOptions = { lean: true }
+  options: QueryOptions = { lean: true },
 ) {
   return Server.findOne(query, null, options);
 }
@@ -25,7 +25,7 @@ export async function findServer(
 export async function upsertServer(
   query: FilterQuery<IServer>,
   update: UpdateQuery<IServer>,
-  options: QueryOptions = { lean: true }
+  options: QueryOptions = { lean: true },
 ) {
   return Server.findOneAndUpdate(query, update, options);
 }

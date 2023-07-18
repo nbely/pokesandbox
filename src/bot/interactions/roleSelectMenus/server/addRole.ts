@@ -6,8 +6,8 @@ const AddRoleMenu: IRoleSelectMenu = {
   name: "server_add-role",
   create: () => {
     return new RoleSelectMenuBuilder()
-    .setCustomId("server_add-role")
-    .setPlaceholder("Choose a Role to Add");
+      .setCustomId("server_add-role")
+      .setPlaceholder("Choose a Role to Add");
   },
 };
 
