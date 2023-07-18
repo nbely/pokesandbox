@@ -20,10 +20,12 @@
     "sourceMap": false,
     "baseUrl": "./src",
     "paths": {
-      "@bot/*": ["bot"],
-      "@events/*": ["bot/interactions/*"],
+      "@bot/*": ["bot/*"],
+      "@embeds/*": ["bot/embeds/*"],
+      "@events/*": ["bot/events/*"],
       "@interactions/*": ["bot/interactions/*"],
       "@structures/*": ["bot/structures/*"],
+      "@utils/*": ["bot/utils/*"],
       "@models/*": ["db/models/*"],
       "@services/*": ["db/services/*"]
     }

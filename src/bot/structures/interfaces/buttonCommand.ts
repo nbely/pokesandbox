@@ -4,6 +4,6 @@ import { BotClient } from "@bot/index";
 import IBaseCommand from "./baseCommand";
 
 export default interface IButtonCommand extends IBaseCommand {
-  component: ButtonBuilder;
-  execute: (client: BotClient, interaction: ButtonInteraction) => void;
+  create: (options?: any) => ButtonBuilder;
+  execute?: (client: BotClient, interaction: ButtonInteraction) => void;
 }

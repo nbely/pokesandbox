@@ -73,13 +73,15 @@ const handleApplicationCommandInteraction = async (client: BotClient, interactio
 const handleMessageComponentInteraction = async (client: BotClient, interaction: MessageComponentInteraction): Promise<void> => {
   if (interaction.isButton()) {
     const button: IButtonCommand | undefined = 
-      client.buttons.get(interaction.customId);
+      client.buttons.get(interaction.customId)
+      || client.buttons.get(interaction.customId.split('_')[0]);
     if (!button) {
       interaction.reply({ content: "An error has ocurred", ephemeral: true });
       return;
     }
     const authenticatedCMDOptions = await commandOptionsProcessor(client, interaction, button, true, "Button");
-    if (authenticatedCMDOptions) return button.execute(client, interaction);
+    if (!button.execute) return;
+    if (authenticatedCMDOptions ) return button.execute(client, interaction);
   }
 
   if (interaction.isRoleSelectMenu()) {
@@ -90,6 +92,7 @@ const handleMessageComponentInteraction = async (client: BotClient, interaction:
       return;
     }
     const authenticatedCMDOptions = await commandOptionsProcessor(client, interaction, roleSelectMenu, true, "RoleSelectMenu");
+    if (!roleSelectMenu.execute) return;
     if (authenticatedCMDOptions) return roleSelectMenu.execute(client, interaction);
   }
 

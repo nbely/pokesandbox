@@ -4,6 +4,6 @@ import { BotClient } from "@bot/index";
 import IBaseCommand from "./baseCommand";
 
 export default interface IStringSelectMenu extends IBaseCommand {
-  component: StringSelectMenuBuilder;
+  create: (options?: any) => StringSelectMenuBuilder;
   execute: (client: BotClient, interaction: StringSelectMenuInteraction) => void;
 }

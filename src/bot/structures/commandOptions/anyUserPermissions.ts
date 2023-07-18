@@ -17,7 +17,7 @@ const getAnyUserPermissions = async (
   command: AnyCommand,
   isInteraction?: boolean,
 ): Promise<boolean> => {
-  if (!command.anyUserPermissions || !message.guild || !Array.isArray(command.anyUserPermissions) || !message.guild) return true;
+  if (!command.anyUserPermissions || !message.guild || !Array.isArray(command.anyUserPermissions)) return true;
   const member = message.member as GuildMember;
   if (command.anyUserPermissions.some((permission: string) => member?.permissions.toArray().includes(<UserPermissions>permission))) return true;
   else {

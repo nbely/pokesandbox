@@ -12,9 +12,11 @@
   "_moduleAliases": {
     "@root": ".",
     "@bot": "src/bot",
-    "@events": "src/bot/interactions",
+    "@embeds": "src/bot/embeds",
+    "@events": "src/bot/events",
     "@interactions": "src/bot/interactions",
     "@structures": "src/bot/structures",
+    "@utils": "src/bot/utils",
     "@models": "src/db/models",
     "@services": "src/db/services"
   },
@@ -22,10 +24,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/builders": "^1.6.1",
-    "@discordjs/rest": "^1.7.0",
+    "@discordjs/rest": "^1.7.1",
     "cors": "^2.8.5",
-    "discord.js": "^14.9.0",
+    "discord.js": "^14.11.0",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "module-alias": "^2.2.2",
