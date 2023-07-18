@@ -86,6 +86,8 @@ const handleUpdatePrefixes = async (
           menu = await handleAddPrefix(client, menu) || menu;
           break;
         default:
+          if (Number.isNaN(+option)) throw new Error("Invalid Option Selected");
+          
           menu.prompt = `Successfully removed the prefix: \`${menu.server.prefixes?.[+option]}\``;
           const updatedPrefixes: string[] = menu.server.prefixes
             ? [...menu.server.prefixes]

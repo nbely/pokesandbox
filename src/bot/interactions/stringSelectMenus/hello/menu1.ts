@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
+
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 
 const HelloMenu1: IStringSelectMenu = {

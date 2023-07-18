@@ -49,7 +49,7 @@ const handleUpdateRoles = async (
         
         const roleName: string = (typeof roles?.[index] !== "string")
           ? (roles?.[index] as Role).name
-          : ""
+          : roles?.[index] as string;
         return ServerOption.create(
           {
             label: `Remove [${roleName}]`,
@@ -100,6 +100,8 @@ const handleUpdateRoles = async (
           menu = await handleAddRole(client, menu, roleType, roleIds) || menu;
           break;
         default:
+          if (Number.isNaN(+option)) throw new Error("Invalid Option Selected");
+
           menu.prompt = `Successfully removed the ${roleType} role: ${roles?.[+option]}`;
 
           if (roleType === "Admin") {

@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
+
 import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 
 const GetMessageId: IMessageContextCommand = {

@@ -7,6 +7,7 @@ import {
 
 import { BotClient } from "@bot/index";
 import HelloMenu1 from "@interactions/stringSelectMenus/hello/menu1";
+
 import ISlashCommand from "@structures/interfaces/slashCommand";
 
 const Hello: ISlashCommand = {

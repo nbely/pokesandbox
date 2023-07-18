@@ -1,4 +1,3 @@
-import { AutocompleteInteraction, CacheType, Interaction, Message } from "discord.js";
 import IButtonCommand from "./buttonCommand";
 import IMessageCommand from "./messageCommand";
 import IMessageContextCommand from "./messageContextCommand";

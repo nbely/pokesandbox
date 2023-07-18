@@ -1,5 +1,6 @@
-import { IServer } from "@models/server.model";
 import { Message, MessageComponentInteraction, Role } from "discord.js";
+
+import { IServer } from "@models/server.model";
 
 export interface IServerMenu {
   adminRoles?: (string | Role)[], 

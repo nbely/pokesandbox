@@ -11,10 +11,10 @@ import { BotClient } from "@bot/index";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
 import createDiscoveryMenu from "../utils/createDiscoveryMenu";
 import getDiscoveryOptionsEmbed from "../embeds/discoveryOptionsEmbed";
+import handleMenuUpdate from "../utils/handleMenuUpdate";
 import handleSetDescription from "./handleSetDescription";
 
 import { IServerMenu } from "../interfaces/menu";
-import handleMenuUpdate from "../utils/handleMenuUpdate";
 
 const handleDiscoveryOptions = async (
   client: BotClient,

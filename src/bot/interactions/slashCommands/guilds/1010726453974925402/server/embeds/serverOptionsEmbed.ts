@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  MessageComponentInteraction,
+} from "discord.js";
 
 import { IServerMenu } from "../interfaces/menu";
 
@@ -32,6 +36,6 @@ const getServerOptionsEmbed = async (
       + `\n:three: Update Mod Roles: ${modRolesList}`
       + `\n:four: ${menu.server.discovery.enabled ? "Modify Server Discovery Settings" : "Enable Server Discovery"}`
     );
-}
+};
 
 export default getServerOptionsEmbed;
