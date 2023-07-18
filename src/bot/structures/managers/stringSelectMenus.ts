@@ -1,6 +1,6 @@
 import { statSync } from "fs";
 
-import { BotClient } from "@bot/*";
+import { BotClient } from "@bot/index";
 import IStringSelectMenu from "@structures/interfaces/stringSelectMenu";
 import { getFilesAsSingleArray } from "@structures/getFiles";
 

@@ -1,9 +1,10 @@
 import {
   ApplicationCommandType,
-  Client,
   ContextMenuCommandBuilder,
   MessageContextMenuCommandInteraction,
 } from "discord.js";
+
+import { BotClient } from "@bot/index";
 
 import IMessageContextCommand from "@structures/interfaces/messageContextCommand";
 
@@ -12,7 +13,7 @@ const GetMessageId: IMessageContextCommand = {
   command: new ContextMenuCommandBuilder()
     .setName("get-message-id")
     .setType(ApplicationCommandType.Message),
-  execute: async (client: Client, interaction: MessageContextMenuCommandInteraction) => {    
+  execute: async (client: BotClient, interaction: MessageContextMenuCommandInteraction) => {    
     await interaction.deferReply({ephemeral: true});
     const id: string =  interaction.targetId;
 
