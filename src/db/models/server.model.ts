@@ -1,4 +1,11 @@
-import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
+import {
+  HydratedDocument,
+  Model,
+  Query,
+  Schema,
+  Types,
+  model,
+} from "mongoose";
 
 export interface IServer {
 	serverId: string,
@@ -35,7 +42,7 @@ export const ServerSchema: Schema = new Schema({
   name: { type: String, required: true },
   playerList: { type: [Schema.Types.ObjectId], ref: 'User' },
   prefixes: { type: [String], required: false },
-  regions: { type: [Schema.Types.ObjectId], ref: 'User' }
+  regions: { type: [Schema.Types.ObjectId], ref: 'Region' }
 });
 
 const ServerModel = model<IServer, ServerModelType>('Server', ServerSchema, 'servers');
