@@ -2,7 +2,6 @@ import { ChatInputCommandInteraction, EmbedBuilder, MessageComponentInteraction 
 
 import { IServerMenu } from "../interfaces/menu";
 
-
 const getServerOptionsEmbed = async (
   interaction: ChatInputCommandInteraction | MessageComponentInteraction,
   menu: IServerMenu,
@@ -13,7 +12,11 @@ const getServerOptionsEmbed = async (
     
   const adminRolesList: string = menu.adminRoles
     ? menu.adminRoles?.join(", ")
-    : "";
+    : "None";
+
+  const modRolesList: string = menu.modRoles
+    ? menu.modRoles?.join(", ")
+    : "None";
   
   return new EmbedBuilder()
     .setColor("Gold")
@@ -24,9 +27,10 @@ const getServerOptionsEmbed = async (
     })
     .setDescription(
       `${menu.prompt ? ("**" + menu.prompt + "**\n\n") : ""}`
-      + `:one: Modify Message Command Prefixes: ${prefixes}`
-      + `\n:two: ${(menu.adminRoles && menu.adminRoles[0]) ? "Modify" : "Add"} Admin Roles${adminRolesList}`
-      + `\n:three: ${menu.server.discoveryEnabled ? "Modify Server Discovery Settings" : "Enable Server Discovery"}`
+      + `:one: Update Bot Prefixes: ${prefixes}`
+      + `\n:two: Update Admin Roles: ${adminRolesList}`
+      + `\n:three: Update Mod Roles: ${modRolesList}`
+      + `\n:four: ${menu.server.discovery.enabled ? "Modify Server Discovery Settings" : "Enable Server Discovery"}`
     );
 }
 

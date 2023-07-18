@@ -12,18 +12,19 @@ import {
 
 import { BotClient } from "@bot/index";
 import buildErrorEmbed from "@embeds/errorEmbed";
-import createMenuComponents from "./utils/createMenuComponents";
 import createNewServer from "./utils/createNewServer";
+import createServerMenu from "./utils/createServerMenu";
 import { findServer } from "@services/server.service";
 import getInitializedEmbed from "./embeds/initializedEmbed";
 import getServerOptionsEmbed from "./embeds/serverOptionsEmbed";
-import handleUpdateAdminRoles from "./optionHandlers/handleUpdateAdminRoles";
+import handleDiscoveryOptions from "./optionHandlers/handleDiscoveryOptions";
+import handleMenuUpdate from "./utils/handleMenuUpdate";
 import handleUpdatePrefixes from "./optionHandlers/handleUpdatePrefixes";
+import handleUpdateRoles from "./optionHandlers/handleUpdateRoles";
 
 import { IServer } from "@models/server.model";
-import ISlashCommand from "@structures/interfaces/slashCommand";
 import { IServerMenu } from "./interfaces/menu";
-import handleDiscoveryOptions from "./optionHandlers/handleDiscoveryOptions";
+import ISlashCommand from "@structures/interfaces/slashCommand";
 
 const Server: ISlashCommand = {
   name: "server",
@@ -53,15 +54,22 @@ const Server: ISlashCommand = {
     if (!server) return;
 
     const adminRoles: (string | Role)[] | undefined = server.adminRoleIds
-    ? await Promise.all(server.adminRoleIds.map(async (roleId) => 
-      interaction.guild?.roles.cache.get(roleId)
-        || await interaction.guild?.roles.fetch(roleId)
-        || roleId
-    ))
-    : undefined;
+      ? await Promise.all(server.adminRoleIds.map(async (roleId) => 
+        interaction.guild?.roles.cache.get(roleId)
+          || await interaction.guild?.roles.fetch(roleId)
+          || roleId
+      ))
+      : undefined;
+    const modRoles: (string | Role)[] | undefined = server.modRoleIds
+      ? await Promise.all(server.modRoleIds.map(async (roleId) => 
+        interaction.guild?.roles.cache.get(roleId)
+          || await interaction.guild?.roles.fetch(roleId)
+          || roleId
+      ))
+      : undefined;
 
-    let menu: IServerMenu = { adminRoles, prompt: "", server };
-    const components: ActionRowBuilder<ButtonBuilder>[] = createMenuComponents();
+    let menu: IServerMenu = { adminRoles, modRoles, prompt: "", server };
+    const components: ActionRowBuilder<ButtonBuilder>[] = createServerMenu();
     
     while (!menu.isCancelled) {
       const embeds: EmbedBuilder[] = [await getServerOptionsEmbed(
@@ -71,12 +79,7 @@ const Server: ISlashCommand = {
       if (!menu.message) {
         menu.message = await interaction.followUp({ components, embeds });
       } else if (menu.interaction) {
-        if (menu.isReset) {
-          menu.message = await menu.interaction.followUp({ components, embeds });
-          menu.isReset = false;
-        } else {
-          await menu.interaction.update({ components, embeds });
-        }
+        menu = await handleMenuUpdate(menu, { components, embeds });
       }
 
       const filter = (componentInteraction: MessageComponentInteraction): boolean => {
@@ -84,7 +87,7 @@ const Server: ISlashCommand = {
       };
       try {
         // TODO: Change timeout later 
-        menu.interaction = await menu.message.awaitMessageComponent({ filter,  time: 60_000 });
+        menu.interaction = await menu.message!.awaitMessageComponent({ filter,  time: 60_000 });
         const option: string = menu.interaction.customId.split("_")[1];
     
         switch (option) {
@@ -95,10 +98,11 @@ const Server: ISlashCommand = {
           case "Prefix":
             menu = await handleUpdatePrefixes(client, menu) || menu;
             break;
-          case "2":
-            menu = await handleUpdateAdminRoles(client, menu) || menu;
+          case "Admin":
+          case "Mod":
+            menu = await handleUpdateRoles(client, menu, option) || menu;
             break;
-          case "3":
+          case "Discovery":
             menu = await handleDiscoveryOptions(client, menu) || menu;
             break;
           default:

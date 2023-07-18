@@ -6,10 +6,13 @@ const createNewServer = async (interaction: ChatInputCommandInteraction) => {
   const guild = interaction.guild as Guild;
   return await createServer({
     serverId: guild.id,
-    icon: guild.icon || undefined,
+    discovery: {
+      enabled: false,
+      icon: guild.icon || undefined,
+    },
     name: guild.name,
     playerList: [],
   });
-}
+};
 
 export default createNewServer;

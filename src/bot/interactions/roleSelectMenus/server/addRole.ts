@@ -2,13 +2,13 @@ import { RoleSelectMenuBuilder } from "discord.js";
 
 import IRoleSelectMenu from "@structures/interfaces/roleSelectMenu";
 
-const AddAdminRoleMenu: IRoleSelectMenu = {
-  name: "server_add-admin-role",
+const AddRoleMenu: IRoleSelectMenu = {
+  name: "server_add-role",
   create: () => {
     return new RoleSelectMenuBuilder()
-    .setCustomId("server_add-admin-role")
+    .setCustomId("server_add-role")
     .setPlaceholder("Choose a Role to Add");
   },
 };
 
-export default AddAdminRoleMenu;
+export default AddRoleMenu;

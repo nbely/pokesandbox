@@ -7,6 +7,7 @@ export interface IServerMenu {
   isCancelled?: boolean,
   isReset?: boolean,
   message?: Message,
+  modRoles?: (string | Role)[],
   prompt: string,
   server: IServer,
 }

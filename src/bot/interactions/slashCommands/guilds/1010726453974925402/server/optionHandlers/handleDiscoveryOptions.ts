@@ -1,7 +1,6 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
   EmbedBuilder,
   GuildMember,
   Message,
@@ -9,57 +8,34 @@ import {
 } from "discord.js";
 
 import { BotClient } from "@bot/index";
-import ServerOption from "@interactions/buttons/server/option";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
-import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
-import handleAddPrefix from "./handleAddPrefix";
-import paginateButtons from "@bot/utils/paginateButtons";
-import { upsertServer } from "@services/server.service";
+import createDiscoveryMenu from "../utils/createDiscoveryMenu";
+import getDiscoveryOptionsEmbed from "../embeds/discoveryOptionsEmbed";
+import handleSetDescription from "./handleSetDescription";
 
 import { IServerMenu } from "../interfaces/menu";
+import handleMenuUpdate from "../utils/handleMenuUpdate";
 
 const handleDiscoveryOptions = async (
   client: BotClient,
   menu: IServerMenu
 ): Promise<IServerMenu | undefined> => {
-  let currentPage = 1;
-  let isSelectionMade = false;
+  let isBackSelected = false;
 
-  while (!menu.isCancelled && !isSelectionMade) {
-    const fixedStartButtons: ButtonBuilder[] = [ServerOption.create(
-      { label: 'Add Prefix', style: ButtonStyle.Success }
-    )];
-    const fixedEndButtons: ButtonBuilder[] = [ServerOption.create(
-      { label: 'Cancel', style: ButtonStyle.Secondary }
-    )];
-    let removePrefixButtons: ButtonBuilder[] = [];
-    if (menu.server?.prefixes) {
-      removePrefixButtons = menu.server.prefixes.map((prefix, index) => {
-        return ServerOption.create(
-          {
-            label: `Remove ${prefix}`,
-            style: ButtonStyle.Danger,
-            id: index,
-          }
-        );
-      });
+  while (!menu.isCancelled && !isBackSelected) {
+
+    const components: ActionRowBuilder<ButtonBuilder>[] = createDiscoveryMenu(menu.server.discovery.enabled);
+    if (!menu.server.discovery.enabled && !menu.server.discovery.description) {
+      components[0].components[0].setDisabled(true);
     }
-    const components: ActionRowBuilder<ButtonBuilder>[] = paginateButtons(
-      removePrefixButtons,
-      currentPage,
-      fixedStartButtons,
-      fixedEndButtons,
-    );
 
-    menu.prompt = "Handling Server Discovery Options.";
-    const serverOptionsEmbed: EmbedBuilder = await getServerOptionsEmbed(
+    menu.prompt = "Select an option to update your Server Discovery settings.";
+    const embeds: EmbedBuilder[] = [await getDiscoveryOptionsEmbed(
       menu.interaction as MessageComponentInteraction,
-      menu
-    );
-    (menu.interaction as MessageComponentInteraction).update({
-      components,
-      embeds: [serverOptionsEmbed],
-    })
+      menu 
+    )];
+
+    menu = await handleMenuUpdate(menu, { components, embeds });
 
     const filter = (componentInteraction: MessageComponentInteraction): boolean => {
       return componentInteraction.user === menu.interaction?.user
@@ -71,31 +47,24 @@ const handleDiscoveryOptions = async (
       const option: string = menu.interaction.customId.split("_")[1];
 
       switch (option) {
+        case "Back":
+          menu.prompt = "";
+          isBackSelected = true;
+          break;
         case "Cancel":
           menu.interaction.update({content: '*Command Cancelled*', components: [], embeds: []});
           menu.isCancelled = true;
           break;
-        case "Next":
-        case "Previous":
-          currentPage = option === "Next" ? (currentPage + 1) : (currentPage - 1);
+        case "Enable":
+        case "Disable":
+          menu.prompt = `Successfully ${option === "Enable" ? "enabled" : "disabled"} Server Discovery`;
+          menu.server.discovery.enabled = !menu.server.discovery.enabled;
           break;
-        case "Add Prefix":
-          menu = await handleAddPrefix(client, menu) || menu;
-          isSelectionMade = true;
+        case "Set Description":
+          menu = await handleSetDescription(client, menu) || menu;
           break;
         default:
-          menu.prompt = `Successfully removed the prefix: \`${menu.server.prefixes?.[+option]}\``;
-          const updatedPrefixes: string[] = menu.server.prefixes
-            ? [...menu.server.prefixes]
-            : [];
-          updatedPrefixes.splice(+option, 1);
-          menu.server = {
-            ...menu.server,
-            prefixes: updatedPrefixes,
-          };
-          await upsertServer({serverId: menu.server.serverId }, menu.server);
-          isSelectionMade = true;
-          break;
+          throw new Error("Invalid option selected");
       }
     }
     catch(e) {

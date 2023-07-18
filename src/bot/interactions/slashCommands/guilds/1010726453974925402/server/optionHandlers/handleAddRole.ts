@@ -7,7 +7,7 @@ import {
   RoleSelectMenuBuilder
 } from "discord.js";
 
-import AddAdminRoleMenu from "@interactions/roleSelectMenus/server/addAdminRole";
+import AddRoleMenu from "@bot/interactions/roleSelectMenus/server/addRole";
 import { BotClient } from "@bot/index";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
 import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
@@ -15,17 +15,19 @@ import { upsertServer } from "@services/server.service";
 
 import { IServerMenu } from "../interfaces/menu";
 
-const handleAddAdminRole = async (
+const handleAddRole = async (
   client: BotClient,
   menu: IServerMenu,
+  roleType: string,
+  roleIds: string[] | undefined,
 ): Promise<IServerMenu | undefined> => {
-  menu.prompt = "Please select a role to grant Bot Admin privileges to.";
+  menu.prompt = `Please select a role to grant Bot ${roleType} privileges to.`;
   const serverOptionsEmbed = await getServerOptionsEmbed(
     menu.interaction as MessageComponentInteraction,
     menu
   );
   const components = [new ActionRowBuilder<RoleSelectMenuBuilder>()
-    .addComponents(AddAdminRoleMenu.create())
+    .addComponents(AddRoleMenu.create())
   ];
   (menu.interaction as MessageComponentInteraction).update({
     components,
@@ -42,27 +44,32 @@ const handleAddAdminRole = async (
 
     const selectedRoleId: string = menu.interaction.values[0];
 
-    if (!menu.server.adminRoleIds?.includes(selectedRoleId)) {
-      const newAdminRole: string | Role = 
+    if (!roleIds?.includes(selectedRoleId)) {
+      const newRole: string | Role = 
         menu.interaction.guild?.roles.cache.get(selectedRoleId)
         || await menu.interaction.guild?.roles.fetch(selectedRoleId)
         || selectedRoleId;
 
-      menu.adminRoles = menu.adminRoles
-        ? [...menu.adminRoles, newAdminRole]
-        : [newAdminRole];
-      const updatedAdminRoleIds: string[] = menu.server.adminRoleIds
-        ? [...menu.server.adminRoleIds, selectedRoleId]
-        : [selectedRoleId];
+      if (roleType === "Admin") {
+        menu.adminRoles = menu.adminRoles
+          ? [...menu.adminRoles, newRole]
+          : [newRole];
+        menu.server.adminRoleIds = roleIds
+          ? [...roleIds, selectedRoleId]
+          : [selectedRoleId];
+      } else if (roleType === "Mod") {
+        menu.modRoles = menu.modRoles
+          ? [...menu.modRoles, newRole]
+          : [newRole];
+        menu.server.modRoleIds = roleIds
+          ? [...roleIds, selectedRoleId]
+          : [selectedRoleId];
+      }
       
-      menu.server = {
-        ...menu.server,
-        adminRoleIds: updatedAdminRoleIds,
-      };
       await upsertServer({serverId: menu.server.serverId }, menu.server);
-      menu.prompt = `Successfully added the admin role: ${newAdminRole}`;
+      menu.prompt = `Successfully added the ${roleType} role: ${newRole}`;
     } else {
-      menu.prompt = "Oops! The selected role already has Bot Admin privileges.";
+      menu.prompt = `Oops! The selected role already has Bot ${roleType} privileges.`;
     }
     
   }
@@ -72,7 +79,7 @@ const handleAddAdminRole = async (
       buildErrorEmbed(
         client,
         menu.interaction?.member as GuildMember,
-        "Sorry, the Add Admin Role menu has timed out. Please try again!",
+        `Sorry, the Add ${roleType} Role menu has timed out. Please try again!`,
       ),
     ], components: []});
     menu.isCancelled = true;
@@ -80,4 +87,4 @@ const handleAddAdminRole = async (
   return menu;
 }
 
-export default handleAddAdminRole;
+export default handleAddRole;

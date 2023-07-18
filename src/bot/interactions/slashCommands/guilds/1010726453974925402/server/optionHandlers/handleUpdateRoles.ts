@@ -13,31 +13,42 @@ import { BotClient } from "@bot/index";
 import ServerOption from "@interactions/buttons/server/option";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
 import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
-import handleAddAdminRole from "./handleAddAdminRole";
+import handleAddRole from "./handleAddRole";
+import handleMenuUpdate from "../utils/handleMenuUpdate";
 import paginateButtons from "@bot/utils/paginateButtons";
 import { upsertServer } from "@services/server.service";
 
 import { IServerMenu } from "../interfaces/menu";
 
-const handleUpdateAdminRoles = async (
+const handleUpdateRoles = async (
   client: BotClient,
-  menu: IServerMenu
+  menu: IServerMenu,
+  roleType: string,
 ): Promise<IServerMenu | undefined> => {
   let currentPage = 1;
-  let isSelectionMade = false;
+  let isBackSelected = false;
 
-  while (!menu.isCancelled && !isSelectionMade) {
+  while (!menu.isCancelled && !isBackSelected) {
     const fixedStartButtons: ButtonBuilder[] = [ServerOption.create(
       { label: 'Add Role', style: ButtonStyle.Success }
     )];
-    const fixedEndButtons: ButtonBuilder[] = [ServerOption.create(
-      { label: 'Cancel', style: ButtonStyle.Secondary }
-    )];
+    const fixedEndButtons: ButtonBuilder[] = [
+      ServerOption.create({ label: 'Back', style: ButtonStyle.Secondary }),
+      ServerOption.create({ label: 'Cancel', style: ButtonStyle.Secondary }),
+    ];
     let removeRoleButtons: ButtonBuilder[] = [];
-    if (menu.server?.adminRoleIds) {
-      removeRoleButtons = menu.server.adminRoleIds.map((roleId, index) => {
-        const roleName: string = (typeof menu.adminRoles?.[index] !== "string")
-          ? (menu.adminRoles?.[index] as Role).name
+    const roleIds: string[] | undefined = roleType === "Admin"
+      ? menu.server?.adminRoleIds
+      : menu.server?.modRoleIds;
+    const roles: (string | Role)[] | undefined = roleType === "Admin"
+      ? menu.adminRoles
+      : menu.modRoles;
+
+    if (roleIds) {
+      removeRoleButtons = roleIds.map((roleId, index) => {
+        
+        const roleName: string = (typeof roles?.[index] !== "string")
+          ? (roles?.[index] as Role).name
           : ""
         return ServerOption.create(
           {
@@ -48,6 +59,7 @@ const handleUpdateAdminRoles = async (
         );
       });
     }
+
     const components: ActionRowBuilder<ButtonBuilder>[] = paginateButtons(
       removeRoleButtons,
       currentPage,
@@ -55,18 +67,16 @@ const handleUpdateAdminRoles = async (
       fixedEndButtons,
     );
 
-    menu.prompt = "Add or Remove a Role with Bot Admin privileges.";
-    const serverOptionsEmbed: EmbedBuilder = await getServerOptionsEmbed(
+    menu.prompt = `Add or Remove a Role with Bot ${roleType} privileges.`;
+    const embeds: EmbedBuilder[] = [await getServerOptionsEmbed(
       menu.interaction as MessageComponentInteraction,
       menu
-    );
-    (menu.interaction as MessageComponentInteraction).update({
-      components,
-      embeds: [serverOptionsEmbed],
-    })
+    )];
+    
+    menu = await handleMenuUpdate(menu, { components, embeds });
 
     const filter = (componentInteraction: MessageComponentInteraction): boolean => {
-      return componentInteraction.user === menu.interaction?.user
+      return componentInteraction.user === menu.interaction?.user;
     };
 
     try {
@@ -75,6 +85,9 @@ const handleUpdateAdminRoles = async (
       const option: string = menu.interaction.customId.split("_")[1];
 
       switch (option) {
+        case "Back":
+          isBackSelected = true;
+          break;
         case "Cancel":
           menu.interaction.update({content: '*Command Cancelled*', components: [], embeds: []});
           menu.isCancelled = true;
@@ -84,27 +97,20 @@ const handleUpdateAdminRoles = async (
           currentPage = option === "Next" ? (currentPage + 1) : (currentPage - 1);
           break;
         case "Add Role":
-          menu = await handleAddAdminRole(client, menu) || menu;
-          isSelectionMade = true;
+          menu = await handleAddRole(client, menu, roleType, roleIds) || menu;
           break;
         default:
-          menu.prompt = `Successfully removed the admin role: ${menu.adminRoles?.[+option]}`;
-          let updatedMenuAdminRoles: (string | Role)[] | undefined,
-              updatedServerAdminRoleIds: string[];
-          if (menu.server.adminRoleIds && menu.adminRoles) {
-            updatedMenuAdminRoles = [...menu.adminRoles];
-            updatedServerAdminRoleIds= [...menu.server.adminRoleIds];
-            updatedMenuAdminRoles.splice(+option, 1);
-            updatedServerAdminRoleIds.splice(+option, 1);
+          menu.prompt = `Successfully removed the ${roleType} role: ${roles?.[+option]}`;
 
-            menu.adminRoles = updatedMenuAdminRoles;
-            menu.server = {
-              ...menu.server,
-              adminRoleIds: updatedServerAdminRoleIds,
-            };
-            await upsertServer({serverId: menu.server.serverId }, menu.server);
-            isSelectionMade = true;
+          if (roleType === "Admin") {
+            menu.adminRoles?.splice(+option, 1);
+            menu.server.adminRoleIds?.splice(+option, 1);
+          } else if (roleType === "Mod") {
+            menu.modRoles?.splice(+option, 1);
+            menu.server.modRoleIds?.splice(+option, 1);
           }
+
+          await upsertServer({serverId: menu.server.serverId }, menu.server);
           break;
       }
     }
@@ -114,7 +120,7 @@ const handleUpdateAdminRoles = async (
         buildErrorEmbed(
           client,
           menu.interaction?.member as GuildMember,
-          "Sorry, the Update Admin Roles menu has timed out. Please try again!",
+          `Sorry, the Update ${roleType} Roles menu has timed out. Please try again!`,
         ),
       ], components: []});
       menu.isCancelled = true;
@@ -123,4 +129,4 @@ const handleUpdateAdminRoles = async (
   return menu;
 }
 
-export default handleUpdateAdminRoles;
+export default handleUpdateRoles;

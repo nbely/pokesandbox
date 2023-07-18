@@ -13,6 +13,7 @@ import ServerOption from "@interactions/buttons/server/option";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
 import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
 import handleAddPrefix from "./handleAddPrefix";
+import handleMenuUpdate from "../utils/handleMenuUpdate";
 import paginateButtons from "@bot/utils/paginateButtons";
 import { upsertServer } from "@services/server.service";
 
@@ -23,15 +24,16 @@ const handleUpdatePrefixes = async (
   menu: IServerMenu
 ): Promise<IServerMenu | undefined> => {
   let currentPage = 1;
-  let isSelectionMade = false;
+  let isBackSelected = false;
 
-  while (!menu.isCancelled && !isSelectionMade) {
+  while (!menu.isCancelled && !isBackSelected) {
     const fixedStartButtons: ButtonBuilder[] = [ServerOption.create(
       { label: 'Add Prefix', style: ButtonStyle.Success }
     )];
-    const fixedEndButtons: ButtonBuilder[] = [ServerOption.create(
-      { label: 'Cancel', style: ButtonStyle.Secondary }
-    )];
+    const fixedEndButtons: ButtonBuilder[] = [
+      ServerOption.create({ label: 'Back', style: ButtonStyle.Secondary }),
+      ServerOption.create({ label: 'Cancel', style: ButtonStyle.Secondary }),
+    ];
     let removePrefixButtons: ButtonBuilder[] = [];
     if (menu.server?.prefixes) {
       removePrefixButtons = menu.server.prefixes.map((prefix, index) => {
@@ -52,14 +54,12 @@ const handleUpdatePrefixes = async (
     );
 
     menu.prompt = "Add or Remove a Prefix.";
-    const serverOptionsEmbed: EmbedBuilder = await getServerOptionsEmbed(
+    const embeds: EmbedBuilder[] = [await getServerOptionsEmbed(
       menu.interaction as MessageComponentInteraction,
       menu
-    );
-    (menu.interaction as MessageComponentInteraction).update({
-      components,
-      embeds: [serverOptionsEmbed],
-    })
+    )];
+
+    menu = await handleMenuUpdate(menu, { components, embeds });
 
     const filter = (componentInteraction: MessageComponentInteraction): boolean => {
       return componentInteraction.user === menu.interaction?.user
@@ -71,6 +71,9 @@ const handleUpdatePrefixes = async (
       const option: string = menu.interaction.customId.split("_")[1];
 
       switch (option) {
+        case "Back":
+          isBackSelected = true;
+          break;
         case "Cancel":
           menu.interaction.update({content: '*Command Cancelled*', components: [], embeds: []});
           menu.isCancelled = true;
@@ -81,7 +84,6 @@ const handleUpdatePrefixes = async (
           break;
         case "Add Prefix":
           menu = await handleAddPrefix(client, menu) || menu;
-          isSelectionMade = true;
           break;
         default:
           menu.prompt = `Successfully removed the prefix: \`${menu.server.prefixes?.[+option]}\``;
@@ -94,7 +96,6 @@ const handleUpdatePrefixes = async (
             prefixes: updatedPrefixes,
           };
           await upsertServer({serverId: menu.server.serverId }, menu.server);
-          isSelectionMade = true;
           break;
       }
     }
