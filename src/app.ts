@@ -2,7 +2,7 @@ import "module-alias/register";
 import "dotenv/config";
 
 //connect to the MongoDB database
-import "./db/connect"
+import "./db/connect";
 
 //run the discord bot
 import "./bot/index";

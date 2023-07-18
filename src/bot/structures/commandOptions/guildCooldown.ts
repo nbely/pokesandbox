@@ -1,14 +1,14 @@
 import {
   AutocompleteInteraction,
   CacheType,
-  EmbedBuilder,
   Interaction,
-  Message
+  Message,
 } from "discord.js";
 
 import { AnyCommand } from "@structures/interfaces/baseCommand";
 import { BotClient } from "@bot/index";
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const getGuildCooldown = async (
   client: BotClient,
   message: Message | Exclude<Interaction, AutocompleteInteraction<CacheType>>,
@@ -41,6 +41,6 @@ const getGuildCooldown = async (
   //   });
   //   return false;
   // };
-}
+};
 
 export default getGuildCooldown;

@@ -27,9 +27,9 @@ export class BotClient extends Client {
   messageCommandsAliases = new Collection<string, string>();
   modalForms = new Collection<string, IModalForm>();
   roleSelectMenus = new Collection<string, IRoleSelectMenu>();
-  slashCommands = new Collection<string, ISlashCommand
-  | IMessageContextCommand
-  | IUserContextCommand
+  slashCommands = new Collection<
+    string,
+    ISlashCommand | IMessageContextCommand | IUserContextCommand
   >();
   stringSelectMenus = new Collection<string, IStringSelectMenu>();
   userSelectMenus = new Collection<string, IUserSelectMenu>();
@@ -66,5 +66,4 @@ export class BotClient extends Client {
   await stringSelectMenusManager(client, rootPath);
   await userSelectMenusManager(client, rootPath);
   client.login(TOKEN);
-}
-)();
+})();

@@ -17,7 +17,8 @@ const OAUTH_QS: string = new URLSearchParams({
 
 const OAUTH_URI: string = `https://discord.com/api/oauth2/authorize?${OAUTH_QS}`;
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+const handleOAuth = async (req: NextApiRequest, res: NextApiResponse) => {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   if (req.method !== "GET") return res.redirect("/");
 
   const { code = null, error = null } = req.query;
@@ -37,28 +38,36 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     scope,
   }).toString();
 
-  const { access_token = null, token_type = "Bearer" } = await fetch("https://discord.com/api/oauth2/token", {
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    method: "POST",
-    body,
-  }).then((res): any => res.json());
+  const { access_token = null, token_type = "Bearer" } = await fetch(
+    "https://discord.com/api/oauth2/token",
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+      body,
+    },
+  ).then((res): any => res.json());
 
   if (!access_token || typeof access_token !== "string") {
     return res.redirect(OAUTH_URI);
   }
 
-  const me: DiscordUser | { unauthorized: true } = await fetch("https://discord.com/api/users/@me", {
-    headers: { 
-      Authorization: `${token_type} ${access_token}`,
-      ContentType: "application/x-www-form-urlencoded",
+  const me: DiscordUser | { unauthorized: true } = await fetch(
+    "https://discord.com/api/users/@me",
+    {
+      headers: {
+        Authorization: `${token_type} ${access_token}`,
+        ContentType: "application/x-www-form-urlencoded",
+      },
     },
-  }).then((res): any => res.json());
+  ).then((res): any => res.json());
 
   if (!("id" in me)) {
     return res.redirect(OAUTH_URI);
   }
 
-  const token = sign(me, process.env.JWT_SECRET as string, { expiresIn: "24h" });
+  const token = sign(me, process.env.JWT_SECRET as string, {
+    expiresIn: "24h",
+  });
 
   res.setHeader(
     "Set-Cookie",
@@ -67,8 +76,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       secure: process.env.NODE_ENV !== "development",
       sameSite: "lax",
       path: "/",
-    })
+    }),
   );
 
   res.redirect("/");
 };
+
+export default handleOAuth;

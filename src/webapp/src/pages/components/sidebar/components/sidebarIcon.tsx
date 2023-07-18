@@ -1,14 +1,13 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 interface ISidebarIconProps {
-  label: string,
-  route: string
+  label: string;
+  route: string;
 }
 
 const SidebarIcon: React.FC<ISidebarIconProps> = ({ label, route }) => {
-  
   return (
-    <Link 
+    <Link
       className="relative flex items-center justify-center
         h-12 w-12 mt-2 mb-2 mx-auto
         bg-gray-500 text-gold-800
@@ -23,6 +22,6 @@ const SidebarIcon: React.FC<ISidebarIconProps> = ({ label, route }) => {
       {label}
     </Link>
   );
-}
+};
 
 export default SidebarIcon;
