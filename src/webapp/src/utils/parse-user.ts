@@ -2,7 +2,7 @@ import { GetServerSidePropsContext } from "next";
 import { parse } from "cookie";
 import { verify } from "jsonwebtoken";
 
-import { DiscordUser } from "../interfaces/discordUser";
+import type { DiscordUser } from "../interfaces/discordUser";
 
 export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -21,7 +21,7 @@ export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
   try {
     const { iat, exp, ...user } = verify(
       token,
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET as string
     ) as DiscordUser & { iat: number; exp: number };
     return user;
   } catch (e) {

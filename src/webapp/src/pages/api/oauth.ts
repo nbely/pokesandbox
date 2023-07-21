@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { serialize } from "cookie";
 import { sign } from "jsonwebtoken";
 
-import { DiscordUser } from "../../interfaces/discordUser";
+import type { DiscordUser } from "../../interfaces/discordUser";
 
 const scope: string = ["identify"].join(" ");
 const REDIRECT_URI: string = `${process.env.APP_URI}/api/oauth`;
@@ -44,7 +44,7 @@ const handleOAuth = async (req: NextApiRequest, res: NextApiResponse) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       method: "POST",
       body,
-    },
+    }
   ).then((res): any => res.json());
 
   if (!access_token || typeof access_token !== "string") {
@@ -58,7 +58,7 @@ const handleOAuth = async (req: NextApiRequest, res: NextApiResponse) => {
         Authorization: `${token_type} ${access_token}`,
         ContentType: "application/x-www-form-urlencoded",
       },
-    },
+    }
   ).then((res): any => res.json());
 
   if (!("id" in me)) {
@@ -76,7 +76,7 @@ const handleOAuth = async (req: NextApiRequest, res: NextApiResponse) => {
       secure: process.env.NODE_ENV !== "development",
       sameSite: "lax",
       path: "/",
-    }),
+    })
   );
 
   res.redirect("/");

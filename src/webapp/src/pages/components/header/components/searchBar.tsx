@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 
 import { Input, AutoComplete } from "antd";
 import { UserOutlined } from "@ant-design/icons";
@@ -14,14 +14,8 @@ interface SelectOptions {
 }
 
 const SearchBar: React.FC = () => {
-  const [selectValue, setSelectValue]: [
-    string,
-    Dispatch<SetStateAction<string>>,
-  ] = React.useState("");
-  const [options, setOptions]: [
-    SelectOptions[],
-    Dispatch<SetStateAction<SelectOptions[]>>,
-  ] = React.useState([
+  const [selectValue, setSelectValue] = React.useState<string>("");
+  const [options, setOptions] = React.useState<SelectOptions[]>([
     {
       label: renderTitle("Search Options"),
       options: [
