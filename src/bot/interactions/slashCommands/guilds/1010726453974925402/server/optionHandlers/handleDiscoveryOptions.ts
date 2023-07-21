@@ -15,6 +15,7 @@ import handleMenuUpdate from "../utils/handleMenuUpdate";
 import handleSetDescription from "./handleSetDescription";
 
 import { IServerMenu } from "../interfaces/menu";
+import { upsertServer } from "@services/server.service";
 
 const handleDiscoveryOptions = async (
   client: BotClient,
@@ -73,6 +74,7 @@ const handleDiscoveryOptions = async (
             option === "Enable" ? "enabled" : "disabled"
           } Server Discovery`;
           menu.server.discovery.enabled = !menu.server.discovery.enabled;
+          await upsertServer({ serverId: menu.server.serverId }, menu.server);
           break;
         case "Set Description":
           menu = (await handleSetDescription(client, menu)) || menu;

@@ -1,7 +1,8 @@
-import { HydratedDocument, Model, model, Query, Schema } from "mongoose";
+import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
 export interface IUser {
   avatar?: string;
+  servers: Types.ObjectId[];
   userId: string;
   userTag: string;
   username: string;
@@ -17,6 +18,7 @@ interface UserQueryHelpers {
 
 export const UserSchema: Schema = new Schema({
   avatar: { type: String, required: false },
+  servers: { type: [Schema.Types.ObjectId], ref: "Server" },
   userId: { type: String, required: true },
   userTag: { type: String, required: true },
   username: { type: String, required: true },
