@@ -1,8 +1,8 @@
-import { CallbackWithoutResult, connect } from "mongoose";
+import { connect } from "mongoose";
 
-run().catch(err => console.log(err));
+run().catch((err) => console.log(err));
 
 async function run() {
-    await connect(process.env.DATABASE_URI || "");
-    console.info("Connected to MongoDB with Mongoose");
+  await connect(process.env.DATABASE_URI || "");
+  console.info("Connected to MongoDB with Mongoose");
 }

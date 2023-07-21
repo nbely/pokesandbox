@@ -1,14 +1,16 @@
-import React from 'react';
+interface IPostProps {
+  content: string;
+  title: string;
+}
 
-const url = "https://i1.sndcdn.com/avatars-000651700224-nysi7a-t500x500.jpg";
+const Post: React.FC<IPostProps> = ({ title, content }) => {
+  const url = "https://i1.sndcdn.com/avatars-000651700224-nysi7a-t500x500.jpg";
 
-export default function Post({title, content}: {title: string, content: string}): JSX.Element{
-
-	return (
+  return (
     <div className="Post">
       <div className="Post-title">{title}</div>
       <div className="Post-user">
-        <img className="Post-avatar" src={url} alt="User Avatar"/>
+        <img className="Post-avatar" src={url} alt="User Avatar" />
         <div className="Post-username">
           <div>{"Lord Dalmonde"}</div>
           <div>{"Taav#4683"}</div>
@@ -16,8 +18,10 @@ export default function Post({title, content}: {title: string, content: string})
       </div>
       <div className="Post-content">{content}</div>
     </div>
-  )
-}
+  );
+};
+
+export default Post;
 
 // .Post {
 //   background-color: turquoise;
