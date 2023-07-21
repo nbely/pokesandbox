@@ -4,10 +4,11 @@ import React from "react";
 import fetch, { Response } from "node-fetch";
 
 import { DiscordUser } from "@/interfaces/discordUser";
-import { IServer } from "@/interfaces/models/server";
-import { IUser } from "@/interfaces/models/user";
 import { parseUser } from "@/utils/parse-user";
 import { useGlobalContext } from "@/context/globalProvider";
+
+import type { IServer } from "@/interfaces/models/server";
+import type { IUser } from "@/interfaces/models/user";
 
 interface HomeProps {
   servers: IServer[];
@@ -65,11 +66,11 @@ export const getServerSideProps: GetServerSideProps<HomeProps> =
     const dbServersResponse: Response = await fetch(
       `http://localhost:3000/servers/`
     );
-    const servers = (await dbServersResponse.json()) as { data: IServer[] };
-
     const dbUserResponse: Response = await fetch(
       `http://localhost:3000/user/${discordUser.id}`
     );
+
+    const servers = (await dbServersResponse.json()) as { data: IServer[] };
     const user = (await dbUserResponse.json()) as { data: IUser };
 
     return {

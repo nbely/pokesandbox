@@ -1,7 +1,7 @@
-import { IState, useGlobalContext } from "@/context/globalProvider";
+import { useGlobalContext } from "@/context/globalProvider";
 
 const DarkModeToggle: React.FC = () => {
-  const state: IState = useGlobalContext();
+  const { isDarkMode, toggleDarkMode } = useGlobalContext();
 
   return (
     <button
@@ -11,11 +11,11 @@ const DarkModeToggle: React.FC = () => {
         focus:outline-none focus:ring-4
         text-gray-700 hover:bg-gray-400 focus:ring-gray-400  
         dark:text-gray-700 dark:hover:bg-gray-1000 dark:focus:ring-gray-1000"
-      onClick={() => state.toggleDarkMode()}
+      onClick={() => toggleDarkMode()}
     >
       <svg
         id="theme-toggle-dark-icon"
-        className={`w-5 h-5 ${state.isDarkMode ? "hidden" : ""}`}
+        className={`w-5 h-5 ${isDarkMode ? "hidden" : ""}`}
         fill="currentColor"
         viewBox="0 0 20 20"
         xmlns="http://www.w3.org/2000/svg"
@@ -24,7 +24,7 @@ const DarkModeToggle: React.FC = () => {
       </svg>
       <svg
         id="theme-toggle-light-icon"
-        className={`w-5 h-5 ${state.isDarkMode ? "" : "hidden"}`}
+        className={`w-5 h-5 ${isDarkMode ? "" : "hidden"}`}
         fill="currentColor"
         viewBox="0 0 20 20"
         xmlns="http://www.w3.org/2000/svg"

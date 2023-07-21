@@ -1,10 +1,10 @@
-import Link from "next/link";
-
-import { useGlobalContext } from "@/context/globalProvider";
-import { IServer } from "@/interfaces/models/server";
 import { GetServerSideProps } from "next";
 import React from "react";
+
 import ServerCard from "./components/serverCard";
+import { useGlobalContext } from "@/context/globalProvider";
+
+import type { IServer } from "@/interfaces/models/server";
 
 interface ServersProps {
   servers: IServer[];
@@ -23,9 +23,11 @@ const Servers: React.FC<ServersProps> = (props) => {
     <div>
       <h1 className="text-center text-xl">Server Discovery</h1>
       <div className="flex flex-wrap justify-evenly mt-5">
-        {servers.map((server: IServer) => (
-          <ServerCard key={server.serverId} server={server} />
-        ))}
+        {servers.map((server: IServer) =>
+          server.discovery.enabled ? (
+            <ServerCard key={server.serverId} server={server} />
+          ) : null
+        )}
       </div>
     </div>
   );

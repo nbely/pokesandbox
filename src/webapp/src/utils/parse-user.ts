@@ -2,7 +2,7 @@ import { GetServerSidePropsContext } from "next";
 import { parse } from "cookie";
 import { verify } from "jsonwebtoken";
 
-import { DiscordUser } from "../interfaces/discordUser";
+import type { DiscordUser } from "../interfaces/discordUser";
 
 export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
   /* eslint-disable @typescript-eslint/no-unused-vars */

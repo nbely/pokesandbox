@@ -1,32 +1,16 @@
-import { PropsWithChildren, createContext, useContext, useState } from "react";
 import { ConfigProvider, theme } from "antd";
-import { IUser } from "@/interfaces/models/user";
-import { IServer } from "@/interfaces/models/server";
+import { PropsWithChildren, createContext, useContext, useState } from "react";
 
-export interface IState {
-  getServerById: (serverId: string) => IServer | undefined;
-  getServers: () => IServer[];
-  getUser: () => IUser | undefined;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-  updateServers: (servers: IServer[]) => void;
-  updateUser: (user: IUser) => void;
-}
+import { DEFAULT_STATE } from "./constants/defaultState";
 
-const defaultState: IState = {
-  getServerById: (serverId: string) => undefined,
-  getServers: () => [],
-  getUser: () => undefined,
-  isDarkMode: true,
-  toggleDarkMode: () => {},
-  updateServers: (servers: IServer[]) => {},
-  updateUser: (user: IUser) => {},
-};
-
-const GlobalContext: React.Context<IState> =
-  createContext<IState>(defaultState);
+import type { IServer } from "@/interfaces/models/server";
+import type { IState } from "@/interfaces/state";
+import type { IUser } from "@/interfaces/models/user";
 
 interface GlobalContextProps extends PropsWithChildren {}
+
+const GlobalContext: React.Context<IState> =
+  createContext<IState>(DEFAULT_STATE);
 
 const GlobalProvider: React.FC<GlobalContextProps> = ({ children }) => {
   const { defaultAlgorithm, darkAlgorithm } = theme;
@@ -35,7 +19,17 @@ const GlobalProvider: React.FC<GlobalContextProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | undefined>(undefined);
 
   const getServerById = (serverId: string): IServer | undefined => {
-    return servers.find((server: IServer) => server.serverId === serverId);
+    return servers.find(
+      (server: IServer) =>
+        server.serverId === serverId || server._id === serverId
+    );
+  };
+
+  const getServersByIds = (serverIds: string[]): IServer[] => {
+    return servers.filter(
+      (server: IServer) =>
+        serverIds.includes(server.serverId) || serverIds.includes(server._id)
+    );
   };
 
   const getServers = (): IServer[] => {
@@ -67,6 +61,7 @@ const GlobalProvider: React.FC<GlobalContextProps> = ({ children }) => {
       <GlobalContext.Provider
         value={{
           getServerById,
+          getServersByIds,
           getServers,
           getUser,
           isDarkMode,

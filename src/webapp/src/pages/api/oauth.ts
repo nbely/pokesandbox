@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { serialize } from "cookie";
 import { sign } from "jsonwebtoken";
 
-import { DiscordUser } from "../../interfaces/discordUser";
+import type { DiscordUser } from "../../interfaces/discordUser";
 
 const scope: string = ["identify"].join(" ");
 const REDIRECT_URI: string = `${process.env.APP_URI}/api/oauth`;

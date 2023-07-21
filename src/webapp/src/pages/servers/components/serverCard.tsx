@@ -1,19 +1,18 @@
 import { Avatar, Card } from "antd";
-import { EditOutlined, ReadOutlined } from "@ant-design/icons";
-import React from "react";
-
-import { IServer } from "@/interfaces/models/server";
 import Link from "next/link";
+import React from "react";
+import { ReadOutlined } from "@ant-design/icons";
+
 import DiscordIcon from "@/pages/components/assets/discordSvg";
+
+import type { IServer } from "@/interfaces/models/server";
 
 interface ServerCardProps {
   server: IServer;
 }
 
-const { Meta } = Card;
-
 const ServerCard: React.FC<ServerCardProps> = ({ server }) => {
-  const avatarUrl: string = server.discovery.icon
+  const iconUrl: string = server.discovery.icon
     ? `https://cdn.discordapp.com/icons/${server.serverId}/${server.discovery.icon}.png`
     : "";
 
@@ -37,17 +36,19 @@ const ServerCard: React.FC<ServerCardProps> = ({ server }) => {
               Discover
             </span>
           </Link>,
-          <Link
+          <a
             className="h-10 !w-4/5 min-w-[115px] max-w-[150px] space-x-2 !inline-flex flex-row justify-center items-center bg-[#5865F2] rounded-full"
             href={server.discovery.inviteLink ?? ""}
+            rel="external noopener noreferrer"
+            target="_blank"
           >
             <DiscordIcon key="discord" />
             <span className="text-white font-bold">Join</span>
-          </Link>,
+          </a>,
         ]}
       >
-        <Meta
-          avatar={avatarUrl ? <Avatar src={avatarUrl} /> : undefined}
+        <Card.Meta
+          avatar={iconUrl ? <Avatar src={iconUrl} /> : undefined}
           title={server.name}
           description={server.discovery.description}
         />

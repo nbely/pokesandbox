@@ -2,13 +2,13 @@ import Head from "next/head";
 import { PropsWithChildren } from "react";
 
 import Header from "./header/header";
-import { IState, useGlobalContext } from "@/context/globalProvider";
 import Sidebar from "./sidebar/sidebar";
+import { useGlobalContext } from "@/context/globalProvider";
 
 const Layout: React.FC<PropsWithChildren> = ({ children }) => {
-  const state: IState = useGlobalContext();
+  const { isDarkMode } = useGlobalContext();
   return (
-    <div className={`flex ${state.isDarkMode ? "dark" : ""}`}>
+    <div className={`flex ${isDarkMode ? "dark" : ""}`}>
       <Head>
         <link rel="icon" href="/favicon.ico" />
         <meta

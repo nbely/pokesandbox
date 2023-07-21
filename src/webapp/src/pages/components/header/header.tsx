@@ -1,13 +1,10 @@
 import Link from "next/link";
 
 import DarkModeToggle from "./components/darkModeToggle";
-import { IState, useGlobalContext } from "@/context/globalProvider";
 import PokeballSvg from "../assets/pokeballSvg";
 import SearchBar from "./components/searchBar";
 
 const Header: React.FC = () => {
-  const state: IState = useGlobalContext();
-
   return (
     <header
       className="fixed top-0 left-16 h-16 w-[calc(100vw-4rem)] m-0 px-4 
