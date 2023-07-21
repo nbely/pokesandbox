@@ -1,19 +1,31 @@
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import Image from "next/image";
+import React from "react";
 import fetch, { Response } from "node-fetch";
 
 import { DiscordUser } from "@/interfaces/discordUser";
+import { IServer } from "@/interfaces/models/server";
 import { IUser } from "@/interfaces/models/user";
 import { parseUser } from "@/utils/parse-user";
+import { useGlobalContext } from "@/context/globalProvider";
 
 interface HomeProps {
+  servers: IServer[];
   user: IUser;
 }
 
-const Home: React.FC<HomeProps> = ({ user }) => {
+const Home: React.FC<HomeProps> = (props) => {
+  const { getUser, updateUser, updateServers } = useGlobalContext();
+  const user: IUser = getUser() ?? props.user;
+
   const avatarUrl: string = user.avatar
     ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png`
     : "";
+
+  React.useEffect(() => {
+    updateServers(props.servers);
+    updateUser(props.user);
+  }, []);
 
   return (
     <div>
@@ -38,7 +50,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 };
 
 export const getServerSideProps: GetServerSideProps<HomeProps> =
-  async function (ctx) {
+  async function (ctx: GetServerSidePropsContext) {
     const discordUser: DiscordUser | null = parseUser(ctx);
 
     if (!discordUser) {
@@ -50,13 +62,19 @@ export const getServerSideProps: GetServerSideProps<HomeProps> =
       };
     }
 
+    const dbServersResponse: Response = await fetch(
+      `http://localhost:3000/servers/`
+    );
+    const servers = (await dbServersResponse.json()) as { data: IServer[] };
+
     const dbUserResponse: Response = await fetch(
-      `http://localhost:3000/user/${discordUser.id}`,
+      `http://localhost:3000/user/${discordUser.id}`
     );
     const user = (await dbUserResponse.json()) as { data: IUser };
 
     return {
       props: {
+        servers: servers.data,
         user: user.data,
       },
     };

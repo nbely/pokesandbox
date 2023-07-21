@@ -16,11 +16,11 @@ interface SelectOptions {
 const SearchBar: React.FC = () => {
   const [selectValue, setSelectValue]: [
     string,
-    Dispatch<SetStateAction<string>>,
+    Dispatch<SetStateAction<string>>
   ] = React.useState("");
   const [options, setOptions]: [
     SelectOptions[],
-    Dispatch<SetStateAction<SelectOptions[]>>,
+    Dispatch<SetStateAction<SelectOptions[]>>
   ] = React.useState([
     {
       label: renderTitle("Search Options"),
