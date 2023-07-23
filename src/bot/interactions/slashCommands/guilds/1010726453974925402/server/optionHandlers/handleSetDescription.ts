@@ -1,63 +1,27 @@
-import { GuildMember, Message, MessageComponentInteraction } from "discord.js";
-
-import { BotClient } from "@bot/index";
-import buildErrorEmbed from "@bot/embeds/errorEmbed";
-import getDiscoveryOptionsEmbed from "../embeds/discoveryOptionsEmbed";
+import getDiscoveryOptionsEmbed from "../embeds/getDiscoveryMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
-import { IServerMenu } from "../interfaces/menu";
+import { AdminMenu } from "@bot/classes/adminMenu";
 
-const handleSetDescription = async (
-  client: BotClient,
-  menu: IServerMenu,
-): Promise<IServerMenu | undefined> => {
+const handleSetDescription = async (menu: AdminMenu): Promise<void> => {
   menu.prompt =
     "Please enter a new server description to be displayed on the server discovery page.";
-  const serverOptionsEmbed = await getDiscoveryOptionsEmbed(
-    menu.interaction as MessageComponentInteraction,
-    menu,
-  );
-  (menu.interaction as MessageComponentInteraction).update({
-    components: [],
-    embeds: [serverOptionsEmbed],
-  });
+  menu.components = [];
+  menu.embeds = [await getDiscoveryOptionsEmbed(menu)];
 
-  const filter = (message: Message): boolean => {
-    return message.author.id === menu.interaction?.user.id;
-  };
+  menu.updateEmbedMessage();
+
   try {
     // TODO: Change timeout later
-    const collectedMessage = await menu.interaction?.channel?.awaitMessages({
-      filter,
-      errors: ["time"],
-      max: 1,
-      time: 60_000,
-    });
-
-    const response: string | undefined = collectedMessage?.first()?.content;
-    if (!response) {
-      throw new Error("Invalid response received.");
-    }
+    const response: string = await menu.awaitMessageReply(60_000);
 
     menu.server.discovery.description = response;
     await upsertServer({ serverId: menu.server.serverId }, menu.server);
     menu.prompt = `Successfully updated the server description.`;
     menu.isReset = true;
-  } catch (e) {
-    console.error(e);
-    await (menu.message as Message).edit({
-      embeds: [
-        buildErrorEmbed(
-          client,
-          menu.interaction?.member as GuildMember,
-          "Sorry, the Set Description menu has timed out. Please try again!",
-        ),
-      ],
-      components: [],
-    });
-    menu.isCancelled = true;
+  } catch (error) {
+    await menu.handleError(error);
   }
-  return menu;
 };
 
 export default handleSetDescription;

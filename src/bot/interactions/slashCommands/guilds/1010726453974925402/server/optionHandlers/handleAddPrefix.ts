@@ -1,74 +1,30 @@
-import { GuildMember, Message, MessageComponentInteraction } from "discord.js";
-
-import { BotClient } from "@bot/index";
-import buildErrorEmbed from "@bot/embeds/errorEmbed";
-import getServerOptionsEmbed from "../embeds/serverOptionsEmbed";
+import { AdminMenu } from "@bot/classes/adminMenu";
+import getServerOptionsEmbed from "../embeds/getServerMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
-import { IServerMenu } from "../interfaces/menu";
-
-const handleAddPrefix = async (
-  client: BotClient,
-  menu: IServerMenu,
-): Promise<IServerMenu | undefined> => {
+const handleAddPrefix = async (menu: AdminMenu): Promise<void> => {
   menu.prompt =
     "Please enter a new prefix to use with this bot on your server.";
-  const serverOptionsEmbed = await getServerOptionsEmbed(
-    menu.interaction as MessageComponentInteraction,
-    menu,
-  );
-  (menu.interaction as MessageComponentInteraction).update({
-    components: [],
-    embeds: [serverOptionsEmbed],
-  });
+  menu.components = [];
+  menu.embeds = [getServerOptionsEmbed(menu)];
 
-  const filter = (message: Message): boolean => {
-    return message.author.id === menu.interaction?.user.id;
-  };
+  await menu.updateEmbedMessage();
+
   try {
-    // TODO: Change timeout later
-    const collectedMessage = await menu.interaction?.channel?.awaitMessages({
-      filter,
-      errors: ["time"],
-      max: 1,
-      time: 60_000,
-    });
+    // TODO: Change timeout late
+    const response = await menu.awaitMessageReply(60_000);
 
-    const responsePrefix: string | undefined =
-      collectedMessage?.first()?.content;
-    if (!responsePrefix) {
-      throw new Error("Invalid response received.");
-    }
-    if (!menu.server.prefixes?.includes(responsePrefix)) {
-      const updatedPrefixes: string[] = menu.server.prefixes
-        ? [...menu.server.prefixes, responsePrefix]
-        : [responsePrefix];
-
-      menu.server = {
-        ...menu.server,
-        prefixes: updatedPrefixes,
-      };
+    if (!menu.server.prefixes?.includes(response)) {
+      menu.server.prefixes = [...menu.server.prefixes, response];
       await upsertServer({ serverId: menu.server.serverId }, menu.server);
-      menu.prompt = `Successfully added the prefix: \`${responsePrefix}\``;
+      menu.prompt = `Successfully added the prefix: \`${response}\``;
     } else {
       menu.prompt = "Oops! The entered prefix already exists for this server.";
     }
     menu.isReset = true;
-  } catch (e) {
-    console.error(e);
-    await (menu.message as Message).edit({
-      embeds: [
-        buildErrorEmbed(
-          client,
-          menu.interaction?.member as GuildMember,
-          "Sorry, the Add Prefix menu has timed out. Please try again!",
-        ),
-      ],
-      components: [],
-    });
-    menu.isCancelled = true;
+  } catch (error) {
+    await menu.handleError(error);
   }
-  return menu;
 };
 
 export default handleAddPrefix;

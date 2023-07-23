@@ -1,26 +1,50 @@
 import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
-export interface IServer {
+import type { IRegion } from "./region.model";
+import type { IUser } from "./user.model";
+
+export interface IServerModel {
   serverId: string;
-  adminRoleIds?: string[];
+  adminRoleIds: string[];
   discovery: {
     description?: string;
     enabled: boolean;
     icon?: string;
     inviteLink?: string;
   };
-  modRoleIds?: string[];
+  modRoleIds: string[];
   name: string;
   playerList: Types.ObjectId[];
-  prefixes?: string[];
-  regions?: Types.ObjectId[];
+  prefixes: string[];
+  regions: Types.ObjectId[];
 }
 
-type ServerModelType = Model<IServer, ServerQueryHelpers>;
+export interface IServer extends IServerModel {
+  _id: Types.ObjectId;
+}
+
+export interface IServerPopulated {
+  _id: Types.ObjectId;
+  serverId: string;
+  adminRoleIds: string[];
+  discovery: {
+    description?: string;
+    enabled: boolean;
+    icon?: string;
+    inviteLink?: string;
+  };
+  modRoleIds: string[];
+  name: string;
+  playerList: IUser[];
+  prefixes: string[];
+  regions: IRegion[];
+}
+
+type ServerModelType = Model<IServerModel, ServerQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type ServerModelQuery = Query<
   any,
-  HydratedDocument<IServer>,
+  HydratedDocument<IServerModel>,
   ServerQueryHelpers
 > &
   ServerQueryHelpers;
@@ -30,7 +54,7 @@ interface ServerQueryHelpers {
 
 export const ServerSchema: Schema = new Schema({
   serverId: { type: String, required: true },
-  adminRoleIds: { type: [String], required: false },
+  adminRoleIds: { type: [String], required: true },
   discovery: {
     type: {
       description: { type: String, required: false },
@@ -40,11 +64,11 @@ export const ServerSchema: Schema = new Schema({
     },
     required: true,
   },
-  modRoleIds: { type: [String], required: false },
+  modRoleIds: { type: [String], required: true },
   name: { type: String, required: true },
-  playerList: { type: [Schema.Types.ObjectId], ref: "User" },
-  prefixes: { type: [String], required: false },
-  regions: { type: [Schema.Types.ObjectId], ref: "Region" },
+  playerList: { type: [Schema.Types.ObjectId], ref: "User", required: true },
+  prefixes: { type: [String], required: true },
+  regions: { type: [Schema.Types.ObjectId], ref: "Region", required: true },
 });
 
 const ServerModel = model<IServer, ServerModelType>(

@@ -1,15 +1,8 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageComponentInteraction,
-} from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
-import { IServerMenu } from "../interfaces/menu";
+import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getServerOptionsEmbed = async (
-  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-  menu: IServerMenu,
-) => {
+const getServerOptionsEmbed = (menu: AdminMenu) => {
   const prefixes: string =
     menu.server.prefixes && menu.server.prefixes.length > 0
       ? menu.server.prefixes.map((prefix) => `\`${prefix}\``).join(", ")
@@ -28,7 +21,7 @@ const getServerOptionsEmbed = async (
     .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Server Options:`,
-      iconURL: interaction.guild?.iconURL() || undefined,
+      iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
     })
     .setDescription(
       `${menu.prompt ? "**" + menu.prompt + "**\n\n" : ""}` +

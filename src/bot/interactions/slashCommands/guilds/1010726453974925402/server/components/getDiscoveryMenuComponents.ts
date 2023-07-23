@@ -6,7 +6,7 @@ import ServerOption from "@bot/interactions/buttons/server/option";
  * Creates the action row buttons for the discovery menu
  * @returns {ActionRowBuilder<ButtonBuilder>[]} - The action row buttons for the discovery menu
  */
-const createDiscoveryMenu = (
+const getDiscoveryMenuComponents = (
   enabled?: boolean,
 ): ActionRowBuilder<ButtonBuilder>[] => {
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
@@ -36,4 +36,4 @@ const createDiscoveryMenu = (
   return [actionRow];
 };
 
-export default createDiscoveryMenu;
+export default getDiscoveryMenuComponents;

@@ -1,17 +1,14 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
-import { IServer } from "@models/server.model";
+import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getInitializedEmbed = (
-  server: IServer,
-  interaction: ChatInputCommandInteraction,
-) => {
+const getInitializedEmbed = (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
     .setTimestamp()
     .setAuthor({
-      name: `${server.name} Initialized!`,
-      iconURL: interaction.guild?.iconURL() || undefined,
+      name: `${menu.server.name} Initialized!`,
+      iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
     })
     .setDescription(
       `Congratulations, your server has been initialized with PokeSandbox!\n` +

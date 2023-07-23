@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
 import ServerOption from "@bot/interactions/buttons/server/option";
 
-const createServerMenu = (): ActionRowBuilder<ButtonBuilder>[] => {
+const getServerMenuComponents = (): ActionRowBuilder<ButtonBuilder>[] => {
   return [
     new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -39,4 +39,4 @@ const createServerMenu = (): ActionRowBuilder<ButtonBuilder>[] => {
   ];
 };
 
-export default createServerMenu;
+export default getServerMenuComponents;

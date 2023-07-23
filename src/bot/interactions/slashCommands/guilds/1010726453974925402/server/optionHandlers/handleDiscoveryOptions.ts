@@ -1,59 +1,25 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  EmbedBuilder,
-  GuildMember,
-  Message,
-  MessageComponentInteraction,
-} from "discord.js";
-
-import { BotClient } from "@bot/index";
-import buildErrorEmbed from "@bot/embeds/errorEmbed";
-import createDiscoveryMenu from "../utils/createDiscoveryMenu";
-import getDiscoveryOptionsEmbed from "../embeds/discoveryOptionsEmbed";
-import handleMenuUpdate from "../utils/handleMenuUpdate";
+import { AdminMenu } from "@bot/classes/adminMenu";
+import getDiscoveryMenuComponents from "../components/getDiscoveryMenuComponents";
+import getDiscoveryOptionsEmbed from "../embeds/getDiscoveryMenuEmbed";
 import handleSetDescription from "./handleSetDescription";
-
-import { IServerMenu } from "../interfaces/menu";
 import { upsertServer } from "@services/server.service";
 
-const handleDiscoveryOptions = async (
-  client: BotClient,
-  menu: IServerMenu,
-): Promise<IServerMenu | undefined> => {
+const handleDiscoveryOptions = async (menu: AdminMenu): Promise<void> => {
   let isBackSelected = false;
+  menu.prompt = "Select an option to update your Server Discovery settings.";
 
   while (!menu.isCancelled && !isBackSelected) {
-    const components: ActionRowBuilder<ButtonBuilder>[] = createDiscoveryMenu(
-      menu.server.discovery.enabled,
-    );
+    menu.components = getDiscoveryMenuComponents(menu.server.discovery.enabled);
     if (!menu.server.discovery.enabled && !menu.server.discovery.description) {
-      components[0].components[0].setDisabled(true);
+      menu.components[0].components[0].setDisabled(true);
     }
+    menu.embeds = [await getDiscoveryOptionsEmbed(menu)];
 
-    menu.prompt = "Select an option to update your Server Discovery settings.";
-    const embeds: EmbedBuilder[] = [
-      await getDiscoveryOptionsEmbed(
-        menu.interaction as MessageComponentInteraction,
-        menu,
-      ),
-    ];
-
-    menu = await handleMenuUpdate(menu, { components, embeds });
-
-    const filter = (
-      componentInteraction: MessageComponentInteraction,
-    ): boolean => {
-      return componentInteraction.user === menu.interaction?.user;
-    };
+    await menu.handleMenuReset();
 
     try {
       // TODO: Change timeout later
-      menu.interaction = await (menu.message as Message).awaitMessageComponent({
-        filter,
-        time: 60_000,
-      });
-      const option: string = menu.interaction.customId.split("_")[1];
+      const option = await menu.awaitButtonMenuInteraction(60_000);
 
       switch (option) {
         case "Back":
@@ -61,12 +27,7 @@ const handleDiscoveryOptions = async (
           isBackSelected = true;
           break;
         case "Cancel":
-          menu.interaction.update({
-            content: "*Command Cancelled*",
-            components: [],
-            embeds: [],
-          });
-          menu.isCancelled = true;
+          await menu.cancelMenu();
           break;
         case "Enable":
         case "Disable":
@@ -77,27 +38,15 @@ const handleDiscoveryOptions = async (
           await upsertServer({ serverId: menu.server.serverId }, menu.server);
           break;
         case "Set Description":
-          menu = (await handleSetDescription(client, menu)) || menu;
+          await handleSetDescription(menu);
           break;
         default:
           throw new Error("Invalid option selected");
       }
-    } catch (e) {
-      console.error(e);
-      await (menu.message as Message).edit({
-        embeds: [
-          buildErrorEmbed(
-            client,
-            menu.interaction?.member as GuildMember,
-            "Sorry, the Server Discovery Options menu has timed out. Please try again!",
-          ),
-        ],
-        components: [],
-      });
-      menu.isCancelled = true;
+    } catch (error) {
+      await menu.handleError(error);
     }
   }
-  return menu;
 };
 
 export default handleDiscoveryOptions;

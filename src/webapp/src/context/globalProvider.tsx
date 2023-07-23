@@ -21,14 +21,14 @@ const GlobalProvider: React.FC<GlobalContextProps> = ({ children }) => {
   const getServerById = (serverId: string): IServer | undefined => {
     return servers.find(
       (server: IServer) =>
-        server.serverId === serverId || server._id === serverId
+        server.serverId === serverId || server._id === serverId,
     );
   };
 
   const getServersByIds = (serverIds: string[]): IServer[] => {
     return servers.filter(
       (server: IServer) =>
-        serverIds.includes(server.serverId) || serverIds.includes(server._id)
+        serverIds.includes(server.serverId) || serverIds.includes(server._id),
     );
   };
 

@@ -1,6 +1,8 @@
 import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
-export interface IUser {
+import type { IServer } from "./server.model";
+
+export interface IUserModel {
   avatar?: string;
   servers: Types.ObjectId[];
   userId: string;
@@ -8,9 +10,26 @@ export interface IUser {
   username: string;
 }
 
-type UserModelType = Model<IUser, UserQueryHelpers>;
+export interface IUser extends IUserModel {
+  _id: Types.ObjectId;
+}
+
+export interface IUserPopulated {
+  _id: Types.ObjectId;
+  avatar?: string;
+  servers: IServer[];
+  userId: string;
+  userTag: string;
+  username: string;
+}
+
+type UserModelType = Model<IUserModel, UserQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type UserModelQuery = Query<any, HydratedDocument<IUser>, UserQueryHelpers> &
+type UserModelQuery = Query<
+  any,
+  HydratedDocument<IUserModel>,
+  UserQueryHelpers
+> &
   UserQueryHelpers;
 interface UserQueryHelpers {
   byUserId(this: UserModelQuery, userId: string): UserModelQuery;
@@ -24,6 +43,6 @@ export const UserSchema: Schema = new Schema({
   username: { type: String, required: true },
 });
 
-const UserModel = model<IUser, UserModelType>("User", UserSchema, "users");
+const UserModel = model<IUserModel, UserModelType>("User", UserSchema, "users");
 
 export default UserModel;
