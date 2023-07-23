@@ -2,11 +2,11 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
 import { BotClient } from "@bot/index";
-import createServerMenu from "./components/getServerMenuComponents";
 import { findServer } from "@services/server.service";
-import getInitializedEmbed from "./embeds/getServerInitializedEmbed";
-import getServerOptionsEmbed from "./embeds/getServerMenuEmbed";
-import handleDiscoveryOptions from "./optionHandlers/handleDiscoveryOptions";
+import getServerInitializedEmbed from "./embeds/getServerInitializedEmbed";
+import getServerMenuComponents from "./components/getServerMenuComponents";
+import getServerMenuEmbed from "./embeds/getServerMenuEmbed";
+import handleDiscoveryMenu from "./submenus/discoveryMenu/discoveryMenu";
 import handleUpdatePrefixes from "./optionHandlers/handleUpdatePrefixes";
 import handleUpdateRoles from "./optionHandlers/handleUpdateRoles";
 
@@ -36,23 +36,21 @@ const Server: ISlashCommand = {
 
     const menu = new AdminMenu(client, interaction);
     if ((await menu.initialize()) === false) {
-      await interaction.followUp({ embeds: [getInitializedEmbed(menu)] });
+      await interaction.followUp({ embeds: [getServerInitializedEmbed(menu)] });
     }
 
     await menu.populateAdminRoles();
     await menu.populateModRoles();
 
     while (!menu.isCancelled) {
-      menu.components = createServerMenu();
-      menu.embeds = [getServerOptionsEmbed(menu)];
+      menu.components = getServerMenuComponents();
+      menu.embeds = [getServerMenuEmbed(menu)];
 
       await menu.sendEmbedMessage();
 
       try {
-        // TODO: Change timeout later
-        let option = await menu.awaitButtonMenuInteraction(60_000);
+        const option = await menu.awaitButtonMenuInteraction(120_000);
 
-        option = "test";
         switch (option) {
           case "Cancel":
             await menu.cancelMenu();
@@ -65,7 +63,7 @@ const Server: ISlashCommand = {
             await handleUpdateRoles(menu, option);
             break;
           case "Discovery":
-            await handleDiscoveryOptions(menu);
+            await handleDiscoveryMenu(menu);
             break;
           default:
             await menu.handleError();

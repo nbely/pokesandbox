@@ -1,18 +1,17 @@
 import { AdminMenu } from "@bot/classes/adminMenu";
-import getServerOptionsEmbed from "../embeds/getServerMenuEmbed";
+import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
 const handleAddPrefix = async (menu: AdminMenu): Promise<void> => {
   menu.prompt =
     "Please enter a new prefix to use with this bot on your server.";
   menu.components = [];
-  menu.embeds = [getServerOptionsEmbed(menu)];
+  menu.embeds = [getServerMenuEmbed(menu)];
 
   await menu.updateEmbedMessage();
 
   try {
-    // TODO: Change timeout late
-    const response = await menu.awaitMessageReply(60_000);
+    const response = await menu.awaitMessageReply(600_000);
 
     if (!menu.server.prefixes?.includes(response)) {
       menu.server.prefixes = [...menu.server.prefixes, response];
@@ -21,7 +20,6 @@ const handleAddPrefix = async (menu: AdminMenu): Promise<void> => {
     } else {
       menu.prompt = "Oops! The entered prefix already exists for this server.";
     }
-    menu.isReset = true;
   } catch (error) {
     await menu.handleError(error);
   }

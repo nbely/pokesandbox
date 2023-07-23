@@ -4,7 +4,7 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 import ServerOption from "@bot/interactions/buttons/server/option";
 import paginateButtons from "@bot/utils/paginateButtons";
 
-const getRoleMenuComponents = (
+const getUpdateRolesComponents = (
   menu: AdminMenu,
   roleIds: string[],
   roles: (string | Role)[] | undefined,
@@ -38,4 +38,4 @@ const getRoleMenuComponents = (
   );
 };
 
-export default getRoleMenuComponents;
+export default getUpdateRolesComponents;

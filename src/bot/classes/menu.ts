@@ -54,6 +54,7 @@ export class Menu {
     if (!response) {
       throw new Error("Invalid response received.");
     }
+    this.isReset = true;
     return response;
   }
 

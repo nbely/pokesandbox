@@ -1,6 +1,6 @@
 import { AdminMenu } from "@bot/classes/adminMenu";
-import getPrefixMenuComponents from "../components/getPrefixMenuComponents";
-import getServerOptionsEmbed from "../embeds/getServerMenuEmbed";
+import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
+import getUpdatePrefixesComponents from "../components/getUpdatePrefixesComponents";
 import handleAddPrefix from "./handleAddPrefix";
 import { upsertServer } from "@services/server.service";
 
@@ -10,14 +10,13 @@ const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
   menu.prompt = "Add or Remove a Prefix.";
 
   while (!menu.isCancelled && !isBackSelected) {
-    menu.components = getPrefixMenuComponents(menu);
-    menu.embeds = [getServerOptionsEmbed(menu)];
+    menu.components = getUpdatePrefixesComponents(menu);
+    menu.embeds = [getServerMenuEmbed(menu)];
 
     await menu.handleMenuReset();
 
     try {
-      // TODO: Change timeout later
-      const option = await menu.awaitButtonMenuInteraction(60_000);
+      const option = await menu.awaitButtonMenuInteraction(120_000);
 
       switch (option) {
         case "Back":

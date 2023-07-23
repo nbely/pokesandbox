@@ -1,10 +1,10 @@
 import { AdminMenu } from "@bot/classes/adminMenu";
-import getDiscoveryMenuComponents from "../components/getDiscoveryMenuComponents";
-import getDiscoveryOptionsEmbed from "../embeds/getDiscoveryMenuEmbed";
-import handleSetDescription from "./handleSetDescription";
+import getDiscoveryMenuComponents from "./components/getDiscoveryMenuComponents";
+import getDiscoveryMenuEmbed from "./embeds/getDiscoveryMenuEmbed";
+import handleSetDescription from "./optionHandlers/handleSetDescription";
 import { upsertServer } from "@services/server.service";
 
-const handleDiscoveryOptions = async (menu: AdminMenu): Promise<void> => {
+const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
   let isBackSelected = false;
   menu.prompt = "Select an option to update your Server Discovery settings.";
 
@@ -13,13 +13,12 @@ const handleDiscoveryOptions = async (menu: AdminMenu): Promise<void> => {
     if (!menu.server.discovery.enabled && !menu.server.discovery.description) {
       menu.components[0].components[0].setDisabled(true);
     }
-    menu.embeds = [await getDiscoveryOptionsEmbed(menu)];
+    menu.embeds = [await getDiscoveryMenuEmbed(menu)];
 
     await menu.handleMenuReset();
 
     try {
-      // TODO: Change timeout later
-      const option = await menu.awaitButtonMenuInteraction(60_000);
+      const option = await menu.awaitButtonMenuInteraction(120_000);
 
       switch (option) {
         case "Back":
@@ -49,4 +48,4 @@ const handleDiscoveryOptions = async (menu: AdminMenu): Promise<void> => {
   }
 };
 
-export default handleDiscoveryOptions;
+export default handleDiscoveryMenu;

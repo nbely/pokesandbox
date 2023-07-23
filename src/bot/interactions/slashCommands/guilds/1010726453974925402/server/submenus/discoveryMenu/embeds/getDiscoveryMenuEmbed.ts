@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getDiscoveryOptionsEmbed = async (menu: AdminMenu) => {
+const getDiscoveryMenuEmbed = async (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
     .setTimestamp()
@@ -23,4 +23,4 @@ const getDiscoveryOptionsEmbed = async (menu: AdminMenu) => {
     );
 };
 
-export default getDiscoveryOptionsEmbed;
+export default getDiscoveryMenuEmbed;

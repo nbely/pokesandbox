@@ -1,8 +1,8 @@
 import { Role } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
-import getRoleMenuComponents from "../components/getRoleMenuComponents";
-import getServerOptionsEmbed from "../embeds/getServerMenuEmbed";
+import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
+import getUpdateRolesComponents from "../components/getUpdateRolesComponents";
 import handleAddRole from "./handleAddRole";
 import { upsertServer } from "@services/server.service";
 
@@ -15,19 +15,18 @@ const handleUpdateRoles = async (
   menu.prompt = `Add or Remove a Role with Bot ${roleType} privileges.`;
 
   while (!menu.isCancelled && !isBackSelected) {
-    menu.embeds = [getServerOptionsEmbed(menu)];
+    menu.embeds = [getServerMenuEmbed(menu)];
 
     const roleIds: string[] =
       roleType === "Admin" ? menu.server.adminRoleIds : menu.server.modRoleIds;
     const roles: (string | Role)[] | undefined =
       roleType === "Admin" ? menu.adminRoles : menu.modRoles;
-    menu.components = getRoleMenuComponents(menu, roleIds, roles);
+    menu.components = getUpdateRolesComponents(menu, roleIds, roles);
 
     await menu.handleMenuReset();
 
     try {
-      // TODO: Change timeout later
-      const option = await menu.awaitButtonMenuInteraction(60_000);
+      const option = await menu.awaitButtonMenuInteraction(120_000);
 
       switch (option) {
         case "Back":

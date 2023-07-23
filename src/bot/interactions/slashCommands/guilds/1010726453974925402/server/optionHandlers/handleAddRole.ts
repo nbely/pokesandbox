@@ -1,10 +1,10 @@
 import { ActionRowBuilder, Role, RoleSelectMenuBuilder } from "discord.js";
 
+import { AdminMenu } from "@bot/classes/adminMenu";
 import AddRoleMenu from "@bot/interactions/roleSelectMenus/server/addRole";
-import getServerOptionsEmbed from "../embeds/getServerMenuEmbed";
+import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
-import { AdminMenu } from "@bot/classes/adminMenu";
 
 const handleAddRole = async (
   menu: AdminMenu,
@@ -17,13 +17,12 @@ const handleAddRole = async (
       AddRoleMenu.create(),
     ),
   ];
-  menu.embeds = [getServerOptionsEmbed(menu)];
+  menu.embeds = [getServerMenuEmbed(menu)];
 
   await menu.updateEmbedMessage();
 
   try {
-    // TODO: Change timeout later
-    const selectedRoleId = await menu.awaitRoleMenuInteraction(60_000);
+    const selectedRoleId = await menu.awaitRoleMenuInteraction(120_000);
 
     if (!roleIds?.includes(selectedRoleId)) {
       const newRole: string | Role =

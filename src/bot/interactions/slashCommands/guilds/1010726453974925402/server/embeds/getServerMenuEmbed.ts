@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getServerOptionsEmbed = (menu: AdminMenu) => {
+const getServerMenuEmbed = (menu: AdminMenu) => {
   const prefixes: string =
     menu.server.prefixes && menu.server.prefixes.length > 0
       ? menu.server.prefixes.map((prefix) => `\`${prefix}\``).join(", ")
@@ -36,4 +36,4 @@ const getServerOptionsEmbed = (menu: AdminMenu) => {
     );
 };
 
-export default getServerOptionsEmbed;
+export default getServerMenuEmbed;

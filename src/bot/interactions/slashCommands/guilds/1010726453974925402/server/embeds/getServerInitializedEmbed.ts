@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getInitializedEmbed = (menu: AdminMenu) => {
+const getServerInitializedEmbed = (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
     .setTimestamp()
@@ -18,4 +18,4 @@ const getInitializedEmbed = (menu: AdminMenu) => {
     );
 };
 
-export default getInitializedEmbed;
+export default getServerInitializedEmbed;

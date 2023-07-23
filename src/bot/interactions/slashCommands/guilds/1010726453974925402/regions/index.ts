@@ -6,6 +6,7 @@ import { findServer } from "@services/server.service";
 import getRegionsMenuComponents from "./components/getRegionsMenuComponents";
 import getRegionsMenuEmbed from "./embeds/getRegionsMenuEmbed";
 import handleCreateRegion from "./optionHandlers/handleCreateRegion";
+import handleManageRegionMenu from "./submenus/manageRegionMenu/manageRegionMenu";
 
 import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
@@ -47,8 +48,7 @@ const Regions: ISlashCommand = {
       await menu.sendEmbedMessage();
 
       try {
-        // TODO: Change timeout later
-        const option = await menu.awaitButtonMenuInteraction(60_000);
+        const option = await menu.awaitButtonMenuInteraction(120_000);
 
         switch (option) {
           case "Cancel":
@@ -56,16 +56,13 @@ const Regions: ISlashCommand = {
             break;
           case "Create Region":
             await handleCreateRegion(menu);
-            menu.prompt = `Successfully created a new Region: \`${
-              menu.regions[+option]
-            }\``;
             break;
           default:
             if (!option || Number.isNaN(+option))
               throw new Error("Invalid Option Selected");
 
             menu.region = menu.regions[+option];
-            // await handleRegionOptions(menu)
+            await handleManageRegionMenu(menu)
             break;
         }
       } catch (error) {

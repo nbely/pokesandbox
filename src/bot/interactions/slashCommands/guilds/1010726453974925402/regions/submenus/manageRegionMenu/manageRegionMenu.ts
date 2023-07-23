@@ -2,13 +2,13 @@ import { Types } from "mongoose";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
 import { createRegion } from "@services/region.service";
-import getCreateFirstRegionEmbed from "../embeds/getCreateFirstRegionEmbed";
-import getRegionsMenuEmbed from "../embeds/getRegionsMenuEmbed";
+import getCreateFirstRegionEmbed from "../../embeds/getCreateFirstRegionEmbed";
+import getRegionsMenuEmbed from "../../embeds/getRegionsMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
 import type { IRegion } from "@models/region.model";
 
-const handleCreateRegion = async (menu: AdminMenu): Promise<void> => {
+const handleManageRegionMenu = async (menu: AdminMenu): Promise<void> => {
   menu.prompt =
     "Please enter a name for your new Region.";
   menu.components = [];
@@ -38,4 +38,4 @@ const handleCreateRegion = async (menu: AdminMenu): Promise<void> => {
   }
 };
 
-export default handleCreateRegion;
+export default handleManageRegionMenu;

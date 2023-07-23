@@ -4,7 +4,7 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 import ServerOption from "@bot/interactions/buttons/server/option";
 import paginateButtons from "@bot/utils/paginateButtons";
 
-const getPrefixMenuComponents = (
+const getUpdatePrefixesComponents = (
   menu: AdminMenu,
 ): ActionRowBuilder<ButtonBuilder>[] => {
   const fixedStartButtons: ButtonBuilder[] = [
@@ -35,4 +35,4 @@ const getPrefixMenuComponents = (
   );
 };
 
-export default getPrefixMenuComponents;
+export default getUpdatePrefixesComponents;
