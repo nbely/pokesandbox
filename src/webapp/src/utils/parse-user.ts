@@ -21,7 +21,7 @@ export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
   try {
     const { iat, exp, ...user } = verify(
       token,
-      process.env.JWT_SECRET as string
+      process.env.JWT_SECRET as string,
     ) as DiscordUser & { iat: number; exp: number };
     return user;
   } catch (e) {

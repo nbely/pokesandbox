@@ -3,18 +3,16 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { AdminMenu } from "@bot/classes/adminMenu";
 import { BotClient } from "@bot/index";
 import { findServer } from "@services/server.service";
-import getServerInitializedEmbed from "./embeds/getServerInitializedEmbed";
-import getServerMenuComponents from "./components/getServerMenuComponents";
-import getServerMenuEmbed from "./embeds/getServerMenuEmbed";
-import handleDiscoveryMenu from "./submenus/discoveryMenu/discoveryMenu";
-import handleUpdatePrefixes from "./optionHandlers/handleUpdatePrefixes";
-import handleUpdateRoles from "./optionHandlers/handleUpdateRoles";
+import getRegionsMenuComponents from "./components/getRegionsMenuComponents";
+import getRegionsMenuEmbed from "./embeds/getRegionsMenuEmbed";
+import handleCreateRegion from "./optionHandlers/handleCreateRegion";
+import handleManageRegionMenu from "./submenus/manageRegionMenu/manageRegionMenu";
 
 import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
 
-const Server: ISlashCommand = {
-  name: "server",
+const Regions: ISlashCommand = {
+  name: "regions",
   anyUserPermissions: ["Administrator"],
   onlyRoles: async (guildId: string): Promise<string[]> => {
     const server: IServer | null = await findServer({ serverId: guildId });
@@ -24,27 +22,28 @@ const Server: ISlashCommand = {
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
-    .setName("server")
-    .setDescription("Update your PokeSandbox server settings")
+    .setName("regions")
+    .setDescription("Manage Regions for your PokéSandbox server")
     .setDMPermission(false),
   execute: async (
     client: BotClient,
     interaction: ChatInputCommandInteraction,
   ) => {
     await interaction.deferReply();
-    if (!interaction.guild) return;
 
     const menu = new AdminMenu(client, interaction);
-    if ((await menu.initialize()) === false) {
-      await interaction.followUp({ embeds: [getServerInitializedEmbed(menu)] });
+    if ((await menu.initialize()) === false) return;
+
+    if (menu.server.regions.length === 0) {
+      await handleCreateRegion(menu);
+    } else {
+      await menu.populateRegions();
     }
 
-    await menu.populateAdminRoles();
-    await menu.populateModRoles();
-
     while (!menu.isCancelled) {
-      menu.components = getServerMenuComponents();
-      menu.embeds = [getServerMenuEmbed(menu)];
+      menu.prompt = menu.prompt || "Please select a Region to manage.";
+      menu.components = getRegionsMenuComponents(menu);
+      menu.embeds = [getRegionsMenuEmbed(menu)];
 
       await menu.sendEmbedMessage();
 
@@ -55,18 +54,22 @@ const Server: ISlashCommand = {
           case "Cancel":
             await menu.cancel();
             break;
-          case "Prefix":
-            await handleUpdatePrefixes(menu);
+          case "Create Region":
+            await handleCreateRegion(menu);
             break;
-          case "Admin":
-          case "Mod":
-            await handleUpdateRoles(menu, option);
+          case "Next":
+            menu.currentPage++;
             break;
-          case "Discovery":
-            await handleDiscoveryMenu(menu);
+          case "Previous":
+            menu.currentPage--;
             break;
           default:
-            await menu.handleError();
+            if (!option || Number.isNaN(+option))
+              throw new Error("Invalid Option Selected");
+
+            menu.region = menu.regions[+option];
+            await handleManageRegionMenu(menu);
+            break;
         }
       } catch (error) {
         await menu.handleError(error);
@@ -75,4 +78,4 @@ const Server: ISlashCommand = {
   },
 };
 
-export default Server;
+export default Regions;

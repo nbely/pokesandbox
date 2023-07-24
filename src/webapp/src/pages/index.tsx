@@ -64,10 +64,10 @@ export const getServerSideProps: GetServerSideProps<HomeProps> =
     }
 
     const dbServersResponse: Response = await fetch(
-      `http://localhost:3000/servers/`
+      `http://localhost:3000/servers/`,
     );
     const dbUserResponse: Response = await fetch(
-      `http://localhost:3000/user/${discordUser.id}`
+      `http://localhost:3000/user/${discordUser.id}`,
     );
 
     const servers = (await dbServersResponse.json()) as { data: IServer[] };

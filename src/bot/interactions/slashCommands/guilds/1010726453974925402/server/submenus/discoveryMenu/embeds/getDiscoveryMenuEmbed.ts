@@ -1,21 +1,13 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageComponentInteraction,
-} from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
-import { IServerMenu } from "../interfaces/menu";
+import { AdminMenu } from "@bot/classes/adminMenu";
 
-const getDiscoveryOptionsEmbed = async (
-  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-  menu: IServerMenu,
-) => {
+const getDiscoveryMenuEmbed = async (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
-    .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Discovery Settings:`,
-      iconURL: interaction.guild?.iconURL() || undefined,
+      iconURL: menu.componentInteraction?.guild?.iconURL() ?? undefined,
     })
     .setDescription(`${menu.prompt ? "" + menu.prompt + "\n\n" : ""}`)
     .addFields(
@@ -27,7 +19,8 @@ const getDiscoveryOptionsEmbed = async (
         name: "Server Description:",
         value: menu.server.discovery.description || "None",
       },
-    );
+    )
+    .setTimestamp();
 };
 
-export default getDiscoveryOptionsEmbed;
+export default getDiscoveryMenuEmbed;

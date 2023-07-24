@@ -26,7 +26,7 @@ const Servers: React.FC<ServersProps> = (props) => {
         {servers.map((server: IServer) =>
           server.discovery.enabled ? (
             <ServerCard key={server.serverId} server={server} />
-          ) : null
+          ) : null,
         )}
       </div>
     </div>
@@ -37,7 +37,7 @@ export const getServerSideProps: GetServerSideProps<
   ServersProps
 > = async () => {
   const dbServersResponse: Response = await fetch(
-    `http://localhost:3000/servers/`
+    `http://localhost:3000/servers/`,
   );
   const servers = (await dbServersResponse.json()) as { data: IServer[] };
 
