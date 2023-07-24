@@ -18,7 +18,6 @@ const getServerMenuEmbed = (menu: AdminMenu) => {
 
   return new EmbedBuilder()
     .setColor("Gold")
-    .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Server Options:`,
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
@@ -33,7 +32,8 @@ const getServerMenuEmbed = (menu: AdminMenu) => {
             ? "Modify Server Discovery Settings"
             : "Enable Server Discovery"
         }`,
-    );
+    )
+    .setTimestamp();
 };
 
 export default getServerMenuEmbed;

@@ -5,10 +5,11 @@ import handleSetDescription from "./optionHandlers/handleSetDescription";
 import { upsertServer } from "@services/server.service";
 
 const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
-  let isBackSelected = false;
-  menu.prompt = "Select an option to update your Server Discovery settings.";
-
-  while (!menu.isCancelled && !isBackSelected) {
+  menu.isBackSelected = false;
+  
+  while (!menu.isBackSelected && !menu.isCancelled) {
+    menu.prompt = menu.prompt || "Select an option to update your Server Discovery settings.";
+    menu.isBackSelected = false;
     menu.components = getDiscoveryMenuComponents(menu.server.discovery.enabled);
     if (!menu.server.discovery.enabled && !menu.server.discovery.description) {
       menu.components[0].components[0].setDisabled(true);
@@ -22,11 +23,10 @@ const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
 
       switch (option) {
         case "Back":
-          menu.prompt = "";
-          isBackSelected = true;
+          menu.back();
           break;
         case "Cancel":
-          await menu.cancelMenu();
+          await menu.cancel();
           break;
         case "Enable":
         case "Disable":

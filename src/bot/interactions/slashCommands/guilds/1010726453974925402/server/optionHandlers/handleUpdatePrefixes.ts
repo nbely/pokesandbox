@@ -5,11 +5,12 @@ import handleAddPrefix from "./handleAddPrefix";
 import { upsertServer } from "@services/server.service";
 
 const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
-  let isBackSelected = false;
   menu.currentPage = 1;
-  menu.prompt = "Add or Remove a Prefix.";
-
-  while (!menu.isCancelled && !isBackSelected) {
+  menu.isBackSelected = false;
+  
+  while (!menu.isBackSelected && !menu.isCancelled) {
+    menu.isBackSelected = false;
+    menu.prompt = menu.prompt || "Add or Remove a Prefix.";
     menu.components = getUpdatePrefixesComponents(menu);
     menu.embeds = [getServerMenuEmbed(menu)];
 
@@ -20,11 +21,10 @@ const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
 
       switch (option) {
         case "Back":
-          menu.prompt = "";
-          isBackSelected = true;
+          menu.back();
           break;
         case "Cancel":
-          await menu.cancelMenu();
+          await menu.cancel();
           break;
         case "Next":
           menu.currentPage++;

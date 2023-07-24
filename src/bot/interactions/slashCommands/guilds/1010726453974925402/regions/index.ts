@@ -10,6 +10,7 @@ import handleManageRegionMenu from "./submenus/manageRegionMenu/manageRegionMenu
 
 import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
+import { deleteAllRegions } from "@services/region.service";
 
 const Regions: ISlashCommand = {
   name: "regions",
@@ -33,15 +34,15 @@ const Regions: ISlashCommand = {
 
     const menu = new AdminMenu(client, interaction);
     if ((await menu.initialize()) === false) return;
-    menu.prompt = "Please select a Region to manage.";
-
+    
     if (menu.server.regions.length === 0) {
       await handleCreateRegion(menu);
     } else {
       await menu.populateRegions();
     }
-
+    
     while (!menu.isCancelled) {
+      menu.prompt = menu.prompt || "Please select a Region to manage.";
       menu.components = getRegionsMenuComponents(menu);
       menu.embeds = [getRegionsMenuEmbed(menu)];
 
@@ -52,10 +53,16 @@ const Regions: ISlashCommand = {
 
         switch (option) {
           case "Cancel":
-            await menu.cancelMenu();
+            await menu.cancel();
             break;
           case "Create Region":
             await handleCreateRegion(menu);
+            break;
+          case 'Next':
+            menu.currentPage++;
+            break;
+          case 'Previous':
+            menu.currentPage--;
             break;
           default:
             if (!option || Number.isNaN(+option))

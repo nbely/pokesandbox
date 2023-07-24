@@ -14,7 +14,7 @@ const getRegionsMenuComponents = (
     ServerOption.create({ label: "Cancel", style: ButtonStyle.Secondary }),
   ];
 
-  const manageRegionButtons = menu.regions.map((region, index) => {
+  const regionsButtons = menu.regions.map((region, index) => {
     return ServerOption.create({
       label: `${region.name}`,
       style: ButtonStyle.Primary,
@@ -23,7 +23,7 @@ const getRegionsMenuComponents = (
   });
 
   return paginateButtons(
-    manageRegionButtons,
+    regionsButtons,
     menu.currentPage,
     fixedStartButtons,
     fixedEndButtons,

@@ -53,7 +53,7 @@ const Server: ISlashCommand = {
 
         switch (option) {
           case "Cancel":
-            await menu.cancelMenu();
+            await menu.cancel();
             break;
           case "Prefix":
             await handleUpdatePrefixes(menu);

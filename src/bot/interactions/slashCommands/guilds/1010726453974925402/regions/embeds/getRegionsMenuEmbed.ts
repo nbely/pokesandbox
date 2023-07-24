@@ -5,7 +5,6 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 const getRegionsMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
   return new EmbedBuilder()
     .setColor("Gold")
-    .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Region Manager:`,
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
@@ -13,7 +12,8 @@ const getRegionsMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
     .setDescription(
       `${menu.prompt ? "**" + menu.prompt + "**\n\n" : ""}` +
         menu.regions.map((region) => `${region.name}: Inactive`).join("\n"),
-    );
+    )
+    .setTimestamp();
 };
 
 export default getRegionsMenuEmbed;

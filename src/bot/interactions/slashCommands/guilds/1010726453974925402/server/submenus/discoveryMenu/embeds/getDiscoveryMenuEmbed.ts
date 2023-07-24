@@ -5,7 +5,6 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 const getDiscoveryMenuEmbed = async (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
-    .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Discovery Settings:`,
       iconURL: menu.componentInteraction?.guild?.iconURL() ?? undefined,
@@ -20,7 +19,8 @@ const getDiscoveryMenuEmbed = async (menu: AdminMenu) => {
         name: "Server Description:",
         value: menu.server.discovery.description || "None",
       },
-    );
+    )
+    .setTimestamp();
 };
 
 export default getDiscoveryMenuEmbed;

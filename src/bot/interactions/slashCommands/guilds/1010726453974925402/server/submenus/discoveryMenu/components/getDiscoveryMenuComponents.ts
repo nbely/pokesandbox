@@ -9,31 +9,33 @@ import ServerOption from "@bot/interactions/buttons/server/option";
 const getDiscoveryMenuComponents = (
   enabled?: boolean,
 ): ActionRowBuilder<ButtonBuilder>[] => {
-  const actionRow = new ActionRowBuilder<ButtonBuilder>();
-  if (enabled) {
-    actionRow.addComponents(
-      ServerOption.create({ label: "Disable", style: ButtonStyle.Danger }),
-    );
-  } else {
-    actionRow.addComponents(
-      ServerOption.create({ label: "Enable", style: ButtonStyle.Success }),
-    );
-  }
-  actionRow
-    .addComponents(
-      ServerOption.create({
-        label: "Set Description",
-        style: ButtonStyle.Primary,
-      }),
-    )
-    .addComponents(
-      ServerOption.create({ label: "Back", style: ButtonStyle.Secondary }),
-    )
-    .addComponents(
-      ServerOption.create({ label: "Cancel", style: ButtonStyle.Secondary }),
-    );
-
-  return [actionRow];
+  return [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        ServerOption.create({
+          label: enabled ? "Disable" : "Enable",
+          style: enabled ? ButtonStyle.Danger : ButtonStyle.Success,
+        }),
+      )
+      .addComponents(
+        ServerOption.create({
+          label: "Set Description",
+          style: ButtonStyle.Primary,
+        }),
+      )
+      .addComponents(
+        ServerOption.create({
+          label: "Back",
+          style: ButtonStyle.Secondary,
+        }),
+      )
+      .addComponents(
+        ServerOption.create({
+          label: "Cancel",
+          style: ButtonStyle.Secondary,
+        }),
+      ),
+  ]
 };
 
 export default getDiscoveryMenuComponents;

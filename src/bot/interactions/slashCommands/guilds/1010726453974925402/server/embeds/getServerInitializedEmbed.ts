@@ -5,7 +5,6 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 const getServerInitializedEmbed = (menu: AdminMenu) => {
   return new EmbedBuilder()
     .setColor("Gold")
-    .setTimestamp()
     .setAuthor({
       name: `${menu.server.name} Initialized!`,
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
@@ -15,7 +14,8 @@ const getServerInitializedEmbed = (menu: AdminMenu) => {
         `\nBelow are some basic commands that will be helpful for getting your server setup and starting with creating your first region:` +
         `\n\`/server\`: Use this command at any time to open up the below options menu and update your PokeSandbox server settings.` +
         `\n\`/regions\`: Use this command to create a new region for your server, or to update existing regions.`,
-    );
+    )
+    .setTimestamp();
 };
 
 export default getServerInitializedEmbed;

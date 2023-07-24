@@ -10,11 +10,12 @@ const handleUpdateRoles = async (
   menu: AdminMenu,
   roleType: string,
 ): Promise<void> => {
-  let isBackSelected = false;
   menu.currentPage = 1;
-  menu.prompt = `Add or Remove a Role with Bot ${roleType} privileges.`;
-
-  while (!menu.isCancelled && !isBackSelected) {
+  menu.isBackSelected = false;
+  
+  while (!menu.isBackSelected && !menu.isCancelled) {
+    menu.isBackSelected = false;
+    menu.prompt = menu.prompt || `Add or Remove a Role with Bot ${roleType} privileges.`;
     menu.embeds = [getServerMenuEmbed(menu)];
 
     const roleIds: string[] =
@@ -29,12 +30,8 @@ const handleUpdateRoles = async (
       const option = await menu.awaitButtonMenuInteraction(120_000);
 
       switch (option) {
-        case "Back":
-          menu.prompt = "";
-          isBackSelected = true;
-          break;
-        case "Cancel":
-          await menu.cancelMenu();
+        case "Add Role":
+          await handleAddRole(menu, roleIds, roleType);
           break;
         case "Next":
           menu.currentPage++;
@@ -42,8 +39,11 @@ const handleUpdateRoles = async (
         case "Previous":
           menu.currentPage--;
           break;
-        case "Add Role":
-          await handleAddRole(menu, roleIds, roleType);
+        case "Back":
+          menu.back();
+          break;
+        case "Cancel":
+          await menu.cancel();
           break;
         default:
           if (!option || Number.isNaN(+option))

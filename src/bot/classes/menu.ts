@@ -23,6 +23,7 @@ export class Menu {
   content?: string;
   currentPage: number = 1;
   embeds: EmbedBuilder[] = [];
+  isBackSelected: boolean = false;
   isCancelled: boolean = false;
   isReset: boolean = false;
   message?: Message;
@@ -67,7 +68,13 @@ export class Menu {
     }
   }
 
-  async cancelMenu(): Promise<void> {
+  async back(): Promise<void> {
+    this.isBackSelected = true;
+    this.prompt = "";
+    this.currentPage = 1;
+  }
+
+  async cancel(): Promise<void> {
     this.components = [];
     this.content = "*Command Cancelled*";
     this.embeds = [];
@@ -100,21 +107,18 @@ export class Menu {
   }
 
   async handleMenuReset(): Promise<void> {
-    if (this.componentInteraction) {
-      if (this.isReset) {
-        if (
-          this.componentInteraction.deferred === false &&
-          this.componentInteraction.replied === false
-        ) {
-          await this.componentInteraction.deferReply();
-        }
-        this.message = await this.componentInteraction.followUp(
-          this.getResponseOptions(),
-        );
-        this.isReset = false;
-      } else {
-        await this.updateEmbedMessage();
+    if (this.isReset) {
+      if (
+        this.componentInteraction?.deferred === false &&
+        this.componentInteraction?.replied === false
+      ) {
+        await this.componentInteraction.deferReply();
       }
+      this.message = await this.componentInteraction?.followUp(this.getResponseOptions())
+        ?? await this.commandInteraction.followUp(this.getResponseOptions());
+      this.isReset = false;
+    } else {
+      await this.updateEmbedMessage();
     }
   }
 
