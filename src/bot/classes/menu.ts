@@ -114,8 +114,11 @@ export class Menu {
       ) {
         await this.componentInteraction.deferReply();
       }
-      this.message = await this.componentInteraction?.followUp(this.getResponseOptions())
-        ?? await this.commandInteraction.followUp(this.getResponseOptions());
+      this.message =
+        (await this.componentInteraction?.followUp(
+          this.getResponseOptions(),
+        )) ??
+        (await this.commandInteraction.followUp(this.getResponseOptions()));
       this.isReset = false;
     } else {
       await this.updateEmbedMessage();

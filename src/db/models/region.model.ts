@@ -14,18 +14,18 @@ export interface IRegionModel {
     frontSpritesEnabled?: boolean;
     iconSpritesEnabled?: boolean;
     mapImageLink?: string;
-  }
+  };
   locations: Types.ObjectId[];
   name: string;
   playerList: Types.ObjectId[];
   pokedex: Types.ObjectId[];
   progressionTypes: {
-    [key: string] : string[] | number;
+    [key: string]: string[] | number;
   };
   quests: {
-    active: Types.ObjectId[],
-    passive: Types.ObjectId[],
-    maxPassiveQuests?: number,
+    active: Types.ObjectId[];
+    passive: Types.ObjectId[];
+    maxPassiveQuests?: number;
   };
   shops: Types.ObjectId[];
   transportationTypes: string[];
@@ -35,34 +35,26 @@ export interface IRegion extends IRegionModel {
   _id: Types.ObjectId;
 }
 
-export interface IRegionPopulated {
-  _id: Types.ObjectId;
-  baseGeneration: number;
-  charactersPerPlayer: number;
+export interface IRegionPopulated
+  extends Omit<
+    IRegion,
+    | "characterList"
+    | "locations"
+    | "playerList"
+    | "pokedex"
+    | "quests"
+    | "shops"
+  > {
   characterList: string[]; // ICharacter[];
-  currencyType: string;
-  deployable: boolean;
-  deployed: boolean;
-  graphicSettings: {
-    backSpritesEnabled?: boolean;
-    frontSpritesEnabled?: boolean;
-    iconSpritesEnabled?: boolean;
-    mapImageLink?: string;
-  }
   locations: string[]; // ILocation[];
-  name: string;
   playerList: IUser[];
   pokedex: string[]; // IDexEntry[];
-  progressionTypes: {
-    [key: string] : string[] | number;
-  };
   quests: {
-    active: string[], // IQuest[];
-    passive: string[], // IQuest[];
-    maxPassiveQuests?: number,
+    active: string[]; // IQuest[];
+    passive: string[]; // IQuest[];
+    maxPassiveQuests?: number;
   };
   shops: string[]; // IShop[];
-  transportationTypes: string[];
 }
 
 type RegionModelType = Model<IRegionModel, RegionQueryHelpers>;

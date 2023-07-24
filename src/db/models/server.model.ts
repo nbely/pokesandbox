@@ -23,20 +23,9 @@ export interface IServer extends IServerModel {
   _id: Types.ObjectId;
 }
 
-export interface IServerPopulated {
-  _id: Types.ObjectId;
-  serverId: string;
-  adminRoleIds: string[];
-  discovery: {
-    description?: string;
-    enabled: boolean;
-    icon?: string;
-    inviteLink?: string;
-  };
-  modRoleIds: string[];
-  name: string;
+export interface IServerPopulated
+  extends Omit<IServer, "playerList" | "regions"> {
   playerList: IUser[];
-  prefixes: string[];
   regions: IRegion[];
 }
 

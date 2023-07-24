@@ -12,10 +12,11 @@ const handleUpdateRoles = async (
 ): Promise<void> => {
   menu.currentPage = 1;
   menu.isBackSelected = false;
-  
+
   while (!menu.isBackSelected && !menu.isCancelled) {
     menu.isBackSelected = false;
-    menu.prompt = menu.prompt || `Add or Remove a Role with Bot ${roleType} privileges.`;
+    menu.prompt =
+      menu.prompt || `Add or Remove a Role with Bot ${roleType} privileges.`;
     menu.embeds = [getServerMenuEmbed(menu)];
 
     const roleIds: string[] =

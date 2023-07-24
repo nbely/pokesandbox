@@ -10,7 +10,7 @@ const paginateButtons = (
   previousButtonStyle?: ButtonStyle,
 ): ActionRowBuilder<ButtonBuilder>[] => {
   const buttonSlotCount =
-    10 - (fixedStartButtons.length) - (fixedEndButtons.length);
+    10 - fixedStartButtons.length - fixedEndButtons.length;
   if (buttonSlotCount <= 0) {
     console.error("No slots for paginated buttons available.");
     return [];

@@ -5,7 +5,6 @@ import AddRoleMenu from "@bot/interactions/roleSelectMenus/server/addRole";
 import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
-
 const handleAddRole = async (
   menu: AdminMenu,
   roleIds: string[],

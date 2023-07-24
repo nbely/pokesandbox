@@ -25,10 +25,11 @@ const buildErrorEmbed = (
     .setTitle("Error")
     .setDescription(
       `${description}` +
-      `${addSupportInfo
-        ? "\n\nPlease try again and reach out to the support channel on the official [PokeSandbox Server](https://discord.gg/2BDghKaGQu) if the issue persists."
-        : ""
-      }`,
+        `${
+          addSupportInfo
+            ? "\n\nPlease try again and reach out to the support channel on the official [PokeSandbox Server](https://discord.gg/2BDghKaGQu) if the issue persists."
+            : ""
+        }`,
     )
     .setTimestamp();
 };

@@ -6,9 +6,11 @@ import { upsertServer } from "@services/server.service";
 
 const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
   menu.isBackSelected = false;
-  
+
   while (!menu.isBackSelected && !menu.isCancelled) {
-    menu.prompt = menu.prompt || "Select an option to update your Server Discovery settings.";
+    menu.prompt =
+      menu.prompt ||
+      "Select an option to update your Server Discovery settings.";
     menu.isBackSelected = false;
     menu.components = getDiscoveryMenuComponents(menu.server.discovery.enabled);
     if (!menu.server.discovery.enabled && !menu.server.discovery.description) {

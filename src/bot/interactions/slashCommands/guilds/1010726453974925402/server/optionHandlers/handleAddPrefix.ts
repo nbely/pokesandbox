@@ -3,7 +3,8 @@ import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
 import { upsertServer } from "@services/server.service";
 
 const handleAddPrefix = async (menu: AdminMenu): Promise<void> => {
-  menu.prompt = "Please enter a new prefix to use with this bot on your server.";
+  menu.prompt =
+    "Please enter a new prefix to use with this bot on your server.";
   menu.components = [];
   menu.embeds = [getServerMenuEmbed(menu)];
 

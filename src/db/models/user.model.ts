@@ -14,13 +14,8 @@ export interface IUser extends IUserModel {
   _id: Types.ObjectId;
 }
 
-export interface IUserPopulated {
-  _id: Types.ObjectId;
-  avatar?: string;
+export interface IUserPopulated extends Omit<IUser, "servers"> {
   servers: IServer[];
-  userId: string;
-  userTag: string;
-  username: string;
 }
 
 type UserModelType = Model<IUserModel, UserQueryHelpers>;

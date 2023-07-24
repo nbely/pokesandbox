@@ -35,7 +35,7 @@ const getDiscoveryMenuComponents = (
           style: ButtonStyle.Secondary,
         }),
       ),
-  ]
+  ];
 };
 
 export default getDiscoveryMenuComponents;

@@ -49,10 +49,10 @@ const handleCreateRegion = async (menu: AdminMenu): Promise<void> => {
 
     menu.server.regions.push(new Types.ObjectId(region._id));
     menu.regions = [...menu.regions, region];
-    
+
     await upsertServer({ serverId: menu.server.serverId }, menu.server);
     menu.prompt = `Successfully created the new region: \`${region.name}\``;
-  } catch(error) {
+  } catch (error) {
     await menu.handleError(error);
   }
 };

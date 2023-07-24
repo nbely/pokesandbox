@@ -4,12 +4,14 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 import ServerOption from "@bot/interactions/buttons/server/option";
 import paginateButtons from "@bot/utils/paginateButtons";
 
-const getManageRegionMenuComponents = (menu: AdminMenu): ActionRowBuilder<ButtonBuilder>[] => {
+const getManageRegionMenuComponents = (
+  menu: AdminMenu,
+): ActionRowBuilder<ButtonBuilder>[] => {
   const fixedStartButtons: ButtonBuilder[] = [
     ServerOption.create({
       label: menu.region.deployed ? "Undeploy" : "Deploy",
       style: menu.region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
-    })
+    }),
   ];
   const fixedEndButtons: ButtonBuilder[] = [
     ServerOption.create({ label: "Back", style: ButtonStyle.Secondary }),
@@ -25,7 +27,7 @@ const getManageRegionMenuComponents = (menu: AdminMenu): ActionRowBuilder<Button
     ServerOption.create({
       label: "2",
       style: ButtonStyle.Primary,
-      id: "Moves"
+      id: "Moves",
     }),
     ServerOption.create({
       label: "3",

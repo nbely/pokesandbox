@@ -6,7 +6,7 @@ import { upsertRegion } from "@services/region.service";
 const handleManageRegionMenu = async (menu: AdminMenu): Promise<void> => {
   menu.currentPage = 1;
   menu.isBackSelected = false;
-  
+
   while (!menu.isBackSelected && !menu.isCancelled) {
     menu.isBackSelected = false;
     menu.components = getManageRegionMenuComponents(menu);
@@ -71,7 +71,7 @@ const handleManageRegionMenu = async (menu: AdminMenu): Promise<void> => {
         default:
           throw new Error("Invalid Option Selected");
       }
-    } catch(error) {
+    } catch (error) {
       await menu.handleError(error);
     }
   }

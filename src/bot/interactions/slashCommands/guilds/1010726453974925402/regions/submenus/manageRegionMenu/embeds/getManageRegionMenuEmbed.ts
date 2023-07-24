@@ -3,26 +3,30 @@ import { EmbedBuilder } from "discord.js";
 import { AdminMenu } from "@bot/classes/adminMenu";
 
 const getManageRegionMenuEmbed = (menu: AdminMenu) => {
-  const pokedexOptionText = menu.region.pokedex.length === 0
-    ? "***Create Pokédex***"
-    : `Modify Pokédex ${menu.region.pokedex.length} Pokémon`;
+  const pokedexOptionText =
+    menu.region.pokedex.length === 0
+      ? "***Create Pokédex***"
+      : `Modify Pokédex ${menu.region.pokedex.length} Pokémon`;
   const movesOptionText = "Modify TM/HM/TR Lists";
-  const progressionsOptionText = Object.keys(menu.region.progressionTypes).length === 0
-    ? "***Create Progression Type***"
-    : `Modify Progression Types`;
-  const locationsOptionText = menu.region.locations.length === 0
-    ? "***Create Starting Location***"
-    : `Modify Locations`;
-  const transportationOptionText = menu.region.transportationTypes.length === 0
-    ? "***Setup Transportation Types***"
-    : `Modify Transportation Types`;
-  const questsOptionText = menu.region.quests.active.length === 0
-    && menu.region.quests.passive.length === 0
-    ? "***Create Quests***"
-    : `Modify Quests`;
-  const shopsOptionText = menu.region.shops.length === 0
-    ? "***Create Shop***"
-    : `Modify Shops`;
+  const progressionsOptionText =
+    Object.keys(menu.region.progressionTypes).length === 0
+      ? "***Create Progression Type***"
+      : `Modify Progression Types`;
+  const locationsOptionText =
+    menu.region.locations.length === 0
+      ? "***Create Starting Location***"
+      : `Modify Locations`;
+  const transportationOptionText =
+    menu.region.transportationTypes.length === 0
+      ? "***Setup Transportation Types***"
+      : `Modify Transportation Types`;
+  const questsOptionText =
+    menu.region.quests.active.length === 0 &&
+    menu.region.quests.passive.length === 0
+      ? "***Create Quests***"
+      : `Modify Quests`;
+  const shopsOptionText =
+    menu.region.shops.length === 0 ? "***Create Shop***" : `Modify Shops`;
   const mechanicsOptionText = "***Update Mechanics***";
   const graphicsOptionText = "Modify Graphics Settings";
 
@@ -32,20 +36,22 @@ const getManageRegionMenuEmbed = (menu: AdminMenu) => {
       name: `${menu.region.name} Manager Options:`,
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
     })
-    .setDescription(`__Status: ${menu.region.deployed ? "Deployed" : "Not Deployed"}__` )
+    .setDescription(
+      `__Status: ${menu.region.deployed ? "Deployed" : "Not Deployed"}__`,
+    )
     .addFields(
-      { 
-        name: '\u200b',
+      {
+        name: "\u200b",
         value:
           `\n:one: ${pokedexOptionText}` +
           `\n:two: ${movesOptionText}` +
           `\n:three: ${progressionsOptionText}` +
-          `\n:four: ${locationsOptionText}` + 
+          `\n:four: ${locationsOptionText}` +
           `\n:five: ${transportationOptionText}`,
         inline: true,
       },
       {
-        name: '\u200b',
+        name: "\u200b",
         value:
           `\n:six: ${questsOptionText}` +
           `\n:seven: ${shopsOptionText}` +
@@ -54,7 +60,11 @@ const getManageRegionMenuEmbed = (menu: AdminMenu) => {
         inline: true,
       },
     )
-    .setFooter({ text: !menu.region.deployable ? "Please visit the bolded/italicized options above to fix deployment issues\n" : "" })
+    .setFooter({
+      text: !menu.region.deployable
+        ? "Please visit the bolded/italicized options above to fix deployment issues\n"
+        : "",
+    })
     .setTimestamp();
 };
 
