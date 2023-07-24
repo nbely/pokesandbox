@@ -4,11 +4,13 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 const paginateButtons = (
   buttonList: ButtonBuilder[],
   page: number = 1,
-  fixedStartButtons?: ButtonBuilder[],
-  fixedEndButtons?: ButtonBuilder[],
+  fixedStartButtons: ButtonBuilder[] = [],
+  fixedEndButtons: ButtonBuilder[] = [],
+  nextButtonStyle?: ButtonStyle,
+  previousButtonStyle?: ButtonStyle,
 ): ActionRowBuilder<ButtonBuilder>[] => {
   const buttonSlotCount =
-    10 - (fixedStartButtons?.length || 0) - (fixedEndButtons?.length || 0);
+    10 - fixedStartButtons.length - fixedEndButtons.length;
   if (buttonSlotCount <= 0) {
     console.error("No slots for paginated buttons available.");
     return [];
@@ -39,7 +41,7 @@ const paginateButtons = (
     console.error("Button page specified is greater than the number of pages.");
     return [];
   }
-  const currentPageButtons = fixedStartButtons ? [...fixedStartButtons] : [];
+  const currentPageButtons = [...fixedStartButtons];
   currentPageButtons.push(
     ...buttonList.filter((button, index) => {
       if (
@@ -59,7 +61,7 @@ const paginateButtons = (
     currentPageButtons.push(
       ServerOption.create({
         label: "Previous",
-        style: ButtonStyle.Primary,
+        style: nextButtonStyle ?? ButtonStyle.Primary,
       }),
     );
   }
@@ -67,7 +69,7 @@ const paginateButtons = (
     currentPageButtons.push(
       ServerOption.create({
         label: "Next",
-        style: ButtonStyle.Primary,
+        style: previousButtonStyle ?? ButtonStyle.Primary,
       }),
     );
   }

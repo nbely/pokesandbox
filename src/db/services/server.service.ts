@@ -4,28 +4,35 @@ import {
   QueryOptions,
   UpdateQuery,
 } from "mongoose";
-import Server, { IServer } from "../models/server.model";
+import Server, { IServerModel } from "../models/server.model";
 
-export async function createServer(input: IServer) {
-  const user: HydratedDocument<IServer> = new Server(input);
+export async function createServer(input: IServerModel) {
+  const user: HydratedDocument<IServerModel> = new Server(input);
   return await user.save();
 }
 
 export async function deleteAllServers() {
-  return Server.deleteMany({});
+  return Server.deleteMany({}).exec();
 }
 
 export async function findServer(
-  query: FilterQuery<IServer>,
+  query: FilterQuery<IServerModel>,
   options: QueryOptions = { lean: true },
 ) {
-  return Server.findOne(query, null, options);
+  return Server.findOne(query, null, options).exec();
+}
+
+export async function findServerAndPopulateRegions(
+  query: FilterQuery<IServerModel>,
+  options: QueryOptions = { lean: true },
+) {
+  return Server.findOne(query, null, options).populate("regions").exec();
 }
 
 export async function upsertServer(
-  query: FilterQuery<IServer>,
-  update: UpdateQuery<IServer>,
+  query: FilterQuery<IServerModel>,
+  update: UpdateQuery<IServerModel>,
   options: QueryOptions = { lean: true },
 ) {
-  return Server.findOneAndUpdate(query, update, options);
+  return Server.findOneAndUpdate(query, update, options).exec();
 }

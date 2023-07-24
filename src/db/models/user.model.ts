@@ -1,15 +1,30 @@
-import { HydratedDocument, Model, model, Query, Schema } from "mongoose";
+import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
-export interface IUser {
+import type { IServer } from "./server.model";
+
+export interface IUserModel {
   avatar?: string;
+  servers: Types.ObjectId[];
   userId: string;
   userTag: string;
   username: string;
 }
 
-type UserModelType = Model<IUser, UserQueryHelpers>;
+export interface IUser extends IUserModel {
+  _id: Types.ObjectId;
+}
+
+export interface IUserPopulated extends Omit<IUser, "servers"> {
+  servers: IServer[];
+}
+
+type UserModelType = Model<IUserModel, UserQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type UserModelQuery = Query<any, HydratedDocument<IUser>, UserQueryHelpers> &
+type UserModelQuery = Query<
+  any,
+  HydratedDocument<IUserModel>,
+  UserQueryHelpers
+> &
   UserQueryHelpers;
 interface UserQueryHelpers {
   byUserId(this: UserModelQuery, userId: string): UserModelQuery;
@@ -17,11 +32,12 @@ interface UserQueryHelpers {
 
 export const UserSchema: Schema = new Schema({
   avatar: { type: String, required: false },
+  servers: { type: [Schema.Types.ObjectId], ref: "Server" },
   userId: { type: String, required: true },
   userTag: { type: String, required: true },
   username: { type: String, required: true },
 });
 
-const UserModel = model<IUser, UserModelType>("User", UserSchema, "users");
+const UserModel = model<IUserModel, UserModelType>("User", UserSchema, "users");
 
 export default UserModel;

@@ -14,7 +14,7 @@ const Profile: React.FC = () => {
 
   const fetchProfileData = React.useCallback(async () => {
     const response = await fetch(
-      "http://localhost:3000/profile/160794840815239168"
+      "http://localhost:3000/profile/160794840815239168",
     );
     const { data } = await response.json();
     setProfile(data);
@@ -173,7 +173,7 @@ const Profile: React.FC = () => {
                                           {move.pp}/{move.maxPP} PP
                                         </td>
                                       </tr>
-                                    )
+                                    ),
                                   )}
                                 </tbody>
                               </table>

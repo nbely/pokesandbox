@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 // Middleware Routes
-app.use("/servers", serversRoute)
+app.use("/servers", serversRoute);
 app.use("/user", userRoute);
 
 app.listen(port, () =>
