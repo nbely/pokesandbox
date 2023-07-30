@@ -1,12 +1,14 @@
 import Head from "next/head";
 import { PropsWithChildren } from "react";
 
+import { useAppSelector } from "@/store/selectors";
+
 import Header from "./header/header";
 import Sidebar from "./sidebar/sidebar";
-import { useGlobalContext } from "@/context/globalProvider";
 
 const Layout: React.FC<PropsWithChildren> = ({ children }) => {
-  const { isDarkMode } = useGlobalContext();
+  const isDarkMode = useAppSelector((state) => state.config.isDarkMode);
+
   return (
     <div className={`flex ${isDarkMode ? "dark" : ""}`}>
       <Head>

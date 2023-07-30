@@ -4,6 +4,18 @@ import User from "../../db/models/user.model";
 
 const router = express.Router();
 
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const data = await User.find({});
+
+    console.log("Users found", data);
+    return res.json({ data });
+  } catch (e) {
+    console.log("error", e);
+    return res.json({ e });
+  }
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
   try {

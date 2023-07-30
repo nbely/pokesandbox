@@ -1,7 +1,9 @@
-import { useGlobalContext } from "@/context/globalProvider";
+import { toggleDarkMode } from "@/store/configSlice";
+import { useAppDispatch, useAppSelector } from "@/store/selectors";
 
 const DarkModeToggle: React.FC = () => {
-  const { isDarkMode, toggleDarkMode } = useGlobalContext();
+  const dispatch = useAppDispatch();
+  const isDarkMode = useAppSelector((state) => state.config.isDarkMode);
 
   return (
     <button
@@ -9,9 +11,9 @@ const DarkModeToggle: React.FC = () => {
       type="button"
       className="rounded-lg text-sm p-2.5
         focus:outline-none focus:ring-4
-        text-gray-700 hover:bg-gray-400 focus:ring-gray-400  
+        text-gray-700 hover:bg-gray-400 focus:ring-gray-400
         dark:text-gray-700 dark:hover:bg-gray-1000 dark:focus:ring-gray-1000"
-      onClick={() => toggleDarkMode()}
+      onClick={() => dispatch(toggleDarkMode())}
     >
       <svg
         id="theme-toggle-dark-icon"

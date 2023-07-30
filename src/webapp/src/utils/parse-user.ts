@@ -1,18 +1,18 @@
-import { GetServerSidePropsContext } from "next";
 import { parse } from "cookie";
 import { verify } from "jsonwebtoken";
 
 import type { DiscordUser } from "../interfaces/discordUser";
 
-export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  if (!ctx.req.headers.cookie) {
+export function parseUser(cookies: string | string[] | undefined): DiscordUser | null {
+  if (!cookies) {
     return null;
   }
 
-  const token: string = parse(ctx.req.headers.cookie)[
-    process.env.COOKIE_NAME as string
-  ];
+  if (Array.isArray(cookies)) {
+    cookies = cookies.join();
+  }
+
+  const token: string = parse(cookies)["discordAuth"];
 
   if (!token) {
     return null;
@@ -25,6 +25,7 @@ export function parseUser(ctx: GetServerSidePropsContext): DiscordUser | null {
     ) as DiscordUser & { iat: number; exp: number };
     return user;
   } catch (e) {
+    console.error(e);
     return null;
   }
 }
