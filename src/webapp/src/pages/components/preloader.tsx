@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
 
-import { setServers } from "@/store/serversSlice";
-import { store } from "@/store";
-import { setLoggedInUser, setUsers } from "@/store/usersSlice";
 import { setRegions } from "@/store/regionsSlice";
+import { setServers } from "@/store/serversSlice";
+import { setUsers } from "@/store/usersSlice";
+import { store } from "@/store";
 
 const Preloader = ({ data }: any) => {
   const loaded = useRef(false);
@@ -12,7 +12,6 @@ const Preloader = ({ data }: any) => {
     if (!loaded.current && data) {
       store.dispatch(setRegions(data.regions));
       store.dispatch(setServers(data.servers));
-      store.dispatch(setLoggedInUser(data.loggedInUser));
       store.dispatch(setUsers(data.users));
       loaded.current = true;
     }

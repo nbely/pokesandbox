@@ -7,8 +7,8 @@ import IMessageContextCommand from "@structures/interfaces/messageContextCommand
 import ISlashCommand from "@structures/interfaces/slashCommand";
 import IUserContextCommand from "@structures/interfaces/userContextCommand";
 
-const CLIENT_ID = process.env.CLIENT_ID as string;
-const TOKEN = process.env.POKE_SANDBOT_TOKEN as string;
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID as string;
+const TOKEN = process.env.DISCORD_BOT_TOKEN as string;
 
 type ChatInputCommand =
   | IMessageContextCommand

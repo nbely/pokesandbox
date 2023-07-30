@@ -36,7 +36,7 @@ export class BotClient extends Client {
 }
 
 (async () => {
-  const TOKEN = process.env.POKE_SANDBOT_TOKEN as string;
+  const TOKEN = process.env.DISCORD_BOT_TOKEN as string;
   console.log("SandBot is initializing...");
 
   const client = new BotClient({

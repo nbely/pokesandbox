@@ -13,7 +13,7 @@ const ThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
         algorithm: isDarkMode ? darkAlgorithm : defaultAlgorithm,
       }}
     >
-        {children}
+      {children}
     </ConfigProvider>
   );
 };

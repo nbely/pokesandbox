@@ -27,7 +27,7 @@ const searchSlice = createSlice({
     },
     setSearchType: (state, action: PayloadAction<SearchType[]>) => {
       state.searchTypes = action.payload;
-    }
+    },
   },
 });
 

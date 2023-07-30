@@ -1,12 +1,11 @@
 import Image from "next/image";
 import React from "react";
 
-import { store } from "@/store";
+import type { NextPage } from "next";
+import { useAppSelector } from "@/store/selectors";
 
-const Home: React.FC = () => {
-
-  const user = store.getState().users.loggedInUser;
-
+const Home: NextPage = () => {
+  const user = useAppSelector((state) => state.users.loggedInUser);
   const avatarUrl: string = user?.avatar
     ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png`
     : "";
@@ -34,4 +33,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-

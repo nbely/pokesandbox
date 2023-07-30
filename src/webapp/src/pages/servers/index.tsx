@@ -1,16 +1,17 @@
 import React from "react";
 
+import { useGetServers } from "@/store/selectors/serversSelectors";
+
 import ServerCard from "./components/serverCard";
 
 import type { IServer } from "@/interfaces/models/server";
-import { getServers } from "@/store/selectors/serversSelectors";
 
 interface ServersProps {
   servers: IServer[];
 }
 
 const Servers: React.FC<ServersProps> = () => {
-  const servers: IServer[] = getServers();
+  const servers: IServer[] = useGetServers();
 
   return (
     <div>
