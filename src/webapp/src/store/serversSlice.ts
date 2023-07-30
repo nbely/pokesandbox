@@ -28,22 +28,18 @@ export default serverSlice.reducer;
 
 export const selectServers = (state: RootState) => state.servers.servers;
 export const selectServerById = createSelector(
-  [
-    selectServers,
-    (state, serverId: string) => serverId,
-  ],
+  [selectServers, (state, serverId: string) => serverId],
   (servers, serverId) =>
-    servers.find((server: IServer) =>
-      server.serverId === serverId || server._id === serverId
-    )
+    servers.find(
+      (server: IServer) =>
+        server.serverId === serverId || server._id === serverId,
+    ),
 );
 export const selectServersByIds = createSelector(
-  [
-    selectServers,
-    (state, serverIds: string[]) => serverIds,
-  ],
+  [selectServers, (state, serverIds: string[]) => serverIds],
   (servers, serverIds) =>
-    servers.filter((server: IServer) =>
-      serverIds.includes(server.serverId) || serverIds.includes(server._id)
-    )
+    servers.filter(
+      (server: IServer) =>
+        serverIds.includes(server.serverId) || serverIds.includes(server._id),
+    ),
 );

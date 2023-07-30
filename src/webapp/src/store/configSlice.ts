@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-
 export interface ConfigState {
   isDarkMode: boolean;
 }

@@ -1,13 +1,15 @@
 import { useRouter } from "next/router";
 
-import { IUser } from "@/interfaces/models/user";
-import { getUserById } from "@/store/selectors/usersSelectors";
+import { useGetUserById } from "@/store/selectors/usersSelectors";
+
+import type { IUser } from "@/interfaces/models/user";
 
 const User: React.FC = () => {
   const router = useRouter();
-  let user: IUser | undefined = typeof router.query.id === "string"
-    ? getUserById(router.query.id)
-    : undefined;
+  let user: IUser | undefined =
+    typeof router.query.id === "string"
+      ? useGetUserById(router.query.id)
+      : undefined;
 
   return (
     <div>
