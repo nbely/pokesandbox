@@ -1,23 +1,16 @@
-import { GetServerSideProps } from "next";
 import React from "react";
 
 import ServerCard from "./components/serverCard";
-import { useGlobalContext } from "@/context/globalProvider";
 
 import type { IServer } from "@/interfaces/models/server";
+import { getServers } from "@/store/selectors/serversSelectors";
 
 interface ServersProps {
   servers: IServer[];
 }
 
-const Servers: React.FC<ServersProps> = (props) => {
-  const { getServers, updateServers } = useGlobalContext();
-  const servers: IServer[] =
-    getServers().length > 0 ? getServers() : props.servers;
-
-  React.useEffect(() => {
-    updateServers(props.servers);
-  }, []);
+const Servers: React.FC<ServersProps> = () => {
+  const servers: IServer[] = getServers();
 
   return (
     <div>
@@ -31,21 +24,6 @@ const Servers: React.FC<ServersProps> = (props) => {
       </div>
     </div>
   );
-};
-
-export const getServerSideProps: GetServerSideProps<
-  ServersProps
-> = async () => {
-  const dbServersResponse: Response = await fetch(
-    `http://localhost:3000/servers/`,
-  );
-  const servers = (await dbServersResponse.json()) as { data: IServer[] };
-
-  return {
-    props: {
-      servers: servers.data,
-    },
-  };
 };
 
 export default Servers;

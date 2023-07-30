@@ -14,11 +14,8 @@ const Header: React.FC = () => {
     >
       <Link
         href="/"
-        className="relative flex items-center justify-center
-          h-8 w-auto my-auto
-          hover:text-gold-800 dark:hover:text-dgold-700
-          transition-all duration-100 ease-linear
-          cursor-pointer"
+        className="Link relative flex items-center justify-center
+          h-8 w-auto my-auto"
       >
         <PokeballSvg className="mr-2 text-gold-800 dark:text-dgold-700" />
         <span className="text-xl">PokéSandbox</span>
@@ -26,6 +23,7 @@ const Header: React.FC = () => {
       <div className="flex flex-row items-center space-x-4">
         <SearchBar />
         <DarkModeToggle />
+        {/* <UserMenu /> */}
       </div>
     </header>
   );
