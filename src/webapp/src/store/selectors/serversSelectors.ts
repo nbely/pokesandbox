@@ -7,14 +7,18 @@ import {
   selectServersByIds,
 } from "../serversSlice";
 
-export const getServers = () => {
+export const useGetServers = () => {
   return useAppSelector((state: RootState) => selectServers(state));
 };
 
-export const getServerById = (serverId: string) => {
-  return useAppSelector((state: RootState) => selectServerById(state, serverId));
+export const useGetServerById = (serverId: string) => {
+  return useAppSelector((state: RootState) =>
+    selectServerById(state, serverId),
+  );
 };
 
-export const getServersByIds = (serverIds: string[]) => {
-  return useAppSelector((state: RootState) => selectServersByIds(state, serverIds));
+export const useGetServersByIds = (serverIds: string[]) => {
+  return useAppSelector((state: RootState) =>
+    selectServersByIds(state, serverIds),
+  );
 };

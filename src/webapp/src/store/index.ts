@@ -10,7 +10,7 @@ export const store = configureStore({
   reducer: {
     config: configReducer,
     regions: regionsReducer,
-    search: searchReducer,   
+    search: searchReducer,
     servers: serversReducer,
     users: usersReducer,
   },

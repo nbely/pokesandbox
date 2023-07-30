@@ -27,18 +27,12 @@ export default regionsSlice.reducer;
 
 export const selectRegions = (state: RootState) => state.regions.regions;
 export const selectRegionById = createSelector(
-  [
-    selectRegions,
-    (state, regionId: string) => regionId,
-  ],
+  [selectRegions, (state, regionId: string) => regionId],
   (regions, regionId) =>
-    regions.find((region: IRegion) =>region._id === regionId)
+    regions.find((region: IRegion) => region._id === regionId),
 );
 export const selectRegionsByIds = createSelector(
-  [
-    selectRegions,
-    (state, regionIds: string[]) => regionIds,
-  ],
+  [selectRegions, (state, regionIds: string[]) => regionIds],
   (regions, regionIds) =>
-    regions.filter((region: IRegion) => regionIds.includes(region._id))
+    regions.filter((region: IRegion) => regionIds.includes(region._id)),
 );

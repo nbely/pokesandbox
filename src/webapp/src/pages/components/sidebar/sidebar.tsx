@@ -1,13 +1,13 @@
 import SidebarIcon from "./components/sidebarIcon";
 
-import { getServersByIds } from "@/store/selectors/serversSelectors";
+import { useGetServersByIds } from "@/store/selectors/serversSelectors";
 import { useAppSelector } from "@/store/selectors";
 
 import type { IServer } from "@/interfaces/models/server";
 
 const Sidebar: React.FC = () => {
   const user = useAppSelector((state) => state.users.loggedInUser);
-  const servers = getServersByIds(user?.servers ?? []);
+  const servers = useGetServersByIds(user?.servers ?? []);
 
   return (
     <aside

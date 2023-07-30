@@ -5,7 +5,7 @@
 @layer components {
   .Link {
     @apply hover:text-gold-800 dark:hover:text-dgold-700
-      transition-all duration-100 ease-linear cursor-pointer
+      transition-all duration-100 ease-linear cursor-pointer;
   }
 }
 

@@ -6,7 +6,7 @@ import regionsRoute from "./routes/regions";
 import serversRoute from "./routes/servers";
 import usersRoute from "./routes/users";
 
-const port = process.env.EXPRESS_PORT || 3000;
+const port = process.env.EXPRESS_PORT || 3001;
 const app = express();
 
 // Middleware
@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 // Middleware Routes
-app.use("/regions", regionsRoute)
+app.use("/regions", regionsRoute);
 app.use("/servers", serversRoute);
 app.use("/users", usersRoute);
 

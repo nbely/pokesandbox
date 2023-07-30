@@ -7,14 +7,18 @@ import {
   selectRegionsByIds,
 } from "../regionsSlice";
 
-export const getRegions = () => {
+export const useGetRegions = () => {
   return useAppSelector((state: RootState) => selectRegions(state));
 };
 
-export const getRegionById = (regionId: string) => {
-  return useAppSelector((state: RootState) => selectRegionById(state, regionId));
+export const useGetRegionById = (regionId: string) => {
+  return useAppSelector((state: RootState) =>
+    selectRegionById(state, regionId),
+  );
 };
 
-export const getRegionsByIds = (regionIds: string[]) => {
-  return useAppSelector((state: RootState) => selectRegionsByIds(state, regionIds));
+export const useGetRegionsByIds = (regionIds: string[]) => {
+  return useAppSelector((state: RootState) =>
+    selectRegionsByIds(state, regionIds),
+  );
 };

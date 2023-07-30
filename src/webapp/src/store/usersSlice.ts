@@ -32,23 +32,15 @@ export default usersSlice.reducer;
 
 export const selectUsers = (state: RootState) => state.users.users;
 export const selectUserById = createSelector(
-  [
-    selectUsers,
-    (state, userId: string) => userId,
-  ],
+  [selectUsers, (state, userId: string) => userId],
   (users, userId) =>
-    users.find((user: IUser) =>
-      user.userId === userId || user._id === userId
-    )
+    users.find((user: IUser) => user.userId === userId || user._id === userId),
 );
 export const selectUsersByIds = createSelector(
-  [
-    selectUsers,
-    (state, userIds: string[]) => userIds,
-  ],
+  [selectUsers, (state, userIds: string[]) => userIds],
   (users, userIds) =>
-    users.filter((user: IUser) =>
-      userIds.includes(user.userId) || userIds.includes(user._id)
-    )
+    users.filter(
+      (user: IUser) =>
+        userIds.includes(user.userId) || userIds.includes(user._id),
+    ),
 );
-

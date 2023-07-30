@@ -40,7 +40,7 @@ const SearchBar: React.FC = () => {
 
   React.useEffect(() => {
     setOptions(getAnySearchOptions());
-  }, [])
+  }, []);
 
   const searchTypeString = React.useMemo(() => {
     return searchTypes
@@ -48,116 +48,188 @@ const SearchBar: React.FC = () => {
       .join("/");
   }, [searchTypes]);
 
-  const getAnySearchOptions = React.useCallback((value: string = ""): SelectOptions[] => {
-    const types: SearchTypeOption[] = [
-      { name: "Servers", quantity: servers.length},
-      { name: "Regions", quantity: regions.length},
-      { name: "Users", quantity: users.length},
-    ];
-    const filteredTypes = types.filter((type: SearchTypeOption) => type.name.toLowerCase().includes(value.toLowerCase()));
-    return filteredTypes.length > 0
-      ?[{
-        label: renderTitle("Search Options"),
-        options: filteredTypes.map((type: SearchTypeOption) => 
-          renderItem(type.name, type.quantity),
-        ),
-      }]
-      : [];
-  }, [servers, regions, users]);
+  const getAnySearchOptions = React.useCallback(
+    (value: string = ""): SelectOptions[] => {
+      const types: SearchTypeOption[] = [
+        { name: "Servers", quantity: servers.length },
+        { name: "Regions", quantity: regions.length },
+        { name: "Users", quantity: users.length },
+      ];
+      const filteredTypes = types.filter((type: SearchTypeOption) =>
+        type.name.toLowerCase().includes(value.toLowerCase()),
+      );
+      return filteredTypes.length > 0
+        ? [
+            {
+              label: renderTitle("Search Options"),
+              options: filteredTypes.map((type: SearchTypeOption) =>
+                renderItem(type.name, type.quantity),
+              ),
+            },
+          ]
+        : [];
+    },
+    [servers, regions, users],
+  );
 
-  const getServersSearchOptions = React.useCallback((value: string = ""): SelectOptions[] => {
-    const filteredServers = servers.filter((server: IServer) => server.name.toLowerCase().includes(value.toLowerCase()));
-    return filteredServers.length > 0
-      ? [{
-        label: renderTitle("Servers"),
-        options: filteredServers.map((server: IServer) =>
-          renderItem(server.name, server.playerList.length, SearchType.Servers, server.serverId)
-        ),
-      }]
-      : [];
-  }, [servers]);
+  const getServersSearchOptions = React.useCallback(
+    (value: string = ""): SelectOptions[] => {
+      const filteredServers = servers.filter((server: IServer) =>
+        server.name.toLowerCase().includes(value.toLowerCase()),
+      );
+      return filteredServers.length > 0
+        ? [
+            {
+              label: renderTitle("Servers"),
+              options: filteredServers.map((server: IServer) =>
+                renderItem(
+                  server.name,
+                  server.playerList.length,
+                  SearchType.Servers,
+                  server.serverId,
+                ),
+              ),
+            },
+          ]
+        : [];
+    },
+    [servers],
+  );
 
-  const getRegionsSearchOptions = React.useCallback((value: string = ""): SelectOptions[] => {
-    const filteredRegions = regions.filter((region: IRegion) => region.name.toLowerCase().includes(value.toLowerCase()));
-    return filteredRegions.length > 0
-      ? [{
-        label: renderTitle("Regions"),
-        options: filteredRegions.map((region: IRegion) =>
-          renderItem(region.name, region.playerList.length, SearchType.Regions, region._id)
-        ),
-      }]
-      : [];
-  }, [regions]);
+  const getRegionsSearchOptions = React.useCallback(
+    (value: string = ""): SelectOptions[] => {
+      const filteredRegions = regions.filter((region: IRegion) =>
+        region.name.toLowerCase().includes(value.toLowerCase()),
+      );
+      return filteredRegions.length > 0
+        ? [
+            {
+              label: renderTitle("Regions"),
+              options: filteredRegions.map((region: IRegion) =>
+                renderItem(
+                  region.name,
+                  region.playerList.length,
+                  SearchType.Regions,
+                  region._id,
+                ),
+              ),
+            },
+          ]
+        : [];
+    },
+    [regions],
+  );
 
-  const getUsersSearchOptions = React.useCallback((value: string = ""): SelectOptions[] => {
-    const filteredUsers = users.filter((user: IUser) => user.username.toLowerCase().includes(value.toLowerCase()));
-    return filteredUsers.length > 0
-      ? [{
-        label: renderTitle("Users"),
-        options: filteredUsers.map((user: IUser) =>
-          renderItem(user.username, undefined, SearchType.Users, user.userId)
-        ),
-      }]
-      : [];
-  }, [users]);
+  const getUsersSearchOptions = React.useCallback(
+    (value: string = ""): SelectOptions[] => {
+      const filteredUsers = users.filter((user: IUser) =>
+        user.username.toLowerCase().includes(value.toLowerCase()),
+      );
+      return filteredUsers.length > 0
+        ? [
+            {
+              label: renderTitle("Users"),
+              options: filteredUsers.map((user: IUser) =>
+                renderItem(
+                  user.username,
+                  undefined,
+                  SearchType.Users,
+                  user.userId,
+                ),
+              ),
+            },
+          ]
+        : [];
+    },
+    [users],
+  );
 
-  const updateOptions = React.useCallback((value: string, searchTypes: SearchType[]): void => {
-    const newOptions: SelectOptions[] = [];
-    for (let searchType of searchTypes) {
-      if (searchType === SearchType.Any) {
-        newOptions.push(...getAnySearchOptions(value))
+  const updateOptions = React.useCallback(
+    (value: string, searchTypes: SearchType[]): void => {
+      const newOptions: SelectOptions[] = [];
+      for (let searchType of searchTypes) {
+        if (searchType === SearchType.Any) {
+          newOptions.push(...getAnySearchOptions(value));
+        }
+        if (
+          searchType === SearchType.Servers ||
+          (value && searchType === SearchType.Any)
+        ) {
+          newOptions.push(...getServersSearchOptions(value));
+        }
+        if (
+          searchType === SearchType.Regions ||
+          (value && searchType === SearchType.Any)
+        ) {
+          newOptions.push(...getRegionsSearchOptions(value));
+        }
+        if (
+          searchType === SearchType.Users ||
+          (value && searchType === SearchType.Any)
+        ) {
+          newOptions.push(...getUsersSearchOptions(value));
+        }
       }
-      if (searchType === SearchType.Servers || (value && searchType === SearchType.Any)) {
-        newOptions.push(...getServersSearchOptions(value));
-      }
-      if (searchType === SearchType.Regions || (value && searchType === SearchType.Any)) {
-        newOptions.push(...getRegionsSearchOptions(value));
-      }
-      if (searchType === SearchType.Users || (value && searchType === SearchType.Any)) {
-        newOptions.push(...getUsersSearchOptions(value));
-      }
-    }
-    setOptions(newOptions);
-  }, [getAnySearchOptions, getServersSearchOptions, getRegionsSearchOptions, getUsersSearchOptions]);
+      setOptions(newOptions);
+    },
+    [
+      getAnySearchOptions,
+      getServersSearchOptions,
+      getRegionsSearchOptions,
+      getUsersSearchOptions,
+    ],
+  );
 
-  const handleSelect = React.useCallback((value: string, valueOptions: SelectOptions | SelectOptions[]): void => {
-    let newSearch: string = search;
-    let newSearchTypes: SearchType[] = [SearchType.Any];
-    
-    if (Object.keys(SearchType).includes(value)) {
-      const newValue = value as SearchType;
-      newSearchTypes = [...searchTypes, newValue]
-        .filter((type: SearchType) => type !== SearchType.Any);
-      
+  const handleSelect = React.useCallback(
+    (value: string, valueOptions: SelectOptions | SelectOptions[]): void => {
+      let newSearch: string = search;
+      let newSearchTypes: SearchType[] = [SearchType.Any];
+
+      if (Object.keys(SearchType).includes(value)) {
+        const newValue = value as SearchType;
+        newSearchTypes = [...searchTypes, newValue].filter(
+          (type: SearchType) => type !== SearchType.Any,
+        );
       } else {
         newSearch = "";
         const selectionOption = valueOptions as unknown as SelectItem;
-        router.push(`/${selectionOption.type.toLowerCase()}/${selectionOption.id}`);
+        router.push(
+          `/${selectionOption.type.toLowerCase()}/${selectionOption.id}`,
+        );
       }
       dispatch(setSearch(newSearch));
       dispatch(setSearchType(newSearchTypes));
       updateOptions(newSearch, newSearchTypes);
-  }, [search, searchTypes, updateOptions]);
-  
+    },
+    [search, searchTypes, updateOptions],
+  );
 
-  const handleChange = React.useCallback((value: string): void => {
-    if (value.includes(": ")) {
-      const [inputSearchTypes, inputSearch] = value.split(": ");
-      const parsedSearchTypes = inputSearchTypes.split("/");
-      if (
-        !searchTypes.every((type: SearchType, index: number) => type === parsedSearchTypes[index])
-        && parsedSearchTypes.every((type: string) => Object.keys(SearchType).includes(type))
-      ) {
-        dispatch(setSearchType(parsedSearchTypes as SearchType[]));
-        updateOptions(inputSearch, parsedSearchTypes as SearchType[]);
+  const handleChange = React.useCallback(
+    (value: string): void => {
+      if (value.includes(": ")) {
+        const [inputSearchTypes, inputSearch] = value.split(": ");
+        const parsedSearchTypes = inputSearchTypes.split("/");
+        if (
+          !searchTypes.every(
+            (type: SearchType, index: number) =>
+              type === parsedSearchTypes[index],
+          ) &&
+          parsedSearchTypes.every((type: string) =>
+            Object.keys(SearchType).includes(type),
+          )
+        ) {
+          dispatch(setSearchType(parsedSearchTypes as SearchType[]));
+          updateOptions(inputSearch, parsedSearchTypes as SearchType[]);
+        }
+        dispatch(setSearch(inputSearch));
+      } else {
+        dispatch(setSearch(value));
+        dispatch(setSearchType([SearchType.Any]));
+        updateOptions(value, [SearchType.Any]);
       }
-      dispatch(setSearch(inputSearch));
-    } else {
-      dispatch(setSearch(value));
-      dispatch(setSearchType([SearchType.Any]));
-      updateOptions(value, [SearchType.Any]);
-    }
-  }, [searchTypes, updateOptions]);
+    },
+    [searchTypes, updateOptions],
+  );
 
   return (
     <AutoComplete
@@ -175,7 +247,12 @@ const SearchBar: React.FC = () => {
 
 const renderTitle = (title: string): JSX.Element => <span>{title}</span>;
 
-const renderItem = (title: string, count: number | undefined, type: string = SearchType.Any, id: string = ""): SelectItem => ({
+const renderItem = (
+  title: string,
+  count: number | undefined,
+  type: string = SearchType.Any,
+  id: string = "",
+): SelectItem => ({
   id,
   label: (
     <div
