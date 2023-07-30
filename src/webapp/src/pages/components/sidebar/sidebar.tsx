@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
       <SidebarIcon label="Server Discovery" route="servers" />
       <hr className="w-12 mx-auto border-t-2 border-gray-500 dark:border-gray-1000" />
       {servers.map((server: IServer) => {
-        const iconUrl: string | undefined = server?.discovery.icon
+        const iconUrl: string | undefined = server.discovery.icon
           ? `https://cdn.discordapp.com/icons/${server.serverId}/${server.discovery.icon}.png`
           : undefined;
 
