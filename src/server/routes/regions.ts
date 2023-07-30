@@ -1,14 +1,14 @@
 import express, { Request, Response } from "express";
 
-import Server from "../../db/models/server.model";
+import Region from "../../db/models/region.model";
 
 const router = express.Router();
 
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const data = await Server.find({});
+    const data = await Region.find({});
 
-    console.log("Servers found", data);
+    console.log("Regions found", data);
     return res.json({ data });
   } catch (e) {
     console.log("error", e);
