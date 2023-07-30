@@ -3,9 +3,9 @@ import Link from "next/link";
 import React from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 
-import { useGetUserById } from "@/store/selectors/usersSelectors";
 import { setLoggedInUser } from "@/store/usersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/selectors";
+import { useGetUserById } from "@/store/selectors/usersSelectors";
 
 import DarkModeToggle from "./components/darkModeToggle";
 import PokeballSvg from "../assets/pokeballSvg";

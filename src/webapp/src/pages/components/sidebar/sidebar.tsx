@@ -1,7 +1,7 @@
 import SidebarIcon from "./components/sidebarIcon";
 
-import { useGetServersByIds } from "@/store/selectors/serversSelectors";
 import { useAppSelector } from "@/store/selectors";
+import { useGetServersByIds } from "@/store/selectors/serversSelectors";
 
 import type { IServer } from "@/interfaces/models/server";
 

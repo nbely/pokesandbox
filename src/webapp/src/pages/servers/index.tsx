@@ -1,9 +1,10 @@
 import React from "react";
 
+import { useGetServers } from "@/store/selectors/serversSelectors";
+
 import ServerCard from "./components/serverCard";
 
 import type { IServer } from "@/interfaces/models/server";
-import { useGetServers } from "@/store/selectors/serversSelectors";
 
 interface ServersProps {
   servers: IServer[];

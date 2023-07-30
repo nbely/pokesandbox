@@ -1,7 +1,8 @@
 import { useRouter } from "next/router";
 
-import { IRegion } from "@/interfaces/models/region";
 import { useGetRegionById } from "@/store/selectors/regionsSelectors";
+
+import type { IRegion } from "@/interfaces/models/region";
 
 const Region: React.FC = () => {
   const router = useRouter();

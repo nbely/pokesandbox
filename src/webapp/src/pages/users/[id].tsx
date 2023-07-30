@@ -1,7 +1,8 @@
 import { useRouter } from "next/router";
 
-import { IUser } from "@/interfaces/models/user";
 import { useGetUserById } from "@/store/selectors/usersSelectors";
+
+import type { IUser } from "@/interfaces/models/user";
 
 const User: React.FC = () => {
   const router = useRouter();
