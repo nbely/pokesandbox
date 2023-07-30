@@ -1,22 +1,20 @@
 import App, { AppContext, AppProps } from "next/app";
 
-import "@/styles/globals.scss";
-import { DiscordUser } from "@/interfaces/discordUser";
-import GlobalProvider from "@/context/globalProvider";
-import Layout from "./components/layout";
-import Preloader from "./components/preloader";
-import Providers from "@/context/storeProvider";
-import { parseUser } from "@/utils/parse-user";
-
 import { setLoggedInUser, setUsers } from "@/store/usersSlice";
 import { setRegions } from "@/store/regionsSlice";
 import { setServers } from "@/store/serversSlice";
 import { store } from "@/store";
 
+import "@/styles/globals.scss";
+import { DiscordUser } from "@/interfaces/discordUser";
+import Layout from "./components/layout";
+import Preloader from "./components/preloader";
+import Providers from "@/providers";
+import { parseUser } from "@/utils/parse-user";
+
 import type { IRegion } from "@/interfaces/models/region";
 import type { IServer } from "@/interfaces/models/server";
 import type { IUser } from "@/interfaces/models/user";
-import Router from "next/router";
 
 type TProps = Pick<AppProps, "Component" | "pageProps"> & {
   data: {
@@ -38,11 +36,11 @@ const CustomApp = ({ Component, pageProps, data }: TProps) => {
   return (
     <Providers>
       <Preloader data={data} />
-      <GlobalProvider>
+      <Providers>
         <Layout>
           <Component {...pageProps} />
         </Layout>
-      </GlobalProvider>
+      </Providers>
     </Providers>
   );
 };
