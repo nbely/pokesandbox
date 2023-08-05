@@ -9,7 +9,7 @@ import type { IRegion } from "@/interfaces/models/region";
 import type { IServer } from "@/interfaces/models/server";
 import type { IUser } from "@/interfaces/models/user";
 
-type TProps = Pick<AppProps, "Component" | "pageProps"> & {
+type CustomAppProps = Pick<AppProps, "Component" | "pageProps"> & {
   data: {
     regions: IRegion[];
     servers: IServer[];
@@ -21,7 +21,7 @@ const CustomApp = ({
   Component,
   pageProps: { session, ...pageProps },
   data,
-}: TProps) => {
+}: CustomAppProps) => {
   return (
     <main>
       <Preloader data={data} />
@@ -37,9 +37,9 @@ const CustomApp = ({
 CustomApp.getInitialProps = async (context: AppContext) => {
   const ctx = await App.getInitialProps(context);
 
-  const dbRegionsResponse = await fetch(`http://localhost:3001/regions/`);
-  const dbServersResponse = await fetch(`http://localhost:3001/servers/`);
-  const dbUserResponse = await fetch(`http://localhost:3001/users/`);
+  const dbRegionsResponse = await fetch(`${process.env.API_URL}/regions/`);
+  const dbServersResponse = await fetch(`${process.env.API_URL}/servers/`);
+  const dbUserResponse = await fetch(`${process.env.API_URL}/users/`);
   const regions = (await dbRegionsResponse.json()) as { data: IRegion[] };
   const servers = (await dbServersResponse.json()) as { data: IServer[] };
   const users = (await dbUserResponse.json()) as { data: IUser[] };
