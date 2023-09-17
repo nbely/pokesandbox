@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { toggleDarkMode } from "@/store/configSlice";
-import { useAppDispatch, useAppSelector } from "@/store/selectors";
+import { toggleDarkMode } from "@store/configSlice";
+import { useAppDispatch, useAppSelector } from "@store/selectors";
 
 const DarkModeToggle: React.FC = () => {
   const dispatch = useAppDispatch();

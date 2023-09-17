@@ -1,12 +1,10 @@
-'use client'
+"use client";
 
 import React from "react";
 
-import { useGetServers } from "@/store/selectors/serversSelectors";
-
 import ServerCard from "./components/ServerCard";
-
-import type { IServer } from "@/interfaces/models/server";
+import { useGetServers } from "@store/selectors/serversSelectors";
+import type { IServer } from "@interfaces/models/server";
 
 const ServersPage: React.FC = () => {
   const servers: IServer[] = useGetServers();
@@ -18,7 +16,7 @@ const ServersPage: React.FC = () => {
         {servers.map((server: IServer) =>
           server.discovery.enabled ? (
             <ServerCard key={server.serverId} server={server} />
-          ) : null,
+          ) : null
         )}
       </div>
     </div>

@@ -1,8 +1,7 @@
-'use client'
+"use client";
 
 import Icon from "@ant-design/icons";
 import React from "react";
-
 import type { CustomIconComponentProps } from "@ant-design/icons/lib/components/Icon";
 
 const DiscordSvg = () => (

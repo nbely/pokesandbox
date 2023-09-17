@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
 import React, { useRef } from "react";
 
-import { setRegions } from "@/store/regionsSlice";
-import { setServers } from "@/store/serversSlice";
-import { setUsers } from "@/store/usersSlice";
-import { store } from "@/store";
+import { setRegions } from "@store/regionsSlice";
+import { setServers } from "@store/serversSlice";
+import { setUsers } from "@store/usersSlice";
+import { store } from "@store/index";
 
 const Preloader = ({ data }: any) => {
   const loaded = useRef(false);

@@ -1,17 +1,16 @@
-'use client'
+"use client";
 
 import { Button } from "antd";
 import Link from "next/link";
 import React from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 
-import { setLoggedInUser } from "@/store/usersSlice";
-import { useAppDispatch, useAppSelector } from "@/store/selectors";
-import { useGetUserById } from "@/store/selectors/usersSelectors";
-
 import DarkModeToggle from "./components/darkModeToggle";
 import PokeballSvg from "../assets/pokeballSvg";
 import SearchBar from "./components/searchBar";
+import { setLoggedInUser } from "@store/usersSlice";
+import { useAppDispatch, useAppSelector } from "@store/selectors";
+import { useGetUserById } from "@store/selectors/usersSelectors";
 
 const Header: React.FC = () => {
   const dispatch = useAppDispatch();

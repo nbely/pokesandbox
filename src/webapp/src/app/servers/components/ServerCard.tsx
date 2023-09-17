@@ -1,13 +1,12 @@
-'use client'
+"use client";
 
 import { Avatar, Card } from "antd";
 import Link from "next/link";
 import React from "react";
 import { ReadOutlined } from "@ant-design/icons";
 
-import DiscordIcon from "../../components/assets/discordSvg";
-
-import type { IServer } from "@/interfaces/models/server";
+import DiscordIcon from "@components/assets/discordSvg";
+import type { IServer } from "@interfaces/models/server";
 
 interface ServerCardProps {
   server: IServer;

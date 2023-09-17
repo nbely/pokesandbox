@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { useGetRegionsByIds } from "@/store/selectors/regionsSelectors";
-import { useGetServerById } from "@/store/selectors/serversSelectors";
-import type { IRegion } from "@/interfaces/models/region";
-import type { IServer } from "@/interfaces/models/server";
+import { useGetRegionsByIds } from "@store/selectors/regionsSelectors";
+import { useGetServerById } from "@store/selectors/serversSelectors";
+import type { IRegion } from "@interfaces/models/region";
+import type { IServer } from "@interfaces/models/server";
 
 const ServerPage: React.FC = () => {
   const pathParts: string[] = usePathname()?.split("/") ?? [""];

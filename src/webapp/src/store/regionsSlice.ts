@@ -1,8 +1,8 @@
 import { createSelector, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-import { IRegion } from "@/interfaces/models/region";
 import { RootState } from ".";
+import type { IRegion } from "@interfaces/models/region";
 
 export interface RegionsState {
   regions: IRegion[];
@@ -29,10 +29,10 @@ export const selectRegions = (state: RootState) => state.regions.regions;
 export const selectRegionById = createSelector(
   [selectRegions, (state, regionId: string) => regionId],
   (regions, regionId) =>
-    regions.find((region: IRegion) => region._id === regionId),
+    regions.find((region: IRegion) => region._id === regionId)
 );
 export const selectRegionsByIds = createSelector(
   [selectRegions, (state, regionIds: string[]) => regionIds],
   (regions, regionIds) =>
-    regions.filter((region: IRegion) => regionIds.includes(region._id)),
+    regions.filter((region: IRegion) => regionIds.includes(region._id))
 );

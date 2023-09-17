@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
 import { usePathname } from "next/navigation";
 
-import { useGetUserById } from "@/store/selectors/usersSelectors";
-import type { IUser } from "@/interfaces/models/user";
+import { useGetUserById } from "@store/selectors/usersSelectors";
+import type { IUser } from "@interfaces/models/user";
 
 const User: React.FC = () => {
   const pathParts: string[] = usePathname()?.split("/") ?? [""];

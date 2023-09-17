@@ -1,8 +1,8 @@
 import { createSelector, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-import { IUser } from "@/interfaces/models/user";
 import { RootState } from ".";
+import type { IUser } from "@interfaces/models/user";
 
 export interface UsersState {
   loggedInUser: IUser | null;
@@ -34,13 +34,13 @@ export const selectUsers = (state: RootState) => state.users.users;
 export const selectUserById = createSelector(
   [selectUsers, (state, userId: string) => userId],
   (users, userId) =>
-    users.find((user: IUser) => user.userId === userId || user._id === userId),
+    users.find((user: IUser) => user.userId === userId || user._id === userId)
 );
 export const selectUsersByIds = createSelector(
   [selectUsers, (state, userIds: string[]) => userIds],
   (users, userIds) =>
     users.filter(
       (user: IUser) =>
-        userIds.includes(user.userId) || userIds.includes(user._id),
-    ),
+        userIds.includes(user.userId) || userIds.includes(user._id)
+    )
 );

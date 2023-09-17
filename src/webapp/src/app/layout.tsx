@@ -1,25 +1,30 @@
-import "@/styles/globals.scss";
-import LayoutProvider from "./LayoutProvider";
 import { PropsWithChildren } from "react";
-import { IRegion } from "@/interfaces/models/region";
-import { IServer } from "@/interfaces/models/server";
-import { IUser } from "@/interfaces/models/user";
 
-type AppData = {
+import "@styles/globals.scss";
+import LayoutProvider from "./AppLayout";
+import type { IRegion } from "@interfaces/models/region";
+import type { IServer } from "@interfaces/models/server";
+import type { IUser } from "@interfaces/models/user";
+
+export type AppData = {
   regions: IRegion[];
   servers: IServer[];
   users: IUser[];
-}
+};
 
-export default async function RootLayout({children}: PropsWithChildren) {
+export default async function RootLayout({ children }: PropsWithChildren) {
   const data: AppData = {
     regions: [],
     servers: [],
-    users: []
-  }
+    users: [],
+  };
 
-  const dbRegionsResponse = (await fetch(`${process.env.API_URL}/regions/`)).clone();
-  const dbServersResponse = (await fetch(`${process.env.API_URL}/servers/`)).clone();
+  const dbRegionsResponse = (
+    await fetch(`${process.env.API_URL}/regions/`)
+  ).clone();
+  const dbServersResponse = (
+    await fetch(`${process.env.API_URL}/servers/`)
+  ).clone();
   const dbUserResponse = (await fetch(`${process.env.API_URL}/users/`)).clone();
 
   const regions = (await dbRegionsResponse.json()) as { data: IRegion[] };
@@ -33,10 +38,8 @@ export default async function RootLayout({children}: PropsWithChildren) {
   return (
     <html lang="en">
       <body>
-        <LayoutProvider data={data}>
-          {children}
-        </LayoutProvider>
+        <LayoutProvider data={data}>{children}</LayoutProvider>
       </body>
     </html>
-  )
+  );
 }

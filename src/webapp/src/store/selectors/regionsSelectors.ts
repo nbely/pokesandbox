@@ -13,12 +13,12 @@ export const useGetRegions = () => {
 
 export const useGetRegionById = (regionId: string) => {
   return useAppSelector((state: RootState) =>
-    selectRegionById(state, regionId),
+    selectRegionById(state, regionId)
   );
 };
 
 export const useGetRegionsByIds = (regionIds: string[]) => {
   return useAppSelector((state: RootState) =>
-    selectRegionsByIds(state, regionIds),
+    selectRegionsByIds(state, regionIds)
   );
 };

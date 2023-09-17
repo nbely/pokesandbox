@@ -2,8 +2,8 @@ import { createSelector } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-import { IServer } from "@/interfaces/models/server";
 import { RootState } from ".";
+import type { IServer } from "@interfaces/models/server";
 
 export interface ServerState {
   servers: IServer[];
@@ -32,14 +32,14 @@ export const selectServerById = createSelector(
   (servers, serverId) =>
     servers.find(
       (server: IServer) =>
-        server.serverId === serverId || server._id === serverId,
-    ),
+        server.serverId === serverId || server._id === serverId
+    )
 );
 export const selectServersByIds = createSelector(
   [selectServers, (state, serverIds: string[]) => serverIds],
   (servers, serverIds) =>
     servers.filter(
       (server: IServer) =>
-        serverIds.includes(server.serverId) || serverIds.includes(server._id),
-    ),
+        serverIds.includes(server.serverId) || serverIds.includes(server._id)
+    )
 );

@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
 import Image from "next/image";
 import React from "react";
 
-import { useAppSelector } from "@/store/selectors";
+import { useAppSelector } from "@store/selectors";
 
 export default function HomePage() {
   const user = useAppSelector((state) => state.users.loggedInUser);
@@ -31,4 +31,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-};
+}

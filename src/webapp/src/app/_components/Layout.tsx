@@ -1,11 +1,12 @@
-'use client'
+"use client";
 
-import { useAppSelector } from "@/store/selectors";
+import type { PropsWithChildren } from "react";
+
 import Header from "./header/header";
 import Sidebar from "./sidebar/sidebar";
-import { PropsWithChildren } from "react";
+import { useAppSelector } from "@store/selectors";
 
-export default function Layout({children}: PropsWithChildren) {
+export default function Layout({ children }: PropsWithChildren) {
   const isDarkMode = useAppSelector((state) => state.config.isDarkMode);
 
   return (
@@ -21,5 +22,5 @@ export default function Layout({children}: PropsWithChildren) {
       </main>
       <Sidebar />
     </div>
-  )
+  );
 }

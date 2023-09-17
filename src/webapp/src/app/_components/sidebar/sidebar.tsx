@@ -1,11 +1,9 @@
-'use client'
+"use client";
 
 import SidebarIcon from "./components/sidebarIcon";
-
-import { useAppSelector } from "@/store/selectors";
-import { useGetServersByIds } from "@/store/selectors/serversSelectors";
-
-import type { IServer } from "@/interfaces/models/server";
+import { useAppSelector } from "@store/selectors";
+import { useGetServersByIds } from "@store/selectors/serversSelectors";
+import type { IServer } from "@interfaces/models/server";
 
 const Sidebar: React.FC = () => {
   const user = useAppSelector((state) => state.users.loggedInUser);
