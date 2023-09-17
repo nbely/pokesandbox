@@ -33,7 +33,7 @@ export async function findRegionsByObjectIds(
 export async function upsertRegion(
   query: FilterQuery<IRegionModel>,
   update: UpdateQuery<IRegionModel>,
-  options: QueryOptions = { lean: true },
+  options: QueryOptions = { lean: true, upsert: true },
 ) {
   return Region.findOneAndUpdate(query, update, options).exec();
 }
