@@ -1,16 +1,27 @@
 import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
-export type EvoRegion = 'Alola' | 'Galar';
-export type EvoType = 'trade' | 'useItem' | 'levelMove' | 'levelExtra' | 'levelFriendship' | 'levelHold' | 'other';
+export type EvoRegion = "Alola" | "Galar";
+export type EvoType =
+  | "trade"
+  | "useItem"
+  | "levelMove"
+  | "levelExtra"
+  | "levelFriendship"
+  | "levelHold"
+  | "other";
 export type GenderName = "" | "M" | "F" | "N";
-export type GenderRatio = {M: number, F: number};
+export type GenderRatio = { M: number; F: number };
 export type SpeciesAbility = {
   0: string;
   1?: string;
   H?: string;
   S?: string;
 };
-export type SpeciesTag = "Mythical" | "Restricted Legendary" | "Sub-Legendary" | "Paradox";
+export type SpeciesTag =
+  | "Mythical"
+  | "Restricted Legendary"
+  | "Sub-Legendary"
+  | "Paradox";
 export type StatsTable = {
   hp: number;
   atk: number;
@@ -19,9 +30,34 @@ export type StatsTable = {
   spd: number;
   spe: number;
 };
-export type SinglesTier = "AG" | "Uber" | "(Uber)" | "OU" | "(OU)" | "UUBL" | "UU" | "RUBL" | "RU" | "NUBL" | "NU" |
-	"(NU)" | "PUBL" | "PU" | "(PU)" | "NFE" | "LC";
-export type DoublesTier = "DUber" | "(DUber)" | "DOU" | "(DOU)" | "DBL" | "DUU" | "(DUU)" | "NFE" | "LC";
+export type SinglesTier =
+  | "AG"
+  | "Uber"
+  | "(Uber)"
+  | "OU"
+  | "(OU)"
+  | "UUBL"
+  | "UU"
+  | "RUBL"
+  | "RU"
+  | "NUBL"
+  | "NU"
+  | "(NU)"
+  | "PUBL"
+  | "PU"
+  | "(PU)"
+  | "NFE"
+  | "LC";
+export type DoublesTier =
+  | "DUber"
+  | "(DUber)"
+  | "DOU"
+  | "(DOU)"
+  | "DBL"
+  | "DUU"
+  | "(DUU)"
+  | "NFE"
+  | "LC";
 export type OtherTier = "Unreleased" | "Illegal" | "CAP" | "CAP NFE" | "CAP LC";
 export type Sprites = {
   back?: string;
@@ -29,16 +65,16 @@ export type Sprites = {
   front: string;
   frontf?: string;
   icon?: string;
-}
+};
 export type Gen1Sprite = {
   normal: Sprites;
   gray?: Sprites;
   color?: Sprites;
-}
+};
 export type Sprite = {
   normal: Sprites;
   shiny?: Sprites;
-}
+};
 export enum Gen1 {
   "b" = "rb",
   "g" = "rg",
@@ -120,38 +156,38 @@ export enum OtherSpriteGroup {
   "custom" = "custom",
 }
 export interface ISprites {
-  footprint?: string,
+  footprint?: string;
   g1?: {
     [value in Gen1]?: Gen1Sprite;
-  },
+  };
   g2?: {
     [value in Gen2]?: Sprite;
-  },
+  };
   g3?: {
     [value in Gen3]?: Sprite;
-  },
+  };
   g4?: {
     [value in Gen4]?: Sprite;
-  },
+  };
   g5?: {
     [value in Gen5]?: Sprite;
-  },
+  };
   g6?: {
     [value in Gen6]?: Sprite;
-  },
+  };
   g7?: {
     [value in Gen7]?: Sprite;
-  },
+  };
   g8?: {
     [value in Gen8]?: Sprite;
-  },
+  };
   g9?: {
     [value in Gen9]?: Sprite;
-  },
+  };
   other?: {
     [value in OtherSpriteGroup]?: Sprite;
-  },
-  shape?: string,
+  };
+  shape?: string;
 }
 
 export interface IShowdownDexEntry {
@@ -194,19 +230,26 @@ export interface IShowdownDexEntry {
   changesFrom?: string;
   tags?: SpeciesTag[];
   maleOnlyHidden?: boolean;
-  unreleasedHidden?: boolean | 'Past';
+  unreleasedHidden?: boolean | "Past";
   pokemonGoData?: string[];
   gen?: number;
   tier?: SinglesTier | OtherTier;
   doublesTier?: DoublesTier | OtherTier;
   natDexTier?: SinglesTier | OtherTier;
-};
+}
 
-export interface IDexEntryModel extends Omit<
-  IShowdownDexEntry,
-  "baseSpecies" | "changesFrom" | "cosmeticFormes"
-  | "evoRegion" | "evos" | "formeOrder" | "otherFormes" | "prevo"
-> {
+export interface IDexEntryModel
+  extends Omit<
+    IShowdownDexEntry,
+    | "baseSpecies"
+    | "changesFrom"
+    | "cosmeticFormes"
+    | "evoRegion"
+    | "evos"
+    | "formeOrder"
+    | "otherFormes"
+    | "prevo"
+  > {
   baseSpecies?: {
     id: Types.ObjectId;
     name: string;
@@ -225,10 +268,12 @@ export interface IDexEntryModel extends Omit<
   classification: string;
   dexEntries?: string[];
   evYields: StatsTable;
-  evoRegion?: {
-    id?: Types.ObjectId;
-    name: string;
-  } | string;
+  evoRegion?:
+    | {
+        id?: Types.ObjectId;
+        name: string;
+      }
+    | string;
   evos?: {
     id: Types.ObjectId;
     name: string;
@@ -319,10 +364,12 @@ export const DexEntrySchema: Schema = new Schema({
   classification: { type: String, required: true },
   color: { type: String, required: true },
   cosmeticFormes: {
-    type: [{
-      id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
-      name: { type: String, required: false },
-    }],
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
     required: false,
   },
   dexEntries: { type: [String], required: false },
@@ -352,20 +399,24 @@ export const DexEntrySchema: Schema = new Schema({
   },
   evoType: { type: String, required: false },
   evos: {
-    type: [{
-      id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
-      name: { type: String, required: false },
-    }],
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
     required: false,
   },
   expGrowth: { type: String, required: true },
   expYield: { type: Number, required: true },
   forme: { type: String, required: false },
   formeOrder: {
-    type: [{
-      id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
-      name: { type: String, required: false },
-    }],
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
     required: false,
   },
   gen: { type: Number, required: false },
@@ -391,10 +442,12 @@ export const DexEntrySchema: Schema = new Schema({
   num: { type: Number, required: true },
   originServer: { type: Schema.Types.ObjectId, ref: "Server", required: false },
   otherFormes: {
-    type: [{
-      id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
-      name: { type: String, required: false },
-    }],
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
     required: false,
   },
   pokemonGoData: { type: [String], required: false },
@@ -409,7 +462,7 @@ export const DexEntrySchema: Schema = new Schema({
   requiredItem: { type: String, required: false },
   requiredItems: { type: [String], required: false },
   requiredMove: { type: String, required: false },
-  showdownName: {type: String, required: true },
+  showdownName: { type: String, required: true },
   sprites: {
     type: {
       footprint: { type: String, required: false },
