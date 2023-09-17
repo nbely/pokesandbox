@@ -13,12 +13,12 @@ export const useGetServers = () => {
 
 export const useGetServerById = (serverId: string) => {
   return useAppSelector((state: RootState) =>
-    selectServerById(state, serverId),
+    selectServerById(state, serverId)
   );
 };
 
 export const useGetServersByIds = (serverIds: string[]) => {
   return useAppSelector((state: RootState) =>
-    selectServersByIds(state, serverIds),
+    selectServersByIds(state, serverIds)
   );
 };
