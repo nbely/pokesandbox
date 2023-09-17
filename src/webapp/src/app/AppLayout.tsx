@@ -7,14 +7,11 @@ import Preloader from "./_components/preloader";
 import Providers from "./_providers";
 import type { AppData } from "./layout";
 
-interface LayoutProviderProps extends PropsWithChildren {
+interface AppLayoutProps extends PropsWithChildren {
   data: AppData;
 }
 
-export default function LayoutProvider({
-  children,
-  data,
-}: LayoutProviderProps) {
+export default function AppLayout({ children, data }: AppLayoutProps) {
   return (
     <Fragment>
       <Preloader data={data} />

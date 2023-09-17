@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 
 import "@styles/globals.scss";
-import LayoutProvider from "./AppLayout";
+import AppLayout from "./AppLayout";
 import type { IRegion } from "@interfaces/models/region";
 import type { IServer } from "@interfaces/models/server";
 import type { IUser } from "@interfaces/models/user";
@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <body>
-        <LayoutProvider data={data}>{children}</LayoutProvider>
+        <AppLayout data={data}>{children}</AppLayout>
       </body>
     </html>
   );
