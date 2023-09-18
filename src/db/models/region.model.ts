@@ -18,7 +18,10 @@ export interface IRegionModel {
   locations: Types.ObjectId[];
   name: string;
   playerList: Types.ObjectId[];
-  pokedex: Types.ObjectId[];
+  pokedex: {
+    id: Types.ObjectId,
+    name: string,
+  }[];
   progressionTypes: {
     [key: string]: string[] | number;
   };
@@ -48,7 +51,10 @@ export interface IRegionPopulated
   characterList: string[]; // ICharacter[];
   locations: string[]; // ILocation[];
   playerList: IUser[];
-  pokedex: string[]; // IDexEntry[];
+  pokedex: {
+    id: string; // IDexEntry[];
+    name: string;
+  }[];
   quests: {
     active: string[]; // IQuest[];
     passive: string[]; // IQuest[];
@@ -88,7 +94,13 @@ export const RegionSchema: Schema = new Schema({
   locations: { type: [Schema.Types.ObjectId], ref: "Location", required: true },
   name: { type: String, required: true },
   playerList: { type: [Schema.Types.ObjectId], ref: "User", required: true },
-  pokedex: { type: [Schema.Types.ObjectId], ref: "DexEntry", required: true },
+  pokedex: {
+    type: {
+      id: { type: [Schema.Types.ObjectId], ref: "DexEntry", required: true },
+      name: { type: String, required: true },
+    },
+    required: true,
+  },
   progressionTypes: {
     type: Map,
     of: Schema.Types.Mixed,

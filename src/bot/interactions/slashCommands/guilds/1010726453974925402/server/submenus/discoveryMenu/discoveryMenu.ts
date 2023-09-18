@@ -1,7 +1,7 @@
 import { AdminMenu } from "@bot/classes/adminMenu";
-import getDiscoveryMenuComponents from "./components/getDiscoveryMenuComponents";
 import getDiscoveryMenuEmbed from "./embeds/getDiscoveryMenuEmbed";
 import handleSetDescription from "./optionHandlers/handleSetDescription";
+import setDiscoveryMenuComponents from "./components/setDiscoveryMenuComponents";
 import { upsertServer } from "@services/server.service";
 
 const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
@@ -12,40 +12,31 @@ const handleDiscoveryMenu = async (menu: AdminMenu): Promise<void> => {
       menu.prompt ||
       "Select an option to update your Server Discovery settings.";
     menu.isBackSelected = false;
-    menu.components = getDiscoveryMenuComponents(menu.server.discovery.enabled);
+    setDiscoveryMenuComponents(menu);
     if (!menu.server.discovery.enabled && !menu.server.discovery.description) {
       menu.components[0].components[0].setDisabled(true);
     }
     menu.embeds = [await getDiscoveryMenuEmbed(menu)];
 
-    await menu.handleMenuReset();
+    await menu.updateEmbedMessage();
 
-    try {
-      const option = await menu.awaitButtonMenuInteraction(120_000);
+    const selection = await menu.awaitButtonMenuInteraction(120_000);
+    if (selection === undefined) continue;
 
-      switch (option) {
-        case "Back":
-          menu.back();
-          break;
-        case "Cancel":
-          await menu.cancel();
-          break;
-        case "Enable":
-        case "Disable":
-          menu.prompt = `Successfully ${
-            option === "Enable" ? "enabled" : "disabled"
-          } Server Discovery`;
-          menu.server.discovery.enabled = !menu.server.discovery.enabled;
-          await upsertServer({ serverId: menu.server.serverId }, menu.server);
-          break;
-        case "Set Description":
-          await handleSetDescription(menu);
-          break;
-        default:
-          throw new Error("Invalid option selected");
-      }
-    } catch (error) {
-      await menu.handleError(error);
+    switch (selection) {
+      case "Enable":
+      case "Disable":
+        menu.prompt = `Successfully ${
+          selection === "Enable" ? "enabled" : "disabled"
+        } Server Discovery`;
+        menu.server.discovery.enabled = !menu.server.discovery.enabled;
+        await upsertServer({ serverId: menu.server.serverId }, menu.server);
+        break;
+      case "Set Description":
+        await handleSetDescription(menu);
+        break;
+      default:
+        menu.handleError(new Error("Invalid option selected"));
     }
   }
 };

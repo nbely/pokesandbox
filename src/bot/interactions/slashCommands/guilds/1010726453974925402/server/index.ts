@@ -4,11 +4,11 @@ import { AdminMenu } from "@bot/classes/adminMenu";
 import { BotClient } from "@bot/index";
 import { findServer } from "@services/server.service";
 import getServerInitializedEmbed from "./embeds/getServerInitializedEmbed";
-import getServerMenuComponents from "./components/getServerMenuComponents";
 import getServerMenuEmbed from "./embeds/getServerMenuEmbed";
 import handleDiscoveryMenu from "./submenus/discoveryMenu/discoveryMenu";
 import handleUpdatePrefixes from "./optionHandlers/handleUpdatePrefixes";
 import handleUpdateRoles from "./optionHandlers/handleUpdateRoles";
+import setServerMenuComponents from "./components/setServerMenuComponents";
 
 import { IServer } from "@models/server.model";
 import ISlashCommand from "@structures/interfaces/slashCommand";
@@ -43,33 +43,28 @@ const Server: ISlashCommand = {
     await menu.populateModRoles();
 
     while (!menu.isCancelled) {
-      menu.components = getServerMenuComponents();
+      menu.isRootMenu = true;
+      setServerMenuComponents(menu);
       menu.embeds = [getServerMenuEmbed(menu)];
 
       await menu.sendEmbedMessage();
 
-      try {
-        const option = await menu.awaitButtonMenuInteraction(120_000);
+      const selection = await menu.awaitButtonMenuInteraction(120_000);
+      if (selection === undefined) continue;
 
-        switch (option) {
-          case "Cancel":
-            await menu.cancel();
-            break;
-          case "Prefix":
-            await handleUpdatePrefixes(menu);
-            break;
-          case "Admin":
-          case "Mod":
-            await handleUpdateRoles(menu, option);
-            break;
-          case "Discovery":
-            await handleDiscoveryMenu(menu);
-            break;
-          default:
-            await menu.handleError();
-        }
-      } catch (error) {
-        await menu.handleError(error);
+      switch (selection) {
+        case "Prefix":
+          await handleUpdatePrefixes(menu);
+          break;
+        case "Admin":
+        case "Mod":
+          await handleUpdateRoles(menu, selection);
+          break;
+        case "Discovery":
+          await handleDiscoveryMenu(menu);
+          break;
+        default:
+          await menu.handleError(new Error("Invalid option selected"));
       }
     }
   },

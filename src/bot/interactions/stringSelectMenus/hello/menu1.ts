@@ -17,11 +17,9 @@ const HelloMenu1: IStringSelectMenu = {
       .addOptions(
         new StringSelectMenuOptionBuilder()
           .setLabel("Nice weather we're having!")
-          .setDescription("Send a response about the nice weather.")
           .setValue("nice_weather"),
         new StringSelectMenuOptionBuilder()
           .setLabel("Have a nice day!")
-          .setDescription("Send aresponse wishing a nice day.")
           .setValue("nice_day"),
       );
   },

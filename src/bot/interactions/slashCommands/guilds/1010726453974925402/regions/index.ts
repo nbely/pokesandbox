@@ -3,13 +3,12 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { AdminMenu } from "@bot/classes/adminMenu";
 import { BotClient } from "@bot/index";
 import { findServer } from "@services/server.service";
-import getRegionsMenuComponents from "./components/getRegionsMenuComponents";
 import getRegionsMenuEmbed from "./embeds/getRegionsMenuEmbed";
 import handleCreateRegion from "./optionHandlers/handleCreateRegion";
 import handleManageRegionMenu from "./submenus/manageRegionMenu/manageRegionMenu";
-
-import { IServer } from "@models/server.model";
-import ISlashCommand from "@structures/interfaces/slashCommand";
+import setRegionsMenuComponents from "./components/setRegionsMenuComponents";
+import type { IServer } from "@models/server.model";
+import type ISlashCommand from "@structures/interfaces/slashCommand";
 
 const Regions: ISlashCommand = {
   name: "regions",
@@ -41,38 +40,28 @@ const Regions: ISlashCommand = {
     }
 
     while (!menu.isCancelled) {
+      menu.isRootMenu = true;
       menu.prompt = menu.prompt || "Please select a Region to manage.";
-      menu.components = getRegionsMenuComponents(menu);
+      setRegionsMenuComponents(menu);
       menu.embeds = [getRegionsMenuEmbed(menu)];
 
       await menu.sendEmbedMessage();
 
-      try {
-        const option = await menu.awaitButtonMenuInteraction(120_000);
-
-        switch (option) {
-          case "Cancel":
-            await menu.cancel();
-            break;
-          case "Create Region":
-            await handleCreateRegion(menu);
-            break;
-          case "Next":
-            menu.currentPage++;
-            break;
-          case "Previous":
-            menu.currentPage--;
-            break;
-          default:
-            if (!option || Number.isNaN(+option))
-              throw new Error("Invalid Option Selected");
-
-            menu.region = menu.regions[+option];
+      const selection = await menu.awaitButtonMenuInteraction(120_000);
+      if (selection === undefined) continue;
+      
+      switch (selection) {
+        case "Create Region":
+          await handleCreateRegion(menu);
+          break;
+        default:
+          if (Number.isNaN(+selection)) {
+            menu.handleError(new Error("Invalid Option Selected"));                
+          } else {
+            menu.region = menu.regions[+selection];
             await handleManageRegionMenu(menu);
-            break;
-        }
-      } catch (error) {
-        await menu.handleError(error);
+          }
+          break;
       }
     }
   },
