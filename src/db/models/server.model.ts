@@ -63,7 +63,7 @@ export const ServerSchema: Schema = new Schema({
 const ServerModel = model<IServer, ServerModelType>(
   "Server",
   ServerSchema,
-  "servers",
+  "servers"
 );
 
 export default ServerModel;

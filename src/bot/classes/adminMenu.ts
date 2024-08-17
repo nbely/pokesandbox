@@ -10,14 +10,30 @@ import type { IRegion } from "@models/region.model";
 import type { IServer } from "@models/server.model";
 
 export class AdminMenu extends Menu {
-  adminRoles: (string | Role)[] = [];
-  modRoles: (string | Role)[] = [];
+  private _adminRoles: (string | Role)[] = [];
+  private _modRoles: (string | Role)[] = [];
   private _region?: IRegion;
   private _regions: IRegion[] = [];
   private _server: IServer | null = null;
 
   constructor(client: BotClient, interaction: ChatInputCommandInteraction) {
     super(client, interaction);
+  }
+
+  get adminRoles(): (string | Role)[] {
+    return this._adminRoles;
+  }
+
+  set adminRoles(adminRoles: (string | Role)[]) {
+    this._adminRoles = adminRoles;
+  }
+
+  get modRoles(): (string | Role)[] {
+    return this._modRoles;
+  }
+
+  set modRoles(modRoles: (string | Role)[]) {
+    this._modRoles = modRoles;
   }
 
   get region(): IRegion {

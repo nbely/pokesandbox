@@ -1,7 +1,7 @@
 import { AdminMenu } from "@bot/classes/adminMenu";
 import getServerMenuEmbed from "../embeds/getServerMenuEmbed";
-import getUpdatePrefixesComponents from "../components/getUpdatePrefixesComponents";
 import handleAddPrefix from "./handleAddPrefix";
+import setUpdatePrefixesComponents from "../components/setUpdatePrefixesComponents";
 import { upsertServer } from "@services/server.service";
 
 const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
@@ -11,42 +11,28 @@ const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
   while (!menu.isBackSelected && !menu.isCancelled) {
     menu.isBackSelected = false;
     menu.prompt = menu.prompt || "Add or Remove a Prefix.";
-    menu.components = getUpdatePrefixesComponents(menu);
+    setUpdatePrefixesComponents(menu);
     menu.embeds = [getServerMenuEmbed(menu)];
 
-    await menu.handleMenuReset();
+    await menu.updateEmbedMessage();
 
-    try {
-      const option = await menu.awaitButtonMenuInteraction(120_000);
+    const selection = await menu.awaitButtonMenuInteraction(120_000);
+    if (selection === undefined) continue;
 
-      switch (option) {
-        case "Back":
-          menu.back();
-          break;
-        case "Cancel":
-          await menu.cancel();
-          break;
-        case "Next":
-          menu.currentPage++;
-          break;
-        case "Previous":
-          menu.currentPage--;
-          break;
-        case "Add Prefix":
-          await handleAddPrefix(menu);
-          break;
-        default:
-          if (!option || Number.isNaN(+option))
-            throw new Error("Invalid Option Selected");
+    switch (selection) {
+      case "Add Prefix":
+        await handleAddPrefix(menu);
+        break;
+      default:
+        if (Number.isNaN(+selection)){
+          menu.handleError(new Error("Invalid selection Selected"));
+        }
 
-          menu.prompt = `Successfully removed the prefix: \`${menu.server
-            .prefixes?.[+option]}\``;
-          menu.server.prefixes?.splice(+option, 1);
-          await upsertServer({ serverId: menu.server.serverId }, menu.server);
-          break;
-      }
-    } catch (error) {
-      await menu.handleError(error);
+        menu.prompt = `Successfully removed the prefix: \`${menu.server
+          .prefixes?.[+selection]}\``;
+        menu.server.prefixes?.splice(+selection, 1);
+        await upsertServer({ serverId: menu.server.serverId }, menu.server);
+        break;
     }
   }
 };

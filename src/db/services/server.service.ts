@@ -32,7 +32,7 @@ export async function findServerAndPopulateRegions(
 export async function upsertServer(
   query: FilterQuery<IServerModel>,
   update: UpdateQuery<IServerModel>,
-  options: QueryOptions = { lean: true },
+  options: QueryOptions = { lean: true, upsert: true },
 ) {
   return Server.findOneAndUpdate(query, update, options).exec();
 }
