@@ -24,6 +24,8 @@ const getManageRegionMenuComponents = (menu: AdminMenu): void => {
       ),
     ],
     hideBackButton: false,
+    nextButtonStyle: ButtonStyle.Secondary,
+    previousButtonStyle: ButtonStyle.Secondary,
     type: "buttons",
   }
 };

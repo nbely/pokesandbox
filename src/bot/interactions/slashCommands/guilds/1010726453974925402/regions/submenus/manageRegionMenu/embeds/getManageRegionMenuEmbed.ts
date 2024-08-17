@@ -6,7 +6,7 @@ const getManageRegionMenuEmbed = (menu: AdminMenu) => {
   const pokedexOptionText =
     menu.region.pokedex.length === 0
       ? "***Create Pokédex***"
-      : `Modify Pokédex ${menu.region.pokedex.length} Pokémon`;
+      : `Modify Pokédex (${menu.region.pokedex.length})`;
   const movesOptionText = "Modify TM/HM/TR Lists";
   const progressionsOptionText =
     Object.keys(menu.region.progressionTypes).length === 0
@@ -37,7 +37,7 @@ const getManageRegionMenuEmbed = (menu: AdminMenu) => {
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
     })
     .setDescription(
-      `__Status: ${menu.region.deployed ? "Deployed" : "Not Deployed"}__`,
+      `__Status: ${menu.region.deployed ? "Deployed" : "Not Deployed"}__`
     )
     .addFields(
       {
@@ -58,7 +58,7 @@ const getManageRegionMenuEmbed = (menu: AdminMenu) => {
           `\n:eight: ${mechanicsOptionText}` +
           `\n:nine: ${graphicsOptionText}`,
         inline: true,
-      },
+      }
     )
     .setFooter({
       text: !menu.region.deployable

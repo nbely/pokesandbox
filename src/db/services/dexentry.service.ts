@@ -5,6 +5,7 @@ import {
   Types,
   UpdateQuery,
 } from "mongoose";
+
 import DexEntry, { IDexEntryModel } from "../models/dexentry.model";
 
 export async function createDexEntry(input: IDexEntryModel) {
@@ -18,14 +19,21 @@ export async function deleteAllDexEntries() {
 
 export async function findDexEntry(
   query: FilterQuery<IDexEntryModel>,
-  options: QueryOptions = { lean: true },
+  options: QueryOptions = { lean: true }
 ) {
   return DexEntry.findOne(query, null, options).exec();
 }
 
+export async function findDexEntries(
+  query: FilterQuery<IDexEntryModel>,
+  options: QueryOptions = { lean: true }
+) {
+  return DexEntry.find(query, null, options).exec();
+}
+
 export async function findDexEntriesByObjectIds(
   objectIds: Types.ObjectId[],
-  options: QueryOptions = { lean: true },
+  options: QueryOptions = { lean: true }
 ) {
   return DexEntry.find({ _id: { $in: objectIds } }, null, options).exec();
 }
@@ -33,7 +41,7 @@ export async function findDexEntriesByObjectIds(
 export async function upsertDexEntry(
   query: FilterQuery<IDexEntryModel>,
   update: UpdateQuery<IDexEntryModel>,
-  options: QueryOptions = { lean: true, upsert: true },
+  options: QueryOptions = { lean: true, upsert: true }
 ) {
   return DexEntry.findOneAndUpdate(query, update, options).exec();
 }

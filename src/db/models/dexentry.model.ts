@@ -76,12 +76,8 @@ export type Sprite = {
   shiny?: Sprites;
 };
 export enum Gen1 {
-  "b" = "rb",
-  "g" = "rg",
-  "r" = "rb",
   "rb" = "rb",
   "rg" = "rg",
-  "rj" = "rg",
   "y" = "y",
 }
 export enum Gen2 {
@@ -91,65 +87,34 @@ export enum Gen2 {
 }
 export enum Gen3 {
   "e" = "e",
-  "fr" = "frlg",
   "frlg" = "frlg",
-  "lg" = "frlg",
-  "r" = "rs",
   "rs" = "rs",
-  "s" = "rs",
 }
 export enum Gen4 {
-  "d" = "dp",
   "dp" = "dp",
-  "hg" = "hgss",
   "hgss" = "hgss",
-  "pe" = "dp",
   "p" = "p",
-  "pl" = "p",
-  "ss" = "hgss",
 }
 export enum Gen5 {
-  "b" = "bw",
-  "b2" = "bw",
   "bw" = "bw",
-  "bw2" = "bw",
-  "w" = "bw",
-  "w2" = "bw",
 }
 export enum Gen6 {
-  "as" = "oras",
-  "b" = "bank",
   "bank" = "bank",
   "go" = "go",
-  "or" = "oras",
   "oras" = "oras",
-  "x" = "xy",
   "xy" = "xy",
-  "y" = "xy",
 }
 export enum Gen7 {
-  "e" = "lgpe",
-  "lg" = "lgpe",
   "lgpe" = "lgpe",
-  "p" = "lgpe",
 }
 export enum Gen8 {
-  "a" = "la",
-  "bd" = "bdsp",
   "bdsp" = "bdsp",
-  "h" = "home",
   "home" = "home",
-  "l" = "la",
   "la" = "la",
-  "sh" = "swsh",
-  "sw" = "swsh",
   "swsh" = "swsh",
-  "sp" = "bdsp",
 }
 export enum Gen9 {
-  "s" = "sv",
   "sv" = "sv",
-  "v" = "sv",
 }
 export enum OtherSpriteGroup {
   "sugimori" = "sugimori",
@@ -751,7 +716,7 @@ export const DexEntrySchema: Schema = new Schema({
 const DexEntryModel = model<IDexEntryModel, DexEntryModelType>(
   "DexEntry",
   DexEntrySchema,
-  "dexentries",
+  "dexentries"
 );
 
 export default DexEntryModel;

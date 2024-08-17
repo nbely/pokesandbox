@@ -1,19 +1,21 @@
 import { EmbedBuilder, EmbedField } from "discord.js";
 
 import { AdminMenu } from "@bot/classes/adminMenu";
+import type { IDexEntry } from "@models/dexentry.model";
 
-const getManageRegionMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
-  const pokedexLines: string[] = [];
+const getSelectMatchedPokemonEmbed = (
+  menu: AdminMenu,
+  pokedexNo: number,
+  matchedPokemon: IDexEntry[]
+): EmbedBuilder => {
+  const matchedOptions: string[] = [];
+
   for (
     let i = menu.paginationOptions._currentStartIndex;
     i < menu.paginationOptions._currentEndIndex;
     i++
   ) {
-    const pokemon = menu.region.pokedex[i];
-    pokedexLines.push(`\n${i + 1}. ${pokemon?.name ?? "-"}`);
-  }
-  if (pokedexLines.length === 0) {
-    pokedexLines.push("\nNo Pokédex entries found.");
+    matchedOptions.push(`\n${i + 1}. ${matchedPokemon[i].name}`);
   }
 
   const fields: EmbedField[] = [];
@@ -21,19 +23,19 @@ const getManageRegionMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
   if (menu.paginationOptions._currentQuantity <= 10) {
     fields.push({
       name: "\u200b",
-      value: pokedexLines.slice().join(""),
+      value: matchedOptions.slice().join(""),
       inline: true,
     });
   } else {
     const half = Math.ceil(menu.paginationOptions._currentQuantity / 2);
     fields.push({
       name: "\u200b",
-      value: pokedexLines.slice(0, half).join(""),
+      value: matchedOptions.slice(0, half).join(""),
       inline: true,
     });
     fields.push({
       name: "\u200b",
-      value: pokedexLines.slice(half).join(""),
+      value: matchedOptions.slice(half).join(""),
       inline: true,
     });
   }
@@ -41,21 +43,17 @@ const getManageRegionMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
   const embed = new EmbedBuilder()
     .setColor("Gold")
     .setAuthor({
-      name: `${menu.region.name} Pokédex Manager:`,
+      name: `${menu.region.name} Pokédex Slot #${pokedexNo}`,
       iconURL: menu.commandInteraction.guild?.iconURL() || undefined,
     })
     .setDescription(menu.description)
     .addFields(fields)
     .setFooter({
-      text: `Showing Pokédex entries ${menu.paginationOptions._currentRange} of ${menu.paginationOptions.totalQuantity}`,
+      text: `Showing matched options ${menu.paginationOptions._currentRange} of ${menu.paginationOptions.totalQuantity}`,
     })
     .setTimestamp();
-
-  if (menu.thumbnail) {
-    embed.setThumbnail(menu.thumbnail);
-  }
 
   return embed;
 };
 
-export default getManageRegionMenuEmbed;
+export default getSelectMatchedPokemonEmbed;

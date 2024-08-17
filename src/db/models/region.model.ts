@@ -2,6 +2,11 @@ import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
 import type { IUser } from "./user.model";
 
+export type PokedexSlot = {
+  id: Types.ObjectId;
+  name: string;
+};
+
 export interface IRegionModel {
   baseGeneration: number;
   charactersPerPlayer: number;
@@ -18,10 +23,7 @@ export interface IRegionModel {
   locations: Types.ObjectId[];
   name: string;
   playerList: Types.ObjectId[];
-  pokedex: {
-    id: Types.ObjectId,
-    name: string,
-  }[];
+  pokedex: (PokedexSlot | null)[];
   progressionTypes: {
     [key: string]: string[] | number;
   };
@@ -95,10 +97,12 @@ export const RegionSchema: Schema = new Schema({
   name: { type: String, required: true },
   playerList: { type: [Schema.Types.ObjectId], ref: "User", required: true },
   pokedex: {
-    type: {
-      id: { type: [Schema.Types.ObjectId], ref: "DexEntry", required: true },
-      name: { type: String, required: true },
-    },
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
     required: true,
   },
   progressionTypes: {
@@ -121,7 +125,7 @@ export const RegionSchema: Schema = new Schema({
 const RegionModel = model<IRegionModel, RegionModelType>(
   "Region",
   RegionSchema,
-  "regions",
+  "regions"
 );
 
 export default RegionModel;

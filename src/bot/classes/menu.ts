@@ -14,16 +14,22 @@ import {
   RoleSelectMenuInteraction,
 } from "discord.js";
 
-import { BotClient } from "../index";
-import Button from "@bot/interactions/buttons/global/button";
 import buildErrorEmbed from "@bot/embeds/errorEmbed";
+import Button from "@bot/interactions/buttons/global/button";
 import paginateButtons from "@bot/utils/paginateButtons";
 
+import { BotClient } from "../index";
+
 type ComponentBuilder = ButtonBuilder | RoleSelectMenuBuilder;
-type ComponentInteraction = MessageComponentInteraction
+type ComponentInteraction =
+  | MessageComponentInteraction
   | RoleSelectMenuInteraction;
 
 export type PaginationOptions = {
+  _currentEndIndex: number;
+  _currentQuantity: number;
+  _currentRange: string;
+  _currentStartIndex: number;
   backButtonStyle?: ButtonStyle;
   buttons?: ButtonBuilder[];
   cancelButtonStyle?: ButtonStyle;
@@ -34,9 +40,9 @@ export type PaginationOptions = {
   nextButtonStyle?: ButtonStyle;
   previousButtonStyle?: ButtonStyle;
   quantityPerPage: number;
-  totalQuantity?: number;
+  totalQuantity: number;
   type: "buttons" | "list";
-}
+};
 
 export class Menu {
   private _client: BotClient;
@@ -45,26 +51,34 @@ export class Menu {
   private _components: ActionRowBuilder<ComponentBuilder>[] = [];
   private _content?: string;
   private _currentPage: number = 1;
+  private _description: string = "";
   private _embeds: EmbedBuilder[] = [];
+  private _info: string = "";
   private _isBackSelected: boolean = false;
   private _isCancelled: boolean = false;
   private _isReset: boolean = false;
   private _isRootMenu: boolean = true;
   private _message?: Message;
   private _paginationOptions: PaginationOptions = {
+    _currentEndIndex: 1,
+    _currentQuantity: 1,
+    _currentRange: "1",
+    _currentStartIndex: 1,
     backButtonStyle: ButtonStyle.Secondary,
     buttons: [],
     cancelButtonStyle: ButtonStyle.Secondary,
     fixedStartButtons: [],
-    fixedEndButtons: [this.createButton("Cancel",ButtonStyle.Secondary)],
+    fixedEndButtons: [this.createButton("Cancel", ButtonStyle.Secondary)],
     hideBackButton: false,
     hideCancelButton: false,
     nextButtonStyle: ButtonStyle.Primary,
     previousButtonStyle: ButtonStyle.Primary,
     quantityPerPage: 10,
+    totalQuantity: 1,
     type: "buttons",
-  }
+  };
   private _prompt: string = "";
+  private _thumbnail?: string;
 
   constructor(client: BotClient, interaction: ChatInputCommandInteraction) {
     this._client = client;
@@ -107,12 +121,25 @@ export class Menu {
     this._currentPage = currentPage;
   }
 
+  get description(): string {
+    return this._description;
+  }
+
   get embeds(): EmbedBuilder[] {
     return this._embeds;
   }
 
   set embeds(embeds: EmbedBuilder[]) {
     this._embeds = embeds;
+  }
+
+  get info(): string {
+    return this._info;
+  }
+
+  set info(info: string) {
+    this._info = info;
+    this.setDescription();
   }
 
   get isBackSelected(): boolean {
@@ -160,26 +187,48 @@ export class Menu {
   }
 
   set paginationOptions(paginationOptions: PaginationOptions) {
-    this._paginationOptions = paginationOptions;
+    const startIndex: number =
+      (this.currentPage - 1) * paginationOptions.quantityPerPage;
+    let endIndex: number = paginationOptions.quantityPerPage * this.currentPage;
+    endIndex =
+      endIndex > paginationOptions.totalQuantity
+        ? paginationOptions.totalQuantity
+        : endIndex;
+
+    this._paginationOptions = {
+      ...paginationOptions,
+      _currentEndIndex: endIndex,
+      _currentQuantity: endIndex - startIndex,
+      _currentRange:
+        startIndex === endIndex
+          ? `${startIndex}`
+          : `${startIndex + 1}-${endIndex}`,
+      _currentStartIndex: startIndex,
+    };
+
     if (paginationOptions.type === "buttons") {
       this._components = paginateButtons(
         paginationOptions.buttons ?? [],
         this.currentPage,
         paginationOptions.fixedStartButtons,
         [
-          ...paginationOptions.fixedEndButtons ?? [],
-          ...(paginationOptions.hideBackButton || this.isRootMenu ? [] : [
-            this.createButton(
-              "Back",
-              paginationOptions.backButtonStyle ?? ButtonStyle.Secondary
-            )
-          ]),
-          ...(paginationOptions.hideCancelButton ? [] : [
-            this.createButton(
-              "Cancel",
-              paginationOptions.cancelButtonStyle ?? ButtonStyle.Secondary
-            )
-          ]),
+          ...(paginationOptions.fixedEndButtons ?? []),
+          ...(paginationOptions.hideBackButton || this.isRootMenu
+            ? []
+            : [
+                this.createButton(
+                  "Back",
+                  paginationOptions.backButtonStyle ?? ButtonStyle.Secondary
+                ),
+              ]),
+          ...(paginationOptions.hideCancelButton
+            ? []
+            : [
+                this.createButton(
+                  "Cancel",
+                  paginationOptions.cancelButtonStyle ?? ButtonStyle.Secondary
+                ),
+              ]),
         ],
         paginationOptions.nextButtonStyle,
         paginationOptions.previousButtonStyle
@@ -195,6 +244,15 @@ export class Menu {
 
   set prompt(prompt: string) {
     this._prompt = prompt;
+    this.setDescription();
+  }
+
+  get thumbnail(): string | undefined {
+    return this._thumbnail;
+  }
+
+  set thumbnail(thumbnail: string | undefined) {
+    this._thumbnail = thumbnail;
   }
 
   async awaitButtonMenuInteraction(time: number): Promise<string | undefined> {
@@ -266,13 +324,15 @@ export class Menu {
     this.isCancelled = true;
   }
 
-  async collectMessageOrButtonInteraction(time: number): Promise<string | undefined> {
-    const promise = new Promise<string | undefined>(async (resolve, reject) => {
+  async collectMessageOrButtonInteraction(
+    time: number
+  ): Promise<string | undefined> {
+    const promise = new Promise<string | undefined>(async (resolve) => {
       let compCollector: InteractionCollector<ButtonInteraction> | undefined;
-      
+
       if (this.components.length > 0) {
         const compFilter = (
-          componentInteraction: MessageComponentInteraction,
+          componentInteraction: MessageComponentInteraction
         ): boolean => {
           return (
             componentInteraction.user ===
@@ -283,18 +343,19 @@ export class Menu {
           componentType: ComponentType.Button,
           max: 1,
           filter: compFilter,
-          time
+          time,
         });
       }
 
       const msgFilter = (message: Message): boolean => {
         return message.author.id === this.commandInteraction.user.id;
       };
-      const msgCollector = this.commandInteraction.channel?.createMessageCollector({
-        filter: msgFilter,
-        max: 1,
-        time
-      });
+      const msgCollector =
+        this.commandInteraction.channel?.createMessageCollector({
+          filter: msgFilter,
+          max: 1,
+          time,
+        });
 
       compCollector?.on("collect", async (componentInteraction) => {
         msgCollector?.stop();
@@ -314,7 +375,6 @@ export class Menu {
         resolve(undefined);
       });
       compCollector?.on("end", async (collected) => {
-        console.log('compCollector end')
         if (collected.size === 0) {
           if (msgCollector) {
             if (msgCollector?.ended && msgCollector?.received === 0) {
@@ -334,7 +394,6 @@ export class Menu {
         resolve(message.content);
       });
       msgCollector?.on("end", async (collected) => {
-        console.log('msgCollector end')
         if (collected.size === 0) {
           if (compCollector) {
             if (compCollector?.ended && compCollector?.total === 0) {
@@ -348,7 +407,7 @@ export class Menu {
         }
       });
     });
-    return promise; 
+    return promise;
   }
 
   createButton(
@@ -374,7 +433,7 @@ export class Menu {
           (this.componentInteraction?.member ??
             this.commandInteraction.member) as GuildMember,
           errorMessage,
-          addSupportInfo,
+          addSupportInfo
         ),
       ],
       components: [],
@@ -385,8 +444,9 @@ export class Menu {
   async sendEmbedMessage(): Promise<void> {
     if (!this.message) {
       this.message = await this.commandInteraction.followUp(
-        this.getResponseOptions(),
+        this.getResponseOptions()
       );
+      this.info = "";
     } else {
       await this.updateEmbedMessage();
     }
@@ -402,18 +462,19 @@ export class Menu {
       }
       this.message =
         (await this.componentInteraction?.followUp(
-          this.getResponseOptions(),
+          this.getResponseOptions()
         )) ??
         (await this.commandInteraction.followUp(this.getResponseOptions()));
       this.isReset = false;
     } else {
       await this.componentInteraction?.update(this.getResponseOptions());
     }
+    this.info = "";
   }
 
   private async awaitMenuInteraction(time: number): Promise<void> {
     const filter = (
-      componentInteraction: MessageComponentInteraction,
+      componentInteraction: MessageComponentInteraction
     ): boolean => {
       return (
         componentInteraction.user ===
@@ -438,12 +499,14 @@ export class Menu {
     let showNextButton: boolean = false;
     let showPreviousButton: boolean = false;
 
-    const totalPages = Math.ceil((this.paginationOptions.totalQuantity ?? 0)
-      / this.paginationOptions.quantityPerPage);
+    const totalPages = Math.ceil(
+      (this.paginationOptions.totalQuantity ?? 0) /
+        this.paginationOptions.quantityPerPage
+    );
 
     if (totalPages > 1 && this.currentPage < totalPages) {
       showNextButton = true;
-    } 
+    }
     if (this.currentPage > 1) {
       showPreviousButton = true;
     }
@@ -452,26 +515,42 @@ export class Menu {
 
     if (showPreviousButton) {
       actionRow.addComponents(
-        this.createButton("Previous", this.paginationOptions.previousButtonStyle),
+        this.createButton(
+          "Previous",
+          this.paginationOptions.previousButtonStyle
+        )
       );
     }
     if (showNextButton) {
       actionRow.addComponents(
-        this.createButton("Next", this.paginationOptions.nextButtonStyle),
+        this.createButton("Next", this.paginationOptions.nextButtonStyle)
       );
     }
     if (!this.paginationOptions.hideBackButton && !this.isRootMenu) {
       actionRow.addComponents(
-        this.createButton("Back", this.paginationOptions.backButtonStyle),
+        this.createButton("Back", this.paginationOptions.backButtonStyle)
       );
     }
     if (!this.paginationOptions.hideCancelButton) {
       actionRow.addComponents(
-        this.createButton("Cancel", this.paginationOptions.cancelButtonStyle),
+        this.createButton("Cancel", this.paginationOptions.cancelButtonStyle)
       );
     }
     if (actionRow.components.length > 0) {
       this.components = [actionRow];
+    }
+  }
+
+  private setDescription() {
+    // set description to prompt only if info is empty
+    // set descriptions to info only if prompt is empty
+    // set description to prompt and info if both are not empty
+    if (this.prompt && this.info) {
+      this._description = `${this.prompt}\n\n${this.info}`;
+    } else if (this.prompt) {
+      this._description = this.prompt;
+    } else if (this.info) {
+      this._description = this.info;
     }
   }
 }
