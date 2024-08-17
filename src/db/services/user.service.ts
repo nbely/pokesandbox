@@ -25,7 +25,7 @@ export async function findUser(
 export async function upsertUser(
   query: FilterQuery<IUserModel>,
   update: UpdateQuery<IUserModel>,
-  options: QueryOptions = { lean: true },
+  options: QueryOptions = { lean: true, upsert: true },
 ) {
   return User.findOneAndUpdate(query, update, options).exec();
 }

@@ -2,8 +2,8 @@ import { ButtonBuilder, ButtonStyle } from "discord.js";
 
 import IButtonCommand from "@structures/interfaces/buttonCommand";
 
-const ServerOption: IButtonCommand = {
-  name: "server-option",
+const Button: IButtonCommand = {
+  name: "global-button",
   create: (options: {
     label: string;
     style: ButtonStyle;
@@ -11,7 +11,7 @@ const ServerOption: IButtonCommand = {
   }) => {
     return new ButtonBuilder()
       .setCustomId(
-        `server-option_${
+        `global-button_${
           options.id !== undefined ? options.id : options.label
         }`,
       )
@@ -20,4 +20,4 @@ const ServerOption: IButtonCommand = {
   },
 };
 
-export default ServerOption;
+export default Button;

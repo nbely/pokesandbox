@@ -2,6 +2,11 @@ import { HydratedDocument, Model, Query, Schema, Types, model } from "mongoose";
 
 import type { IUser } from "./user.model";
 
+export type PokedexSlot = {
+  id: Types.ObjectId;
+  name: string;
+};
+
 export interface IRegionModel {
   baseGeneration: number;
   charactersPerPlayer: number;
@@ -18,7 +23,7 @@ export interface IRegionModel {
   locations: Types.ObjectId[];
   name: string;
   playerList: Types.ObjectId[];
-  pokedex: Types.ObjectId[];
+  pokedex: (PokedexSlot | null)[];
   progressionTypes: {
     [key: string]: string[] | number;
   };
@@ -48,7 +53,10 @@ export interface IRegionPopulated
   characterList: string[]; // ICharacter[];
   locations: string[]; // ILocation[];
   playerList: IUser[];
-  pokedex: string[]; // IDexEntry[];
+  pokedex: {
+    id: string; // IDexEntry[];
+    name: string;
+  }[];
   quests: {
     active: string[]; // IQuest[];
     passive: string[]; // IQuest[];
@@ -88,7 +96,15 @@ export const RegionSchema: Schema = new Schema({
   locations: { type: [Schema.Types.ObjectId], ref: "Location", required: true },
   name: { type: String, required: true },
   playerList: { type: [Schema.Types.ObjectId], ref: "User", required: true },
-  pokedex: { type: [Schema.Types.ObjectId], ref: "DexEntry", required: true },
+  pokedex: {
+    type: [
+      {
+        id: { type: Schema.Types.ObjectId, ref: "DexEntry", required: false },
+        name: { type: String, required: false },
+      },
+    ],
+    required: true,
+  },
   progressionTypes: {
     type: Map,
     of: Schema.Types.Mixed,
@@ -109,7 +125,7 @@ export const RegionSchema: Schema = new Schema({
 const RegionModel = model<IRegionModel, RegionModelType>(
   "Region",
   RegionSchema,
-  "regions",
+  "regions"
 );
 
 export default RegionModel;

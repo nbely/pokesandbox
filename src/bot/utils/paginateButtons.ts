@@ -1,4 +1,4 @@
-import ServerOption from "@bot/interactions/buttons/server/option";
+import Button from "@bot/interactions/buttons/global/button";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
 const paginateButtons = (
@@ -6,8 +6,8 @@ const paginateButtons = (
   page: number = 1,
   fixedStartButtons: ButtonBuilder[] = [],
   fixedEndButtons: ButtonBuilder[] = [],
-  nextButtonStyle?: ButtonStyle,
-  previousButtonStyle?: ButtonStyle,
+  nextButtonStyle: ButtonStyle = ButtonStyle.Primary,
+  previousButtonStyle: ButtonStyle = ButtonStyle.Primary,
 ): ActionRowBuilder<ButtonBuilder>[] => {
   const buttonSlotCount =
     10 - fixedStartButtons.length - fixedEndButtons.length;
@@ -59,17 +59,17 @@ const paginateButtons = (
   );
   if (pageCount > 1 && !isFirstPage) {
     currentPageButtons.push(
-      ServerOption.create({
+      Button.create({
         label: "Previous",
-        style: nextButtonStyle ?? ButtonStyle.Primary,
+        style: nextButtonStyle,
       }),
     );
   }
   if (pageCount > 1 && !isLastPage) {
     currentPageButtons.push(
-      ServerOption.create({
+      Button.create({
         label: "Next",
-        style: previousButtonStyle ?? ButtonStyle.Primary,
+        style: previousButtonStyle,
       }),
     );
   }
