@@ -1,4 +1,6 @@
 # Ignore artifacts:
 CODEOWNERS
-build
-coverage
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
