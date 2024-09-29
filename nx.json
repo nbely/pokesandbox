@@ -37,7 +37,7 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/server-e2e/**/*"]
+      "exclude": ["apps/server-e2e/**/*", "apps/bot-e2e/**/*"]
     },
     {
       "plugin": "@nx/next/plugin",
