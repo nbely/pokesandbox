@@ -20,6 +20,7 @@ import type {
   IUserContextCommand,
   IUserSelectMenu,
 } from '@bot/structures/interfaces';
+import { createSession, Session } from '../classes/Session';
 
 export const InteractionCreate: IBotEvent = {
   name: 'interactionCreate',
@@ -44,9 +45,10 @@ const handleApplicationCommandInteraction = async (
   interaction: CommandInteraction
 ): Promise<void> => {
   if (interaction.isChatInputCommand()) {
-    const slashCommand = client.slashCommands.get(interaction.commandName) as
-      | ISlashCommand
-      | undefined;
+    const slashCommand: ISlashCommand | undefined = client.slashCommands.get(
+      interaction.commandName
+    );
+
     if (!slashCommand || slashCommand.ignore) {
       interaction.reply({
         content: 'Error: Slash Command not found.',
@@ -54,6 +56,7 @@ const handleApplicationCommandInteraction = async (
       });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -61,14 +64,23 @@ const handleApplicationCommandInteraction = async (
       true,
       'SlashCommand'
     );
-    if (authenticatedCMDOptions)
-      return slashCommand.execute(client, interaction);
+
+    if (authenticatedCMDOptions) {
+      // return await createSession(
+      //   Session,
+      //   client,
+      //   interaction,
+      //   await slashCommand.createMenu()
+      // );
+      const session = await createSession(Session, client, interaction);
+      return slashCommand.execute(session);
+    }
   }
 
   if (interaction.isMessageContextMenuCommand()) {
-    const messageContextMenuCommand = client.slashCommands.get(
-      interaction.commandName
-    ) as IMessageContextCommand | undefined;
+    const messageContextMenuCommand: IMessageContextCommand | undefined =
+      client.messageContextCommands.get(interaction.commandName);
+
     if (
       !messageContextMenuCommand ||
       messageContextMenuCommand.command.type !== ApplicationCommandType.Message
@@ -76,6 +88,7 @@ const handleApplicationCommandInteraction = async (
       interaction.reply({ content: 'An error has ocurred', ephemeral: true });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -83,14 +96,16 @@ const handleApplicationCommandInteraction = async (
       true,
       'MessageContextMenuCommand'
     );
-    if (authenticatedCMDOptions)
+
+    if (authenticatedCMDOptions) {
       return messageContextMenuCommand.execute(client, interaction);
+    }
   }
 
   if (interaction.isUserContextMenuCommand()) {
-    const userContextMenuCommand = client.slashCommands.get(
-      interaction.commandName
-    ) as IUserContextCommand | undefined;
+    const userContextMenuCommand: IUserContextCommand | undefined =
+      client.userContextCommands.get(interaction.commandName);
+
     if (
       !userContextMenuCommand ||
       userContextMenuCommand.command.type !== ApplicationCommandType.User
@@ -98,6 +113,7 @@ const handleApplicationCommandInteraction = async (
       interaction.reply({ content: 'An error has ocurred', ephemeral: true });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -105,8 +121,10 @@ const handleApplicationCommandInteraction = async (
       true,
       'UserContextCommand'
     );
-    if (authenticatedCMDOptions)
+
+    if (authenticatedCMDOptions) {
       return userContextMenuCommand.execute(client, interaction);
+    }
   }
 };
 
@@ -122,6 +140,7 @@ const handleMessageComponentInteraction = async (
       interaction.reply({ content: 'An error has ocurred', ephemeral: true });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -129,6 +148,7 @@ const handleMessageComponentInteraction = async (
       true,
       'Button'
     );
+
     if (!button.execute) return;
     if (authenticatedCMDOptions) return button.execute(client, interaction);
   }
@@ -136,10 +156,12 @@ const handleMessageComponentInteraction = async (
   if (interaction.isRoleSelectMenu()) {
     const roleSelectMenu: IRoleSelectMenu | undefined =
       client.roleSelectMenus.get(interaction.customId);
+
     if (!roleSelectMenu) {
       interaction.reply({ content: 'An error has ocurred', ephemeral: true });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -147,6 +169,7 @@ const handleMessageComponentInteraction = async (
       true,
       'RoleSelectMenu'
     );
+
     if (!roleSelectMenu.execute) return;
     if (authenticatedCMDOptions)
       return roleSelectMenu.execute(client, interaction);
@@ -155,10 +178,12 @@ const handleMessageComponentInteraction = async (
   if (interaction.isStringSelectMenu()) {
     const stringSelectMenu: IStringSelectMenu | undefined =
       client.stringSelectMenus.get(interaction.customId);
+
     if (!stringSelectMenu) {
       interaction.reply({ content: 'An error has ocurred', ephemeral: true });
       return;
     }
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -166,6 +191,7 @@ const handleMessageComponentInteraction = async (
       true,
       'StringSelectMenu'
     );
+
     if (authenticatedCMDOptions)
       return stringSelectMenu.execute(client, interaction);
   }

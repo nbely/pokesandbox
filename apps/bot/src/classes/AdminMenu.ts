@@ -10,16 +10,30 @@ import {
 
 import type { BotClient } from './BotClient';
 import { Menu } from './Menu';
+import getServerInitializedEmbed from '@bot/interactions/guilds/1010726453974925402/slashCommands/server/embeds/getServerInitializedEmbed';
 
 export class AdminMenu extends Menu {
   private _adminRoles: (string | Role)[] = [];
+  private _initialized = false;
   private _modRoles: (string | Role)[] = [];
   private _region?: Region;
   private _regions: Region[] = [];
   private _server: Server | null = null;
 
-  constructor(client: BotClient, interaction: ChatInputCommandInteraction) {
+  private constructor(
+    client: BotClient,
+    interaction: ChatInputCommandInteraction
+  ) {
     super(client, interaction);
+  }
+
+  static async create(
+    client: BotClient,
+    interaction: ChatInputCommandInteraction
+  ): Promise<AdminMenu> {
+    const menu = new AdminMenu(client, interaction);
+    await menu.initialize();
+    return menu;
   }
 
   get adminRoles(): (string | Role)[] {
@@ -28,6 +42,10 @@ export class AdminMenu extends Menu {
 
   set adminRoles(adminRoles: (string | Role)[]) {
     this._adminRoles = adminRoles;
+  }
+
+  get initialized(): boolean {
+    return this._initialized;
   }
 
   get modRoles(): (string | Role)[] {
@@ -87,11 +105,14 @@ export class AdminMenu extends Menu {
     });
   }
 
-  async initialize(): Promise<boolean> {
+  async initialize(): Promise<void> {
     await this.fetchServer();
     if (!this._server) {
       if (this.commandInteraction.commandName === 'server') {
         await this.createNewServer();
+        await this.commandInteraction.followUp({
+          embeds: [getServerInitializedEmbed(this)],
+        });
       } else {
         await this.commandInteraction.followUp({
           embeds: [
@@ -103,9 +124,9 @@ export class AdminMenu extends Menu {
           ],
         });
       }
-      return false;
+      this._initialized = false;
     }
-    return true;
+    this._initialized = true;
   }
 
   async populateAdminRoles(): Promise<void> {

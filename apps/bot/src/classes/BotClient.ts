@@ -18,12 +18,11 @@ export class BotClient extends Client {
   events = new Collection<string, IBotEvent>();
   messageCommands = new Collection<string, IMessageCommand>();
   messageCommandsAliases = new Collection<string, string>();
+  messageContextCommands = new Collection<string, IMessageContextCommand>();
   modalForms = new Collection<string, IModalForm>();
   roleSelectMenus = new Collection<string, IRoleSelectMenu>();
-  slashCommands = new Collection<
-    string,
-    ISlashCommand | IMessageContextCommand | IUserContextCommand
-  >();
+  slashCommands = new Collection<string, ISlashCommand>();
   stringSelectMenus = new Collection<string, IStringSelectMenu>();
+  userContextCommands = new Collection<string, IUserContextCommand>();
   userSelectMenus = new Collection<string, IUserSelectMenu>();
 }
