@@ -9,21 +9,16 @@ import {
   type GuildMember,
   type InteractionCollector,
   type Message,
+  type MessageActionRowComponentBuilder,
   type MessageComponentInteraction,
-  type RoleSelectMenuBuilder,
-  type RoleSelectMenuInteraction,
 } from 'discord.js';
 
 import { buildErrorEmbed } from '@bot/embeds/errorEmbed';
 import { Button } from '@bot/interactions/buttons/global/button';
+import type { ComponentInteraction } from '@bot/structures/interfaces';
 import { paginateButtons } from '@bot/utils/paginateButtons';
 
 import type { BotClient } from './BotClient';
-
-type ComponentBuilder = ButtonBuilder | RoleSelectMenuBuilder;
-type ComponentInteraction =
-  | MessageComponentInteraction
-  | RoleSelectMenuInteraction;
 
 export type PaginationOptions = {
   _currentEndIndex: number;
@@ -48,16 +43,20 @@ export class Menu {
   private _client: BotClient;
   private _commandInteraction: ChatInputCommandInteraction;
   private _componentInteraction?: ComponentInteraction;
-  private _components: ActionRowBuilder<ComponentBuilder>[] = [];
+  private _components: ActionRowBuilder<MessageActionRowComponentBuilder>[] =
+    [];
   private _content?: string;
   private _currentPage = 1;
   private _description = '';
   private _embeds: EmbedBuilder[] = [];
   private _info = '';
   private _isBackSelected = false;
+  private _isCancellable = false;
   private _isCancelled = false;
   private _isReset = false;
+  private _isReturnable = false;
   private _isRootMenu = true;
+  private _trackInHistory = false;
   private _message?: Message;
   private _paginationOptions: PaginationOptions = {
     _currentEndIndex: 1,
@@ -80,7 +79,10 @@ export class Menu {
   private _prompt = '';
   private _thumbnail?: string;
 
-  constructor(client: BotClient, interaction: ChatInputCommandInteraction) {
+  public constructor(
+    client: BotClient,
+    interaction: ChatInputCommandInteraction
+  ) {
     this._client = client;
     this._commandInteraction = interaction;
   }
@@ -97,11 +99,13 @@ export class Menu {
     return this._componentInteraction;
   }
 
-  get components(): ActionRowBuilder<ComponentBuilder>[] {
+  get components(): ActionRowBuilder<MessageActionRowComponentBuilder>[] {
     return this._components;
   }
 
-  set components(components: ActionRowBuilder<ComponentBuilder>[]) {
+  set components(
+    components: ActionRowBuilder<MessageActionRowComponentBuilder>[]
+  ) {
     this._components = components;
   }
 
