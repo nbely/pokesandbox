@@ -1,9 +1,10 @@
 import {
+  ButtonStyle,
   type ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, Session } from '@bot/classes';
+import { AdminMenuBuilder, MenuBuilder, Session } from '@bot/classes';
 import type { Server } from '@shared/models';
 import { findServer } from '@shared/services';
 import type { ISlashCommand } from '@bot/structures/interfaces';
@@ -12,6 +13,7 @@ import setServerMenuComponents from './components/setServerMenuComponents';
 import getServerMenuEmbed from './embeds/getServerMenuEmbed';
 import handleUpdatePrefixes from './optionHandlers/handleUpdatePrefixes';
 import handleUpdateRoles from './optionHandlers/handleUpdateRoles';
+import { MenuButtonConfig } from 'apps/bot/src/classes/Menu';
 
 export const ServerCommand: ISlashCommand = {
   name: 'server',
@@ -30,39 +32,64 @@ export const ServerCommand: ISlashCommand = {
   // createMenu: async () => {
   //   return await AdminMenu.create();
   // },
-  execute: async (session: Session) => {
-    const menu = await AdminMenu.create(
-      session.client,
-      session.commandInteraction
-    );
+  createMenu: async (session: Session): Promise<AdminMenuBuilder> =>
+    (
+      await AdminMenuBuilder.create(
+        session.client,
+        session.commandInteraction,
+        {
+          useAdminRoles: true,
+          useModRoles: true,
+        }
+      )
+    ).setButtons(getButtonConfigs),
 
-    await menu.populateAdminRoles();
-    await menu.populateModRoles();
+  // .setEmbeds((menu: AdminMenu) => [getServerMenuEmbed(menu)]);
 
-    while (!menu.isCancelled) {
-      menu.isRootMenu = true;
-      setServerMenuComponents(menu);
-      menu.embeds = [getServerMenuEmbed(menu)];
+  // setServerMenuComponents(menu);    menu.embeds = [getServerMenuEmbed(menu)];
 
-      await menu.sendEmbedMessage();
+  // while (!menu.isCancelled) {
+  //   menu.isRootMenu = true;
+  //   setServerMenuComponents(menu);
+  //   menu.embeds = [getServerMenuEmbed(menu)];
 
-      const selection = await menu.awaitButtonMenuInteraction(120_000);
-      if (selection === undefined) continue;
+  //   await menu.sendEmbedMessage();
 
-      switch (selection) {
-        case 'Prefix':
-          await handleUpdatePrefixes(menu);
-          break;
-        case 'Admin':
-        case 'Mod':
-          await handleUpdateRoles(menu, selection);
-          break;
-        case 'Discovery':
-          await session.executeCommand('discovery');
-          break;
-        default:
-          await menu.handleError(new Error('Invalid option selected'));
-      }
-    }
-  },
+  //   const selection = await menu.awaitButtonMenuInteraction(120_000);
+  //   if (selection === undefined) continue;
+
+  //   switch (selection) {
+  //     case 'Prefix':
+  //       await handleUpdatePrefixes(menu);
+  //       break;
+  //     case 'Admin':
+  //     case 'Mod':
+  //       await handleUpdateRoles(menu, selection);
+  //       break;
+  //     case 'Discovery':
+  //       await session.executeCommand('discovery');
+  //       break;
+  //     default:
+  //       await menu.handleError(new Error('Invalid option selected'));
+  //   }
+  // }
 };
+
+function getButtonConfigs(menu: AdminMenuBuilder): MenuButtonConfig[] {
+  return [
+    { label: '1', style: ButtonStyle.Primary, onClick: () => {} },
+    { label: '2', style: ButtonStyle.Primary, onClick: () => {} },
+    { label: '3', style: ButtonStyle.Primary, onClick: () => {} },
+    { label: '4', style: ButtonStyle.Primary, onClick: () => {} },
+  ];
+  // menu.paginationOptions = {
+  //   buttons: [
+  //     menu.createButton('1', ButtonStyle.Primary, 'Prefix'),
+  //     menu.createButton('2', ButtonStyle.Primary, 'Admin'),
+  //     menu.createButton('3', ButtonStyle.Primary, 'Mod'),
+  //     menu.createButton('4', ButtonStyle.Primary, 'Discovery'),
+  //   ],
+  //   fixedEndButtons: [],
+  //   fixedStartButtons: [],
+  // };
+}

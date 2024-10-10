@@ -4,13 +4,13 @@ import {
 } from 'discord.js';
 
 import type { BotClient } from './BotClient';
-import { Menu } from './Menu';
+import { MenuBuilder } from './Menu';
 
 interface SessionConstructor<T extends Session> {
   new (
     client: BotClient,
     interaction: ChatInputCommandInteraction,
-    initialMenu: Menu
+    initialCommand: string
   ): T;
 }
 
@@ -18,30 +18,30 @@ export async function createSession<T extends Session>(
   SessionClass: SessionConstructor<T>,
   client: BotClient,
   interaction: ChatInputCommandInteraction,
-  initialMenu?: Menu
-): Promise<T> {
-  const session = new SessionClass(client, interaction, initialMenu);
+  initialCommand: string
+): Promise<void> {
+  const session = new SessionClass(client, interaction, initialCommand);
   await session.initialize();
-  return session;
 }
 
 export class Session {
   private _client: BotClient;
-  private _commandInteraction: ChatInputCommandInteraction | null = null;
+  private _commandInteraction: ChatInputCommandInteraction;
   private _componentInteraction: MessageComponentInteraction | null = null;
-  private _currentMenu: Menu | null = null;
-  private _history: Menu[] = [];
+  private _currentMenu: MenuBuilder | null = null;
+  private _history: MenuBuilder[] = [];
+  private _initialCommand: string;
   private _isCancelled = false;
   private _isCompleted = false;
 
   public constructor(
     client: BotClient,
     interaction: ChatInputCommandInteraction,
-    initialMenu: Menu
+    initialCommand: string
   ) {
     this._client = client;
     this._commandInteraction = interaction;
-    this._currentMenu = initialMenu;
+    this._initialCommand = initialCommand;
   }
 
   get client(): BotClient {
@@ -52,16 +52,16 @@ export class Session {
     return this._commandInteraction;
   }
 
-  get currentMenu(): Menu | null {
+  get currentMenu(): MenuBuilder | null {
     return this._currentMenu;
   }
 
-  get history(): Menu[] {
+  get history(): MenuBuilder[] {
     return this._history;
   }
 
   // Add a new menu to the session and update the current menu
-  public addMenu(menu: Menu): void {
+  public addMenu(menu: MenuBuilder): void {
     this._currentMenu = menu;
     this._history.push(menu);
   }
@@ -77,7 +77,7 @@ export class Session {
   }
 
   // Go back to the previous menu, if available
-  public goBack(): Menu | null {
+  public goBack(): MenuBuilder | null {
     if (this._history.length > 1) {
       this._history.pop();
       this._currentMenu = this._history[this._history.length - 1];
@@ -88,6 +88,10 @@ export class Session {
 
   public async initialize(): Promise<void> {
     await this.commandInteraction.deferReply();
+    const menu: MenuBuilder | undefined = await this._client.slashCommands
+      .get(this._initialCommand)
+      ?.createMenu(this);
+    this._currentMenu = menu;
     await this.processMenus();
   }
 

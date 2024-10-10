@@ -1,8 +1,8 @@
 import { ButtonStyle } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const setUpdatePrefixesComponents = (menu: AdminMenu): void => {
+const setUpdatePrefixesComponents = (menu: AdminMenuBuilder): void => {
   menu.paginationOptions = {
     ...menu.paginationOptions,
     buttons: menu.server.prefixes.map((prefix, index) => {

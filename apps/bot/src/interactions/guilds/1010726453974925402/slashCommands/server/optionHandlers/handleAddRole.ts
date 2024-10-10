@@ -4,14 +4,14 @@ import {
   type RoleSelectMenuBuilder,
 } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import { AddServerRoleMenu } from '@bot/interactions/roleSelectMenus/server/addRoleMenu';
 import { upsertServer } from '@shared/services';
 
 import getServerMenuEmbed from '../embeds/getServerMenuEmbed';
 
 const handleAddRole = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   roleIds: string[],
   roleType: string
 ): Promise<void> => {

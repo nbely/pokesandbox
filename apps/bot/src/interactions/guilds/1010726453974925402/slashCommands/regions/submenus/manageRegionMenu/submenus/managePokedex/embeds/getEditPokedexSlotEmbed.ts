@@ -1,10 +1,10 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 
 const getEditPokedexSlotEmbed = (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number,
   dexEntry: DexEntry
 ) => {

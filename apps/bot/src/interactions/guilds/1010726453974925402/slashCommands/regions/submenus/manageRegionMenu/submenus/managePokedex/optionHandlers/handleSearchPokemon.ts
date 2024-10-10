@@ -1,11 +1,11 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 import { findDexEntries, upsertRegion } from '@shared/services';
 
 import handleSelectMatchedPokemon from './handleSelectMatchedPokemon';
 
 const handleSearchPokemon = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number,
   pokemonName: string
 ): Promise<void> => {

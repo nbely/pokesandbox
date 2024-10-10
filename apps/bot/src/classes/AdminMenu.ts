@@ -9,10 +9,15 @@ import {
 } from '@shared/services';
 
 import type { BotClient } from './BotClient';
-import { Menu } from './Menu';
+import { MenuBuilder, MenuBuilderOptions } from './Menu';
 import getServerInitializedEmbed from '@bot/interactions/guilds/1010726453974925402/slashCommands/server/embeds/getServerInitializedEmbed';
 
-export class AdminMenu extends Menu {
+export interface AdminMenuBuilderOptions extends MenuBuilderOptions {
+  useAdminRoles?: boolean;
+  useModRoles?: boolean;
+}
+
+export class AdminMenuBuilder extends MenuBuilder {
   private _adminRoles: (string | Role)[] = [];
   private _initialized = false;
   private _modRoles: (string | Role)[] = [];
@@ -22,17 +27,21 @@ export class AdminMenu extends Menu {
 
   private constructor(
     client: BotClient,
-    interaction: ChatInputCommandInteraction
+    interaction: ChatInputCommandInteraction,
+    options: AdminMenuBuilderOptions
   ) {
-    super(client, interaction);
+    super(client, interaction, options);
   }
 
   static async create(
     client: BotClient,
-    interaction: ChatInputCommandInteraction
-  ): Promise<AdminMenu> {
-    const menu = new AdminMenu(client, interaction);
+    interaction: ChatInputCommandInteraction,
+    options?: AdminMenuBuilderOptions
+  ): Promise<AdminMenuBuilder> {
+    const menu = new AdminMenuBuilder(client, interaction, options);
     await menu.initialize();
+    if (options?.useAdminRoles) await menu.populateAdminRoles();
+    if (options?.useModRoles) await menu.populateModRoles();
     return menu;
   }
 
@@ -86,7 +95,43 @@ export class AdminMenu extends Menu {
     this._server = server;
   }
 
-  async createNewServer(): Promise<void> {
+  /* Public Builder Methods */
+
+  public async populateAdminRoles(): Promise<AdminMenuBuilder> {
+    if (this.server.adminRoleIds) {
+      this.adminRoles = await Promise.all(
+        this.server.adminRoleIds.map(
+          async (roleId) =>
+            this.commandInteraction.guild?.roles.cache.get(roleId) ??
+            (await this.commandInteraction.guild?.roles.fetch(roleId)) ??
+            roleId
+        )
+      );
+    }
+    return this;
+  }
+
+  public async populateModRoles(): Promise<AdminMenuBuilder> {
+    if (this.server.modRoleIds) {
+      this.modRoles = await Promise.all(
+        this.server.modRoleIds.map(
+          async (roleId) =>
+            this.commandInteraction.guild?.roles.cache.get(roleId) ??
+            (await this.commandInteraction.guild?.roles.fetch(roleId)) ??
+            roleId
+        )
+      );
+    }
+    return this;
+  }
+
+  public async populateRegions(): Promise<void> {
+    this.regions = await findRegionsByObjectIds(this.server.regions);
+  }
+
+  /* Private Methods */
+
+  private async createNewServer(): Promise<void> {
     if (!this.commandInteraction.guild)
       throw new Error('Guild not found while initializing server.');
 
@@ -105,7 +150,7 @@ export class AdminMenu extends Menu {
     });
   }
 
-  async initialize(): Promise<void> {
+  private async initialize(): Promise<void> {
     await this.fetchServer();
     if (!this._server) {
       if (this.commandInteraction.commandName === 'server') {
@@ -127,36 +172,6 @@ export class AdminMenu extends Menu {
       this._initialized = false;
     }
     this._initialized = true;
-  }
-
-  async populateAdminRoles(): Promise<void> {
-    if (this.server.adminRoleIds) {
-      this.adminRoles = await Promise.all(
-        this.server.adminRoleIds.map(
-          async (roleId) =>
-            this.commandInteraction.guild?.roles.cache.get(roleId) ??
-            (await this.commandInteraction.guild?.roles.fetch(roleId)) ??
-            roleId
-        )
-      );
-    }
-  }
-
-  async populateModRoles(): Promise<void> {
-    if (this.server.modRoleIds) {
-      this.modRoles = await Promise.all(
-        this.server.modRoleIds.map(
-          async (roleId) =>
-            this.commandInteraction.guild?.roles.cache.get(roleId) ??
-            (await this.commandInteraction.guild?.roles.fetch(roleId)) ??
-            roleId
-        )
-      );
-    }
-  }
-
-  async populateRegions(): Promise<void> {
-    this.regions = await findRegionsByObjectIds(this.server.regions);
   }
 
   private async fetchServer(): Promise<void> {

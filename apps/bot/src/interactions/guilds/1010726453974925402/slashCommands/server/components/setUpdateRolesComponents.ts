@@ -1,9 +1,9 @@
 import { ButtonStyle, type Role } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
 const setUpdateRolesComponents = (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   roleIds: string[],
   roles: (string | Role)[] | undefined
 ): void => {

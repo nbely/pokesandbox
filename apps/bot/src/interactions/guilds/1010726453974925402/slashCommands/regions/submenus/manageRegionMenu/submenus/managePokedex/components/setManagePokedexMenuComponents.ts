@@ -1,8 +1,8 @@
 import { ButtonStyle } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const setManageRegionMenuComponents = (menu: AdminMenu): void => {
+const setManageRegionMenuComponents = (menu: AdminMenuBuilder): void => {
   menu.paginationOptions = {
     ...menu.paginationOptions,
     quantityPerPage: 50,
