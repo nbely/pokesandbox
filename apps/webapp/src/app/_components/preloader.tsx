@@ -14,6 +14,7 @@ const Preloader = ({ data }: any) => {
     if (!loaded.current && data) {
       store.dispatch(setRegions(data.regions));
       store.dispatch(setServers(data.servers));
+      console.log(">>> users store load", data.users);
       store.dispatch(setUsers(data.users));
       loaded.current = true;
     }

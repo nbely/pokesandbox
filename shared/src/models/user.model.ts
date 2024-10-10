@@ -10,17 +10,11 @@ export const userEntitySchema = z.object({
   username: z.string(),
 });
 
-export type UserEntity = z.infer<typeof userEntitySchema>;
+export type User = z.infer<typeof userEntitySchema>;
 
-export type User = HydratedDocument<UserEntity>;
-
-type UserModelType = Model<UserEntity, UserQueryHelpers>;
+type UserModelType = Model<User, UserQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type UserModelQuery = Query<
-  any,
-  HydratedDocument<UserEntity>,
-  UserQueryHelpers
-> &
+type UserModelQuery = Query<any, HydratedDocument<User>, UserQueryHelpers> &
   UserQueryHelpers;
 
 export interface UserQueryHelpers {
@@ -35,4 +29,4 @@ export const UserSchema: Schema = new Schema({
   username: { type: String, required: true },
 });
 
-export const User = model<UserEntity, UserModelType>('User', UserSchema, 'users');
+export const User = model<User, UserModelType>('User', UserSchema, 'users');

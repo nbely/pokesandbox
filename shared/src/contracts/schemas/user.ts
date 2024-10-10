@@ -16,6 +16,7 @@ export const UserDTO = {
       _id: entity._id.toHexString(),
       servers: entity.servers.map((id) => id.toHexString()),
     };
+    console.log('>>> users dto', dto);
     return userDTOSchema.parse(dto);
   },
 };
