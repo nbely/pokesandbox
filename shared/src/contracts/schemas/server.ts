@@ -12,7 +12,6 @@ export type ServerDTO = z.infer<typeof serverDTOSchema>;
 
 export const ServerDTO = {
   convertFromEntity(entity: Server): ServerDTO {
-    console.log('>>> server entity', entity);
     const dto: ServerDTO = {
       ...entity,
       _id: entity._id.toHexString(),

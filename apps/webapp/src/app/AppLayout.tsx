@@ -11,7 +11,6 @@ interface AppLayoutProps extends PropsWithChildren {
 }
 
 export default function AppLayout({ children, data }: AppLayoutProps) {
-  console.log(">>> data", data);
   return (
     <>
       <Preloader data={data} />

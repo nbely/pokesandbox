@@ -38,7 +38,6 @@ export const selectUsers = (state: RootState) => state.users.users;
 export const selectUserById = createSelector(
   [selectUsers, (_state, userId: string) => userId],
   (users, userId) => {
-    console.log(">>> users", users);
     return users.find(
       (user: UserDTO) =>
         user.userId === userId || user._id.toString() === userId
