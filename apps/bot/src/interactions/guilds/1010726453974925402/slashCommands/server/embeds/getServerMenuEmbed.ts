@@ -1,8 +1,8 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const getServerMenuEmbed = (menu: AdminMenu) => {
+const getServerMenuEmbed = (menu: AdminMenuBuilder) => {
   const prefixes: string =
     menu.server.prefixes && menu.server.prefixes.length > 0
       ? menu.server.prefixes.map((prefix) => `\`${prefix}\``).join(', ')

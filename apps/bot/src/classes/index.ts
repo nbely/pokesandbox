@@ -1,4 +1,4 @@
-export { AdminMenu } from './AdminMenu';
+export { AdminMenuBuilder } from './AdminMenu';
 export { BotClient } from './BotClient';
-export { Menu } from './Menu';
+export { MenuBuilder } from './Menu';
 export { Session } from './Session';

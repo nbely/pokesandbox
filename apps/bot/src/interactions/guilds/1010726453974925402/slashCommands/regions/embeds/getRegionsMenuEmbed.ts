@@ -1,8 +1,8 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const getRegionsMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
+const getRegionsMenuEmbed = (menu: AdminMenuBuilder): EmbedBuilder => {
   return new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({

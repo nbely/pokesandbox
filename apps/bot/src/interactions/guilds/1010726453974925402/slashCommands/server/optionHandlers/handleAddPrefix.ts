@@ -1,9 +1,9 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import { upsertServer } from '@shared/services';
 
 import getServerMenuEmbed from '../embeds/getServerMenuEmbed';
 
-const handleAddPrefix = async (menu: AdminMenu): Promise<void> => {
+const handleAddPrefix = async (menu: AdminMenuBuilder): Promise<void> => {
   menu.prompt =
     'Please enter a new prefix to use with this bot on your server.';
   menu.components = [];

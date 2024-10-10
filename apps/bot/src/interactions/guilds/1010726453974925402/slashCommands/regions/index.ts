@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, Session } from '@bot/classes';
+import { AdminMenuBuilder, Session } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import type { Server } from '@shared/models';
 import { findServer } from '@shared/services';
@@ -28,7 +28,7 @@ export const RegionsCommand: ISlashCommand = {
     .setDescription('Manage Regions for your PokéSandbox server')
     .setDMPermission(false),
   execute: async (session: Session) => {
-    const menu = await AdminMenu.create(
+    const menu = await AdminMenuBuilder.create(
       session.client,
       session.commandInteraction
     );

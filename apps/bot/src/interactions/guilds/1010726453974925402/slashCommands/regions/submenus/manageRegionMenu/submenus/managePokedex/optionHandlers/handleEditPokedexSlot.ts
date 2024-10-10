@@ -1,4 +1,4 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 import { findDexEntry } from '@shared/services';
 
@@ -6,7 +6,7 @@ import setEditPokedexSlotComponents from '../components/setEditPokedexSlotCompon
 import getEditPokedexSlotEmbed from '../embeds/getEditPokedexSlotEmbed';
 
 const handleEditPokedexSlot = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number
 ): Promise<void> => {
   menu.currentPage = 1;
