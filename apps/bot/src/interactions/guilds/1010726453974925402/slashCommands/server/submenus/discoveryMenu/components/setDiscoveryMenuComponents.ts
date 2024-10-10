@@ -1,8 +1,8 @@
 import { ButtonStyle } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const setDiscoveryMenuComponents = (menu: AdminMenu): void => {
+const setDiscoveryMenuComponents = (menu: AdminMenuBuilder): void => {
   menu.paginationOptions = {
     ...menu.paginationOptions,
     buttons: [

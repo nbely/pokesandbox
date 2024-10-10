@@ -1,10 +1,10 @@
 import { ButtonStyle } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 
 const setSelectMatchedPokemonComponents = (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   matchedPokemon: DexEntry[]
 ): void => {
   menu.paginationOptions = {

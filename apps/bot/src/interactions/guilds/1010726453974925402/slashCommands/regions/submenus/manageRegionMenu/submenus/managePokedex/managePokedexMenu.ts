@@ -1,4 +1,4 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
 import setManagePokedexMenuComponents from './components/setManagePokedexMenuComponents';
 import getManagePokedexMenuEmbed from './embeds/getManagePokedexMenuEmbed';
@@ -6,7 +6,9 @@ import handleAddPokedexSlot from './optionHandlers/handleAddPokedexSlot';
 import handleEditPokedexSlot from './optionHandlers/handleEditPokedexSlot';
 import handleSearchPokemon from './optionHandlers/handleSearchPokemon';
 
-const handleManagePokedexMenu = async (menu: AdminMenu): Promise<void> => {
+const handleManagePokedexMenu = async (
+  menu: AdminMenuBuilder
+): Promise<void> => {
   menu.currentPage = 1;
 
   while (!menu.isBackSelected && !menu.isCancelled) {

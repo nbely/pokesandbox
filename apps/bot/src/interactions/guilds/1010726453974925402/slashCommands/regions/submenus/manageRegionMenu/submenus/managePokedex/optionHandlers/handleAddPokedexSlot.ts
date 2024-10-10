@@ -1,11 +1,11 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
 import setAddPokedexSlotComponents from '../components/setAddPokedexSlotComponents';
 import getAddPokedexSlotEmbed from '../embeds/getAddPokedexSlotEmbed';
 import handleSearchPokemon from './handleSearchPokemon';
 
 const handleAddPokedexSlot = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number
 ): Promise<void> => {
   menu.currentPage = 1;

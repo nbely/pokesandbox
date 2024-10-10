@@ -3,11 +3,11 @@ import { Types } from 'mongoose';
 import type { Region } from '@shared/models';
 import { createRegion, upsertServer } from '@shared/services';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import getCreateFirstRegionEmbed from '../embeds/getCreateFirstRegionEmbed';
 import getRegionsMenuEmbed from '../embeds/getRegionsMenuEmbed';
 
-const handleCreateRegion = async (menu: AdminMenu): Promise<void> => {
+const handleCreateRegion = async (menu: AdminMenuBuilder): Promise<void> => {
   menu.components = [];
   if (menu.regions.length >= 1) {
     menu.prompt = 'Please enter a name for your new Region.';

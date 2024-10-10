@@ -1,8 +1,8 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const getManageRegionMenuEmbed = (menu: AdminMenu) => {
+const getManageRegionMenuEmbed = (menu: AdminMenuBuilder) => {
   const pokedexOptionText =
     menu.region.pokedex.length === 0
       ? '***Create Pokédex***'

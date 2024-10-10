@@ -1,10 +1,10 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 
 const getSelectMatchedPokemonEmbed = (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number,
   matchedPokemon: DexEntry[]
 ): EmbedBuilder => {

@@ -1,11 +1,11 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import { upsertServer } from '@shared/services';
 
 import setUpdatePrefixesComponents from '../components/setUpdatePrefixesComponents';
 import getServerMenuEmbed from '../embeds/getServerMenuEmbed';
 import handleAddPrefix from './handleAddPrefix';
 
-const handleUpdatePrefixes = async (menu: AdminMenu): Promise<void> => {
+const handleUpdatePrefixes = async (menu: AdminMenuBuilder): Promise<void> => {
   menu.currentPage = 1;
   menu.isBackSelected = false;
 

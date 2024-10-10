@@ -1,8 +1,8 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const getManageRegionMenuEmbed = (menu: AdminMenu): EmbedBuilder => {
+const getManageRegionMenuEmbed = (menu: AdminMenuBuilder): EmbedBuilder => {
   const pokedexLines: string[] = [];
   for (
     let i = menu.paginationOptions._currentStartIndex;

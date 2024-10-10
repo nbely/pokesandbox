@@ -1,6 +1,6 @@
 import type { Role } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import { upsertServer } from '@shared/services';
 
 import setUpdateRolesComponents from '../components/setUpdateRolesComponents';
@@ -8,7 +8,7 @@ import getServerMenuEmbed from '../embeds/getServerMenuEmbed';
 import handleAddRole from './handleAddRole';
 
 const handleUpdateRoles = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   roleType: string
 ): Promise<void> => {
   menu.currentPage = 1;

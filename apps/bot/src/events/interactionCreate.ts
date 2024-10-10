@@ -66,14 +66,9 @@ const handleApplicationCommandInteraction = async (
     );
 
     if (authenticatedCMDOptions) {
-      // return await createSession(
-      //   Session,
-      //   client,
-      //   interaction,
-      //   await slashCommand.createMenu()
-      // );
-      const session = await createSession(Session, client, interaction);
-      return slashCommand.execute(session);
+      return createSession(Session, client, interaction, slashCommand.name);
+      // const session = await createSession(Session, client, interaction);
+      // return slashCommand.execute(session);
     }
   }
 

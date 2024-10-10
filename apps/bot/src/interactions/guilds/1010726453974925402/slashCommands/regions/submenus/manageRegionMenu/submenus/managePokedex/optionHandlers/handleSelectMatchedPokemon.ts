@@ -1,11 +1,11 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import type { DexEntry } from '@shared/models';
 
 import setSelectMatchedPokemonComponents from '../components/setSelectMatchedPokemonComponents';
 import getSelectMatchedPokemonEmbed from '../embeds/getSelectMatchedPokemonEmbed';
 
 const handleSelectMatchedPokemon = async (
-  menu: AdminMenu,
+  menu: AdminMenuBuilder,
   pokedexNo: number,
   matchedPokemon: DexEntry[]
 ): Promise<DexEntry | undefined> => {

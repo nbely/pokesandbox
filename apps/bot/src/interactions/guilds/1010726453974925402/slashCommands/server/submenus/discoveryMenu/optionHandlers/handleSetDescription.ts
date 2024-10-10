@@ -1,9 +1,9 @@
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import { upsertServer } from '@shared/services';
 
 import getDiscoveryMenuEmbed from '../embeds/getDiscoveryMenuEmbed';
 
-const handleSetDescription = async (menu: AdminMenu): Promise<void> => {
+const handleSetDescription = async (menu: AdminMenuBuilder): Promise<void> => {
   menu.prompt =
     'Please enter a new server description to be displayed on the server discovery page.';
   menu.components = [];

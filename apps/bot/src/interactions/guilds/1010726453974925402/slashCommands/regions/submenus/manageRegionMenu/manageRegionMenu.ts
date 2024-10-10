@@ -1,11 +1,13 @@
 import { upsertRegion } from '@shared/services';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 import setManageRegionMenuComponents from './components/setManageRegionMenuComponents';
 import getManageRegionMenuEmbed from './embeds/getManageRegionMenuEmbed';
 import handleManagePokedexMenu from './submenus/managePokedex/managePokedexMenu';
 
-const handleManageRegionMenu = async (menu: AdminMenu): Promise<void> => {
+const handleManageRegionMenu = async (
+  menu: AdminMenuBuilder
+): Promise<void> => {
   menu.currentPage = 1;
 
   while (!menu.isBackSelected && !menu.isCancelled) {

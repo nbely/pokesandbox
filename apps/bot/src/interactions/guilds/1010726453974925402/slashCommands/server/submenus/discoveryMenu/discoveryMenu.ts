@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 
-import { AdminMenu, Session } from '@bot/classes';
+import { AdminMenuBuilder, Session } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { Server } from '@shared/models';
 import { findServer, upsertServer } from '@shared/services';
@@ -24,7 +24,7 @@ export const DiscoveryCommand: ISlashCommand = {
     .setDescription('Update your server discovery settings')
     .setDMPermission(false),
   execute: async (session: Session) => {
-    const menu = await AdminMenu.create(
+    const menu = await AdminMenuBuilder.create(
       session.client,
       session.commandInteraction
     );
@@ -34,7 +34,7 @@ export const DiscoveryCommand: ISlashCommand = {
   },
 };
 
-async function handleDiscoveryMenu(menu: AdminMenu): Promise<void> {
+async function handleDiscoveryMenu(menu: AdminMenuBuilder): Promise<void> {
   menu.isBackSelected = false;
   console.log('handleDiscoveryMenu');
 

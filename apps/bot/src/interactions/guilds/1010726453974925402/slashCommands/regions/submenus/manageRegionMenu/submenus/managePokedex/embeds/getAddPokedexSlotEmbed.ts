@@ -1,8 +1,8 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuBuilder } from '@bot/classes';
 
-const getAddPokedexSlotEmbed = (menu: AdminMenu, pokedexNo: number) => {
+const getAddPokedexSlotEmbed = (menu: AdminMenuBuilder, pokedexNo: number) => {
   return new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({
