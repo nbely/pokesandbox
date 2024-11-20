@@ -29,4 +29,6 @@ export const UserSchema: Schema = new Schema({
   username: { type: String, required: true },
 });
 
+export const userRequestDTOSchema = userEntitySchema.omit({ _id: true });
+
 export const User = model<User, UserModelType>('User', UserSchema, 'users');
