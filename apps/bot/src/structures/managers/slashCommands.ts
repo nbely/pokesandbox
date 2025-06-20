@@ -41,7 +41,11 @@ export const slashCommandsManager = async (client: BotClient) => {
     }
 
     for (const slashCommand of globalSlashCommands) {
-      if (slashCommand.ignore || !slashCommand.command || !slashCommand.execute)
+      if (
+        slashCommand.ignore ||
+        !slashCommand.command ||
+        !slashCommand.createMenu
+      )
         return;
       client.slashCommands.set(slashCommand.command.name, slashCommand);
       globalChatInputCommands.push(slashCommand.command.toJSON());
@@ -75,7 +79,8 @@ export const slashCommandsManager = async (client: BotClient) => {
       }
 
       for (const slashCmd of guild.slashCommands) {
-        if (slashCmd.ignore || !slashCmd.command || !slashCmd.execute) continue;
+        if (slashCmd.ignore || !slashCmd.command || !slashCmd.createMenu)
+          continue;
         client.slashCommands.set(slashCmd.command.name, slashCmd);
 
         guildChatInputCommands.push(slashCmd.command.toJSON());

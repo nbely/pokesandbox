@@ -17,7 +17,7 @@ import type {
   UserSelectMenuInteraction,
 } from 'discord.js';
 
-import type { BotClient, MenuBuilder, Session } from '@bot/classes';
+import type { BotClient, Menu, Session } from '@bot/classes';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];
@@ -83,12 +83,17 @@ export interface IRoleSelectMenu extends IBaseCommand {
   execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }
 
-export interface ISlashCommand extends IBaseCommand {
+type CreateMenuFunction<T extends Menu = Menu> = (
+  session: Session,
+  ...options: string[]
+) => Promise<T>;
+
+export interface ISlashCommand<T extends Menu = Menu> extends IBaseCommand {
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
-  createMenu?: (session: Session) => Promise<MenuBuilder>;
+  createMenu?: CreateMenuFunction<T>;
   execute?: (session: Session) => void;
 }
 

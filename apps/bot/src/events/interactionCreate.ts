@@ -20,7 +20,8 @@ import type {
   IUserContextCommand,
   IUserSelectMenu,
 } from '@bot/structures/interfaces';
-import { createSession, Session } from '../classes/Session';
+
+import { createSession, Session } from '../classes/Session/Session';
 
 export const InteractionCreate: IBotEvent = {
   name: 'interactionCreate',
@@ -67,8 +68,6 @@ const handleApplicationCommandInteraction = async (
 
     if (authenticatedCMDOptions) {
       return createSession(Session, client, interaction, slashCommand.name);
-      // const session = await createSession(Session, client, interaction);
-      // return slashCommand.execute(session);
     }
   }
 
@@ -131,10 +130,10 @@ const handleMessageComponentInteraction = async (
     const button: IButtonCommand | undefined =
       client.buttons.get(interaction.customId) ||
       client.buttons.get(interaction.customId.split('_')[0]);
-    if (!button) {
-      interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-      return;
-    }
+    if (!button) return;
+    // interaction.reply({ content: 'An error has ocurred', ephemeral: true });
+    // return;
+    // }
 
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
@@ -152,10 +151,7 @@ const handleMessageComponentInteraction = async (
     const roleSelectMenu: IRoleSelectMenu | undefined =
       client.roleSelectMenus.get(interaction.customId);
 
-    if (!roleSelectMenu) {
-      interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-      return;
-    }
+    if (!roleSelectMenu) return;
 
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,

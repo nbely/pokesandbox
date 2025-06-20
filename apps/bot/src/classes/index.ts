@@ -1,4 +1,8 @@
-export { AdminMenuBuilder } from './AdminMenu';
-export { BotClient } from './BotClient';
-export { MenuBuilder } from './Menu';
-export { Session } from './Session';
+export { AdminMenu } from './AdminMenu/AdminMenu';
+export { AdminMenuBuilder } from './AdminMenu/AdminMenuBuilder';
+export { BotClient } from './BotClient/BotClient';
+export { Menu } from './Menu/Menu';
+export { MenuBuilder } from './Menu/MenuBuilder';
+export { Session } from './Session/Session';
+
+export * from './types';
