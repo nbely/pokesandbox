@@ -1,7 +1,12 @@
 import { EmbedBuilder, Role } from 'discord.js';
 
 import type { Server } from '@shared/models';
-import { createServer, findServer } from '@shared/services';
+import {
+  createServer,
+  findRegionsByObjectIds,
+  findServer,
+  findServerAndPopulateRegions,
+} from '@shared/services';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
@@ -110,6 +115,23 @@ export class AdminMenu extends Menu {
     }
 
     return server;
+  }
+
+  public async fetchServerAndRegions() {
+    try {
+      const server = await findServerAndPopulateRegions({
+        serverId: this.interaction.guild?.id,
+      });
+      if (!server) {
+        throw new Error(
+          'There was a problem fetching your server. Please try again later.'
+        );
+      }
+      const regions = await findRegionsByObjectIds(server.regions);
+      return { ...server, regions };
+    } catch (error) {
+      await this.session.handleError(error);
+    }
   }
 
   public async getGuildRole(roleId: string): Promise<string | Role> {

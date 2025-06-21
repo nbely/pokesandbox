@@ -13,7 +13,7 @@ const getDiscoveryMenuEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${server.name} Discovery Settings:`,
+        name: `${server.name} Discovery Settings`,
         iconURL: menu.interaction?.guild?.iconURL() ?? undefined,
       })
       .setDescription(`${prompt ? '' + prompt + '\n\n' : ''}`)

@@ -2,8 +2,8 @@ import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
 import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { Server } from '@shared';
-import { findServer, upsertServer } from '@shared/services';
+import { onlyAdminRoles } from '@bot/utils';
+import { upsertServer } from '@shared/services';
 
 import { getServerMenuEmbeds } from './server.embeds';
 
@@ -13,11 +13,7 @@ export const SERVER_ADD_PREFIX_COMMAND_NAME = COMMAND_NAME;
 export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
-  onlyRoles: async (guildId: string): Promise<string[]> => {
-    const server: Server | null = await findServer({ serverId: guildId });
-    if (!server?.adminRoleIds) return [];
-    return server.adminRoleIds;
-  },
+  onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()

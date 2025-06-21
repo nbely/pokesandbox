@@ -1,5 +1,6 @@
 import { ISlashCommand } from '@bot/structures/interfaces';
 
+import * as RegionManagementCommands from './regionManagement';
 import * as ServerManagementCommands from './serverManagement';
 
 const getAllCommands = (
@@ -10,4 +11,7 @@ const getAllCommands = (
     return [...acc, ...commands];
   }, [] as ISlashCommand[]);
 
-export const slashCommands = getAllCommands([ServerManagementCommands]);
+export const slashCommands = getAllCommands([
+  RegionManagementCommands,
+  ServerManagementCommands,
+]);

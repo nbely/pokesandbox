@@ -25,7 +25,7 @@ export const getServerMenuEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${server.name} Server Options:`,
+        name: `${server.name} Server Options`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(

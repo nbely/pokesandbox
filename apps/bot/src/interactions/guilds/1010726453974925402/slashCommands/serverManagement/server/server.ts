@@ -6,8 +6,7 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import type { Server } from '@shared/models';
-import { findServer } from '@shared/services';
+import { onlyAdminRoles } from '@bot/utils';
 
 import { DISCOVERY_COMMAND_NAME } from '../discovery/discovery';
 import { getServerMenuEmbeds } from './server.embeds';
@@ -20,11 +19,7 @@ export const SERVER_COMMAND_NAME = COMMAND_NAME;
 export const ServerCommand: ISlashCommand<AdminMenu> = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
-  onlyRoles: async (guildId: string): Promise<string[]> => {
-    const server: Server | null = await findServer({ serverId: guildId });
-    if (!server?.adminRoleIds) return [];
-    return server.adminRoleIds;
-  },
+  onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
