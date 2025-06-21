@@ -326,7 +326,11 @@ export class Menu {
       .map((button) => button.component);
 
     const buttonSlotCount =
-      10 - fixedStartButtons.length - fixedEndButtons.length;
+      10 -
+      fixedStartButtons.length -
+      fixedEndButtons.length -
+      (this._reservedButtons.get('Back') ? 1 : 0) -
+      (this._reservedButtons.get('Cancel') ? 1 : 0);
 
     const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
@@ -358,28 +362,30 @@ export class Menu {
     }
 
     const currentPageButtons = [...fixedStartButtons];
-    currentPageButtons.push(
-      ...buttonList.filter((_button, index) => {
-        if (
-          (isFirstPage && isLastPage) ||
-          (isFirstPage && index + 1 <= buttonSlotCount - 1) ||
-          (isLastPage &&
-            index + 1 >
-              buttonSlotCount - 1 + (pageCount - 2) * (buttonSlotCount - 2)) ||
-          (index + 1 >
-            buttonSlotCount - 1 + (page - 2) * (buttonSlotCount - 2) &&
-            index + 1 <=
-              buttonSlotCount - 1 + (page - 1) * (buttonSlotCount - 2))
-        )
-          return true;
-        else return false;
-      })
-    );
+
+    const filteredButtons = buttonList.filter((_button, index) => {
+      if (
+        (isFirstPage && isLastPage) ||
+        (isFirstPage && index + 1 <= buttonSlotCount - 1) ||
+        (isLastPage &&
+          index + 1 >
+            buttonSlotCount - 1 + (pageCount - 2) * (buttonSlotCount - 2)) ||
+        (index + 1 > buttonSlotCount - 1 + (page - 2) * (buttonSlotCount - 2) &&
+          index + 1 <= buttonSlotCount - 1 + (page - 1) * (buttonSlotCount - 2))
+      )
+        return true;
+      else return false;
+    });
+    currentPageButtons.push(...filteredButtons);
+
     if (pageCount > 1 && !isFirstPage) {
-      currentPageButtons.push(this.createDefaultButton('Previous'));
+      const prevBtn = this.createDefaultButton('Previous');
+      currentPageButtons.push(prevBtn);
     }
+
     if (pageCount > 1 && !isLastPage) {
-      currentPageButtons.push(this.createDefaultButton('Next'));
+      const nextBtn = this.createDefaultButton('Next');
+      currentPageButtons.push(nextBtn);
     }
 
     if (fixedEndButtons) {

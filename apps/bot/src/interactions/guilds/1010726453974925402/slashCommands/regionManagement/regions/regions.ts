@@ -6,10 +6,11 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, openMenu } from '@bot/utils';
 
-import { getRegionsMenuEmbeds } from './regions.embeds';
+import { REGION_COMMAND_NAME } from '../region/region';
 import { REGION_CREATE_COMMAND_NAME } from './regionCreate';
+import { getRegionsMenuEmbeds } from './regions.embeds';
 
 const COMMAND_NAME = 'regions';
 export const REGIONS_COMMAND_NAME = COMMAND_NAME;
@@ -36,7 +37,6 @@ export const RegionsCommand: ISlashCommand<AdminMenu> = {
 const getRegionsButtons = async (
   menu: AdminMenu
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const { client, session } = menu;
   const { regions } = await menu.fetchServerAndRegions();
 
   return [
@@ -44,23 +44,14 @@ const getRegionsButtons = async (
       label: 'Create Region',
       fixedPosition: 'start',
       style: ButtonStyle.Success,
-      onClick: async () => {
-        const createRegionMenu = await client.slashCommands
-          .get(REGION_CREATE_COMMAND_NAME)
-          .createMenu(session);
-        await session.next(createRegionMenu);
-      },
+      onClick: async (menu) => openMenu(menu, REGION_CREATE_COMMAND_NAME),
     },
     ...regions.map((region) => ({
       label: region.name,
-      style: ButtonStyle.Primary,
-      onClick: async () => {
-        const regionMenu = await client.slashCommands
-          .get('region')
-          .createMenu(session);
-        await session.next(regionMenu);
-      },
       id: region._id.toString(),
+      style: ButtonStyle.Primary,
+      onClick: async (menu) =>
+        openMenu(menu, REGION_COMMAND_NAME, region._id.toString()),
     })),
   ];
 };

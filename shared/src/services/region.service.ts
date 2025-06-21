@@ -24,7 +24,7 @@ export async function findRegion(
   query: FilterQuery<Region>,
   options: QueryOptions = { lean: true }
 ) {
-  return (await Region.findOne(query, null, options).exec())?.toObject();
+  return await Region.findOne(query, null, options).exec();
 }
 
 export async function findRegionsByObjectIds(

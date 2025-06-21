@@ -118,12 +118,12 @@ export class MenuBuilder<M extends Menu = Menu> {
   private setPaginationOptions(options?: PaginationOptions) {
     this._reservedButtons.set('Next', {
       label: options?.nextButton?.label ?? 'Next',
-      style: options?.nextButton?.style ?? ButtonStyle.Primary,
+      style: options?.nextButton?.style ?? ButtonStyle.Secondary,
     });
 
     this._reservedButtons.set('Previous', {
       label: options?.previousButton?.label ?? 'Previous',
-      style: options?.previousButton?.style ?? ButtonStyle.Primary,
+      style: options?.previousButton?.style ?? ButtonStyle.Secondary,
     });
 
     this._paginationItemsPerPage =

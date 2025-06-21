@@ -10,7 +10,7 @@ import {
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, openMenu } from '@bot/utils';
 import { upsertServer } from '@shared/services';
 
 import { getServerMenuEmbeds } from './server.embeds';
@@ -51,12 +51,7 @@ export const getServerManagePrefixesButtons = async (
       label: 'Add Prefix',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async () => {
-        const addPrefixMenu = await menu.client.slashCommands
-          .get(SERVER_ADD_PREFIX_COMMAND_NAME)
-          .createMenu(menu.session);
-        await menu.session.next(addPrefixMenu);
-      },
+      onClick: async (menu) => openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
     },
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,

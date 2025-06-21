@@ -6,7 +6,7 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, openMenu } from '@bot/utils';
 
 import { DISCOVERY_COMMAND_NAME } from '../discovery/discovery';
 import { getServerMenuEmbeds } from './server.embeds';
@@ -35,52 +35,27 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
       .build(),
 };
 
-const getServerButtons = async (
-  menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const { client, session } = menu;
-  return [
-    {
-      label: '1',
-      style: ButtonStyle.Primary,
-      onClick: async () => {
-        const managePrefixesMenu = await client.slashCommands
-          .get(SERVER_MANAGE_PREFIXES_COMMAND_NAME)
-          .createMenu(session);
-        await session.next(managePrefixesMenu);
+const getServerButtons = async (): Promise<MenuButtonConfig<AdminMenu>[]> => {
+  const subMenuButtons: { id: string; command: string; options?: string[] }[] =
+    [
+      { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
+      {
+        id: 'Admin',
+        command: SERVER_MANAGE_ROLES_COMMAND_NAME,
+        options: ['admin'],
       },
-      id: 'Prefix',
-    },
-    {
-      label: '2',
-      style: ButtonStyle.Primary,
-      onClick: async () => handleRoleButtonClick(menu, 'admin'),
-      id: 'Admin',
-    },
-    {
-      label: '3',
-      style: ButtonStyle.Primary,
-      onClick: async () => handleRoleButtonClick(menu, 'mod'),
-      id: 'Mod',
-    },
-    {
-      label: '4',
-      style: ButtonStyle.Primary,
-      onClick: async () => {
-        const discoveryMenu = await client.slashCommands
-          .get(DISCOVERY_COMMAND_NAME)
-          .createMenu(session);
-        await session.next(discoveryMenu);
+      {
+        id: 'Mod',
+        command: SERVER_MANAGE_ROLES_COMMAND_NAME,
+        options: ['mod'],
       },
-      id: 'Discovery',
-    },
-  ];
-};
+      { id: 'Discovery', command: DISCOVERY_COMMAND_NAME },
+    ];
 
-const handleRoleButtonClick = async (menu: AdminMenu, roleType: string) => {
-  const { client, session } = menu;
-  const manageRolesMenu = await client.slashCommands
-    .get(SERVER_MANAGE_ROLES_COMMAND_NAME)
-    .createMenu(session, roleType);
-  await session.next(manageRolesMenu, [roleType]);
+  return subMenuButtons.map(({ id, command, options }, idx) => ({
+    label: (idx + 1).toString(),
+    id,
+    style: ButtonStyle.Primary,
+    onClick: async (menu) => openMenu(menu, command, ...options),
+  }));
 };

@@ -6,7 +6,7 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, openMenu } from '@bot/utils';
 import { upsertServer } from '@shared/services';
 
 import getDiscoveryMenuEmbeds from './discovery.embeds';
@@ -38,7 +38,6 @@ export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
 async function getDiscoveryButtons(
   menu: AdminMenu
 ): Promise<MenuButtonConfig[]> {
-  const { client, session } = menu;
   const server = await menu.fetchServer();
 
   return [
@@ -57,13 +56,8 @@ async function getDiscoveryButtons(
     {
       label: 'Set Description',
       style: ButtonStyle.Primary,
-      onClick: async () => {
-        const discoveryDescriptionMenu = await client.slashCommands
-          .get(DISCOVERY_DESCRIPTION_COMMAND_NAME)
-          ?.createMenu(session);
-
-        await session.next(discoveryDescriptionMenu);
-      },
+      onClick: async (menu) =>
+        openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
     },
   ];
 }
