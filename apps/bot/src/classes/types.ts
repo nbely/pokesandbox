@@ -14,7 +14,7 @@ import { Menu } from './Menu/Menu';
 export type MenuBuilderOptions<M extends Menu = Menu> = {
   commandOptions?: string[];
   isTrackedInHistory: boolean;
-  paginationConfig: PaginationConfig;
+  paginationConfig: PaginationConfig<M>;
   reservedButtons: Collection<ReservedButtonLabels, ReservedButtonOptions>;
   responseType?: MenuResponseType;
   handleMessage?: (menu: M, response: string) => Promise<void>;
@@ -25,7 +25,7 @@ export type MenuBuilderOptions<M extends Menu = Menu> = {
 
 /** Menu Button Types */
 
-export type MenuButtonConfig<T extends Menu = Menu> = {
+export type MenuButtonConfig<M extends Menu = Menu> = {
   /** Whether the button should be disabled */
   disabled?: boolean;
   /** Whether the button should be fixed to the start or end of the menu */
@@ -37,7 +37,7 @@ export type MenuButtonConfig<T extends Menu = Menu> = {
   /** The style of the button */
   style: ButtonStyle;
   /** Custom handler to run if defined */
-  onClick?: (menu: T) => Promise<void>;
+  onClick?: (menu: M) => Promise<void>;
 };
 
 export type MenuButton = Pick<MenuButtonConfig, 'fixedPosition' | 'onClick'> & {
@@ -50,11 +50,11 @@ export type AnySelectMenuBuilder = Exclude<
   ButtonBuilder
 >;
 
-export type SelectMenuConfig<T extends Menu = Menu> = {
+export type SelectMenuConfig<M extends Menu = Menu> = {
   /** The builder for the select menu */
   builder: AnySelectMenuBuilder;
   /** The onClick handler for the select menu */
-  onSelect?: (menu: T, values: string[]) => Promise<void>;
+  onSelect?: (menu: M, values: string[]) => Promise<void>;
 };
 
 export type SessionHistoryEntry = {
@@ -71,10 +71,10 @@ export type ReservedButtonOptions = {
 
 /** Menu Pagination Types */
 
-export type PaginationConfig = {
+export type PaginationConfig<M extends Menu = Menu> = {
   itemsPerPage: number;
-  itemTotal: number;
   type: MenuPaginationType;
+  getItemTotal?: (menu: M) => Promise<number>;
 };
 
 export interface PaginationOptions {
@@ -83,8 +83,9 @@ export interface PaginationOptions {
   quantityItemsPerPage?: number;
 }
 
-export interface ListPaginationOptions extends PaginationOptions {
-  quantityTotalItems?: number;
+export interface ListPaginationOptions<M extends Menu = Menu>
+  extends PaginationOptions {
+  getTotalQuantityItems: (menu: M) => Promise<number>;
 }
 
 export type PaginationState = {
@@ -93,4 +94,5 @@ export type PaginationState = {
   quantity: number;
   range: string;
   startIndex: number;
+  total: number;
 };

@@ -194,8 +194,10 @@ export class Session {
         await this.cancel();
       } else if (buttonId === 'Next') {
         this._currentMenu.currentPage++;
+        await this._currentMenu.refresh();
       } else if (buttonId === 'Previous') {
         this._currentMenu.currentPage--;
+        await this._currentMenu.refresh();
       } else {
         this._lastInput = buttonId;
         return buttonId;

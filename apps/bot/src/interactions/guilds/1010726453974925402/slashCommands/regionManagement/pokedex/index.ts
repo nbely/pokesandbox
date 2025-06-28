@@ -1,0 +1,1 @@
+export { ManagePokedexCommand } from './managePokedex';

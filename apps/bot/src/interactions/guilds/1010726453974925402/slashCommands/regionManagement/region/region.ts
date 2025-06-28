@@ -10,6 +10,7 @@ import { onlyAdminRoles, openMenu } from '@bot/utils';
 import { findRegion, upsertRegion } from '@shared';
 
 import { getRegionMenuEmbeds } from './region.embeds';
+import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 
 const COMMAND_NAME = 'region';
 export const REGION_COMMAND_NAME = COMMAND_NAME;
@@ -22,7 +23,7 @@ export const RegionCommand: ISlashCommand<AdminMenu> = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription('Manage Regions for your PokéSandbox server')
+    .setDescription('Manage a Region for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, regionId) =>
     new AdminMenuBuilder(session, COMMAND_NAME)
@@ -35,13 +36,13 @@ export const RegionCommand: ISlashCommand<AdminMenu> = {
 };
 
 const getRegionButtons = async (
-  menu: AdminMenu,
+  _menu: AdminMenu,
   regionId: string
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
   const region = await findRegion({ _id: regionId });
 
   const subMenuButtons: { id: string; command: string }[] = [
-    { id: 'Pokedex', command: 'pokedex' },
+    { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
     { id: 'Moves', command: 'moves' },
     { id: 'Progression', command: 'progression' },
     { id: 'Locations', command: 'locations' },
@@ -58,7 +59,7 @@ const getRegionButtons = async (
       disabled: !region.deployable,
       fixedPosition: 'start',
       style: region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
-      onClick: async () => {
+      onClick: async (menu) => {
         region.deployed = !region.deployed;
         await upsertRegion({ _id: region._id }, region);
         menu.prompt = `Successfully ${
@@ -70,8 +71,7 @@ const getRegionButtons = async (
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu) =>
-        await openMenu(menu, command, regionId),
+      onClick: async (menu: AdminMenu) => openMenu(menu, command, regionId),
       id,
     })),
   ];

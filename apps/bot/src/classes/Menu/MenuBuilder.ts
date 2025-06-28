@@ -19,12 +19,12 @@ export class MenuBuilder<M extends Menu = Menu> {
   private _commandOptions: string[] = [];
   private _isTrackedInHistory = false;
   private _paginationItemsPerPage = 10;
-  private _paginationTotalListItems = 10;
   private _paginationType?: MenuPaginationType;
   private _reservedButtons: Collection<
     ReservedButtonLabels,
     ReservedButtonOptions
   > = new Collection();
+  private _getListPaginationTotalQuantityItems: (menu: M) => Promise<number>;
   private _handleMessageCallback?: (menu: M, response: string) => Promise<void>;
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
@@ -43,7 +43,10 @@ export class MenuBuilder<M extends Menu = Menu> {
   /**** Public Methods ****/
 
   public async build(): Promise<M> {
-    if (this._reservedButtons.size > 0 || this._setButtonsCallback) {
+    if (
+      !this._paginationType &&
+      (this._reservedButtons.size > 0 || this._setButtonsCallback)
+    ) {
       this._paginationType = MenuPaginationType.BUTTONS;
     }
     this.validateBuilder();
@@ -83,11 +86,10 @@ export class MenuBuilder<M extends Menu = Menu> {
     return this;
   }
 
-  public setListPagination(options?: ListPaginationOptions) {
+  public setListPagination(options: ListPaginationOptions<M>) {
     this._paginationType = MenuPaginationType.LIST;
     this.setPaginationOptions(options);
-    this._paginationTotalListItems =
-      options?.quantityTotalItems ?? this._paginationTotalListItems;
+    this._getListPaginationTotalQuantityItems = options.getTotalQuantityItems;
 
     return this;
   }
@@ -131,20 +133,14 @@ export class MenuBuilder<M extends Menu = Menu> {
   }
 
   private validateListPaginationOptions() {
-    if (!this._paginationTotalListItems) {
-      throw new Error(
-        'Cannot paginate list without setting paginationTotalListItems via options or the setter.'
-      );
-    }
-
     const reservedButtonCount = this._reservedButtons.size;
     const totalButtonCount = reservedButtonCount + this._buttons.size;
 
-    if (this._paginationType === 'list' && totalButtonCount > 10) {
+    if (totalButtonCount > 10) {
       throw new Error(
         `Cannot set more than ${
           10 - reservedButtonCount
-        } custom buttons on this menu when list pagination is set.`
+        } custom buttons on a menu when list pagination is set.`
       );
     }
   }
@@ -182,7 +178,7 @@ export class MenuBuilder<M extends Menu = Menu> {
       isTrackedInHistory: this._isTrackedInHistory,
       paginationConfig: {
         itemsPerPage: this._paginationItemsPerPage,
-        itemTotal: this._paginationTotalListItems,
+        getItemTotal: this._getListPaginationTotalQuantityItems,
         type: this._paginationType,
       },
       reservedButtons: this._reservedButtons,

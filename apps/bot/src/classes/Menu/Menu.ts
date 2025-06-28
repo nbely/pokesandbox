@@ -56,6 +56,7 @@ export class Menu {
     quantity: 1,
     range: '1',
     startIndex: 1,
+    total: 1,
   };
   private _prompt = '';
   private _responseType: MenuResponseType;
@@ -129,7 +130,7 @@ export class Menu {
       page: currentPage,
     };
 
-    this.updatePagination();
+    // this.updatePagination();
   }
 
   get description(): string {
@@ -267,9 +268,9 @@ export class Menu {
       this.refreshSelectMenu();
     }
 
-    this._embeds = await this._setEmbeds(this);
+    await this.updatePagination();
 
-    this.updatePagination();
+    this._embeds = await this._setEmbeds(this);
   }
 
   public async handleButtonInteraction(buttonId: string) {
@@ -421,12 +422,13 @@ export class Menu {
     this.components = components;
   };
 
-  private paginateList() {
+  private async paginateList() {
     let showNextButton = false;
     let showPreviousButton = false;
 
     const totalPages = Math.ceil(
-      this._paginationConfig.itemTotal / this._paginationConfig.itemsPerPage
+      (await this._paginationConfig.getItemTotal(this)) /
+        this._paginationConfig.itemsPerPage
     );
 
     if (totalPages > 1 && this.currentPage < totalPages) {
@@ -472,30 +474,33 @@ export class Menu {
     }
   }
 
-  private updatePagination() {
-    const { itemsPerPage, itemTotal } = this._paginationConfig;
-    const startIndex: number = (this.currentPage - 1) * itemsPerPage;
-    let endIndex: number = itemsPerPage * this.currentPage;
-    endIndex = endIndex > itemTotal ? itemTotal : endIndex;
-
-    this._paginationState = {
-      ...this._paginationState,
-      endIndex: endIndex,
-      quantity: endIndex - startIndex,
-      range:
-        startIndex === endIndex
-          ? `${startIndex}`
-          : `${startIndex + 1}-${endIndex}`,
-      startIndex: startIndex,
-    };
-
+  private async updatePagination() {
     if (
       this._paginationConfig.type === MenuPaginationType.BUTTONS &&
       (this._buttons.size > 0 || this._reservedButtons.size > 0)
     ) {
       this.paginateButtons();
     } else if (this._paginationConfig.type === MenuPaginationType.LIST) {
-      this.paginateList();
+      const { itemsPerPage, getItemTotal } = this._paginationConfig;
+      const startIndex: number = (this.currentPage - 1) * itemsPerPage;
+      const itemTotal = await getItemTotal(this);
+
+      let endIndex: number = itemsPerPage * this.currentPage - 1;
+      endIndex = endIndex > itemTotal ? itemTotal - 1 : endIndex;
+
+      this._paginationState = {
+        ...this._paginationState,
+        endIndex: endIndex,
+        quantity: endIndex - startIndex + 1,
+        range:
+          startIndex === endIndex
+            ? `${startIndex + 1}`
+            : `${startIndex + 1}-${endIndex + 1}`,
+        startIndex: startIndex,
+        total: itemTotal,
+      };
+
+      await this.paginateList();
     }
   }
 
