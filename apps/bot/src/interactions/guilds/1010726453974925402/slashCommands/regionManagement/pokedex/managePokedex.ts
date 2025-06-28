@@ -6,7 +6,7 @@ import {
 
 import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, openMenu } from '@bot/utils';
 import { findRegion } from '@shared';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
 
@@ -35,6 +35,30 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
           const region = await findRegion({ _id: regionId });
           return region.pokedex.length;
         },
+      })
+      .setMessageHandler(async (menu, response) => {
+        const region = await findRegion({ _id: regionId });
+        const messageArgs: string[] = response.split(' ');
+        const pokedexNumber: number = +messageArgs[0];
+
+        if (
+          Number.isNaN(pokedexNumber) ||
+          pokedexNumber < 1 ||
+          pokedexNumber > 1500
+        ) {
+          menu.session.handleError(
+            new Error('Please enter a valid Pokédex number')
+          );
+        } else if (messageArgs.length < 2) {
+          if (region.pokedex[pokedexNumber - 1] === null) {
+            openMenu(menu, 'add-pokedex-slot', regionId, `${pokedexNumber}`);
+          } else {
+            openMenu(menu, 'edit-pokedex-slot', regionId, `${pokedexNumber}`);
+          }
+        } else {
+          const pokemonName: string = messageArgs.slice(1).join(' ');
+          openMenu(menu, 'search-pokemon', regionId, pokemonName);
+        }
       })
       .setReturnable()
       .setTrackedInHistory()

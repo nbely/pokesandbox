@@ -27,7 +27,7 @@ interface SessionConstructor<T extends Session> {
 
 type MixedInteractionResponse = {
   type: MenuResponseType.MESSAGE | MenuResponseType.COMPONENT;
-  value: string;
+  value?: string;
 };
 
 export async function createSession<T extends Session>(
@@ -273,19 +273,7 @@ export class Session {
       compCollector?.on('collect', async (componentInteraction) => {
         msgCollector?.stop();
         this._componentInteraction = componentInteraction;
-        const buttonId = componentInteraction.customId.split('_')[1];
-        if (buttonId === 'Back') {
-          await this.goBack();
-        } else if (buttonId === 'Cancel') {
-          await this.cancel();
-          // } else if (buttonId === 'Next') {
-          //   this.currentPage++;
-          // } else if (buttonId === 'Previous') {
-          //   this.currentPage--;
-        } else {
-          resolve({ value: buttonId, type: MenuResponseType.COMPONENT });
-        }
-        resolve(undefined);
+        resolve({ type: MenuResponseType.COMPONENT });
       });
       compCollector?.on('end', async (collected) => {
         if (collected.size === 0) {
@@ -401,12 +389,12 @@ export class Session {
         const { value, type } = await this.collectMessageOrButtonInteraction(
           120_000
         );
-        if (value === undefined) continue;
-        const handler =
-          type === MenuResponseType.MESSAGE
-            ? this._currentMenu.handleMessageResponse
-            : this._currentMenu.handleButtonInteraction;
-        await handler(value);
+
+        if (!!value && type === MenuResponseType.MESSAGE) {
+          await this._currentMenu.handleMessageResponse(value);
+        } else if (type === MenuResponseType.COMPONENT) {
+          await this.handleComponentInteraction();
+        }
       }
     }
   }
