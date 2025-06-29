@@ -68,3 +68,23 @@ export const getManagePokedexMenuEmbeds = async (
 
   return [embed];
 };
+
+export const getAddPokedexSlotEmbeds = async (
+  menu: AdminMenu,
+  regionId: string,
+  pokedexNo: string,
+  defaultPrompt = 'This slot is currently empty. Please enter the name of the Pokémon to add to the Pokédex slot.'
+) => {
+  const region = await findRegion({ _id: regionId });
+
+  return [
+    new EmbedBuilder()
+      .setColor('Gold')
+      .setAuthor({
+        name: `${region.name} Pokédex Slot #${pokedexNo}`,
+        iconURL: menu.interaction.guild?.iconURL() || undefined,
+      })
+      .setDescription(menu.prompt || defaultPrompt)
+      .setTimestamp(),
+  ];
+};

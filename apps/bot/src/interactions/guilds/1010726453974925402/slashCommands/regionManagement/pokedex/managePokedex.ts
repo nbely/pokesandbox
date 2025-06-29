@@ -8,6 +8,8 @@ import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles, openMenu } from '@bot/utils';
 import { findRegion } from '@shared';
+
+import { ADD_POKEDEX_SLOT_COMMAND_NAME } from './addPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
 
 const COMMAND_NAME = 'manage-pokedex';
@@ -50,14 +52,24 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
             new Error('Please enter a valid Pokédex number')
           );
         } else if (messageArgs.length < 2) {
-          if (region.pokedex[pokedexNumber - 1] === null) {
-            openMenu(menu, 'add-pokedex-slot', regionId, `${pokedexNumber}`);
+          if (region.pokedex[pokedexNumber - 1] == null) {
+            await openMenu(
+              menu,
+              ADD_POKEDEX_SLOT_COMMAND_NAME,
+              regionId,
+              pokedexNumber.toString()
+            );
           } else {
-            openMenu(menu, 'edit-pokedex-slot', regionId, `${pokedexNumber}`);
+            await openMenu(
+              menu,
+              'edit-pokedex-slot',
+              regionId,
+              pokedexNumber.toString()
+            );
           }
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
-          openMenu(menu, 'search-pokemon', regionId, pokemonName);
+          await openMenu(menu, 'search-pokemon', regionId, pokemonName);
         }
       })
       .setReturnable()
