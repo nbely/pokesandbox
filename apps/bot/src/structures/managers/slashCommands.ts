@@ -79,10 +79,10 @@ export const slashCommandsManager = async (client: BotClient) => {
       }
 
       for (const slashCmd of guild.slashCommands) {
-        if (slashCmd.ignore || !slashCmd.command || !slashCmd.createMenu)
-          continue;
+        if (!slashCmd.command || !slashCmd.createMenu) continue;
         client.slashCommands.set(slashCmd.command.name, slashCmd);
 
+        if (slashCmd.ignore) continue;
         guildChatInputCommands.push(slashCmd.command.toJSON());
       }
 

@@ -364,7 +364,10 @@ export class Menu {
 
     const currentPageButtons = [...fixedStartButtons];
 
-    const filteredButtons = buttonList.filter((_button, index) => {
+    const filteredButtons = [];
+    let startIndex = 0,
+      endIndex = 0;
+    buttonList.forEach((button, index) => {
       if (
         (isFirstPage && isLastPage) ||
         (isFirstPage && index + 1 <= buttonSlotCount - 1) ||
@@ -373,11 +376,27 @@ export class Menu {
             buttonSlotCount - 1 + (pageCount - 2) * (buttonSlotCount - 2)) ||
         (index + 1 > buttonSlotCount - 1 + (page - 2) * (buttonSlotCount - 2) &&
           index + 1 <= buttonSlotCount - 1 + (page - 1) * (buttonSlotCount - 2))
-      )
-        return true;
-      else return false;
+      ) {
+        if (filteredButtons.length === 0) {
+          startIndex = index;
+        }
+        filteredButtons.push(button);
+        endIndex = index;
+      }
     });
     currentPageButtons.push(...filteredButtons);
+
+    this._paginationState = {
+      ...this._paginationState,
+      endIndex: endIndex,
+      quantity: endIndex - startIndex + 1,
+      range:
+        startIndex === endIndex
+          ? `${startIndex + 1}`
+          : `${startIndex + 1}-${endIndex + 1}`,
+      startIndex: startIndex,
+      total: buttonList.length,
+    };
 
     if (pageCount > 1 && !isFirstPage) {
       const prevBtn = this.createDefaultButton('Previous');
@@ -426,9 +445,28 @@ export class Menu {
     let showNextButton = false;
     let showPreviousButton = false;
 
+    const { itemsPerPage, getItemTotal } = this._paginationConfig;
+
+    const startIndex: number = (this.currentPage - 1) * itemsPerPage;
+    const itemTotal = await getItemTotal(this);
+
+    let endIndex: number = itemsPerPage * this.currentPage - 1;
+    endIndex = endIndex > itemTotal ? itemTotal - 1 : endIndex;
+
+    this._paginationState = {
+      ...this._paginationState,
+      endIndex: endIndex,
+      quantity: endIndex - startIndex + 1,
+      range:
+        startIndex === endIndex
+          ? `${startIndex + 1}`
+          : `${startIndex + 1}-${endIndex + 1}`,
+      startIndex: startIndex,
+      total: itemTotal,
+    };
+
     const totalPages = Math.ceil(
-      (await this._paginationConfig.getItemTotal(this)) /
-        this._paginationConfig.itemsPerPage
+      itemTotal / this._paginationConfig.itemsPerPage
     );
 
     if (totalPages > 1 && this.currentPage < totalPages) {
@@ -481,34 +519,11 @@ export class Menu {
     ) {
       this.paginateButtons();
     } else if (this._paginationConfig.type === MenuPaginationType.LIST) {
-      const { itemsPerPage, getItemTotal } = this._paginationConfig;
-      const startIndex: number = (this.currentPage - 1) * itemsPerPage;
-      const itemTotal = await getItemTotal(this);
-
-      let endIndex: number = itemsPerPage * this.currentPage - 1;
-      endIndex = endIndex > itemTotal ? itemTotal - 1 : endIndex;
-
-      this._paginationState = {
-        ...this._paginationState,
-        endIndex: endIndex,
-        quantity: endIndex - startIndex + 1,
-        range:
-          startIndex === endIndex
-            ? `${startIndex + 1}`
-            : `${startIndex + 1}-${endIndex + 1}`,
-        startIndex: startIndex,
-        total: itemTotal,
-      };
-
       await this.paginateList();
     }
   }
 
   private validateButtonPaginationOptions() {
-    if (this.paginationConfig.itemsPerPage > 10) {
-      throw new Error('Cannot set more than 10 buttons per page to paginate.');
-    }
-
     const reservedButtonCount = this._reservedButtons.size;
     const fixedButtonCount = this._buttons.filter(
       (button) => button.fixedPosition !== undefined

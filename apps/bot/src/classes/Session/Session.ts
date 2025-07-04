@@ -1,6 +1,7 @@
 import {
   ButtonInteraction,
   ChatInputCommandInteraction,
+  Collection,
   ComponentType,
   GuildMember,
   InteractionCollector,
@@ -30,6 +31,12 @@ type MixedInteractionResponse = {
   value?: string;
 };
 
+type ResponseRecord = {
+  menuName: string;
+  responseType: MenuResponseType;
+  response: string | string[];
+};
+
 export async function createSession<T extends Session>(
   SessionClass: SessionConstructor<T>,
   client: BotClient,
@@ -55,6 +62,8 @@ export class Session {
     | ChatInputCommandInteraction
     | MessageComponentInteraction;
   private _message?: Message;
+  private _responseHistory?: ResponseRecord[] = [];
+  private _state: Collection<string, unknown> = new Collection();
 
   public constructor(
     client: BotClient,
@@ -124,6 +133,20 @@ export class Session {
     this._history = [];
   }
 
+  public getState(key: string): unknown {
+    return this._state.get(key);
+  }
+
+  public setState(key: string, value: unknown): void {
+    this._state.set(key, value);
+  }
+
+  public getLastResponseByMenu(menuName: string): ResponseRecord | undefined {
+    return this._responseHistory
+      ?.reverse()
+      .find((record) => record.menuName === menuName);
+  }
+
   // Go back to the previous menu, if available
   public async goBack() {
     if (this._history.length > 0) {
@@ -170,11 +193,20 @@ export class Session {
 
   /**** Private Methods ****/
 
+  private async handleMessageResponse(message: string): Promise<void> {
+    this._responseHistory.push({
+      menuName: this._currentMenu.name,
+      responseType: this._currentMenu.responseType,
+      response: message,
+    });
+
+    await this._currentMenu.handleMessageResponse(message);
+  }
+
   private async handleComponentInteraction(): Promise<void> {
     if (this.componentInteraction.isButton()) {
       const buttonId = await this.handleButtonInteraction();
       if (buttonId !== undefined) {
-        this._lastInput = buttonId;
         await this._currentMenu.handleButtonInteraction(buttonId);
       }
     } else if (this.componentInteraction.isRoleSelectMenu()) {
@@ -186,6 +218,11 @@ export class Session {
 
   private async handleButtonInteraction(): Promise<string | undefined> {
     const buttonId = this.componentInteraction?.customId.split('_')[1];
+    this._responseHistory.push({
+      menuName: this._currentMenu.name,
+      responseType: MenuResponseType.COMPONENT,
+      response: buttonId,
+    });
 
     if (buttonId !== undefined) {
       if (buttonId === 'Back') {
@@ -210,6 +247,12 @@ export class Session {
   private async handleRoleMenuInteraction(): Promise<void> {
     const values = (this.componentInteraction as RoleSelectMenuInteraction)
       .values;
+    this._responseHistory.push({
+      menuName: this._currentMenu.name,
+      responseType: MenuResponseType.COMPONENT,
+      response: values,
+    });
+
     await this._currentMenu.handleSelectMenuInteraction(values);
     this._lastInput = values;
   }
@@ -377,7 +420,7 @@ export class Session {
 
       if (menuResponseType === MenuResponseType.MESSAGE) {
         const message = await this.awaitMessageReply(120_000);
-        await this._currentMenu.handleMessageResponse(message);
+        await this.handleMessageResponse(message);
       }
 
       if (menuResponseType === MenuResponseType.COMPONENT) {
@@ -391,7 +434,7 @@ export class Session {
         );
 
         if (!!value && type === MenuResponseType.MESSAGE) {
-          await this._currentMenu.handleMessageResponse(value);
+          await this.handleMessageResponse(value);
         } else if (type === MenuResponseType.COMPONENT) {
           await this.handleComponentInteraction();
         }
