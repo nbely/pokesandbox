@@ -21,6 +21,7 @@ export type MenuBuilderOptions<M extends Menu = Menu> = {
   setButtons?: (menu: M) => Promise<MenuButtonConfig[]>;
   setEmbeds: (menu: M) => Promise<EmbedBuilder[]>;
   setSelectMenu?: (menu: M) => SelectMenuConfig<M>;
+  onComplete?: (menu: M, result: unknown) => Promise<void>;
 };
 
 /** Menu Button Types */

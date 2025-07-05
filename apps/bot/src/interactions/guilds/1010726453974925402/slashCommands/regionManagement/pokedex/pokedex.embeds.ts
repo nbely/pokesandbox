@@ -1,7 +1,7 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenu } from '@bot/classes';
-import { DexEntry, findDexEntries, findDexEntry, findRegion } from '@shared';
+import { findDexEntries, findDexEntry, findRegion } from '@shared';
 
 export const getManagePokedexMenuEmbeds = async (
   menu: AdminMenu,

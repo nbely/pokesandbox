@@ -4,9 +4,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import {
+  AdminMenu,
+  AdminMenuBuilder,
+  MenuButtonConfig,
+  MenuWorkflow,
+} from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { getEditPokedexSlotEmbeds } from './pokedex.embeds';
 import { findRegion, upsertRegion } from '@shared';
 
@@ -45,13 +50,18 @@ const getEditPokedexSlotButtons = async (
       label: 'Customize',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        openMenu(menu, 'customize-pokedex-slot', regionId, pokedexNo),
+        MenuWorkflow.openMenu(
+          menu,
+          'customize-pokedex-slot',
+          regionId,
+          pokedexNo
+        ),
     },
     {
       label: 'Swap',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        openMenu(menu, 'swap-pokedex-slot', regionId, pokedexNo),
+        MenuWorkflow.openMenu(menu, 'swap-pokedex-slot', regionId, pokedexNo),
     },
     {
       label: 'Remove',

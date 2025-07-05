@@ -68,6 +68,7 @@ export class Menu {
   protected _setButtons?: (menu: Menu) => Promise<MenuButtonConfig[]>;
   protected _setSelectMenu?: (menu: Menu) => SelectMenuConfig;
   protected _setEmbeds: (menu: Menu) => Promise<EmbedBuilder[]>;
+  protected _onComplete?: (menu: Menu, result: unknown) => Promise<void>;
 
   /**** Constructor ****/
 
@@ -90,6 +91,7 @@ export class Menu {
     this._setButtons = options.setButtons;
     this._setSelectMenu = options.setSelectMenu;
     this._setEmbeds = options.setEmbeds;
+    this._onComplete = options.onComplete;
   }
 
   /**** Getters/Setters ****/
@@ -300,6 +302,20 @@ export class Menu {
       await this._handleMessage(this, response);
     } else {
       throw new Error('No message handler defined for this menu.');
+    }
+  }
+
+  /**
+   * Trigger the completion handler for this menu
+   */
+  public async complete(result?: unknown): Promise<void> {
+    // Store the completion result in session state for continuation callbacks
+    if (result !== undefined) {
+      this._session.setState(`completion:${this._name}`, result);
+    }
+
+    if (this._onComplete) {
+      await this._onComplete(this, result);
     }
   }
 

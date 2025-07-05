@@ -7,10 +7,11 @@ import {
 import {
   AdminMenuBuilder,
   MenuButtonConfig,
+  MenuWorkflow,
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { upsertServer } from '@shared/services';
 
 import { getServerMenuEmbeds } from './server.embeds';
@@ -51,7 +52,8 @@ export const getServerManagePrefixesButtons = async (
       label: 'Add Prefix',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) => openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
+      onClick: async (menu) =>
+        MenuWorkflow.openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
     },
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,

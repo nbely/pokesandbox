@@ -7,10 +7,11 @@ import {
 import {
   AdminMenuBuilder,
   MenuButtonConfig,
+  MenuWorkflow,
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { upsertServer } from '@shared';
 
 import { getServerMenuEmbeds } from './server.embeds';
@@ -57,7 +58,7 @@ export const getServerManageRolesButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, roleType),
+        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, roleType),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,

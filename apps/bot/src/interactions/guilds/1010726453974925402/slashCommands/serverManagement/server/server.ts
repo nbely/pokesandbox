@@ -4,9 +4,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import {
+  AdminMenu,
+  AdminMenuBuilder,
+  MenuButtonConfig,
+  MenuWorkflow,
+} from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 
 import { DISCOVERY_COMMAND_NAME } from '../discovery/discovery';
 import { getServerMenuEmbeds } from './server.embeds';
@@ -56,6 +61,6 @@ const getServerButtons = async (): Promise<MenuButtonConfig<AdminMenu>[]> => {
     label: (idx + 1).toString(),
     id,
     style: ButtonStyle.Primary,
-    onClick: async (menu) => openMenu(menu, command, ...options),
+    onClick: async (menu) => MenuWorkflow.openMenu(menu, command, ...options),
   }));
 };

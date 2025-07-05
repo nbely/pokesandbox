@@ -29,6 +29,7 @@ export class MenuBuilder<M extends Menu = Menu> {
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
   private _setSelectMenuCallback?: (menu: M) => SelectMenuConfig;
+  private _onCompleteCallback?: (menu: M, result: unknown) => Promise<void>;
 
   protected _name: string;
   protected _session: Session;
@@ -101,10 +102,17 @@ export class MenuBuilder<M extends Menu = Menu> {
     return this;
   }
 
-  public setReturnable(backButtonOptions?: Partial<ReservedButtonOptions>) {
+  public setCompletionHandler(
+    callback: (menu: M, result: unknown) => Promise<void>
+  ) {
+    this._onCompleteCallback = callback;
+    return this;
+  }
+
+  public setReturnable(returnButtonOptions?: Partial<ReservedButtonOptions>) {
     this._reservedButtons.set('Back', {
-      label: backButtonOptions?.label ?? 'Back',
-      style: backButtonOptions?.style ?? ButtonStyle.Secondary,
+      label: returnButtonOptions?.label ?? 'Back',
+      style: returnButtonOptions?.style ?? ButtonStyle.Secondary,
     });
 
     return this;
@@ -187,6 +195,7 @@ export class MenuBuilder<M extends Menu = Menu> {
       setButtons: this._setButtonsCallback,
       setEmbeds: this._setEmbedsCallback,
       setSelectMenu: this._setSelectMenuCallback,
+      onComplete: this._onCompleteCallback,
     };
   }
 

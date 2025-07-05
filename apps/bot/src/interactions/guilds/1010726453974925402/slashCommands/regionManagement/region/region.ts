@@ -4,9 +4,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import {
+  AdminMenu,
+  AdminMenuBuilder,
+  MenuButtonConfig,
+  MenuWorkflow,
+} from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { findRegion, upsertRegion } from '@shared';
 
 import { getRegionMenuEmbeds } from './region.embeds';
@@ -71,7 +76,8 @@ const getRegionButtons = async (
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu) => openMenu(menu, command, regionId),
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, command, regionId),
       id,
     })),
   ];

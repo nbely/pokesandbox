@@ -4,9 +4,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import {
+  AdminMenu,
+  AdminMenuBuilder,
+  MenuButtonConfig,
+  MenuWorkflow,
+} from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { upsertServer } from '@shared/services';
 
 import getDiscoveryMenuEmbeds from './discovery.embeds';
@@ -57,7 +62,7 @@ async function getDiscoveryButtons(
       label: 'Set Description',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
+        MenuWorkflow.openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
     },
   ];
 }

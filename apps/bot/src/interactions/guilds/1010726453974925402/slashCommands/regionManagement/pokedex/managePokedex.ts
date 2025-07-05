@@ -4,9 +4,9 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, openMenu } from '@bot/utils';
+import { onlyAdminRoles } from '@bot/utils';
 import { findRegion } from '@shared';
 
 import { ADD_POKEDEX_SLOT_COMMAND_NAME } from './addPokedexSlot';
@@ -53,14 +53,14 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
           );
         } else if (messageArgs.length < 2) {
           if (region.pokedex[pokedexNumber - 1] == null) {
-            await openMenu(
+            await MenuWorkflow.openMenu(
               menu,
               ADD_POKEDEX_SLOT_COMMAND_NAME,
               regionId,
               pokedexNumber.toString()
             );
           } else {
-            await openMenu(
+            await MenuWorkflow.openMenu(
               menu,
               'edit-pokedex-slot',
               regionId,
@@ -68,8 +68,14 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
             );
           }
         } else {
+          // TODO: handle search by pokemon name
           const pokemonName: string = messageArgs.slice(1).join(' ');
-          await openMenu(menu, 'search-pokemon', regionId, pokemonName);
+          await MenuWorkflow.openMenu(
+            menu,
+            'search-pokemon',
+            regionId,
+            pokemonName
+          );
         }
       })
       .setReturnable()

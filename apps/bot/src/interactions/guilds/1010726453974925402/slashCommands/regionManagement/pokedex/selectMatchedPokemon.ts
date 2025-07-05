@@ -4,9 +4,15 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import {
+  AdminMenu,
+  AdminMenuBuilder,
+  MenuButtonConfig,
+  MenuWorkflow,
+} from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+
 import { getSelectMatchedPokemonEmbeds } from './pokedex.embeds';
 
 const COMMAND_NAME = 'select-matched-pokemon';
@@ -32,8 +38,6 @@ export const SelectMatchedPokemonCommand: ISlashCommand<AdminMenu> = {
       .setEmbeds((menu) =>
         getSelectMatchedPokemonEmbeds(menu, matchedDexEntryIds)
       )
-      .setReturnable()
-      .setTrackedInHistory()
       .build(),
 };
 
@@ -41,12 +45,12 @@ const getSelectMatchedPokemonButtons = async (
   _menu: AdminMenu,
   matchedDexEntryIds: string[]
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  return matchedDexEntryIds.map((id, idx) => ({
-    id,
+  return matchedDexEntryIds.map((dexEntryId, idx) => ({
+    id: dexEntryId,
     label: `${idx + 1}`,
     style: ButtonStyle.Primary,
     onClick: async (menu) => {
-      await menu.session.goBack();
+      await MenuWorkflow.completeAndReturn(menu, dexEntryId);
     },
   }));
 };

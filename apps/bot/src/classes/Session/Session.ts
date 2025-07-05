@@ -64,6 +64,10 @@ export class Session {
   private _message?: Message;
   private _responseHistory?: ResponseRecord[] = [];
   private _state: Collection<string, unknown> = new Collection();
+  private _continuationCallbacks: Array<{
+    targetMenuName: string;
+    callback: (session: Session, result: unknown) => Promise<void>;
+  }> = [];
 
   public constructor(
     client: BotClient,
@@ -147,8 +151,47 @@ export class Session {
       .find((record) => record.menuName === menuName);
   }
 
+  /**
+   * Set workflow state data that persists across menu transitions
+   */
+  public setWorkflowState(workflowId: string, data: unknown): void {
+    this._state.set(`workflow:${workflowId}`, data);
+  }
+
+  /**
+   * Get workflow state data
+   */
+  public getWorkflowState<T = unknown>(workflowId: string): T | undefined {
+    return this._state.get(`workflow:${workflowId}`) as T | undefined;
+  }
+
+  /**
+   * Clear workflow state data
+   */
+  public clearWorkflowState(workflowId: string): void {
+    this._state.delete(`workflow:${workflowId}`);
+  }
+
   // Go back to the previous menu, if available
   public async goBack() {
+    // Execute any continuation callbacks before going back
+    let completionResult: unknown;
+    let returningMenuName: string;
+    if (this._currentMenu) {
+      returningMenuName = this._currentMenu.name;
+      // Check if there's a completion result from the current menu
+      completionResult = this.getState(`completion:${returningMenuName}`);
+      // Clear the completion result
+      this._state.delete(`completion:${returningMenuName}`);
+    }
+
+    await this.executeContinuations(completionResult ?? this._lastInput);
+
+    // new menu was set during continuation, do not go back
+    if (this._currentMenu.name !== returningMenuName) {
+      return;
+    }
+
     if (this._history.length > 0) {
       const lastHistoryEntry = this._history.pop();
       this._currentMenu = lastHistoryEntry.menu;
@@ -189,6 +232,50 @@ export class Session {
     await menu.refresh();
     this._currentMenu = menu;
     await this.processMenus();
+  }
+
+  /**
+   * Register a continuation callback to be executed when a specific menu completes
+   */
+  public registerContinuation(
+    targetMenuName: string,
+    callback: (session: Session, result: unknown) => Promise<void>
+  ): void {
+    this._continuationCallbacks.push({ targetMenuName, callback });
+  }
+
+  /**
+   * Open a sub-menu and register a continuation callback for when it completes
+   */
+  public async openSubMenu(
+    menu: Menu,
+    onComplete?: (session: Session, result: unknown) => Promise<void>
+  ): Promise<void> {
+    if (onComplete) {
+      this.registerContinuation(menu.name, onComplete);
+    }
+    await this.next(menu);
+  }
+
+  /**
+   * Execute and clear any registered continuation callbacks for the current menu
+   */
+  private async executeContinuations(result?: unknown): Promise<void> {
+    if (!this._currentMenu) return;
+
+    const continuations = this._continuationCallbacks.filter(
+      (c) => c.targetMenuName === this._currentMenu.name
+    );
+
+    // Clear the executed continuations
+    this._continuationCallbacks = this._continuationCallbacks.filter(
+      (c) => c.targetMenuName !== this._currentMenu.name
+    );
+
+    // Execute all matching continuations
+    for (const continuation of continuations) {
+      await continuation.callback(this, result);
+    }
   }
 
   /**** Private Methods ****/
