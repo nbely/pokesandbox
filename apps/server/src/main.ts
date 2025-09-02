@@ -6,7 +6,7 @@ import { connectDb, contract } from '@shared';
 
 import { getRegion, getRegions } from './routes/regions';
 import { getServers } from './routes/servers';
-import { getUsers } from './routes/users';
+import { getUsers, createUser } from './routes/users';
 
 connectDb().then(() => {
   const port = process.env.EXPRESS_PORT || 3333;
@@ -23,6 +23,7 @@ connectDb().then(() => {
     getRegions,
     getServers,
     getUsers,
+    createUser,
   });
 
   createExpressEndpoints(contract, router, app);

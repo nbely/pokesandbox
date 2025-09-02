@@ -12,3 +12,32 @@ export const getUsers: AppRouteImplementation<
     body: users.map((user) => UserDTO.convertFromEntity(user)),
   };
 };
+
+export const createUser: AppRouteImplementation<
+  typeof contract.createUser
+> = async ({ body }) => {
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ userId: body.userId });
+    if (existingUser) {
+      return {
+        status: 400,
+        body: { message: 'User already exists' },
+      };
+    }
+
+    // Create new user
+    const newUser = new User(body);
+    const savedUser = await newUser.save();
+
+    return {
+      status: 201,
+      body: UserDTO.convertFromEntity(savedUser),
+    };
+  } catch (error) {
+    return {
+      status: 400,
+      body: { message: 'Failed to create user' },
+    };
+  }
+};
