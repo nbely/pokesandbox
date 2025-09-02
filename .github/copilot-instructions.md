@@ -6,31 +6,27 @@
 
 1. **/shared** - Common package that contains:
 
-
-    - Endpoint ts-rest DTO schemas and contracts
-    - Data Model zod and Mongoose (ORM for MongoDB) schemas/types and accompanying service functions.
-    - Shared utility functions.
-    - Any other shared code that is used by more than one part of the project.
+   - Endpoint ts-rest DTO schemas and contracts
+   - Data Model zod and Mongoose (ORM for MongoDB) schemas/types and accompanying service functions.
+   - Shared utility functions.
+   - Any other shared code that is used by more than one part of the project.
 
 2. **/apps/bot** - Discord.js bot application that allows Discord server admin users to create and manage every part of a Pokemon game, and allows players to play the games that have been published by the server admins.
 
-
-    - Uses `/shared` package service functions for fetching and updating database data
-    - Includes:
-      - Custom Menu classes for streamlining development of Discord.js commands
-      - `/interactions` - Exports global message, slash, and context menu commands, as well as any other Discord.js interactions.
-      - `/interactions/guilds` - Exports guild-specific commands, which is were all development of bot commands should take place for now
+   - Uses `/shared` package service functions for fetching and updating database data
+   - Includes:
+     - Custom Menu classes for streamlining development of Discord.js commands
+     - `/interactions` - Exports global message, slash, and context menu commands, as well as any other Discord.js interactions.
+     - `/interactions/guilds` - Exports guild-specific commands, which is were all development of bot commands should take place for now
 
 3. **/apps/server/** - Express server that utilizes contracts from the `/shared` package to provide a REST API for the bot.
 
-
-    - Also uses `/shared` package service functions for fetching and updating database data
-    - Primarily used to feed DB data to the web application.
+   - Also uses `/shared` package service functions for fetching and updating database data
+   - Primarily used to feed DB data to the web application.
 
 4. **/apps/webapp/** - Next.js React web application that provides a way for Discord servers to make their servers/games discoverable, and allows players to view their game progress for any game they are playing.
 
-
-    - Fetches and updates game data via endpoint calls to the `/apps/server/` Express server
+   - Fetches and updates game data via endpoint calls to the `/apps/server/` Express server
 
 ## PRIME DIRECTIVE
 
@@ -70,7 +66,6 @@
     3. Do you approve this plan? I'll proceed with Edit [number] after your confirmation.
     4. WAIT for explicit user confirmation before making ANY edits when user ok edit [number]
 
-
 ### EXECUTION PHASE
 
     - After each individual edit, clearly indicate progress:
@@ -78,7 +73,6 @@
     - If you discover additional needed changes during editing:
     - STOP and update the plan
     - Get approval before continuing
-
 
 ### REFACTORING GUIDANCE
 
@@ -88,18 +82,15 @@
     - Consider temporary duplication as a valid interim step
     - Always indicate the refactoring pattern being applied
 
-
 ### RATE LIMIT AVOIDANCE
 
     - For very large files, suggest splitting changes across multiple sessions
     - Prioritize changes that are logically complete units
     - Always provide clear stopping points
 
-
 ## General Requirements
 
     Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
-
 
 ### Accessibility
 
@@ -111,7 +102,6 @@
     - Alternative texts (`alt`, `aria-label`) for media elements.
     - Semantic HTML for clear structure.
     - Tools like **Lighthouse** for audits.
-
 
 ## Browser Compatibility (for `/apps/webapp/`)
 
@@ -206,7 +196,6 @@
 ## Documentation Requirements
 
     - Include JSDoc comments for JavaScript/TypeScript functions.
-    - Document complex functions with clear examples.
     - Maintain concise Markdown documentation.
     - Minimum docblock info: `param`, `return`, `throws`
 

@@ -18,6 +18,10 @@ export const Ready: IBotEvent = {
         console.log(`[Events] Loaded ${client.events.size} Events.`);
       if (client.buttons.size > 0)
         console.log(`[ButtonCommands] Loaded ${client.buttons.size} Buttons.`);
+      if (client.messageContextCommands.size > 0)
+        console.log(
+          `[MessageContextCommands] Loaded ${client.messageContextCommands.size} MessageContextCommands.`
+        );
       if (client.messageCommands.size > 0)
         console.log(
           `[MessageCommands] Loaded ${client.messageCommands.size} MessageCommands with ${client.messageCommandsAliases.size} Aliases`
@@ -35,6 +39,10 @@ export const Ready: IBotEvent = {
       if (client.stringSelectMenus.size > 0)
         console.log(
           `[StringSelectMenus] Loaded ${client.stringSelectMenus.size} StringSelectMenus.`
+        );
+      if (client.userContextCommands.size > 0)
+        console.log(
+          `[UserContextCommands] Loaded ${client.userContextCommands.size} UserContextCommands.`
         );
       if (client.userSelectMenus.size > 0)
         console.log(

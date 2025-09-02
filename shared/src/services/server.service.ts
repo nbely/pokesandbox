@@ -5,6 +5,7 @@ import {
   UpdateQuery,
 } from 'mongoose';
 import { Server } from '../models/server.model';
+import { Region } from '@shared/models';
 
 export async function createServer(input: Omit<Server, '_id'>) {
   const user: HydratedDocument<Server> = new Server(input);
@@ -30,7 +31,11 @@ export async function findServerAndPopulateRegions(
   query: FilterQuery<Server>,
   options: QueryOptions = { lean: true }
 ) {
-  return Server.findOne(query, null, options).populate('regions').exec();
+  const serverWithRegions = await Server.findOne(query, null, options)
+    .populate('regions')
+    .exec();
+
+  return serverWithRegions as (Server & { regions: Region[] }) | null;
 }
 
 export async function upsertServer(
