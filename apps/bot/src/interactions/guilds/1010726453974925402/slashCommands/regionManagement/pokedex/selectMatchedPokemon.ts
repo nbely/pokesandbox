@@ -53,9 +53,8 @@ export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
 const getSelectMatchedPokemonButtons = async (
   _menu: AdminMenu,
   matchedDexEntryIds: string[]
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  console.log('buttons - first 5 matched ids', matchedDexEntryIds.slice(0, 5));
-  return matchedDexEntryIds.map((dexEntryId, idx) => ({
+): Promise<MenuButtonConfig<AdminMenu>[]> =>
+  matchedDexEntryIds.map((dexEntryId, idx) => ({
     id: dexEntryId,
     label: `${idx + 1}`,
     style: ButtonStyle.Primary,
@@ -63,4 +62,3 @@ const getSelectMatchedPokemonButtons = async (
       await MenuWorkflow.completeAndReturn(menu, dexEntryId);
     },
   }));
-};

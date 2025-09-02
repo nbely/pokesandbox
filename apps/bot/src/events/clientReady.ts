@@ -3,8 +3,8 @@ import { ActivityType } from 'discord.js';
 import type { BotClient } from '@bot/classes';
 import type { IBotEvent } from '@bot/structures/interfaces';
 
-export const Ready: IBotEvent = {
-  name: 'ready',
+export const ClientReady: IBotEvent = {
+  name: 'clientReady',
   execute: (name: string, client?: BotClient) => {
     if (!client) return;
     client.once(name, async () => {
