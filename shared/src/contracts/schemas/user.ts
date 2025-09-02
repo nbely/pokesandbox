@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { User, userEntitySchema } from '../../models/user.model';
+import { createRequestDTOSchema } from '../../utils/schema-helpers';
 
 export const userDTOSchema = z.object({
   ...userEntitySchema.shape,
@@ -7,9 +8,7 @@ export const userDTOSchema = z.object({
   servers: z.array(z.string()),
 });
 
-export const userRequestDTOSchema = userEntitySchema.omit({
-  _id: true,
-});
+export const userRequestDTOSchema = createRequestDTOSchema(userEntitySchema);
 
 export type UserDTO = z.infer<typeof userDTOSchema>;
 export type UserRequestDTO = z.infer<typeof userRequestDTOSchema>;
