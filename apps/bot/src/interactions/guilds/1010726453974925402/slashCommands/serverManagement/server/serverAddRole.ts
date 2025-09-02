@@ -18,7 +18,15 @@ import { getServerMenuEmbeds } from './server.embeds';
 const COMMAND_NAME = 'server-add-role';
 export const SERVER_ADD_ROLE_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerAddRoleCommand: ISlashCommand<AdminMenu> = {
+type ServerAddRoleCommandOptions = {
+  roleType: string;
+};
+type ServerAddRoleCommand = ISlashCommand<
+  AdminMenu,
+  ServerAddRoleCommandOptions
+>;
+
+export const ServerAddRoleCommand: ServerAddRoleCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -28,8 +36,9 @@ export const ServerAddRoleCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Add a new admin or mod role to your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, roleType: string): Promise<AdminMenu> =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenu: async (session, options): Promise<AdminMenu> => {
+    const { roleType } = options;
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) =>
         getServerMenuEmbeds(
           menu,
@@ -38,7 +47,8 @@ export const ServerAddRoleCommand: ISlashCommand<AdminMenu> = {
       )
       .setSelectMenu((menu) => getServerAddRoleSelectMenu(menu, roleType))
       .setTrackedInHistory()
-      .build(),
+      .build();
+  },
 };
 
 export const getServerAddRoleSelectMenu = (

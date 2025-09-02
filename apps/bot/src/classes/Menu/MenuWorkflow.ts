@@ -1,4 +1,5 @@
 import { Session } from '../Session/Session';
+import { MenuCommandOptions } from '../types';
 import { Menu } from './Menu';
 
 /**
@@ -8,12 +9,12 @@ export class MenuWorkflow {
   public static async openMenu<M extends Menu>(
     menu: M,
     command: string,
-    ...params: string[]
+    options?: MenuCommandOptions
   ) {
     const pokedexMenu = await menu.client.slashCommands
       .get(command)
-      .createMenu(menu.session, ...params);
-    await menu.session.next(pokedexMenu, params);
+      .createMenu(menu.session, options);
+    await menu.session.next(pokedexMenu, options);
   }
 
   /**
@@ -29,12 +30,12 @@ export class MenuWorkflow {
   >(
     currentMenu: TMenu,
     subMenuName: string,
-    commandArgs: string[],
-    onComplete: (session: Session, result: TResult) => Promise<void>
+    onComplete: (session: Session, result: TResult) => Promise<void>,
+    commandOptions?: MenuCommandOptions
   ): Promise<void> {
     // Register the continuation callback and open the sub-menu
     currentMenu.session.registerContinuation(subMenuName, onComplete);
-    return this.openMenu(currentMenu, subMenuName, ...commandArgs);
+    return this.openMenu(currentMenu, subMenuName, commandOptions);
   }
 
   /**
@@ -51,5 +52,3 @@ export class MenuWorkflow {
     await menu.session.goBack();
   }
 }
-
-export default MenuWorkflow;

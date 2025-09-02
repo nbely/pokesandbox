@@ -11,8 +11,12 @@ import { Menu } from './Menu/Menu';
 
 /** Menu Types */
 
-export type MenuBuilderOptions<M extends Menu = Menu> = {
-  commandOptions?: string[];
+export type MenuCommandOptions = Record<string, unknown>;
+export type MenuBuilderOptions<
+  M extends Menu = Menu,
+  O extends MenuCommandOptions = MenuCommandOptions
+> = {
+  commandOptions?: O;
   isTrackedInHistory: boolean;
   paginationConfig: PaginationConfig<M>;
   reservedButtons: Collection<ReservedButtonLabels, ReservedButtonOptions>;
@@ -60,7 +64,7 @@ export type SelectMenuConfig<M extends Menu = Menu> = {
 
 export type SessionHistoryEntry = {
   menu: Menu;
-  options?: string[];
+  options?: MenuCommandOptions;
 };
 
 export type ReservedButtonLabels = 'Back' | 'Cancel' | 'Next' | 'Previous';

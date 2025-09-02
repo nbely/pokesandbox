@@ -8,15 +8,18 @@ import {
   MenuBuilderOptions,
   MenuButton,
   MenuButtonConfig,
+  MenuCommandOptions,
   PaginationOptions,
   ReservedButtonLabels,
   ReservedButtonOptions,
   SelectMenuConfig,
 } from '../types';
 
-export class MenuBuilder<M extends Menu = Menu> {
+export class MenuBuilder<
+  M extends Menu = Menu,
+  O extends MenuCommandOptions = MenuCommandOptions
+> {
   private _buttons: Collection<string, MenuButton> = new Collection();
-  private _commandOptions: string[] = [];
   private _isTrackedInHistory = false;
   private _paginationItemsPerPage = 10;
   private _paginationType?: MenuPaginationType;
@@ -29,16 +32,17 @@ export class MenuBuilder<M extends Menu = Menu> {
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
   private _setSelectMenuCallback?: (menu: M) => SelectMenuConfig;
-  private _onCompleteCallback?: (menu: M, result: unknown) => Promise<void>;
 
   protected _name: string;
   protected _session: Session;
+  protected _commandOptions: O;
 
   /**** Constructor ****/
 
-  public constructor(session: Session, name: string) {
+  public constructor(session: Session, name: string, commandOptions?: O) {
     this._name = name;
     this._session = session;
+    this._commandOptions = commandOptions;
   }
 
   /**** Public Methods ****/
@@ -77,11 +81,6 @@ export class MenuBuilder<M extends Menu = Menu> {
     return this;
   }
 
-  public setCommandOptions(options: string | string[]) {
-    this._commandOptions = typeof options === 'string' ? [options] : options;
-    return this;
-  }
-
   public setEmbeds(callback: (menu: M) => Promise<EmbedBuilder[]>) {
     this._setEmbedsCallback = callback;
     return this;
@@ -102,17 +101,10 @@ export class MenuBuilder<M extends Menu = Menu> {
     return this;
   }
 
-  public setCompletionHandler(
-    callback: (menu: M, result: unknown) => Promise<void>
-  ) {
-    this._onCompleteCallback = callback;
-    return this;
-  }
-
-  public setReturnable(returnButtonOptions?: Partial<ReservedButtonOptions>) {
+  public setReturnable(backButtonOptions?: Partial<ReservedButtonOptions>) {
     this._reservedButtons.set('Back', {
-      label: returnButtonOptions?.label ?? 'Back',
-      style: returnButtonOptions?.style ?? ButtonStyle.Secondary,
+      label: backButtonOptions?.label ?? 'Back',
+      style: backButtonOptions?.style ?? ButtonStyle.Secondary,
     });
 
     return this;
@@ -195,7 +187,6 @@ export class MenuBuilder<M extends Menu = Menu> {
       setButtons: this._setButtonsCallback,
       setEmbeds: this._setEmbedsCallback,
       setSelectMenu: this._setSelectMenuCallback,
-      onComplete: this._onCompleteCallback,
     };
   }
 

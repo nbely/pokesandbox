@@ -2,12 +2,15 @@ import { Session } from '../Session/Session';
 
 import { MenuBuilder } from '../Menu/MenuBuilder';
 import { AdminMenu } from './AdminMenu';
+import { MenuCommandOptions } from '../types';
 
-export class AdminMenuBuilder extends MenuBuilder<AdminMenu> {
+export class AdminMenuBuilder<
+  O extends MenuCommandOptions = MenuCommandOptions
+> extends MenuBuilder<AdminMenu, O> {
   /**** Constructor ****/
 
-  public constructor(session: Session, name: string) {
-    super(session, name);
+  public constructor(session: Session, name: string, options: O = {} as O) {
+    super(session, name, options);
   }
 
   /**** Getters & Setters ****/

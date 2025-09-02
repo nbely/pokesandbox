@@ -23,6 +23,7 @@ import {
   MenuBuilderOptions,
   MenuButton,
   MenuButtonConfig,
+  MenuCommandOptions,
   PaginationConfig,
   PaginationState,
   SelectMenuConfig,
@@ -30,7 +31,7 @@ import {
 
 type ReservedButtonLabels = 'Back' | 'Cancel' | 'Next' | 'Previous';
 
-export class Menu {
+export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   private _reservedButtons: Collection<
     ReservedButtonLabels,
     { label: string; style: ButtonStyle }
@@ -38,7 +39,7 @@ export class Menu {
   private _buttons: Collection<string, MenuButton> = new Collection();
   private _client: BotClient;
   private _interaction: ChatInputCommandInteraction | ComponentInteraction;
-  private _commandOptions: string[];
+  private _commandOptions: C;
   private _components: ActionRowBuilder<MessageActionRowComponentBuilder>[] =
     [];
   private _content?: string;
@@ -75,7 +76,7 @@ export class Menu {
   public constructor(
     session: Session,
     name: string,
-    options: MenuBuilderOptions
+    options: MenuBuilderOptions<Menu<C>, C>
   ) {
     this._name = name;
     this._session = session;
@@ -100,7 +101,7 @@ export class Menu {
     return this._client;
   }
 
-  get commandOptions(): string[] {
+  get commandOptions(): C {
     return this._commandOptions;
   }
 
@@ -275,6 +276,14 @@ export class Menu {
     this._embeds = await this._setEmbeds(this);
   }
 
+  /**
+   * Hard refresh - completely recreate the menu from scratch
+   * This is useful when the menu's structure needs to change significantly
+   */
+  public async hardRefresh(): Promise<void> {
+    await this._session.hardRefresh();
+  }
+
   public async handleButtonInteraction(buttonId: string) {
     const button = this._buttons.get(buttonId);
 
@@ -311,7 +320,7 @@ export class Menu {
   public async complete(result?: unknown): Promise<void> {
     // Store the completion result in session state for continuation callbacks
     if (result !== undefined) {
-      this._session.setState(`completion:${this._name}`, result);
+      this._session.setMenuCompletionState(this._name, result);
     }
 
     if (this._onComplete) {

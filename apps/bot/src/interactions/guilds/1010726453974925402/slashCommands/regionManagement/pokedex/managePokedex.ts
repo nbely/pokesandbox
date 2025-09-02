@@ -9,13 +9,21 @@ import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { findRegion } from '@shared';
 
-import { ADD_POKEDEX_SLOT_COMMAND_NAME } from './addPokedexSlot';
+import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
 
 const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 
-export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
+type ManagePokedexCommandOptions = {
+  regionId: string;
+};
+type ManagePokedexCommand = ISlashCommand<
+  AdminMenu,
+  ManagePokedexCommandOptions
+>;
+
+export const ManagePokedexCommand: ManagePokedexCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -25,8 +33,9 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Manage the Pokédex for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, regionId) =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenu: async (session, options) => {
+    const { regionId } = options;
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, regionId))
       .setCancellable()
       .setListPagination({
@@ -39,7 +48,6 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
         },
       })
       .setMessageHandler(async (menu, response) => {
-        const region = await findRegion({ _id: regionId });
         const messageArgs: string[] = response.split(' ');
         const pokedexNumber: number = +messageArgs[0];
 
@@ -52,33 +60,21 @@ export const ManagePokedexCommand: ISlashCommand<AdminMenu> = {
             new Error('Please enter a valid Pokédex number')
           );
         } else if (messageArgs.length < 2) {
-          if (region.pokedex[pokedexNumber - 1] == null) {
-            await MenuWorkflow.openMenu(
-              menu,
-              ADD_POKEDEX_SLOT_COMMAND_NAME,
-              regionId,
-              pokedexNumber.toString()
-            );
-          } else {
-            await MenuWorkflow.openMenu(
-              menu,
-              'edit-pokedex-slot',
-              regionId,
-              pokedexNumber.toString()
-            );
-          }
-        } else {
-          // TODO: handle search by pokemon name
-          const pokemonName: string = messageArgs.slice(1).join(' ');
-          await MenuWorkflow.openMenu(
-            menu,
-            'search-pokemon',
+          await MenuWorkflow.openMenu(menu, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
             regionId,
-            pokemonName
-          );
+            pokedexNo: pokedexNumber,
+          });
+        } else {
+          const pokemonName: string = messageArgs.slice(1).join(' ');
+
+          await MenuWorkflow.openMenu(menu, 'search-pokemon', {
+            regionId,
+            pokemonName,
+          });
         }
       })
       .setReturnable()
       .setTrackedInHistory()
-      .build(),
+      .build();
+  },
 };

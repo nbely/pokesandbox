@@ -17,7 +17,12 @@ import type {
   UserSelectMenuInteraction,
 } from 'discord.js';
 
-import type { BotClient, Menu, Session } from '@bot/classes';
+import type {
+  BotClient,
+  Menu,
+  MenuCommandOptions,
+  Session,
+} from '@bot/classes';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];
@@ -83,17 +88,20 @@ export interface IRoleSelectMenu extends IBaseCommand {
   execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }
 
-type CreateMenuFunction<T extends Menu = Menu> = (
-  session: Session,
-  ...options: string[]
-) => Promise<T>;
+type CreateMenuFunction<
+  T extends Menu = Menu,
+  TOptions extends MenuCommandOptions = MenuCommandOptions
+> = (session: Session, options?: TOptions) => Promise<T>;
 
-export interface ISlashCommand<T extends Menu = Menu> extends IBaseCommand {
+export interface ISlashCommand<
+  T extends Menu = Menu,
+  TOptions extends MenuCommandOptions = MenuCommandOptions
+> extends IBaseCommand {
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
-  createMenu?: CreateMenuFunction<T>;
+  createMenu?: CreateMenuFunction<T, TOptions>;
   execute?: (session: Session) => void;
 }
 

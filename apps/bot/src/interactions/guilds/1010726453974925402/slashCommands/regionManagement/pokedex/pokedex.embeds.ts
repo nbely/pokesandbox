@@ -131,6 +131,7 @@ export const getSelectMatchedPokemonEmbeds = async (
   const matchedPokemon = await findDexEntries({
     _id: { $in: matchedDexEntryIds },
   });
+  matchedPokemon.sort((a, b) => a.num - b.num);
 
   for (
     let i = menu.paginationState.startIndex;

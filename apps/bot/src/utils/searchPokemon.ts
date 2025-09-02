@@ -23,9 +23,9 @@ export const searchPokemon = async (
       { $or: [{ isCanon: true }, { originServer: serverId }] },
     ],
   });
+  potentialMatches.sort((a, b) => a.num - b.num);
 
   if (potentialMatches.length < 1) {
-    console.log('No Pokemon found');
     return { potentialMatches };
   }
 

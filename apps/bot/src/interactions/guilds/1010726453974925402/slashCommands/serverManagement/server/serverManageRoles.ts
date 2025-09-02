@@ -20,7 +20,15 @@ import { SERVER_ADD_ROLE_COMMAND_NAME } from './serverAddRole';
 const COMMAND_NAME = 'server-manage-roles';
 export const SERVER_MANAGE_ROLES_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerManageRolesCommand: ISlashCommand<AdminMenu> = {
+type ServerManageRolesCommandOptions = {
+  roleType: string;
+};
+type ServerManageRolesCommand = ISlashCommand<
+  AdminMenu,
+  ServerManageRolesCommandOptions
+>;
+
+export const ServerManageRolesCommand: ServerManageRolesCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -30,8 +38,9 @@ export const ServerManageRolesCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, roleType: string): Promise<AdminMenu> =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenu: async (session, options): Promise<AdminMenu> => {
+    const { roleType } = options;
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getServerManageRolesButtons(menu, roleType))
       .setEmbeds((menu) =>
         getServerMenuEmbeds(
@@ -42,7 +51,8 @@ export const ServerManageRolesCommand: ISlashCommand<AdminMenu> = {
       .setCancellable()
       .setTrackedInHistory()
       .setReturnable()
-      .build(),
+      .build();
+  },
 };
 
 export const getServerManageRolesButtons = async (
@@ -58,7 +68,7 @@ export const getServerManageRolesButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, roleType),
+        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,

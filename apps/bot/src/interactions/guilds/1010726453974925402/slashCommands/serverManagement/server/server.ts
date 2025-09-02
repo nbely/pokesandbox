@@ -41,26 +41,26 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
 };
 
 const getServerButtons = async (): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const subMenuButtons: { id: string; command: string; options?: string[] }[] =
-    [
-      { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
-      {
-        id: 'Admin',
-        command: SERVER_MANAGE_ROLES_COMMAND_NAME,
-        options: ['admin'],
-      },
-      {
-        id: 'Mod',
-        command: SERVER_MANAGE_ROLES_COMMAND_NAME,
-        options: ['mod'],
-      },
-      { id: 'Discovery', command: DISCOVERY_COMMAND_NAME },
-    ];
+  const subMenuButtons: { id: string; command: string; option?: string }[] = [
+    { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
+    {
+      id: 'Admin',
+      command: SERVER_MANAGE_ROLES_COMMAND_NAME,
+      option: 'admin',
+    },
+    {
+      id: 'Mod',
+      command: SERVER_MANAGE_ROLES_COMMAND_NAME,
+      option: 'mod',
+    },
+    { id: 'Discovery', command: DISCOVERY_COMMAND_NAME },
+  ];
 
-  return subMenuButtons.map(({ id, command, options }, idx) => ({
+  return subMenuButtons.map(({ id, command, option }, idx) => ({
     label: (idx + 1).toString(),
     id,
     style: ButtonStyle.Primary,
-    onClick: async (menu) => MenuWorkflow.openMenu(menu, command, ...options),
+    onClick: async (menu) =>
+      MenuWorkflow.openMenu(menu, command, { roleType: option }),
   }));
 };

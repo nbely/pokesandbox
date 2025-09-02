@@ -16,7 +16,7 @@ import { ComponentInteraction } from '@bot/structures/interfaces';
 import type { BotClient } from '../BotClient/BotClient';
 import { MenuResponseType } from '../constants';
 import { Menu } from '../Menu/Menu';
-import type { SessionHistoryEntry } from '../types';
+import type { MenuCommandOptions, SessionHistoryEntry } from '../types';
 
 interface SessionConstructor<T extends Session> {
   new (
@@ -115,9 +115,9 @@ export class Session {
   }
 
   // Add a new menu to the session and update the current menu
-  public async next(menu: Menu, options?: string[]) {
+  public async next(menu: Menu, options?: MenuCommandOptions) {
     if (this._currentMenu.isTrackedInHistory) {
-      this._history.push({ menu: this._currentMenu, options: options });
+      this._history.push({ menu: this._currentMenu, options });
     }
     this._currentMenu = menu;
     await this._currentMenu.refresh();
@@ -137,14 +137,6 @@ export class Session {
     this._history = [];
   }
 
-  public getState(key: string): unknown {
-    return this._state.get(key);
-  }
-
-  public setState(key: string, value: unknown): void {
-    this._state.set(key, value);
-  }
-
   public getLastResponseByMenu(menuName: string): ResponseRecord | undefined {
     return this._responseHistory
       ?.reverse()
@@ -154,50 +146,68 @@ export class Session {
   /**
    * Set workflow state data that persists across menu transitions
    */
-  public setWorkflowState(workflowId: string, data: unknown): void {
-    this._state.set(`workflow:${workflowId}`, data);
+  public setState(key: string, value: unknown): void {
+    this._state.set(key, value);
   }
 
   /**
    * Get workflow state data
    */
-  public getWorkflowState<T = unknown>(workflowId: string): T | undefined {
-    return this._state.get(`workflow:${workflowId}`) as T | undefined;
+  public getState<T = unknown>(key: string): T | undefined {
+    return this._state.get(key) as T | undefined;
   }
 
   /**
-   * Clear workflow state data
+   * Get menu completion state data
    */
-  public clearWorkflowState(workflowId: string): void {
-    this._state.delete(`workflow:${workflowId}`);
+  public getMenuCompletionState<T = unknown>(menuName: string): T | undefined {
+    return this.getState(`completion:${menuName}`) as T | undefined;
+  }
+
+  /**
+   * Set menu completion state data that persists across menu transitions
+   */
+  public setMenuCompletionState(menuName: string, data: unknown): void {
+    this.setState(`completion:${menuName}`, data);
+  }
+
+  /**
+   * Clear the menu completion state for a specific menu
+   */
+  public clearMenuCompletionState(menuName: string): void {
+    this._state.delete(`completion:${menuName}`);
   }
 
   // Go back to the previous menu, if available
   public async goBack() {
-    // Execute any continuation callbacks before going back
-    let completionResult: unknown;
-    let returningMenuName: string;
-    if (this._currentMenu) {
-      returningMenuName = this._currentMenu.name;
-      // Check if there's a completion result from the current menu
-      completionResult = this.getState(`completion:${returningMenuName}`);
-      // Clear the completion result
-      this._state.delete(`completion:${returningMenuName}`);
-    }
+    // Store completion result from the current menu before going back
+    const returningMenuName = this._currentMenu.name;
+    console.log('going back from menu:', returningMenuName);
 
-    await this.executeContinuations(completionResult ?? this._lastInput);
+    // Check if there's a completion result from the current menu
+    const completionResult = this.getMenuCompletionState(returningMenuName);
+    console.log('completion result', completionResult);
+    this.clearMenuCompletionState(returningMenuName);
 
-    // new menu was set during continuation, do not go back
-    if (this._currentMenu.name !== returningMenuName) {
-      return;
-    }
+    const lastHistoryEntry = this._history.pop();
 
-    if (this._history.length > 0) {
-      const lastHistoryEntry = this._history.pop();
+    // First, restore the previous menu context
+    if (lastHistoryEntry) {
       this._currentMenu = lastHistoryEntry.menu;
-      await this._currentMenu.refresh();
     } else {
       this._isCompleted = true;
+      return; // No menu to go back to, exit early
+    }
+
+    // Now execute continuation callbacks for the submenu that just completed
+    await this.executeContinuations(
+      returningMenuName,
+      completionResult ?? this._lastInput
+    );
+
+    // If no new menu was set during continuation, refresh the current menu
+    if (this._currentMenu.name === lastHistoryEntry.menu.name) {
+      await this._currentMenu.refresh();
     }
   }
 
@@ -226,9 +236,16 @@ export class Session {
 
   public async initialize(): Promise<void> {
     await this.commandInteraction.deferReply();
+    const options = this.commandInteraction.options.data.reduce(
+      (acc, option) => {
+        acc[option.name] = option.value;
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
     const menu: Menu = await this._client.slashCommands
       .get(this._initialCommand)
-      .createMenu(this);
+      .createMenu(this, options);
     await menu.refresh();
     this._currentMenu = menu;
     await this.processMenus();
@@ -245,37 +262,52 @@ export class Session {
   }
 
   /**
-   * Open a sub-menu and register a continuation callback for when it completes
+   * Execute and clear any registered continuation callbacks for the specified menu
    */
-  public async openSubMenu(
-    menu: Menu,
-    onComplete?: (session: Session, result: unknown) => Promise<void>
+  private async executeContinuations(
+    targetMenuName: string,
+    result?: unknown
   ): Promise<void> {
-    if (onComplete) {
-      this.registerContinuation(menu.name, onComplete);
-    }
-    await this.next(menu);
-  }
-
-  /**
-   * Execute and clear any registered continuation callbacks for the current menu
-   */
-  private async executeContinuations(result?: unknown): Promise<void> {
-    if (!this._currentMenu) return;
-
     const continuations = this._continuationCallbacks.filter(
-      (c) => c.targetMenuName === this._currentMenu.name
+      (c) => c.targetMenuName === targetMenuName
     );
 
     // Clear the executed continuations
     this._continuationCallbacks = this._continuationCallbacks.filter(
-      (c) => c.targetMenuName !== this._currentMenu.name
+      (c) => c.targetMenuName !== targetMenuName
     );
 
     // Execute all matching continuations
     for (const continuation of continuations) {
       await continuation.callback(this, result);
     }
+  }
+
+  /**
+   * Completely recreate the current menu from scratch using the original command and options
+   */
+  public async hardRefresh(): Promise<void> {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to hard refresh');
+    }
+
+    const currentMenuName = this._currentMenu.name;
+    const currentOptions = this._currentMenu.commandOptions;
+    console.log('current menu name:', currentMenuName);
+    console.log('current menu options:', currentOptions);
+
+    // Recreate the menu from scratch using the original command
+    const newMenu = await this._client.slashCommands
+      .get(currentMenuName)
+      ?.createMenu(this, currentOptions);
+
+    if (!newMenu) {
+      throw new Error(`Failed to recreate menu: ${currentMenuName}`);
+    }
+
+    // Replace the current menu without affecting history
+    this._currentMenu = newMenu;
+    await this._currentMenu.refresh();
   }
 
   /**** Private Methods ****/

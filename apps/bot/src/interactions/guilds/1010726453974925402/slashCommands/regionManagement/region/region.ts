@@ -20,7 +20,12 @@ import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 const COMMAND_NAME = 'region';
 export const REGION_COMMAND_NAME = COMMAND_NAME;
 
-export const RegionCommand: ISlashCommand<AdminMenu> = {
+type RegionCommandOptions = {
+  regionId: string;
+};
+type RegionCommand = ISlashCommand<AdminMenu, RegionCommandOptions>;
+
+export const RegionCommand: RegionCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -30,10 +35,10 @@ export const RegionCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Manage a Region for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, regionId) =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
-      .setButtons((menu) => getRegionButtons(menu, regionId))
-      .setEmbeds((menu) => getRegionMenuEmbeds(menu, regionId))
+  createMenu: async (session, options) =>
+    new AdminMenuBuilder(session, COMMAND_NAME, options)
+      .setButtons((menu) => getRegionButtons(menu, options.regionId))
+      .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.regionId))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -77,7 +82,7 @@ const getRegionButtons = async (
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu) =>
-        MenuWorkflow.openMenu(menu, command, regionId),
+        MenuWorkflow.openMenu(menu, command, { regionId }),
       id,
     })),
   ];
