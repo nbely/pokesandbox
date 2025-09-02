@@ -182,11 +182,9 @@ export class Session {
   public async goBack() {
     // Store completion result from the current menu before going back
     const returningMenuName = this._currentMenu.name;
-    console.log('going back from menu:', returningMenuName);
 
     // Check if there's a completion result from the current menu
     const completionResult = this.getMenuCompletionState(returningMenuName);
-    console.log('completion result', completionResult);
     this.clearMenuCompletionState(returningMenuName);
 
     const lastHistoryEntry = this._history.pop();
@@ -293,8 +291,6 @@ export class Session {
 
     const currentMenuName = this._currentMenu.name;
     const currentOptions = this._currentMenu.commandOptions;
-    console.log('current menu name:', currentMenuName);
-    console.log('current menu options:', currentOptions);
 
     // Recreate the menu from scratch using the original command
     const newMenu = await this._client.slashCommands

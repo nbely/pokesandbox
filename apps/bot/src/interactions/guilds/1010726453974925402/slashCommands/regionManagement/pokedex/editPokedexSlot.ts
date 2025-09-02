@@ -44,7 +44,6 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
     const { regionId, pokedexNo } = options;
-    console.log(COMMAND_NAME, 'regionId', regionId, pokedexNo);
     const region = await findRegion({ _id: regionId });
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
@@ -132,7 +131,6 @@ const handleAddPokemonToSlot = async (
       menu,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
       async (_session, selectedPokemonId: string) => {
-        // Handle the selected Pokemon ID
         const selectedPokemon = potentialMatches.find(
           (match) => match._id.toString() === selectedPokemonId
         );
@@ -142,14 +140,6 @@ const handleAddPokemonToSlot = async (
           return menu.refresh();
         }
 
-        console.log(
-          'Selected Pokémon:',
-          selectedPokemon.name,
-          'menu name:',
-          menu.name
-        );
-
-        // Continue with your logic...
         await handlePokemonSelected(menu, selectedPokemon, region, pokedexNo);
       },
       {
@@ -180,11 +170,6 @@ const handlePokemonSelected = async (
       name: selectedPokemon.name,
     };
     await upsertRegion({ _id: region._id }, region);
-    console.log(
-      'upserting region with new pokedex position',
-      +pokedexNo - 1,
-      region.pokedex[+pokedexNo - 1]
-    );
     return menu.hardRefresh();
   }
 };
