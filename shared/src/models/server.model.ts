@@ -18,15 +18,13 @@ export const serverEntitySchema = z.object({
   regions: z.array(z.instanceof(Types.ObjectId)),
 });
 
-export type ServerEntity = z.infer<typeof serverEntitySchema>;
+export type Server = z.infer<typeof serverEntitySchema>;
 
-export type Server = HydratedDocument<ServerEntity>;
-
-type ServerModelType = Model<ServerEntity, ServerQueryHelpers>;
+type ServerModelType = Model<Server, ServerQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type ServerModelQuery = Query<
   any,
-  HydratedDocument<ServerEntity>,
+  HydratedDocument<Server>,
   ServerQueryHelpers
 > &
   ServerQueryHelpers;
@@ -54,8 +52,8 @@ export const ServerSchema: Schema = new Schema({
   regions: { type: [Schema.Types.ObjectId], ref: 'Region', required: true },
 });
 
-export const Server = model<ServerEntity, ServerModelType>(
+export const Server = model<Server, ServerModelType>(
   'Server',
   ServerSchema,
-  'servers',
+  'servers'
 );

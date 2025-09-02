@@ -5,10 +5,10 @@ import {
   Types,
   UpdateQuery,
 } from 'mongoose';
-import { Region, RegionEntity } from '../models/region.model';
+import { Region } from '../models/region.model';
 
-export async function createRegion(input: RegionEntity) {
-  const user: HydratedDocument<RegionEntity> = new Region(input);
+export async function createRegion(input: Region) {
+  const user: HydratedDocument<Region> = new Region(input);
   return await user.save();
 }
 
@@ -16,11 +16,15 @@ export async function deleteAllRegions() {
   return Region.deleteMany({}).exec();
 }
 
+export async function findAllRegions(options: QueryOptions = { lean: true }) {
+  return Region.find({}, null, options).exec();
+}
+
 export async function findRegion(
-  query: FilterQuery<RegionEntity>,
+  query: FilterQuery<Region>,
   options: QueryOptions = { lean: true }
 ) {
-  return Region.findOne(query, null, options).exec();
+  return await Region.findOne(query, null, options).exec();
 }
 
 export async function findRegionsByObjectIds(
@@ -31,8 +35,8 @@ export async function findRegionsByObjectIds(
 }
 
 export async function upsertRegion(
-  query: FilterQuery<RegionEntity>,
-  update: UpdateQuery<RegionEntity>,
+  query: FilterQuery<Region>,
+  update: UpdateQuery<Region>,
   options: QueryOptions = { lean: true, upsert: true }
 ) {
   return Region.findOneAndUpdate(query, update, options).exec();

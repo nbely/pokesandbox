@@ -24,7 +24,7 @@ export const regionEntitySchema = z.object({
         id: z.instanceof(Types.ObjectId),
         name: z.string(),
       })
-      .nullable(),
+      .nullable()
   ),
   progressionTypes: z.record(z.union([z.array(z.string()), z.number()])),
   quests: z.object({
@@ -36,15 +36,13 @@ export const regionEntitySchema = z.object({
   transportationTypes: z.array(z.string()),
 });
 
-export type RegionEntity = z.infer<typeof regionEntitySchema>;
+export type Region = z.infer<typeof regionEntitySchema>;
 
-export type Region = HydratedDocument<RegionEntity>;
-
-type RegionModelType = Model<RegionEntity, RegionQueryHelpers>;
+type RegionModelType = Model<Region, RegionQueryHelpers>;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type RegionModelQuery = Query<
   any,
-  HydratedDocument<RegionEntity>,
+  HydratedDocument<Region>,
   RegionQueryHelpers
 > &
   RegionQueryHelpers;
@@ -98,8 +96,8 @@ export const RegionSchema: Schema = new Schema({
   transportationTypes: { type: [String], required: true },
 });
 
-export const Region = model<RegionEntity, RegionModelType>(
+export const Region = model<Region, RegionModelType>(
   'Region',
   RegionSchema,
-  'regions',
+  'regions'
 );
