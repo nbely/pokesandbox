@@ -4,6 +4,7 @@ import {
   model,
   type Query,
   type QueryFilter,
+  type QueryWithHelpers,
   Schema,
   Types,
 } from 'mongoose';
@@ -29,7 +30,14 @@ export const serverEntitySchema = z.object({
 export type IServer = z.infer<typeof serverEntitySchema>;
 export type Server = HydratedDocument<IServer>;
 
-interface IServerModel extends Model<IServer> {
+// Define interface for query helpers
+interface IServerQueryHelpers {
+  byServerId(
+    serverId?: string
+  ): QueryWithHelpers<any, Server, IServerQueryHelpers>;
+}
+
+interface IServerModel extends Model<IServer, IServerQueryHelpers> {
   createServer(server: IServer): Promise<Server>;
   findServerWithRegions(
     filter: QueryFilter<IServer>
@@ -40,7 +48,12 @@ interface IServerModel extends Model<IServer> {
   ): Query<Server | null, IServer>;
 }
 
-export const serverSchema = new Schema<IServer, IServerModel>(
+export const serverSchema = new Schema<
+  IServer,
+  IServerModel,
+  Record<string, never>,
+  IServerQueryHelpers
+>(
   {
     serverId: { type: String, required: true },
     adminRoleIds: { type: [String], required: true },
@@ -61,7 +74,10 @@ export const serverSchema = new Schema<IServer, IServerModel>(
   },
   {
     query: {
-      byServerId(serverId: string) {
+      byServerId(
+        this: QueryWithHelpers<any, Server, IServerQueryHelpers>,
+        serverId?: string
+      ) {
         return this.where({ serverId });
       },
     },

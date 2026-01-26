@@ -1,5 +1,4 @@
-import type { DexEntry } from '@shared/models';
-import { findDexEntries } from '@shared/services';
+import { DexEntry } from '@shared/models';
 
 type PokemonSearchResult = {
   exactMatch?: DexEntry;
@@ -11,7 +10,7 @@ export const searchPokemon = async (
   searchName: string
 ): Promise<PokemonSearchResult> => {
   let exactMatch: DexEntry | undefined;
-  const potentialMatches: DexEntry[] = await findDexEntries({
+  const potentialMatches: DexEntry[] = await DexEntry.find({
     $and: [
       { baseSpecies: undefined },
       {

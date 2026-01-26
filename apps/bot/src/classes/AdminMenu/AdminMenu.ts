@@ -1,12 +1,6 @@
 import { EmbedBuilder, Role } from 'discord.js';
 
-import type { Server } from '@shared/models';
-import {
-  createServer,
-  findRegionsByObjectIds,
-  findServer,
-  findServerAndPopulateRegions,
-} from '@shared/services';
+import { Region, Server } from '@shared/models';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
@@ -79,7 +73,7 @@ export class AdminMenu extends Menu {
     if (!this.interaction.guild)
       throw new Error('Guild not found while initializing server.');
 
-    await createServer({
+    await Server.create({
       adminRoleIds: [],
       discovery: {
         enabled: false,
@@ -96,9 +90,7 @@ export class AdminMenu extends Menu {
 
   private async fetchNullableServer(): Promise<Server | null> {
     try {
-      return findServer({
-        serverId: this.interaction.guild?.id,
-      });
+      return Server.findOne().byServerId(this.interaction.guild?.id);
     } catch (error) {
       await this.session.handleError(error);
     }
@@ -119,7 +111,7 @@ export class AdminMenu extends Menu {
 
   public async fetchServerAndRegions() {
     try {
-      const server = await findServerAndPopulateRegions({
+      const server = await Server.findServerWithRegions({
         serverId: this.interaction.guild?.id,
       });
       if (!server) {
@@ -127,7 +119,8 @@ export class AdminMenu extends Menu {
           'There was a problem fetching your server. Please try again later.'
         );
       }
-      const regions = await findRegionsByObjectIds(server.regions);
+      const serverRegionIds = server.regions.map((r) => r._id.toHexString());
+      const regions = await Region.find().byIds(serverRegionIds);
       return { ...server, regions };
     } catch (error) {
       await this.session.handleError(error);

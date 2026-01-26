@@ -4,6 +4,7 @@ import {
   model,
   type Query,
   type QueryFilter,
+  QueryWithHelpers,
   Schema,
   Types,
 } from 'mongoose';
@@ -277,6 +278,11 @@ export interface IDexEntry
 
 export type DexEntry = HydratedDocument<IDexEntry>;
 
+// Define interface for query helpers
+interface IDexEntryQueryHelpers {
+  byIds(ids?: string[]): QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>;
+}
+
 interface IDexEntryModel extends Model<IDexEntry> {
   createDexEntry(dexEntry: IDexEntry): Promise<DexEntry>;
   upsertDexEntry(
@@ -285,7 +291,12 @@ interface IDexEntryModel extends Model<IDexEntry> {
   ): Query<DexEntry | null, IDexEntry>;
 }
 
-export const DexEntrySchema = new Schema<IDexEntry, IDexEntryModel>(
+export const DexEntrySchema = new Schema<
+  IDexEntry,
+  IDexEntryModel,
+  Record<string, never>,
+  IDexEntryQueryHelpers
+>(
   {
     abilities: {
       type: {
@@ -721,11 +732,11 @@ export const DexEntrySchema = new Schema<IDexEntry, IDexEntryModel>(
   },
   {
     query: {
-      byId(id: string) {
-        return this.where({ _id: id });
-      },
-      byIds(objectIds: Types.ObjectId[]) {
-        return this.where({ _id: { $in: objectIds } });
+      byIds(
+        this: QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>,
+        ids: string[]
+      ) {
+        return this.where({ _id: { $in: ids } });
       },
     },
     statics: {

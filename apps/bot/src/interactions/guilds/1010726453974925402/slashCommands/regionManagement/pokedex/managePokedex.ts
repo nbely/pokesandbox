@@ -7,10 +7,10 @@ import {
 import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { findRegion } from '@shared';
 
 import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
+import { Region } from '@shared/models';
 
 const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
@@ -43,7 +43,7 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         nextButton: { style: ButtonStyle.Primary },
         previousButton: { style: ButtonStyle.Primary },
         getTotalQuantityItems: async () => {
-          const region = await findRegion({ _id: regionId });
+          const region = await Region.findById(regionId);
           return region.pokedex.length;
         },
       })

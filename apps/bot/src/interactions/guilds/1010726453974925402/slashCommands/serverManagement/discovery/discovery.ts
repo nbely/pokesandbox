@@ -12,7 +12,6 @@ import {
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { upsertServer } from '@shared/services';
 
 import getDiscoveryMenuEmbeds from './discovery.embeds';
 import { DISCOVERY_DESCRIPTION_COMMAND_NAME } from './discoveryDescription';
@@ -54,7 +53,7 @@ async function getDiscoveryButtons(
         : ButtonStyle.Success,
       onClick: async () => {
         server.discovery.enabled = !server.discovery.enabled;
-        await upsertServer({ serverId: server.serverId }, server);
+        await server.save();
         await menu.refresh();
       },
     },

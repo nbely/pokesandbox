@@ -4,6 +4,7 @@ import {
   model,
   type Query,
   type QueryFilter,
+  type QueryWithHelpers,
   Schema,
   Types,
 } from 'mongoose';
@@ -47,7 +48,12 @@ export const regionEntitySchema = z.object({
 export type IRegion = z.infer<typeof regionEntitySchema>;
 export type Region = HydratedDocument<IRegion>;
 
-interface IRegionModel extends Model<IRegion> {
+// Define interface for query helpers
+interface IRegionQueryHelpers {
+  byIds(ids: string[]): QueryWithHelpers<any, Region, IRegionQueryHelpers>;
+}
+
+interface IRegionModel extends Model<IRegion, IRegionQueryHelpers> {
   createRegion(region: IRegion): Promise<Region>;
   upsertRegion(
     filter: QueryFilter<IRegion>,
@@ -55,7 +61,12 @@ interface IRegionModel extends Model<IRegion> {
   ): Query<Region | null, IRegion>;
 }
 
-export const regionSchema = new Schema<IRegion, IRegionModel>(
+export const regionSchema = new Schema<
+  IRegion,
+  IRegionModel,
+  Record<string, never>,
+  IRegionQueryHelpers
+>(
   {
     baseGeneration: { type: Number, required: true },
     charactersPerPlayer: { type: Number, required: true },
@@ -110,10 +121,10 @@ export const regionSchema = new Schema<IRegion, IRegionModel>(
   },
   {
     query: {
-      byId(id: string) {
-        return this.where({ _id: id });
-      },
-      byIds(ids: string[]) {
+      byIds(
+        this: QueryWithHelpers<any, Region, IRegionQueryHelpers>,
+        ids: string[]
+      ) {
         return this.where({ _id: { $in: ids } });
       },
     },

@@ -12,7 +12,6 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { upsertServer } from '@shared';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_ROLE_COMMAND_NAME } from './serverAddRole';
@@ -82,7 +81,7 @@ export const getServerManageRolesButtons = async (
           server.modRoleIds.splice(idx, 1);
         }
 
-        await upsertServer({ serverId: server.serverId }, server);
+        await server.save();
         await menu.refresh();
       },
       id: idx.toString(),
