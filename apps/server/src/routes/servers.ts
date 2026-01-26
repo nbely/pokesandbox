@@ -1,11 +1,11 @@
 import type { AppRouteImplementation } from '@ts-rest/express';
 
-import { contract, findAllServers, ServerDTO } from '@shared';
+import { contract, Server, ServerDTO } from '@shared';
 
 export const getServers: AppRouteImplementation<
   typeof contract.getServers
 > = async () => {
-  const servers = await findAllServers();
+  const servers = await Server.find().exec();
 
   return {
     status: 200,

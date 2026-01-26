@@ -1,4 +1,12 @@
-import { HydratedDocument, Model, Query, Schema, Types, model } from 'mongoose';
+import {
+  type HydratedDocument,
+  type Model,
+  model,
+  type Query,
+  type QueryFilter,
+  Schema,
+  Types,
+} from 'mongoose';
 
 export type EvoRegion = 'Alola' | 'Galar';
 export type EvoType =
@@ -203,7 +211,7 @@ export interface IShowdownDexEntry {
   natDexTier?: SinglesTier | OtherTier;
 }
 
-export interface IDexEntryModel
+export interface IDexEntry
   extends Omit<
     IShowdownDexEntry,
     | 'baseSpecies'
@@ -267,454 +275,472 @@ export interface IDexEntryModel
   weightLb: number;
 }
 
-export type DexEntry = HydratedDocument<IDexEntryModel>;
+export type DexEntry = HydratedDocument<IDexEntry>;
 
-type DexEntryModelType = Model<IDexEntryModel, DexEntryQueryHelpers>;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type DexEntryModelQuery = Query<
-  any,
-  HydratedDocument<IDexEntryModel>,
-  DexEntryQueryHelpers
-> &
-  DexEntryQueryHelpers;
-
-export interface DexEntryQueryHelpers {
-  byDexEntryId(this: DexEntryModelQuery, serverId: string): DexEntryModelQuery;
+interface IDexEntryModel extends Model<IDexEntry> {
+  createDexEntry(dexEntry: IDexEntry): Promise<DexEntry>;
+  upsertDexEntry(
+    filter: QueryFilter<IDexEntry>,
+    update: Partial<IDexEntry>
+  ): Query<DexEntry | null, IDexEntry>;
 }
 
-export const DexEntrySchema: Schema = new Schema({
-  abilities: {
-    type: {
-      0: { type: String, required: true },
-      1: { type: String, required: false },
-      H: { type: String, required: false },
-      S: { type: String, required: false },
+export const DexEntrySchema = new Schema<IDexEntry, IDexEntryModel>(
+  {
+    abilities: {
+      type: {
+        0: { type: String, required: true },
+        1: String,
+        H: String,
+        S: String,
+      },
+      required: true,
     },
-    required: true,
-  },
-  baseForme: { type: String, required: false },
-  baseHappiness: { type: Number, required: true },
-  baseSpecies: {
-    type: {
-      id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-      name: { type: String, required: false },
-    },
-    required: false,
-  },
-  baseStatTotal: { type: Number, required: true },
-  baseStats: {
-    type: {
-      hp: { type: Number, required: true },
-      atk: { type: Number, required: true },
-      def: { type: Number, required: true },
-      spa: { type: Number, required: true },
-      spd: { type: Number, required: true },
-      spe: { type: Number, required: true },
-    },
-    required: true,
-  },
-  battleOnly: { type: Schema.Types.Mixed, required: false },
-  canGigantamax: { type: String, required: false },
-  canHatch: { type: Boolean, required: false },
-  cannotDynamax: { type: Boolean, required: false },
-  catchRate: { type: Number, required: true },
-  changesFrom: {
-    type: {
-      id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-      name: { type: String, required: false },
-    },
-    required: false,
-  },
-  classification: { type: String, required: true },
-  color: { type: String, required: true },
-  cosmeticFormes: {
-    type: [
-      {
+    baseForme: String,
+    baseHappiness: { type: Number, required: true },
+    baseSpecies: {
+      type: {
         id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-        name: { type: String, required: false },
+        name: String,
       },
-    ],
-    required: false,
-  },
-  dexEntries: { type: [String], required: false },
-  doublesTier: { type: String, required: false },
-  eggGroups: { type: [String], required: true },
-  evYields: {
-    type: {
-      hp: { type: Number, required: true },
-      atk: { type: Number, required: true },
-      def: { type: Number, required: true },
-      spa: { type: Number, required: true },
-      spd: { type: Number, required: true },
-      spe: { type: Number, required: true },
+      required: false,
     },
-    required: true,
-  },
-  evoCondition: { type: String, required: false },
-  evoItem: { type: String, required: false },
-  evoLevel: { type: Number, required: false },
-  evoMove: { type: String, required: false },
-  evoRegion: {
-    type: {
-      id: { type: Schema.Types.ObjectId, ref: 'Region', required: false },
-      name: { type: String, required: false },
+    baseStatTotal: { type: Number, required: true },
+    baseStats: {
+      type: {
+        hp: { type: Number, required: true },
+        atk: { type: Number, required: true },
+        def: { type: Number, required: true },
+        spa: { type: Number, required: true },
+        spd: { type: Number, required: true },
+        spe: { type: Number, required: true },
+      },
+      required: true,
     },
-    required: false,
-  },
-  evoType: { type: String, required: false },
-  evos: {
-    type: [
-      {
+    battleOnly: { type: Schema.Types.Mixed, required: false },
+    canGigantamax: String,
+    canHatch: { type: Boolean, required: false },
+    cannotDynamax: { type: Boolean, required: false },
+    catchRate: { type: Number, required: true },
+    changesFrom: {
+      type: {
         id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-        name: { type: String, required: false },
+        name: String,
       },
-    ],
-    required: false,
-  },
-  expGrowth: { type: String, required: true },
-  expYield: { type: Number, required: true },
-  forme: { type: String, required: false },
-  formeOrder: {
-    type: [
-      {
+      required: false,
+    },
+    classification: { type: String, required: true },
+    color: { type: String, required: true },
+    cosmeticFormes: {
+      type: [
+        {
+          id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
+          name: String,
+        },
+      ],
+      required: false,
+    },
+    dexEntries: { type: [String], required: false },
+    doublesTier: String,
+    eggGroups: { type: [String], required: true },
+    evYields: {
+      type: {
+        hp: { type: Number, required: true },
+        atk: { type: Number, required: true },
+        def: { type: Number, required: true },
+        spa: { type: Number, required: true },
+        spd: { type: Number, required: true },
+        spe: { type: Number, required: true },
+      },
+      required: true,
+    },
+    evoCondition: String,
+    evoItem: String,
+    evoLevel: { type: Number, required: false },
+    evoMove: String,
+    evoRegion: {
+      type: {
+        id: { type: Schema.Types.ObjectId, ref: 'Region', required: false },
+        name: String,
+      },
+      required: false,
+    },
+    evoType: String,
+    evos: {
+      type: [
+        {
+          id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
+          name: String,
+        },
+      ],
+      required: false,
+    },
+    expGrowth: { type: String, required: true },
+    expYield: { type: Number, required: true },
+    forme: String,
+    formeOrder: {
+      type: [
+        {
+          id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
+          name: String,
+        },
+      ],
+      required: false,
+    },
+    gen: { type: Number, required: false },
+    gender: String,
+    genderRatio: {
+      type: {
+        M: { type: Number, required: false },
+        F: { type: Number, required: false },
+      },
+      required: false,
+    },
+    gmaxUnreleased: { type: Boolean, required: false },
+    hatchCycles: { type: Number, required: true },
+    heightIn: { type: Number, required: true },
+    heightm: { type: Number, required: true },
+    isCanon: { type: Boolean, required: false },
+    isPublic: { type: Boolean, required: false },
+    maleOnlyHidden: { type: Boolean, required: false },
+    maxHP: { type: Number, required: false },
+    name: { type: String, required: true },
+    natDexTier: String,
+    nfe: { type: Boolean, required: false },
+    num: { type: Number, required: true },
+    originServer: {
+      type: Schema.Types.ObjectId,
+      ref: 'Server',
+      required: false,
+    },
+    otherFormes: {
+      type: [
+        {
+          id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
+          name: String,
+        },
+      ],
+      required: false,
+    },
+    pokemonGoData: { type: [String], required: false },
+    prevo: {
+      type: {
         id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-        name: { type: String, required: false },
+        name: String,
       },
-    ],
-    required: false,
-  },
-  gen: { type: Number, required: false },
-  gender: { type: String, required: false },
-  genderRatio: {
-    type: {
-      M: { type: Number, required: false },
-      F: { type: Number, required: false },
+      required: false,
     },
-    required: false,
-  },
-  gmaxUnreleased: { type: Boolean, required: false },
-  hatchCycles: { type: Number, required: true },
-  heightIn: { type: Number, required: true },
-  heightm: { type: Number, required: true },
-  isCanon: { type: Boolean, required: false },
-  isPublic: { type: Boolean, required: false },
-  maleOnlyHidden: { type: Boolean, required: false },
-  maxHP: { type: Number, required: false },
-  name: { type: String, required: true },
-  natDexTier: { type: String, required: false },
-  nfe: { type: Boolean, required: false },
-  num: { type: Number, required: true },
-  originServer: { type: Schema.Types.ObjectId, ref: 'Server', required: false },
-  otherFormes: {
-    type: [
-      {
-        id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-        name: { type: String, required: false },
+    requiredAbility: String,
+    requiredItem: String,
+    requiredItems: { type: [String], required: false },
+    requiredMove: String,
+    showdownName: { type: String, required: true },
+    sprites: {
+      type: {
+        footprint: String,
+        g1: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            gray: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            color: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g2: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g3: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g4: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g5: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g6: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g7: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g8: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        g9: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        other: {
+          type: Map,
+          of: {
+            normal: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+            shiny: {
+              type: {
+                back: String,
+                backf: String,
+                front: String,
+                frontf: String,
+                icon: String,
+              },
+              required: false,
+            },
+          },
+          required: false,
+        },
+        shape: String,
       },
-    ],
-    required: false,
-  },
-  pokemonGoData: { type: [String], required: false },
-  prevo: {
-    type: {
-      id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-      name: { type: String, required: false },
+      required: false,
     },
-    required: false,
+    tags: { type: [String], required: false },
+    tier: String,
+    types: { type: [String], required: true },
+    unreleasedHidden: { type: Schema.Types.Mixed, required: false },
+    weightLb: { type: Number, required: true },
+    weightkg: { type: Number, required: true },
   },
-  requiredAbility: { type: String, required: false },
-  requiredItem: { type: String, required: false },
-  requiredItems: { type: [String], required: false },
-  requiredMove: { type: String, required: false },
-  showdownName: { type: String, required: true },
-  sprites: {
-    type: {
-      footprint: { type: String, required: false },
-      g1: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          gray: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          color: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
+  {
+    query: {
+      byId(id: string) {
+        return this.where({ _id: id });
       },
-      g2: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
+      byIds(objectIds: Types.ObjectId[]) {
+        return this.where({ _id: { $in: objectIds } });
       },
-      g3: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g4: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g5: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g6: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g7: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g8: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      g9: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      other: {
-        type: Map,
-        of: {
-          normal: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-          shiny: {
-            type: {
-              back: { type: String, required: false },
-              backf: { type: String, required: false },
-              front: { type: String, required: false },
-              frontf: { type: String, required: false },
-              icon: { type: String, required: false },
-            },
-            required: false,
-          },
-        },
-        required: false,
-      },
-      shape: { type: String, required: false },
     },
-    required: false,
-  },
-  tags: { type: [String], required: false },
-  tier: { type: String, required: false },
-  types: { type: [String], required: true },
-  unreleasedHidden: { type: Schema.Types.Mixed, required: false },
-  weightLb: { type: Number, required: true },
-  weightkg: { type: Number, required: true },
-});
-
-export const DexEntry = model<IDexEntryModel, DexEntryModelType>(
-  'DexEntry',
-  DexEntrySchema,
-  'dexentries',
+    statics: {
+      createDexEntry(dexEntry: IDexEntry) {
+        const newDexEntry = new this(dexEntry);
+        return newDexEntry.save();
+      },
+      upsertDexEntry(
+        filter: QueryFilter<IDexEntry>,
+        update: Partial<IDexEntry>
+      ) {
+        return this.findOneAndUpdate(filter, update, { upsert: true });
+      },
+    },
+  }
 );
 
+export const DexEntry = model('DexEntry', DexEntrySchema, 'dexentries');

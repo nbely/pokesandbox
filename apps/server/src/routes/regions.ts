@@ -1,11 +1,18 @@
 import type { AppRouteImplementation } from '@ts-rest/express';
 
-import { contract, findAllRegions, findRegion, RegionDTO } from '@shared';
+import { contract, Region, RegionDTO } from '@shared';
 
 export const getRegion: AppRouteImplementation<
   typeof contract.getRegion
 > = async ({ params: { id } }) => {
-  const region = await findRegion({ _id: id });
+  const region = await Region.findById(id);
+
+  if (!region) {
+    return {
+      status: 404,
+      body: { message: 'Region not found' },
+    };
+  }
 
   return {
     status: 200,
@@ -16,7 +23,7 @@ export const getRegion: AppRouteImplementation<
 export const getRegions: AppRouteImplementation<
   typeof contract.getRegions
 > = async () => {
-  const regions = await findAllRegions();
+  const regions = await Region.find();
 
   return {
     status: 200,

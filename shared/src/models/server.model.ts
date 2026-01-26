@@ -1,8 +1,16 @@
-import { HydratedDocument, Model, Query, Schema, Types, model } from 'mongoose';
+import {
+  type HydratedDocument,
+  type Model,
+  model,
+  type Query,
+  type QueryFilter,
+  Schema,
+  Types,
+} from 'mongoose';
 import { z } from 'zod';
+import { Region } from './region.model';
 
 export const serverEntitySchema = z.object({
-  _id: z.instanceof(Types.ObjectId),
   serverId: z.string(),
   adminRoleIds: z.array(z.string()),
   discovery: z.object({
@@ -18,42 +26,62 @@ export const serverEntitySchema = z.object({
   regions: z.array(z.instanceof(Types.ObjectId)),
 });
 
-export type Server = z.infer<typeof serverEntitySchema>;
+export type IServer = z.infer<typeof serverEntitySchema>;
+export type Server = HydratedDocument<IServer>;
 
-type ServerModelType = Model<Server, ServerQueryHelpers>;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type ServerModelQuery = Query<
-  any,
-  HydratedDocument<Server>,
-  ServerQueryHelpers
-> &
-  ServerQueryHelpers;
-
-export interface ServerQueryHelpers {
-  byServerId(this: ServerModelQuery, serverId: string): ServerModelQuery;
+interface IServerModel extends Model<IServer> {
+  createServer(server: IServer): Promise<Server>;
+  findServerWithRegions(
+    filter: QueryFilter<IServer>
+  ): Query<(Omit<Server, 'regions'> & { regions: Region[] }) | null, IServer>;
+  upsertServer(
+    filter: QueryFilter<IServer>,
+    update: Partial<IServer>
+  ): Query<Server | null, IServer>;
 }
 
-export const ServerSchema: Schema = new Schema({
-  serverId: { type: String, required: true },
-  adminRoleIds: { type: [String], required: true },
-  discovery: {
-    type: {
-      description: { type: String, required: false },
-      enabled: { type: Boolean, required: true },
-      icon: { type: String, required: false },
-      inviteLink: { type: String, required: false },
+export const serverSchema = new Schema<IServer, IServerModel>(
+  {
+    serverId: { type: String, required: true },
+    adminRoleIds: { type: [String], required: true },
+    discovery: {
+      type: {
+        description: String,
+        enabled: { type: Boolean, required: true },
+        icon: String,
+        inviteLink: String,
+      },
+      required: true,
     },
-    required: true,
+    modRoleIds: { type: [String], required: true },
+    name: { type: String, required: true },
+    playerList: { type: [Schema.Types.ObjectId], ref: 'User', required: true },
+    prefixes: { type: [String], required: true },
+    regions: { type: [Schema.Types.ObjectId], ref: 'Region', required: true },
   },
-  modRoleIds: { type: [String], required: true },
-  name: { type: String, required: true },
-  playerList: { type: [Schema.Types.ObjectId], ref: 'User', required: true },
-  prefixes: { type: [String], required: true },
-  regions: { type: [Schema.Types.ObjectId], ref: 'Region', required: true },
-});
+  {
+    query: {
+      byServerId(serverId: string) {
+        return this.where({ serverId });
+      },
+    },
+    statics: {
+      createServer(server: IServer) {
+        const newServer = new this(server);
+        return newServer.save();
+      },
+      findServerWithRegions(filter: QueryFilter<IServer>) {
+        return this.findOne(filter).populate('regions');
+      },
+      upsertServer(filter: QueryFilter<IServer>, update: Partial<IServer>) {
+        return this.findOneAndUpdate(filter, update, { upsert: true });
+      },
+    },
+  }
+);
 
-export const Server = model<Server, ServerModelType>(
+export const Server = model<IServer, IServerModel>(
   'Server',
-  ServerSchema,
+  serverSchema,
   'servers'
 );

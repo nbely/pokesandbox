@@ -1,8 +1,15 @@
-import { HydratedDocument, Model, Query, Schema, Types, model } from 'mongoose';
+import {
+  type HydratedDocument,
+  type Model,
+  model,
+  type Query,
+  type QueryFilter,
+  Schema,
+  Types,
+} from 'mongoose';
 import { z } from 'zod';
 
 export const userEntitySchema = z.object({
-  _id: z.instanceof(Types.ObjectId),
   avatar: z.string().optional(),
   servers: z.array(z.instanceof(Types.ObjectId)),
   userId: z.string(),
@@ -10,23 +17,41 @@ export const userEntitySchema = z.object({
   username: z.string(),
 });
 
-export type User = z.infer<typeof userEntitySchema>;
+export type IUser = z.infer<typeof userEntitySchema>;
+export type User = HydratedDocument<IUser>;
 
-type UserModelType = Model<User, UserQueryHelpers>;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type UserModelQuery = Query<any, HydratedDocument<User>, UserQueryHelpers> &
-  UserQueryHelpers;
-
-export interface UserQueryHelpers {
-  byUserId(this: UserModelQuery, userId: string): UserModelQuery;
+interface IUserModel extends Model<IUser> {
+  createUser(user: IUser): Promise<User>;
+  upsertServer(
+    filter: QueryFilter<IUser>,
+    update: Partial<IUser>
+  ): Query<User | null, IUser>;
 }
 
-export const UserSchema: Schema = new Schema({
-  avatar: { type: String, required: false },
-  servers: { type: [Schema.Types.ObjectId], ref: 'Server' },
-  userId: { type: String, required: true },
-  userTag: { type: String, required: true },
-  username: { type: String, required: true },
-});
+export const userSchema = new Schema<IUser, IUserModel>(
+  {
+    avatar: String,
+    servers: { type: [Schema.Types.ObjectId], ref: 'Server' },
+    userId: { type: String, required: true },
+    userTag: { type: String, required: true },
+    username: { type: String, required: true },
+  },
+  {
+    query: {
+      byUserId(id: string) {
+        return this.where({ userId: id });
+      },
+    },
+    statics: {
+      createUser(user: IUser) {
+        const newUser = new this(user);
+        return newUser.save();
+      },
+      upsertUser(filter: QueryFilter<IUser>, update: Partial<IUser>) {
+        return this.findOneAndUpdate(filter, update, { upsert: true });
+      },
+    },
+  }
+);
 
-export const User = model<User, UserModelType>('User', UserSchema, 'users');
+export const User = model('User', userSchema, 'users');
