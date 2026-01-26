@@ -129,7 +129,7 @@ export const regionSchema = new Schema<
       },
     },
     statics: {
-      createRegion(region: Region) {
+      createRegion(region: IRegion) {
         const newRegion = new this(region);
         return newRegion.save();
       },

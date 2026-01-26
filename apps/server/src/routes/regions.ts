@@ -5,7 +5,7 @@ import { contract, Region, RegionDTO } from '@shared';
 export const getRegion: AppRouteImplementation<
   typeof contract.getRegion
 > = async ({ params: { id } }) => {
-  const region = await Region.findById(id);
+  const region = await Region.findById(id).exec();
 
   if (!region) {
     return {
@@ -23,7 +23,7 @@ export const getRegion: AppRouteImplementation<
 export const getRegions: AppRouteImplementation<
   typeof contract.getRegions
 > = async () => {
-  const regions = await Region.find();
+  const regions = await Region.find().exec();
 
   return {
     status: 200,

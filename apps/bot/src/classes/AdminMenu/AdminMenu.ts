@@ -119,9 +119,7 @@ export class AdminMenu extends Menu {
           'There was a problem fetching your server. Please try again later.'
         );
       }
-      const serverRegionIds = server.regions.map((r) => r._id.toHexString());
-      const regions = await Region.find().byIds(serverRegionIds);
-      return { ...server, regions };
+      return server;
     } catch (error) {
       await this.session.handleError(error);
     }

@@ -22,7 +22,7 @@ export type User = HydratedDocument<IUser>;
 
 interface IUserModel extends Model<IUser> {
   createUser(user: IUser): Promise<User>;
-  upsertServer(
+  upsertUser(
     filter: QueryFilter<IUser>,
     update: Partial<IUser>
   ): Query<User | null, IUser>;

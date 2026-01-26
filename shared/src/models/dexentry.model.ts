@@ -280,7 +280,7 @@ export type DexEntry = HydratedDocument<IDexEntry>;
 
 // Define interface for query helpers
 interface IDexEntryQueryHelpers {
-  byIds(ids?: string[]): QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>;
+  byIds(ids: string[]): QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>;
 }
 
 interface IDexEntryModel extends Model<IDexEntry> {
