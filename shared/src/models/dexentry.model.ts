@@ -2,6 +2,7 @@ import {
   type HydratedDocument,
   type Model,
   model,
+  models,
   type Query,
   type QueryFilter,
   QueryWithHelpers,
@@ -283,7 +284,7 @@ interface IDexEntryQueryHelpers {
   byIds(ids: string[]): QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>;
 }
 
-interface IDexEntryModel extends Model<IDexEntry> {
+interface IDexEntryModel extends Model<IDexEntry, IDexEntryQueryHelpers> {
   createDexEntry(dexEntry: IDexEntry): Promise<DexEntry>;
   upsertDexEntry(
     filter: QueryFilter<IDexEntry>,
@@ -754,4 +755,9 @@ export const DexEntrySchema = new Schema<
   }
 );
 
-export const DexEntry = model('DexEntry', DexEntrySchema, 'dexentries');
+export const DexEntry = (models.DexEntry ||
+  model<IDexEntry, IDexEntryModel>(
+    'DexEntry',
+    DexEntrySchema,
+    'dexentries'
+  )) as IDexEntryModel;

@@ -2,6 +2,7 @@ import {
   type HydratedDocument,
   type Model,
   model,
+  models,
   type Query,
   type QueryFilter,
   type QueryWithHelpers,
@@ -140,4 +141,10 @@ export const regionSchema = new Schema<
   }
 );
 
-export const Region = model('Region', regionSchema, 'regions');
+export const Region =
+  (models.Region as IRegionModel) ||
+  (model<IRegion, IRegionModel>(
+    'Region',
+    regionSchema,
+    'regions'
+  ) as IRegionModel);
