@@ -39,6 +39,8 @@ const SearchBar = () => {
   const users = useAppSelector((state) => state.users.users);
 
   const [options, setOptions] = useState<SelectOptions[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
+  const [keepOpen, setKeepOpen] = useState<boolean>(false);
 
   const getAnySearchOptions = useCallback(
     (value = ""): SelectOptions[] => {
@@ -192,18 +194,22 @@ const SearchBar = () => {
         newSearchTypes = [...searchTypes, newValue].filter(
           (type: SearchType) => type !== SearchType.Any
         );
+        // Set flag to keep dropdown open when selecting a search type
+        setKeepOpen(true);
       } else {
         newSearch = "";
         const selectionOption = valueOptions as unknown as SelectItem;
         router.push(
           `/${selectionOption.type.toLowerCase()}/${selectionOption.id}`
         );
+        // Allow dropdown to close when navigating
+        setKeepOpen(false);
       }
       dispatch(setSearch(newSearch));
       dispatch(setSearchType(newSearchTypes));
       updateOptions(newSearch, newSearchTypes);
     },
-    [dispatch, router, search, searchTypes, updateOptions]
+    [dispatch, router, search, searchTypes, updateOptions, keepOpen]
   );
 
   const handleChange = useCallback(
@@ -233,13 +239,33 @@ const SearchBar = () => {
     [dispatch, searchTypes, updateOptions]
   );
 
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen && keepOpen) {
+        // Keep dropdown open if flag is set
+        setOpen(true);
+        setKeepOpen(false);
+      } else {
+        setOpen(isOpen);
+      }
+    },
+    [keepOpen]
+  );
+  console.log("options", options);
+
   return (
     <AutoComplete
-      dropdownMatchSelectWidth={350}
+      classNames={{
+        popup: {
+          root: "certain-category-search-dropdown",
+        },
+      }}
+      onOpenChange={handleOpenChange}
+      open={open}
       onChange={handleChange}
       onSelect={handleSelect}
       options={options}
-      popupClassName="certain-category-search-dropdown"
+      popupMatchSelectWidth={350}
       value={`${searchTypeString ? searchTypeString + ": " : ""}${search}`}
     >
       <Input.Search size="large" placeholder="Search" className="searchbox" />

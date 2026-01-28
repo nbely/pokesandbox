@@ -76,9 +76,9 @@ export const regionSchema = new Schema<
     deployed: { type: Boolean, required: true },
     graphicSettings: {
       type: {
-        backSpritesEnabled: String,
+        backSpritesEnabled: Boolean,
         frontSpritesEnabled: Boolean,
-        iconSpritesEnabled: String,
+        iconSpritesEnabled: Boolean,
         mapImageLink: String,
       },
       required: true,
