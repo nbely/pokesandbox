@@ -12,7 +12,7 @@ import {
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { findRegion, upsertRegion } from '@shared';
+import { Region } from '@shared/models';
 
 import { getRegionMenuEmbeds } from './region.embeds';
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
@@ -49,7 +49,7 @@ const getRegionButtons = async (
   _menu: AdminMenu,
   regionId: string
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const region = await findRegion({ _id: regionId });
+  const region = await Region.findById(regionId);
 
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
@@ -71,7 +71,7 @@ const getRegionButtons = async (
       style: region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
       onClick: async (menu) => {
         region.deployed = !region.deployed;
-        await upsertRegion({ _id: region._id }, region);
+        await region.save();
         menu.prompt = `Successfully ${
           region.deployed ? 'deployed' : 'undeployed'
         } the ${region.name} Region`;

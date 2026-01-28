@@ -3,7 +3,6 @@ import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { upsertServer } from '@shared/services';
 
 import { getServerMenuEmbeds } from './server.embeds';
 
@@ -34,7 +33,7 @@ export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
         try {
           if (!server.prefixes?.includes(response)) {
             server.prefixes = [...server.prefixes, response];
-            await upsertServer({ serverId: server.serverId }, server);
+            await server.save();
             menu.prompt = `Successfully added the prefix: \`${response}\``;
           } else {
             menu.prompt =

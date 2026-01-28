@@ -4,8 +4,7 @@ import { Types } from 'mongoose';
 import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { Region } from '@shared/models';
-import { createRegion, upsertServer } from '@shared/services';
+import { Region } from '@shared/models';
 
 import {
   getCreateFirstRegionEmbeds,
@@ -41,7 +40,7 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
         async (menu: AdminMenu, response: string): Promise<void> => {
           const server = await menu.fetchServer();
 
-          const region: Region = await createRegion({
+          const region: Region = await Region.create({
             baseGeneration: 10,
             charactersPerPlayer: 1,
             characterList: [],
@@ -67,7 +66,7 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
           });
 
           server.regions.push(new Types.ObjectId(region._id));
-          await upsertServer({ serverId: server.serverId }, server);
+          await server.save();
 
           menu.prompt = `Successfully created the new region: \`${region.name}\``;
           await menu.session.goBack();

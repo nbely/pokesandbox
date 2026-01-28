@@ -1,14 +1,14 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenu } from '@bot/classes';
-import { findDexEntries, findDexEntry, findRegion } from '@shared';
+import { DexEntry, Region } from '@shared/models';
 
 export const getManagePokedexMenuEmbeds = async (
   menu: AdminMenu,
   regionId: string,
   defaultPrompt = 'Enter a space-separated Pokédex number (up to 1500) and Pokémon name to add a Pokémon to a blank Pokédex slot, or enter just a number to modify a Pokédex slot'
 ) => {
-  const region = await findRegion({ _id: regionId });
+  const region = await Region.findById(regionId);
   const pokedexLines: string[] = [];
 
   for (
@@ -75,7 +75,7 @@ export const getAddPokedexSlotEmbeds = async (
   pokedexNo: string,
   defaultPrompt = 'This slot is currently empty. Please enter the name of a Pokémon to add to the Pokédex slot.'
 ) => {
-  const region = await findRegion({ _id: regionId });
+  const region = await Region.findById(regionId);
 
   return [
     new EmbedBuilder()
@@ -94,11 +94,8 @@ export const getEditPokedexSlotEmbeds = async (
   regionId: string,
   pokedexNo: string
 ) => {
-  const region = await findRegion({ _id: regionId });
-  const dexEntry = await findDexEntry({
-    _id: region.pokedex[+pokedexNo - 1]?.id,
-  });
-
+  const region = await Region.findById(regionId);
+  const dexEntry = await DexEntry.findById(region.pokedex[+pokedexNo - 1]?.id);
   // TODO: Decide on the final format of the embed
   const embed = new EmbedBuilder()
     .setColor('Gold')
@@ -128,9 +125,9 @@ export const getSelectMatchedPokemonEmbeds = async (
   defaultPrompt = 'Select a Pokémon from the search results by clicking the corresponding button.'
 ): Promise<EmbedBuilder[]> => {
   const matchedOptions: string[] = [];
-  const matchedPokemon = await findDexEntries({
-    _id: { $in: matchedDexEntryIds },
-  });
+  const matchedPokemon: DexEntry[] = await DexEntry.find().byIds(
+    matchedDexEntryIds
+  );
   matchedPokemon.sort((a, b) => a.num - b.num);
 
   for (

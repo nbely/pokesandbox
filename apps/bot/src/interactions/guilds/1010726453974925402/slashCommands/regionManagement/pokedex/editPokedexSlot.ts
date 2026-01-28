@@ -12,7 +12,7 @@ import {
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles, searchPokemon } from '@bot/utils';
-import { findRegion, upsertRegion, DexEntry, Region } from '@shared';
+import { DexEntry, Region } from '@shared';
 
 import {
   getAddPokedexSlotEmbeds,
@@ -44,7 +44,7 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
     const { regionId, pokedexNo } = options;
-    const region = await findRegion({ _id: regionId });
+    const region = await Region.findById(regionId);
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
       .setReturnable()
@@ -99,11 +99,11 @@ const getEditPokedexSlotButtons = async (
       label: 'Remove',
       style: ButtonStyle.Danger,
       onClick: async (menu) => {
-        const region = await findRegion({ _id: regionId });
+        const region = await Region.findById(regionId);
         const pokedexIndex = +pokedexNo - 1;
 
         region.pokedex[pokedexIndex] = null;
-        await upsertRegion({ _id: regionId }, region);
+        await region.save();
         await menu.hardRefresh();
       },
     },
@@ -169,7 +169,7 @@ const handlePokemonSelected = async (
       id: selectedPokemon._id,
       name: selectedPokemon.name,
     };
-    await upsertRegion({ _id: region._id }, region);
+    await region.save();
     return menu.hardRefresh();
   }
 };

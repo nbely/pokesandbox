@@ -11,7 +11,6 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { upsertServer } from '@shared';
 
 import { getServerMenuEmbeds } from './server.embeds';
 
@@ -79,7 +78,7 @@ export const getServerAddRoleSelectMenu = (
             server.modRoleIds = roleIds.concat(newRoleIds);
           }
 
-          await upsertServer({ serverId: server.serverId }, server);
+          await server.save();
           menu.prompt = `Successfully added the ${roleType} roles: ${newRoles.join(
             ', '
           )}`;

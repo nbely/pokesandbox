@@ -21,7 +21,6 @@
       "@bot/structures/*": ["apps/bot/src/structures/*"],
       "@bot/utils": ["apps/bot/src/utils/index.ts"],
       "@shared": ["shared/src/index.ts"],
-      "@shared/services": ["shared/src/services/index.ts"],
       "@shared/models": ["shared/src/models/index.ts"],
       "@webapp/components/*": ["apps/webapp/src/app/_components/*"],
       "@webapp/store/*": ["apps/webapp/src/store/*"],

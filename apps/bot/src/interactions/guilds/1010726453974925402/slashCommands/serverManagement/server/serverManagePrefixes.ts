@@ -12,7 +12,6 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { upsertServer } from '@shared/services';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';
@@ -72,7 +71,7 @@ export const handleRemovePrefixButtonClick = async (
 
   try {
     const removedPrefix = server.prefixes?.splice(idx, 1)[0];
-    await upsertServer({ serverId: server.serverId }, server);
+    await server.save();
     menu.prompt = `Successfully removed the prefix: \`${removedPrefix}\``;
   } catch (error) {
     await menu.session.handleError(error);
