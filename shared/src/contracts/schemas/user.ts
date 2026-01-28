@@ -12,7 +12,7 @@ export type UserDTO = z.infer<typeof userDTOSchema>;
 export const UserDTO = {
   convertFromEntity(entity: User): UserDTO {
     const dto: UserDTO = {
-      ...entity,
+      ...entity.toJSON(),
       _id: entity._id.toHexString(),
       servers: entity.servers.map((id) => id.toHexString()),
     };
