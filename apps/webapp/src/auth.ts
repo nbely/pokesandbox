@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 
-import { trpcServer } from "@webapp/trpc/server";
+import { trpcServer } from "./trpc/server";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Discord],
@@ -15,7 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             userId: profile.id as string,
             username: profile.username as string,
             userTag: `${profile.username}#${(profile as any).discriminator || "0"}`,
-            avatar: profile.image,
+            avatar: profile.image as string | undefined,
             servers: [],
           });
         } catch (error) {

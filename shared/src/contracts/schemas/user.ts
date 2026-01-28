@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { User, userEntitySchema } from '../../models/user.model';
-import { createRequestDTOSchema } from '../../utils/schema-helpers';
 
 export const userDTOSchema = z.object({
   ...userEntitySchema.shape,
@@ -8,7 +7,11 @@ export const userDTOSchema = z.object({
   servers: z.array(z.string()),
 });
 
-export const userRequestDTOSchema = createRequestDTOSchema(userEntitySchema);
+// For creating users, we use the entity schema directly since it already excludes _id
+export const userRequestDTOSchema = z.object({
+  ...userEntitySchema.shape,
+  servers: z.array(z.string()), // Convert ObjectId to string for API
+});
 
 export type UserDTO = z.infer<typeof userDTOSchema>;
 export type UserRequestDTO = z.infer<typeof userRequestDTOSchema>;
