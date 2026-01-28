@@ -1,3 +1,5 @@
+"use client";
+
 // import ProgressBar from 'react-bootstrap/ProgressBar';
 import { LoadingOutlined } from "@ant-design/icons";
 import { Divider, Typography } from "antd";
