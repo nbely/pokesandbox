@@ -18,21 +18,24 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     users: [],
   };
 
-  const dbRegionsResponse = (
-    await fetch(`${process.env.API_URL}/regions`)
-  ).clone();
-  const dbServersResponse = (
-    await fetch(`${process.env.API_URL}/servers`)
-  ).clone();
-  const dbUserResponse = (await fetch(`${process.env.API_URL}/users`)).clone();
+  // Only fetch data if API_URL is defined (for production/dev builds with server)
+  if (process.env.API_URL) {
+    const dbRegionsResponse = (
+      await fetch(`${process.env.API_URL}/regions`)
+    ).clone();
+    const dbServersResponse = (
+      await fetch(`${process.env.API_URL}/servers`)
+    ).clone();
+    const dbUserResponse = (await fetch(`${process.env.API_URL}/users`)).clone();
 
-  const regions: RegionDTO[] = await dbRegionsResponse.json();
-  const servers = await dbServersResponse.json();
-  const users: UserDTO[] = await dbUserResponse.json();
+    const regions: RegionDTO[] = await dbRegionsResponse.json();
+    const servers = await dbServersResponse.json();
+    const users: UserDTO[] = await dbUserResponse.json();
 
-  data.regions = regions;
-  data.servers = servers;
-  data.users = users;
+    data.regions = regions;
+    data.servers = servers;
+    data.users = users;
+  }
 
   return (
     <html lang="en">

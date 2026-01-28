@@ -14,13 +14,13 @@ import { useAppDispatch, useAppSelector } from "@webapp/store/selectors";
 
 interface SelectItem {
   id: string;
-  label: JSX.Element;
+  label: React.ReactElement;
   type: string;
   value: string;
 }
 
 interface SelectOptions {
-  label: JSX.Element;
+  label: React.ReactElement;
   options: SelectItem[];
 }
 
@@ -247,7 +247,7 @@ const SearchBar = () => {
   );
 };
 
-const renderTitle = (title: string): JSX.Element => <span>{title}</span>;
+const renderTitle = (title: string): React.ReactElement => <span>{title}</span>;
 
 const renderItem = (
   title: string,
