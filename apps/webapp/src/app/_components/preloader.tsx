@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef } from "react";
 
 import { setRegions } from "@webapp/store/regionsSlice";

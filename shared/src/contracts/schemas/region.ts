@@ -13,7 +13,7 @@ export const regionDTOSchema = z.object({
         id: z.string(),
         name: z.string(),
       })
-      .nullable(),
+      .nullable()
   ),
   quests: z.object({
     active: z.array(z.string()),
@@ -28,7 +28,7 @@ export type RegionDTO = z.infer<typeof regionDTOSchema>;
 export const RegionDTO = {
   convertFromEntity(entity: Region): RegionDTO {
     const dto: RegionDTO = {
-      ...entity,
+      ...entity.toJSON(),
       _id: entity._id.toHexString(),
       characterList: entity.characterList.map((c) => c.toHexString()),
       locations: entity.locations.map((l) => l.toHexString()),
@@ -39,7 +39,7 @@ export const RegionDTO = {
               id: p.id.toHexString(),
               name: p.name,
             }
-          : null,
+          : null
       ),
       quests: {
         active: entity.quests.active.map((q) => q.toHexString()),

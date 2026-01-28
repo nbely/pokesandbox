@@ -1,4 +1,8 @@
-import { createSelector, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 import type { UserDTO } from "@shared";
 
@@ -33,10 +37,12 @@ export default usersSlice.reducer;
 export const selectUsers = (state: RootState) => state.users.users;
 export const selectUserById = createSelector(
   [selectUsers, (_state, userId: string) => userId],
-  (users, userId) =>
-    users.find(
-      (user: UserDTO) => user.userId === userId || user._id.toString() === userId
-    )
+  (users, userId) => {
+    return users.find(
+      (user: UserDTO) =>
+        user.userId === userId || user._id.toString() === userId
+    );
+  }
 );
 export const selectUsersByIds = createSelector(
   [selectUsers, (_state, userIds: string[]) => userIds],

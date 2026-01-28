@@ -19,13 +19,14 @@
       "@bot/embeds/*": ["apps/bot/src/embeds/*"],
       "@bot/interactions/*": ["apps/bot/src/interactions/*"],
       "@bot/structures/*": ["apps/bot/src/structures/*"],
-      "@bot/utils/*": ["apps/bot/src/utils/*"],
+      "@bot/utils": ["apps/bot/src/utils/index.ts"],
       "@shared": ["shared/src/index.ts"],
-      "@shared/services": ["shared/src/services/index.ts"],
       "@shared/models": ["shared/src/models/index.ts"],
       "@webapp/components/*": ["apps/webapp/src/app/_components/*"],
+      "@webapp/auth": ["apps/webapp/src/auth.ts"],
       "@webapp/store/*": ["apps/webapp/src/store/*"],
-      "@webapp/styles/*": ["apps/webapp/src/styles/*"]
+      "@webapp/styles/*": ["apps/webapp/src/styles/*"],
+      "@webapp/trpc": ["apps/webapp/src/trpc/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

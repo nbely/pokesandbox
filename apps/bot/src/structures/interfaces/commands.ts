@@ -1,7 +1,6 @@
 import type {
   ButtonBuilder,
   ButtonInteraction,
-  ChatInputCommandInteraction,
   ContextMenuCommandBuilder,
   Message,
   MessageContextMenuCommandInteraction,
@@ -18,7 +17,12 @@ import type {
   UserSelectMenuInteraction,
 } from 'discord.js';
 
-import type { BotClient } from '@bot/classes';
+import type {
+  BotClient,
+  Menu,
+  MenuCommandOptions,
+  Session,
+} from '@bot/classes';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];
@@ -84,15 +88,21 @@ export interface IRoleSelectMenu extends IBaseCommand {
   execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }
 
-export interface ISlashCommand extends IBaseCommand {
+type CreateMenuFunction<
+  T extends Menu = Menu,
+  TOptions extends MenuCommandOptions = MenuCommandOptions
+> = (session: Session, options?: TOptions) => Promise<T>;
+
+export interface ISlashCommand<
+  T extends Menu = Menu,
+  TOptions extends MenuCommandOptions = MenuCommandOptions
+> extends IBaseCommand {
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
-  execute: (
-    client: BotClient,
-    interaction: ChatInputCommandInteraction
-  ) => void;
+  createMenu?: CreateMenuFunction<T, TOptions>;
+  execute?: (session: Session) => void;
 }
 
 export interface IStringSelectMenu extends IBaseCommand {
@@ -119,11 +129,6 @@ export interface IUserSelectMenu extends IBaseCommand {
   execute: (client: BotClient, interaction: UserSelectMenuInteraction) => void;
 }
 
-export type ChatInputCommand =
-  | IMessageContextCommand
-  | ISlashCommand
-  | IUserContextCommand;
-
 export type AnyCommand =
   | IButtonCommand
   | IMessageCommand
@@ -134,3 +139,15 @@ export type AnyCommand =
   | IStringSelectMenu
   | IUserContextCommand
   | IUserSelectMenu;
+
+export type ChatInputCommand =
+  | IMessageContextCommand
+  | ISlashCommand
+  | IUserContextCommand;
+
+export type GuildChatInputCommands = {
+  id: string;
+  messageContextCommands: IMessageContextCommand[];
+  slashCommands: ISlashCommand[];
+  userContextCommands: IUserContextCommand[];
+};

@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "antd";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -17,8 +18,7 @@ const Header = () => {
   const loggedInUser = useAppSelector((state) => state.users.loggedInUser);
   const { data: session } = useSession();
   const user = useGetUserById(session?.user?.id ?? "");
-
-useEffect(() => {
+  useEffect(() => {
     if (user && !loggedInUser) {
       dispatch(setLoggedInUser(user));
     }

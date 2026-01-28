@@ -1,7 +1,9 @@
+import "../styles/globals.scss";
+
 import type { PropsWithChildren } from "react";
 
-import "../styles/globals.scss";
-import type { RegionDTO, ServerDTO, UserDTO } from "@shared";
+import { RegionDTO, ServerDTO, UserDTO } from "@shared";
+import { TRPCProvider, trpcServer } from "@webapp/trpc";
 
 import AppLayout from "./AppLayout";
 
@@ -12,32 +14,26 @@ export type AppData = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const data: AppData = {
-    regions: [],
-    servers: [],
-    users: [],
-  };
+  const api = await trpcServer();
 
-  const dbRegionsResponse = (
-    await fetch(`${process.env.API_URL}/regions`)
-  ).clone();
-  const dbServersResponse = (
-    await fetch(`${process.env.API_URL}/servers`)
-  ).clone();
-  const dbUserResponse = (await fetch(`${process.env.API_URL}/users`)).clone();
-
-  const regions = (await dbRegionsResponse.json()) as { data: RegionDTO[] };
-  const servers = (await dbServersResponse.json()) as { data: ServerDTO[] };
-  const users = (await dbUserResponse.json()) as { data: UserDTO[] };
-
-  data.regions = regions.data;
-  data.servers = servers.data;
-  data.users = users.data;
+  const [regions, servers, users] = await Promise.all([
+    api.regions.getAll(),
+    api.servers.getAll(),
+    api.users.getAll(),
+  ]);
 
   return (
     <html lang="en">
       <body>
-        <AppLayout data={data}>{children}</AppLayout>
+        <AppLayout
+          data={{
+            regions,
+            servers,
+            users,
+          }}
+        >
+          <TRPCProvider>{children}</TRPCProvider>
+        </AppLayout>
       </body>
     </html>
   );
