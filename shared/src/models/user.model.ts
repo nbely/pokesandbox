@@ -2,6 +2,7 @@ import {
   type HydratedDocument,
   type Model,
   model,
+  models,
   type Query,
   type QueryFilter,
   Schema,
@@ -54,4 +55,6 @@ export const userSchema = new Schema<IUser, IUserModel>(
   }
 );
 
-export const User = model('User', userSchema, 'users');
+export const User =
+  (models.User as IUserModel) ||
+  (model<IUser, IUserModel>('User', userSchema, 'users') as IUserModel);

@@ -2,6 +2,7 @@ import {
   type HydratedDocument,
   type Model,
   model,
+  models,
   type Query,
   type QueryFilter,
   type QueryWithHelpers,
@@ -96,8 +97,10 @@ export const serverSchema = new Schema<
   }
 );
 
-export const Server = model<IServer, IServerModel>(
-  'Server',
-  serverSchema,
-  'servers'
-);
+export const Server =
+  (models.Server as IServerModel) ||
+  (model<IServer, IServerModel>(
+    'Server',
+    serverSchema,
+    'servers'
+  ) as IServerModel);

@@ -12,7 +12,7 @@ import { globalUserContextCommands } from '@bot/interactions/userContextCommands
 
 import type { GuildChatInputCommands } from '../interfaces';
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID as string;
+const CLIENT_ID = process.env.AUTH_DISCORD_ID as string;
 const TOKEN = process.env.DISCORD_BOT_TOKEN as string;
 
 export const slashCommandsManager = async (client: BotClient) => {
