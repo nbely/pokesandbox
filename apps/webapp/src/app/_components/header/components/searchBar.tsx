@@ -209,7 +209,7 @@ const SearchBar = () => {
       dispatch(setSearchType(newSearchTypes));
       updateOptions(newSearch, newSearchTypes);
     },
-    [dispatch, router, search, searchTypes, updateOptions, keepOpen]
+    [dispatch, router, search, searchTypes, updateOptions]
   );
 
   const handleChange = useCallback(
@@ -251,7 +251,6 @@ const SearchBar = () => {
     },
     [keepOpen]
   );
-  console.log("options", options);
 
   return (
     <AutoComplete
