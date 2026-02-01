@@ -5,9 +5,7 @@ import { useAppSelector } from "@webapp/store/selectors";
 
 export default function HomePage() {
   const user = useAppSelector((state) => state.users.loggedInUser);
-  const avatarUrl: string = user?.avatar
-    ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png`
-    : "";
+  const avatarUrl: string = user?.avatarUrl ?? "";
 
   return (
     <div>
@@ -25,7 +23,7 @@ export default function HomePage() {
             width={65}
           />
         ) : null}
-        <h1 className="text-3xl ml-4">{user?.userTag}</h1>
+        <h1 className="text-3xl ml-4">{user?.globalName}</h1>
       </div>
     </div>
   );

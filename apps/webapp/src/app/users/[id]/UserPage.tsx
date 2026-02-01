@@ -12,7 +12,7 @@ const User = () => {
 
   return (
     <div>
-      <h1 className="text-xl">{user?.username}</h1>
+      <h1 className="text-xl">{user?.globalName}</h1>
     </div>
   );
 };
