@@ -9,14 +9,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, profile }) {
       if (profile) {
         try {
-          // Call tRPC mutation to create/update user on first login
           const trpc = await trpcServer();
           await trpc.users.create({
+            avatarUrl: profile.image_url as string | undefined,
+            globalName: profile.global_name as string,
+            servers: [],
             userId: profile.id as string,
             username: profile.username as string,
-            userTag: `${profile.username}#${(profile as any).discriminator || "0"}`,
-            avatar: profile.image as string | undefined,
-            servers: [],
           });
         } catch (error) {
           // Log error but allow sign in to proceed

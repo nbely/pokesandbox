@@ -5,10 +5,6 @@ import { User, UserDTO, userRequestDTOSchema } from "@shared";
 import { router, publicProcedure } from "../init";
 
 export const usersRouter = router({
-  getAll: publicProcedure.query(async () => {
-    const users = await User.find().exec();
-    return users.map((user) => UserDTO.convertFromEntity(user));
-  }),
   create: publicProcedure
     .input(userRequestDTOSchema)
     .mutation(async ({ input }) => {
@@ -17,7 +13,7 @@ export const usersRouter = router({
         ...input,
         servers: input.servers.map((id) => new Types.ObjectId(id)),
       };
-      
+
       // Use upsertUser to create or update the user based on userId
       const user = await User.upsertUser({ userId: input.userId }, userData);
       if (!user) {
@@ -25,4 +21,8 @@ export const usersRouter = router({
       }
       return UserDTO.convertFromEntity(user);
     }),
+  getAll: publicProcedure.query(async () => {
+    const users = await User.find().exec();
+    return users.map((user) => UserDTO.convertFromEntity(user));
+  }),
 });

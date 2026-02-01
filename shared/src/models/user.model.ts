@@ -7,14 +7,15 @@ import {
   type QueryFilter,
   Schema,
   Types,
+  UpdateQuery,
 } from 'mongoose';
 import { z } from 'zod';
 
 export const userEntitySchema = z.object({
-  avatar: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  globalName: z.string(),
   servers: z.array(z.instanceof(Types.ObjectId)),
   userId: z.string(),
-  userTag: z.string(),
   username: z.string(),
 });
 
@@ -31,10 +32,10 @@ interface IUserModel extends Model<IUser> {
 
 export const userSchema = new Schema<IUser, IUserModel>(
   {
-    avatar: String,
+    avatarUrl: String,
+    globalName: { type: String, required: true },
     servers: { type: [Schema.Types.ObjectId], ref: 'Server' },
     userId: { type: String, required: true },
-    userTag: { type: String, required: true },
     username: { type: String, required: true },
   },
   {
@@ -49,7 +50,17 @@ export const userSchema = new Schema<IUser, IUserModel>(
         return newUser.save();
       },
       upsertUser(filter: QueryFilter<IUser>, update: Partial<IUser>) {
-        return this.findOneAndUpdate(filter, update, { upsert: true });
+        const { servers, ...otherUpdates } = update;
+
+        const updateOps: UpdateQuery<IUser> = { $set: otherUpdates };
+        if (servers && servers.length > 0) {
+          updateOps.$addToSet = { servers: { $each: servers } };
+        }
+
+        return this.findOneAndUpdate(filter, updateOps, {
+          new: true,
+          upsert: true,
+        });
       },
     },
   }
