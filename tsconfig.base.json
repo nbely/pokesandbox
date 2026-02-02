@@ -24,9 +24,9 @@
       "@shared/models": ["shared/src/models/index.ts"],
       "@webapp/components/*": ["apps/webapp/src/app/_components/*"],
       "@webapp/auth": ["apps/webapp/src/auth.ts"],
-      "@webapp/store/*": ["apps/webapp/src/store/*"],
       "@webapp/styles/*": ["apps/webapp/src/styles/*"],
-      "@webapp/trpc": ["apps/webapp/src/trpc/index.ts"]
+      "@webapp/trpc": ["apps/webapp/src/trpc/index.ts"],
+      "@webapp/trpc/*": ["apps/webapp/src/trpc/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

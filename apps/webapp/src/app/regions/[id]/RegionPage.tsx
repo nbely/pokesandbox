@@ -1,14 +1,14 @@
 "use client";
+
 import { usePathname } from "next/navigation";
 
-import type { RegionDTO } from "@shared";
-import { useGetRegionById } from "@webapp/store/selectors/regionsSelectors";
+import { trpc } from "@webapp/trpc";
 
 const RegionPage = () => {
   const pathParts: string[] = usePathname()?.split("/") ?? [""];
   const regionId: string = pathParts[pathParts.length - 1];
 
-  const region: RegionDTO | undefined = useGetRegionById(regionId);
+  const { data: region } = trpc.regions.getById.useQuery(regionId);
 
   return (
     <div>

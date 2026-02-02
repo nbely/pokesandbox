@@ -1,8 +1,10 @@
 import { Types } from "mongoose";
+import z from "zod";
 
 import { User, UserDTO, userRequestDTOSchema } from "@shared";
+import { TRPCError } from "@trpc/server";
 
-import { router, publicProcedure } from "../init";
+import { router, publicProcedure, protectedProcedure } from "../init";
 
 export const usersRouter = router({
   create: publicProcedure
@@ -24,5 +26,24 @@ export const usersRouter = router({
   getAll: publicProcedure.query(async () => {
     const users = await User.find().exec();
     return users.map((user) => UserDTO.convertFromEntity(user));
+  }),
+  getByUserId: publicProcedure.input(z.string()).query(async ({ input }) => {
+    const user: User | null = await User.findOne().byUserId(input).exec();
+    if (!user)
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `User with ID ${input} not found`,
+      });
+    return UserDTO.convertFromEntity(user);
+  }),
+  getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const user: User | undefined = await User.findOne().byUserId(userId).exec();
+    if (!user)
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Authorized user not found",
+      });
+    return UserDTO.convertFromEntity(user);
   }),
 });

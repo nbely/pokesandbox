@@ -1,14 +1,14 @@
 "use client";
+
 import { usePathname } from "next/navigation";
 
-import type { UserDTO } from "@shared";
-import { useGetUserById } from "@webapp/store/selectors/usersSelectors";
+import { trpc } from "@webapp/trpc";
 
 const User = () => {
   const pathParts: string[] = usePathname()?.split("/") ?? [""];
   const userId: string = pathParts[pathParts.length - 1];
 
-  const user: UserDTO | undefined = useGetUserById(userId);
+  const { data: user } = trpc.users.getByUserId.useQuery(userId);
 
   return (
     <div>

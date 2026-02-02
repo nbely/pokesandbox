@@ -1,10 +1,11 @@
 "use client";
+
 import Image from "next/image";
 
-import { useAppSelector } from "@webapp/store/selectors";
+import { trpc } from "@webapp/trpc";
 
 export default function HomePage() {
-  const user = useAppSelector((state) => state.users.loggedInUser);
+  const { data: user } = trpc.users.getCurrentUser.useQuery();
   const avatarUrl: string = user?.avatarUrl ?? "";
 
   return (

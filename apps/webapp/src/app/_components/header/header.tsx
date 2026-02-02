@@ -3,26 +3,14 @@
 import { Button } from "antd";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect } from "react";
-
-import { useAppDispatch, useAppSelector } from "@webapp/store/selectors";
-import { useGetUserById } from "@webapp/store/selectors/usersSelectors";
-import { setLoggedInUser } from "@webapp/store/usersSlice";
 
 import PokeballSvg from "../assets/pokeballSvg";
-import DarkModeToggle from "./components/darkModeToggle";
-import SearchBar from "./components/searchBar";
+import { DarkModeToggle } from "./components/DarkModeToggle";
+import { SearchBar } from "./components/SearchBar";
 
-const Header = () => {
-  const dispatch = useAppDispatch();
-  const loggedInUser = useAppSelector((state) => state.users.loggedInUser);
-  const { data: session } = useSession();
-  const user = useGetUserById(session?.user?.id ?? "");
-  useEffect(() => {
-    if (user && !loggedInUser) {
-      dispatch(setLoggedInUser(user));
-    }
-  }, [dispatch, loggedInUser, user]);
+export const Header = () => {
+  const { data: session, status } = useSession();
+  const loading = status === "loading";
 
   return (
     <header
@@ -42,18 +30,17 @@ const Header = () => {
       <div className="flex flex-row items-center space-x-4">
         <SearchBar />
         <DarkModeToggle />
-        {session ? (
-          <Button className="min-h-[40px]" onClick={() => signOut()}>
-            Logout
-          </Button>
-        ) : (
-          <Button className="min-h-[40px]" onClick={() => signIn("discord")}>
-            Login
-          </Button>
-        )}
+        <Button
+          loading={loading}
+          className="min-h-[40px]"
+          onClick={() => {
+            if (!session) return signIn();
+            return signOut();
+          }}
+        >
+          {session ? "Logout" : "Login"}
+        </Button>
       </div>
     </header>
   );
 };
-
-export default Header;

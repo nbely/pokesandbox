@@ -1,13 +1,13 @@
 "use client";
+
 import type { ServerDTO } from "@shared";
-import { useAppSelector } from "@webapp/store/selectors";
-import { useGetServersByIds } from "@webapp/store/selectors/serversSelectors";
+import { trpc } from "@webapp/trpc";
 
 import SidebarIcon from "./components/sidebarIcon";
 
-const Sidebar = () => {
-  const user = useAppSelector((state) => state.users.loggedInUser);
-  const servers = useGetServersByIds(user?.servers ?? []);
+export const Sidebar = () => {
+  const { data: servers = [] } =
+    trpc.servers.getServersForCurrentUser.useQuery();
 
   return (
     <aside
@@ -35,5 +35,3 @@ const Sidebar = () => {
     </aside>
   );
 };
-
-export default Sidebar;

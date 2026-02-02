@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { RegionDTO, ServerDTO, UserDTO } from "@shared";
-import {
-  SearchType,
-  setSearch,
-  setSearchType,
-} from "@webapp/store/searchSlice";
-import { useAppDispatch, useAppSelector } from "@webapp/store/selectors";
+import { trpc } from "@webapp/trpc";
+
+export enum SearchType {
+  Any = "Any",
+  Servers = "Servers",
+  Regions = "Regions",
+  Users = "Users",
+}
 
 interface SelectItem {
   id: string;
@@ -30,14 +32,16 @@ interface SearchTypeOption {
   quantity: number;
 }
 
-const SearchBar = () => {
-  const dispatch = useAppDispatch();
+export const SearchBar = () => {
   const router = useRouter();
-  const search = useAppSelector((state) => state.search.search);
-  const searchTypes = useAppSelector((state) => state.search.searchTypes);
-  const regions = useAppSelector((state) => state.regions.regions);
-  const servers = useAppSelector((state) => state.servers.servers);
-  const users = useAppSelector((state) => state.users.users);
+  const [search, setSearch] = useState<string>("");
+  const [searchTypes, setSearchType] = useState<SearchType[]>([SearchType.Any]);
+  const { data: regions = [], isLoading: regionsLoading } =
+    trpc.regions.getAll.useQuery();
+  const { data: servers = [], isLoading: serversLoading } =
+    trpc.servers.getAll.useQuery();
+  const { data: users = [], isLoading: usersLoading } =
+    trpc.users.getAll.useQuery();
 
   const [options, setOptions] = useState<SelectOptions[]>([]);
   const [open, setOpen] = useState<boolean>(false);
@@ -128,7 +132,7 @@ const SearchBar = () => {
   const getUsersSearchOptions = useCallback(
     (value = ""): SelectOptions[] => {
       const filteredUsers = users.filter((user: UserDTO) =>
-        user.username.toLowerCase().includes(value.toLowerCase())
+        user.globalName.toLowerCase().includes(value.toLowerCase())
       );
       return filteredUsers.length > 0
         ? [
@@ -136,7 +140,7 @@ const SearchBar = () => {
               label: renderTitle("Users"),
               options: filteredUsers.map((user: UserDTO) =>
                 renderItem(
-                  user.username,
+                  user.globalName,
                   undefined,
                   SearchType.Users,
                   user.userId
@@ -206,11 +210,11 @@ const SearchBar = () => {
         // Allow dropdown to close when navigating
         setKeepOpen(false);
       }
-      dispatch(setSearch(newSearch));
-      dispatch(setSearchType(newSearchTypes));
+      setSearch(newSearch);
+      setSearchType(newSearchTypes);
       updateOptions(newSearch, newSearchTypes);
     },
-    [dispatch, router, search, searchTypes, updateOptions]
+    [router, search, searchTypes, updateOptions]
   );
 
   const handleChange = useCallback(
@@ -227,17 +231,17 @@ const SearchBar = () => {
             Object.keys(SearchType).includes(type)
           )
         ) {
-          dispatch(setSearchType(parsedSearchTypes as SearchType[]));
+          setSearchType(parsedSearchTypes as SearchType[]);
           updateOptions(inputSearch, parsedSearchTypes as SearchType[]);
         }
-        dispatch(setSearch(inputSearch));
+        setSearch(inputSearch);
       } else {
-        dispatch(setSearch(value));
-        dispatch(setSearchType([SearchType.Any]));
+        setSearch(value);
+        setSearchType([SearchType.Any]);
         updateOptions(value, [SearchType.Any]);
       }
     },
-    [dispatch, searchTypes, updateOptions]
+    [searchTypes, updateOptions]
   );
 
   const handleOpenChange = useCallback(
@@ -268,7 +272,12 @@ const SearchBar = () => {
       popupMatchSelectWidth={350}
       value={`${searchTypeString ? searchTypeString + ": " : ""}${search}`}
     >
-      <Input.Search size="large" placeholder="Search" className="searchbox" />
+      <Input.Search
+        loading={regionsLoading || serversLoading || usersLoading}
+        size="large"
+        placeholder="Search"
+        className="searchbox"
+      />
     </AutoComplete>
   );
 };
@@ -298,5 +307,3 @@ const renderItem = (
   type,
   value: title,
 });
-
-export default SearchBar;

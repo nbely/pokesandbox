@@ -1,16 +1,11 @@
-"use client";
 import type { PropsWithChildren } from "react";
 
-import { useAppSelector } from "@webapp/store/selectors";
+import { Header } from "./header/Header";
+import { Sidebar } from "./sidebar/Sidebar";
 
-import Header from "./header/header";
-import Sidebar from "./sidebar/sidebar";
-
-export default function Layout({ children }: PropsWithChildren) {
-  const isDarkMode = useAppSelector((state) => state.config.isDarkMode);
-
+export function Layout({ children }: PropsWithChildren) {
   return (
-    <div className={`flex ${isDarkMode ? "dark" : ""}`}>
+    <div className="flex">
       <Header />
       <main
         className="fixed top-16 left-16 border-t-2 m-0 p-4

@@ -3,9 +3,11 @@ import "../styles/globals.scss";
 import type { PropsWithChildren } from "react";
 
 import { RegionDTO, ServerDTO, UserDTO } from "@shared";
-import { TRPCProvider, trpcServer } from "@webapp/trpc";
+import { TRPCProvider } from "@webapp/trpc";
+import { trpcServer } from "@webapp/trpc/server";
 
 import AppLayout from "./AppLayout";
+import { DarkModeScript } from "./_components/DarkModeScript";
 
 export type AppData = {
   regions: RegionDTO[];
@@ -23,17 +25,20 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   ]);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AppLayout
-          data={{
-            regions,
-            servers,
-            users,
-          }}
-        >
-          <TRPCProvider>{children}</TRPCProvider>
-        </AppLayout>
+        <TRPCProvider>
+          <DarkModeScript />
+          <AppLayout
+            data={{
+              regions,
+              servers,
+              users,
+            }}
+          >
+            {children}
+          </AppLayout>
+        </TRPCProvider>
       </body>
     </html>
   );

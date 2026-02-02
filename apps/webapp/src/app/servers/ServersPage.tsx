@@ -1,11 +1,12 @@
 "use client";
+
 import type { ServerDTO } from "@shared";
-import { useGetServers } from "@webapp/store/selectors/serversSelectors";
+import { trpc } from "@webapp/trpc";
 
 import ServerCard from "./components/ServerCard";
 
 const ServersPage = () => {
-  const servers: ServerDTO[] = useGetServers();
+  const { data: servers = [] } = trpc.servers.getAll.useQuery();
 
   return (
     <div>

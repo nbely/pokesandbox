@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 
 import { type Context } from "./context";
+import { Session } from "next-auth";
 
 const t = initTRPC.context<Context>().create();
 
@@ -11,14 +12,21 @@ const t = initTRPC.context<Context>().create();
  */
 export const publicProcedure = t.procedure;
 
+export type ProtectedContext = {
+  req?: Request;
+  session: Session & {
+    user: NonNullable<Session["user"]> & { id: string };
+  };
+};
+
 /**
  * Protected Procedure
  * Use this for private routes with possible mutations
  * It builds on top of the context and throws an error if no session exists.
  */
 export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
-  if (!ctx.session?.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-  return next({ ctx: { session: ctx.session } });
+  if (!ctx.session?.user?.id) throw new TRPCError({ code: "UNAUTHORIZED" });
+  return next({ ctx: ctx as ProtectedContext });
 });
 
 export const createCallerFactory = t.createCallerFactory;

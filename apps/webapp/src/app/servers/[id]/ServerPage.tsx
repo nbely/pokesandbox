@@ -1,17 +1,16 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { RegionDTO, ServerDTO } from "@shared";
-import { useGetRegionsByIds } from "@webapp/store/selectors/regionsSelectors";
-import { useGetServerById } from "@webapp/store/selectors/serversSelectors";
+import { trpc } from "@webapp/trpc";
 
 const ServerPage = () => {
   const pathParts: string[] = usePathname()?.split("/") ?? [""];
   const serverId: string = pathParts[pathParts.length - 1];
 
-  const server: ServerDTO | undefined = useGetServerById(serverId);
-  const regions: RegionDTO[] = useGetRegionsByIds(server?.regions ?? []);
+  const { data: server } =
+    trpc.servers.getByServerIdWithRegions.useQuery(serverId);
 
   return (
     <div>
@@ -22,7 +21,7 @@ const ServerPage = () => {
       <h1 className="text-xl">Regions</h1>
       <br />
       <ul>
-        {regions.map((region: RegionDTO) => (
+        {server?.regions.map((region) => (
           <li key={region._id}>
             <Link className="Link text-lg" href={`/regions/${region._id}`}>
               {region.name}
