@@ -90,41 +90,33 @@ export const serverSchema = new Schema<
         return newServer.save();
       },
       async findServersByUserId(userId: string) {
-        const user: User | null = await User.findOne().byUserId(userId).exec();
-        if (!user) {
-          return this.find()
-            .where({ _id: { $in: [] } })
-            .exec();
-        } else {
-          return this.find().where({ playerList: user._id }).exec();
-        }
-        // return this.aggregate<IServer[]>([
-        //   {
-        //     $lookup: {
-        //       from: 'users',
-        //       let: { playerList: '$playerList' },
-        //       pipeline: [
-        //         {
-        //           $match: {
-        //             $expr: {
-        //               $and: [
-        //                 { $eq: ['$userId', userId] },
-        //                 { $in: ['$_id', '$$playerList'] },
-        //               ],
-        //             },
-        //           },
-        //         },
-        //       ],
-        //       as: 'userMatch',
-        //     },
-        //   },
-        //   {
-        //     $match: { userMatch: { $ne: [] } },
-        //   },
-        //   {
-        //     $project: { userMatch: 0 },
-        //   },
-        // ]);
+        return this.aggregate<IServer[]>([
+          {
+            $lookup: {
+              from: 'users',
+              let: { playerList: '$playerList' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ['$userId', userId] },
+                        { $in: ['$_id', '$$playerList'] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: 'userMatch',
+            },
+          },
+          {
+            $match: { userMatch: { $ne: [] } },
+          },
+          {
+            $project: { userMatch: 0 },
+          },
+        ]);
       },
       findServerWithRegions(filter: QueryFilter<IServer>) {
         return this.findOne(filter).populate('regions');

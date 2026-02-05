@@ -3,9 +3,20 @@
 import { useEffect, useRef } from "react";
 
 import { trpc } from "@webapp/trpc";
+import { RegionDTO, ServerDTO, UserDTO } from "@shared";
+
+type AppData = {
+  regions: RegionDTO[];
+  servers: ServerDTO[];
+  users: UserDTO[];
+};
+
+type HydratorProps = {
+  data: AppData;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const Hydrator = ({ data }: any) => {
+export const Hydrator = ({ data }: HydratorProps) => {
   const utils = trpc.useUtils();
   const hydrated = useRef(false);
 

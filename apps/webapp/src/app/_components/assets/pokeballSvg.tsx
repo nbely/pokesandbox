@@ -1,7 +1,6 @@
-"use client";
 import type { SVGProps } from "react";
 
-const PokeballSvg = ({
+export const PokeballSvg = ({
   color = "currentColor",
   height = "2.5rem",
   width = "2.5rem",
@@ -22,5 +21,3 @@ const PokeballSvg = ({
     />
   </svg>
 );
-
-export default PokeballSvg;

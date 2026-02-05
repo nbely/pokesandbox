@@ -3,7 +3,7 @@
 import { SessionProvider } from "next-auth/react";
 import type { PropsWithChildren } from "react";
 
-import ThemeProvider from "./themeProvider";
+import { ThemeProvider } from "./ThemeProvider";
 
 const Providers = ({ children }: PropsWithChildren) => {
   return (

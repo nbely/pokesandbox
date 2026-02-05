@@ -1,7 +1,7 @@
-import z from "zod";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { Server, ServerDTO, ServerWithRegionsDTO } from "@shared";
-import { TRPCError } from "@trpc/server";
 
 import { router, publicProcedure, protectedProcedure } from "../init";
 
@@ -10,7 +10,7 @@ export const serversRouter = router({
     const servers = await Server.find().exec();
     return servers.map((server) => ServerDTO.convertFromEntity(server));
   }),
-  getByServerIdWithRegions: publicProcedure
+  getByIdWithRegions: publicProcedure
     .input(z.string())
     .query(async ({ input }) => {
       const server = await Server.findServerWithRegions({
@@ -24,7 +24,7 @@ export const serversRouter = router({
       }
       return ServerWithRegionsDTO.convertFromEntity(server);
     }),
-  getServersForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+  getForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
     const servers = await Server.findServersByUserId(userId);
     return servers.map((server) => ServerDTO.convertFromEntity(server));

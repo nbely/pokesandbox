@@ -3,7 +3,7 @@
 import { ConfigProvider, theme } from "antd";
 import { useEffect, useState, type PropsWithChildren } from "react";
 
-const ThemeProvider = ({ children }: PropsWithChildren) => {
+export const ThemeProvider = ({ children }: PropsWithChildren) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { defaultAlgorithm, darkAlgorithm } = theme;
 
@@ -36,5 +36,3 @@ const ThemeProvider = ({ children }: PropsWithChildren) => {
     </ConfigProvider>
   );
 };
-
-export default ThemeProvider;
