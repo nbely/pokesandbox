@@ -5,6 +5,7 @@ import {
   models,
   type Query,
   type QueryFilter,
+  QueryWithHelpers,
   Schema,
   Types,
   UpdateQuery,
@@ -22,7 +23,12 @@ export const userEntitySchema = z.object({
 export type IUser = z.infer<typeof userEntitySchema>;
 export type User = HydratedDocument<IUser>;
 
-interface IUserModel extends Model<IUser> {
+// Define interface for query helpers
+interface IUserQueryHelpers {
+  byUserId(userId: string): QueryWithHelpers<any, User, IUserQueryHelpers>;
+}
+
+interface IUserModel extends Model<IUser, IUserQueryHelpers> {
   createUser(user: IUser): Promise<User>;
   upsertUser(
     filter: QueryFilter<IUser>,
@@ -30,7 +36,12 @@ interface IUserModel extends Model<IUser> {
   ): Query<User | null, IUser>;
 }
 
-export const userSchema = new Schema<IUser, IUserModel>(
+export const userSchema = new Schema<
+  IUser,
+  IUserModel,
+  Record<string, never>,
+  IUserQueryHelpers
+>(
   {
     avatarUrl: String,
     globalName: { type: String, required: true },
@@ -40,8 +51,11 @@ export const userSchema = new Schema<IUser, IUserModel>(
   },
   {
     query: {
-      byUserId(id: string) {
-        return this.where({ userId: id });
+      byUserId(
+        this: QueryWithHelpers<any, User, IUserQueryHelpers>,
+        userId: string
+      ) {
+        return this.where({ userId });
       },
     },
     statics: {

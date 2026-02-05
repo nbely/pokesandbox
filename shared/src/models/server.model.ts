@@ -11,6 +11,7 @@ import {
 } from 'mongoose';
 import { z } from 'zod';
 import { Region } from './region.model';
+import { User } from './user.model';
 
 export const serverEntitySchema = z.object({
   serverId: z.string(),
@@ -40,6 +41,7 @@ interface IServerQueryHelpers {
 
 interface IServerModel extends Model<IServer, IServerQueryHelpers> {
   createServer(server: IServer): Promise<Server>;
+  findServersByUserId(userId: string): Promise<Server[]>;
   findServerWithRegions(
     filter: QueryFilter<IServer>
   ): Query<(Omit<Server, 'regions'> & { regions: Region[] }) | null, IServer>;
@@ -86,6 +88,35 @@ export const serverSchema = new Schema<
       createServer(server: IServer) {
         const newServer = new this(server);
         return newServer.save();
+      },
+      async findServersByUserId(userId: string) {
+        return this.aggregate<IServer[]>([
+          {
+            $lookup: {
+              from: 'users',
+              let: { playerList: '$playerList' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ['$userId', userId] },
+                        { $in: ['$_id', '$$playerList'] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: 'userMatch',
+            },
+          },
+          {
+            $match: { userMatch: { $ne: [] } },
+          },
+          {
+            $project: { userMatch: 0 },
+          },
+        ]);
       },
       findServerWithRegions(filter: QueryFilter<IServer>) {
         return this.findOne(filter).populate('regions');

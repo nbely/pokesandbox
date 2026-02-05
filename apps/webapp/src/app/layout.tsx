@@ -2,16 +2,12 @@ import "../styles/globals.scss";
 
 import type { PropsWithChildren } from "react";
 
-import { RegionDTO, ServerDTO, UserDTO } from "@shared";
-import { TRPCProvider, trpcServer } from "@webapp/trpc";
+import { TRPCProvider } from "@webapp/trpc";
+import { trpcServer } from "@webapp/trpc/server";
 
-import AppLayout from "./AppLayout";
-
-export type AppData = {
-  regions: RegionDTO[];
-  servers: ServerDTO[];
-  users: UserDTO[];
-};
+import { Hydrator } from "./_components/Hydrator";
+import { DarkModeScript } from "./_components/scripts/DarkModeScript";
+import Providers from "./_providers";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const api = await trpcServer();
@@ -23,17 +19,19 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   ]);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AppLayout
-          data={{
-            regions,
-            servers,
-            users,
-          }}
-        >
-          <TRPCProvider>{children}</TRPCProvider>
-        </AppLayout>
+        <TRPCProvider>
+          <DarkModeScript />
+          <Hydrator
+            data={{
+              regions,
+              servers,
+              users,
+            }}
+          />
+          <Providers>{children}</Providers>
+        </TRPCProvider>
       </body>
     </html>
   );
