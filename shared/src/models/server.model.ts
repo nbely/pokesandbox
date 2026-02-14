@@ -12,6 +12,7 @@ import {
 import { z } from 'zod';
 import { Region } from './region.model';
 import { User } from './user.model';
+import type { PopulatedQuery } from './types';
 
 export const serverEntitySchema = z.object({
   serverId: z.string(),
@@ -44,7 +45,7 @@ interface IServerModel extends Model<IServer, IServerQueryHelpers> {
   findServersByUserId(userId: string): Promise<Server[]>;
   findServerWithRegions(
     filter: QueryFilter<IServer>
-  ): Query<(Omit<Server, 'regions'> & { regions: Region[] }) | null, IServer>;
+  ): PopulatedQuery<Server | null, IServer, { regions: Region[] }>;
   upsertServer(
     filter: QueryFilter<IServer>,
     update: Partial<IServer>
@@ -90,7 +91,7 @@ export const serverSchema = new Schema<
         return newServer.save();
       },
       async findServersByUserId(userId: string) {
-        return this.aggregate<IServer[]>([
+        return this.aggregate<IServer>([
           {
             $lookup: {
               from: 'users',
@@ -116,7 +117,7 @@ export const serverSchema = new Schema<
           {
             $project: { userMatch: 0 },
           },
-        ]);
+        ]).exec();
       },
       findServerWithRegions(filter: QueryFilter<IServer>) {
         return this.findOne(filter).populate('regions');

@@ -11,6 +11,8 @@ import {
   UpdateQuery,
 } from 'mongoose';
 import { z } from 'zod';
+import { Server } from './server.model';
+import type { PopulatedQuery } from './types';
 
 export const userEntitySchema = z.object({
   avatarUrl: z.string().optional(),
@@ -30,6 +32,9 @@ interface IUserQueryHelpers {
 
 interface IUserModel extends Model<IUser, IUserQueryHelpers> {
   createUser(user: IUser): Promise<User>;
+  findUserWithServers(
+    filter: QueryFilter<IUser>
+  ): PopulatedQuery<User | null, IUser, { servers: Server[] }>;
   upsertUser(
     filter: QueryFilter<IUser>,
     update: Partial<IUser>
@@ -62,6 +67,9 @@ export const userSchema = new Schema<
       createUser(user: IUser) {
         const newUser = new this(user);
         return newUser.save();
+      },
+      findUserWithServers(filter: QueryFilter<IUser>) {
+        return this.findOne(filter).populate('servers');
       },
       upsertUser(filter: QueryFilter<IUser>, update: Partial<IUser>) {
         const { servers, ...otherUpdates } = update;
