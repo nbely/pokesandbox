@@ -2,7 +2,12 @@ import { TRPCError } from "@trpc/server";
 import { Types } from "mongoose";
 import { z } from "zod";
 
-import { User, UserDTO, userRequestDTOSchema } from "@shared";
+import {
+  User,
+  UserDTO,
+  userRequestDTOSchema,
+  UserWithServersDTO,
+} from "@shared";
 
 import { router, publicProcedure, protectedProcedure } from "../init";
 
@@ -38,12 +43,12 @@ export const usersRouter = router({
   }),
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    const user: User | null = await User.findOne().byUserId(userId).exec();
+    const user = await User.findUserWithServers({ userId }).exec();
     if (!user)
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Authorized user not found",
       });
-    return UserDTO.convertFromEntity(user);
+    return UserWithServersDTO.convertFromEntity(user);
   }),
 });
