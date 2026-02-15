@@ -154,9 +154,13 @@ const handleAddPokemonToSlot = async (
         ),
       }
     );
-  } else {
+  } else if (exactMatch) {
     // Handle exact match (original logic)
     await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
+  } else {
+    // This should never happen based on the first condition, but handle it gracefully
+    menu.prompt = `No Pokémon found with the name "${pokemonName}". Please try again.`;
+    return menu.refresh();
   }
 };
 
