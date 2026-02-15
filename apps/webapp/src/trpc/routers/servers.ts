@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { Server, ServerDTO, ServerWithRegionsDTO } from "@shared";
 
-import { router, publicProcedure, protectedProcedure } from "../init";
+import { router, publicProcedure } from "../init";
 
 export const serversRouter = router({
   getAll: publicProcedure.query(async () => {
@@ -24,9 +24,4 @@ export const serversRouter = router({
       }
       return ServerWithRegionsDTO.convertFromEntity(server);
     }),
-  getForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-    const servers = await Server.findServersByUserId(userId);
-    return servers.map((server) => ServerDTO.convertFromEntity(server));
-  }),
 });
