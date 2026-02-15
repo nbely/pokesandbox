@@ -12,7 +12,6 @@ export const getManageProgressionMenuEmbeds = async (
   const progressionLines: string[] = [];
 
   const progressions = Array.from(region.progressionDefinitions.entries());
-  
   if (progressions.length === 0) {
     progressionLines.push('\nNo progression definitions found.');
   } else {

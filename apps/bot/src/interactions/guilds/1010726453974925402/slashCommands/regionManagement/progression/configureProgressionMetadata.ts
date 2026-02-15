@@ -11,6 +11,8 @@ import {
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
+import type { z } from 'zod';
+import { progressionDefinitionSchema } from '@shared/models/region/progressionDefinition';
 
 import { getConfigureProgressionMetadataEmbeds } from './progression.embeds';
 
@@ -184,7 +186,7 @@ const saveProgressionDefinition = async (
     visibility: state.visibility || 'public' as const,
   };
 
-  let progressionDefinition: any;
+  let progressionDefinition: z.infer<typeof progressionDefinitionSchema>;
 
   switch (kind) {
     case 'numeric':
