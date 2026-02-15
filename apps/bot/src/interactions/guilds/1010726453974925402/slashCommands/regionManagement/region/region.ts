@@ -23,7 +23,7 @@ export const REGION_COMMAND_NAME = COMMAND_NAME;
 type RegionCommandOptions = {
   regionId: string;
 };
-type RegionCommand = ISlashCommand<AdminMenu, RegionCommandOptions>;
+type RegionCommand = ISlashCommand<AdminMenu<any>, RegionCommandOptions>;
 
 export const RegionCommand: RegionCommand = {
   name: COMMAND_NAME,
@@ -35,21 +35,28 @@ export const RegionCommand: RegionCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage a Region for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) =>
-    new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getRegionButtons(menu, options.regionId))
-      .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.regionId))
+  createMenu: async (session, options) => {
+    if (!options) {
+      throw new Error('Options are required');
+    }
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
+      .setButtons((menu) => getRegionButtons(menu as any, options.regionId))
+      .setEmbeds((menu) => getRegionMenuEmbeds(menu as any, options.regionId))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
-      .build(),
-};
+      .build();
+  },
+} as ISlashCommand<any, RegionCommandOptions>;
 
 const getRegionButtons = async (
   _menu: AdminMenu,
   regionId: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig[]> => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
 
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
@@ -81,7 +88,7 @@ const getRegionButtons = async (
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu) =>
+      onClick: async (menu: any) =>
         MenuWorkflow.openMenu(menu, command, { regionId }),
       id,
     })),

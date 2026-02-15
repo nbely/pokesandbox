@@ -13,7 +13,7 @@ import { Menu } from './Menu/Menu';
 
 export type MenuCommandOptions = Record<string, unknown>;
 export type MenuBuilderOptions<
-  M extends Menu<O> = Menu,
+  M extends Menu<any> = Menu,
   O extends MenuCommandOptions = MenuCommandOptions
 > = {
   commandOptions?: O;
@@ -30,7 +30,7 @@ export type MenuBuilderOptions<
 
 /** Menu Button Types */
 
-export type MenuButtonConfig<M extends Menu = Menu> = {
+export type MenuButtonConfig<M extends Menu<any> = Menu> = {
   /** Whether the button should be disabled */
   disabled?: boolean;
   /** Whether the button should be fixed to the start or end of the menu */
@@ -55,7 +55,7 @@ export type AnySelectMenuBuilder = Exclude<
   ButtonBuilder
 >;
 
-export type SelectMenuConfig<M extends Menu = Menu> = {
+export type SelectMenuConfig<M extends Menu<any> = Menu> = {
   /** The builder for the select menu */
   builder: AnySelectMenuBuilder;
   /** The onClick handler for the select menu */
@@ -76,7 +76,7 @@ export type ReservedButtonOptions = {
 
 /** Menu Pagination Types */
 
-export type PaginationConfig<M extends Menu = Menu> = {
+export type PaginationConfig<M extends Menu<any> = Menu> = {
   itemsPerPage: number;
   type: MenuPaginationType;
   getItemTotal?: (menu: M) => Promise<number>;
@@ -88,7 +88,7 @@ export interface PaginationOptions {
   quantityItemsPerPage?: number;
 }
 
-export interface ListPaginationOptions<M extends Menu = Menu>
+export interface ListPaginationOptions<M extends Menu<any> = Menu>
   extends PaginationOptions {
   getTotalQuantityItems: (menu: M) => Promise<number>;
 }

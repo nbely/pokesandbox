@@ -28,7 +28,7 @@ type EditPokedexSlotCommandOptions = {
   pokedexNo: string;
 };
 type EditPokedexSlotCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<any>,
   EditPokedexSlotCommandOptions
 >;
 
@@ -43,8 +43,14 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     .setDescription('Add a Pokémon to a regional Pokédex slot')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
+    if (!options) {
+      throw new Error('Options are required');
+    }
     const { regionId, pokedexNo } = options;
     const region = await Region.findById(regionId);
+    if (!region) {
+      throw new Error('Region not found');
+    }
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
       .setReturnable()
@@ -53,35 +59,35 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     if (!region.pokedex[+pokedexNo - 1]) {
       // handle add pokedex slot
       builder
-        .setEmbeds((menu) => getAddPokedexSlotEmbeds(menu, regionId, pokedexNo))
+        .setEmbeds((menu) => getAddPokedexSlotEmbeds(menu as any, regionId, pokedexNo))
         .setMessageHandler((menu, response) =>
-          handleAddPokemonToSlot(menu, region, pokedexNo, response)
+          handleAddPokemonToSlot(menu as any, region, pokedexNo, response)
         );
     } else {
       builder
         .setEmbeds((menu) =>
-          getEditPokedexSlotEmbeds(menu, regionId, pokedexNo)
+          getEditPokedexSlotEmbeds(menu as any, regionId, pokedexNo)
         )
         .setButtons((menu) =>
-          getEditPokedexSlotButtons(menu, regionId, pokedexNo)
+          getEditPokedexSlotButtons(menu as any, regionId, pokedexNo)
         );
     }
 
     return builder.build();
   },
-};
+} as ISlashCommand<any, EditPokedexSlotCommandOptions>;
 
 const getEditPokedexSlotButtons = async (
   _menu: AdminMenu,
   regionId: string,
   pokedexNo: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig[]> => {
   return [
     {
       label: 'Customize',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, 'customize-pokedex-slot', {
+        MenuWorkflow.openMenu(menu as any, 'customize-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -90,7 +96,7 @@ const getEditPokedexSlotButtons = async (
       label: 'Swap',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, 'swap-pokedex-slot', {
+        MenuWorkflow.openMenu(menu as any, 'swap-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -100,6 +106,9 @@ const getEditPokedexSlotButtons = async (
       style: ButtonStyle.Danger,
       onClick: async (menu) => {
         const region = await Region.findById(regionId);
+        if (!region) {
+          throw new Error('Region not found');
+        }
         const pokedexIndex = +pokedexNo - 1;
 
         region.pokedex[pokedexIndex] = null;
@@ -128,7 +137,7 @@ const handleAddPokemonToSlot = async (
     return menu.refresh();
   } else if (!exactMatch && !!potentialMatches.length) {
     return MenuWorkflow.openSubMenuWithContinuation(
-      menu,
+      menu as any,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
       async (_session, selectedPokemonId: string) => {
         const selectedPokemon = potentialMatches.find(
@@ -149,7 +158,7 @@ const handleAddPokemonToSlot = async (
         ),
       }
     );
-  } else {
+  } else if (exactMatch) {
     // Handle exact match (original logic)
     await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
   }

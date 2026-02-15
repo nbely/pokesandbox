@@ -32,16 +32,16 @@ export const RegionsCommand: ISlashCommand<AdminMenu> = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session) =>
     new AdminMenuBuilder(session, COMMAND_NAME)
-      .setButtons(getRegionsButtons)
+      .setButtons((menu) => getRegionsButtons(menu as any))
       .setEmbeds(getRegionsMenuEmbeds)
       .setCancellable()
       .setTrackedInHistory()
       .build(),
-};
+} as ISlashCommand<any>;
 
 const getRegionsButtons = async (
   menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig[]> => {
   const { regions } = await menu.fetchServerAndRegions();
 
   return [
@@ -50,14 +50,14 @@ const getRegionsButtons = async (
       fixedPosition: 'start',
       style: ButtonStyle.Success,
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, REGION_CREATE_COMMAND_NAME),
+        MenuWorkflow.openMenu(menu as any, REGION_CREATE_COMMAND_NAME),
     },
     ...regions.map((region) => ({
       label: region.name,
       id: region._id.toString(),
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, REGION_COMMAND_NAME, {
+        MenuWorkflow.openMenu(menu as any, REGION_COMMAND_NAME, {
           regionId: region._id.toString(),
         }),
     })),

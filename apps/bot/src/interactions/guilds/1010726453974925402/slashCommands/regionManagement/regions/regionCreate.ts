@@ -74,4 +74,4 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
       )
       .setTrackedInHistory()
       .build(),
-};
+} as ISlashCommand<any>;

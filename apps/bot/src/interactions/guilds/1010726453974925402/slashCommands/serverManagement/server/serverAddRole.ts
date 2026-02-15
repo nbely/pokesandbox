@@ -25,7 +25,7 @@ type ServerAddRoleCommand = ISlashCommand<
   ServerAddRoleCommandOptions
 >;
 
-export const ServerAddRoleCommand: ServerAddRoleCommand = {
+export const ServerAddRoleCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -36,6 +36,9 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
     .setDescription('Add a new admin or mod role to your server')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options): Promise<AdminMenu> => {
+    if (!options) {
+      throw new Error('Options are required for ServerAddRoleCommand');
+    }
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) =>
@@ -48,12 +51,12 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
       .setTrackedInHistory()
       .build();
   },
-};
+} as ISlashCommand<any, ServerAddRoleCommandOptions>;
 
 export const getServerAddRoleSelectMenu = (
   _menu: AdminMenu,
   roleType: string
-): SelectMenuConfig<AdminMenu> => {
+): SelectMenuConfig => {
   return {
     builder: new RoleSelectMenuBuilder()
       .setCustomId(`server-add-${roleType}-role`)

@@ -9,7 +9,7 @@ import getDiscoveryMenuEmbeds from './discovery.embeds';
 const COMMAND_NAME = 'discovery-description';
 export const DISCOVERY_DESCRIPTION_COMMAND_NAME = COMMAND_NAME;
 
-export const DiscoveryDescriptionCommand: ISlashCommand<AdminMenu> = {
+export const DiscoveryDescriptionCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -31,4 +31,4 @@ export const DiscoveryDescriptionCommand: ISlashCommand<AdminMenu> = {
         menu.prompt = `Successfully updated the server description.`;
       })
       .build(),
-};
+} as ISlashCommand<any>;

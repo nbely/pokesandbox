@@ -8,6 +8,9 @@ export const getRegionMenuEmbeds = async (
   regionId: string
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
 
   const pokedexOptionText =
     region.pokedex.length === 0

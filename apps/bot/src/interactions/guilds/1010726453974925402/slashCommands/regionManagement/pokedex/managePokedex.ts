@@ -19,7 +19,7 @@ type ManagePokedexCommandOptions = {
   regionId: string;
 };
 type ManagePokedexCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<any>,
   ManagePokedexCommandOptions
 >;
 
@@ -34,9 +34,12 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
     .setDescription('Manage the Pokédex for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
+    if (!options) {
+      throw new Error('Options are required');
+    }
     const { regionId } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, regionId))
+      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu as any, regionId))
       .setCancellable()
       .setListPagination({
         quantityItemsPerPage: 50,
@@ -44,6 +47,9 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         previousButton: { style: ButtonStyle.Primary },
         getTotalQuantityItems: async () => {
           const region = await Region.findById(regionId);
+          if (!region) {
+            throw new Error('Region not found');
+          }
           return region.pokedex.length;
         },
       })
@@ -60,14 +66,14 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
             new Error('Please enter a valid Pokédex number')
           );
         } else if (messageArgs.length < 2) {
-          await MenuWorkflow.openMenu(menu, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
+          await MenuWorkflow.openMenu(menu as any, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
             regionId,
             pokedexNo: pokedexNumber,
           });
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
-          await MenuWorkflow.openMenu(menu, 'search-pokemon', {
+          await MenuWorkflow.openMenu(menu as any, 'search-pokemon', {
             regionId,
             pokemonName,
           });
@@ -77,4 +83,4 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
       .setTrackedInHistory()
       .build();
   },
-};
+} as ISlashCommand<any, ManagePokedexCommandOptions>;

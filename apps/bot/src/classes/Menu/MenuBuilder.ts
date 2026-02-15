@@ -16,7 +16,7 @@ import {
 } from '../types';
 
 export class MenuBuilder<
-  M extends Menu<O> = Menu,
+  M extends Menu<any> = Menu,
   O extends MenuCommandOptions = MenuCommandOptions
 > {
   private _buttons: Collection<string, MenuButton> = new Collection();

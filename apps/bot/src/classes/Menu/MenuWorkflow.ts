@@ -6,14 +6,19 @@ import { Menu } from './Menu';
  * Helper class for working with continuation callbacks in multi-menu workflows
  */
 export class MenuWorkflow {
-  public static async openMenu<M extends Menu>(
+  public static async openMenu<M extends Menu<any>>(
     menu: M,
     command: string,
     options?: MenuCommandOptions
   ) {
-    const pokedexMenu = await menu.client.slashCommands
-      .get(command)
-      .createMenu(menu.session, options);
+    const slashCommand = menu.client.slashCommands.get(command);
+    if (!slashCommand) {
+      throw new Error(`Slash command '${command}' not found.`);
+    }
+    if (!slashCommand.createMenu) {
+      throw new Error(`Slash command '${command}' does not have a createMenu method.`);
+    }
+    const pokedexMenu = await slashCommand.createMenu(menu.session, options);
     await menu.session.next(pokedexMenu, options);
   }
 
@@ -25,12 +30,12 @@ export class MenuWorkflow {
    * @param commandArgs Arguments to pass to the sub-menu command
    */
   public static async openSubMenuWithContinuation<
-    TMenu extends Menu,
+    TMenu extends Menu<any>,
     TResult = unknown
   >(
     currentMenu: TMenu,
     subMenuName: string,
-    onComplete: (session: Session, result: TResult) => Promise<void>,
+    onComplete: (session: Session, result: unknown) => Promise<void>,
     commandOptions?: MenuCommandOptions
   ): Promise<void> {
     // Register the continuation callback and open the sub-menu
@@ -44,7 +49,7 @@ export class MenuWorkflow {
    * @param result The result to pass to any continuation callbacks
    */
   public static async completeAndReturn<TResult = unknown>(
-    menu: Menu,
+    menu: Menu<any>,
     result?: TResult
   ): Promise<void> {
     // Mark the menu as completed with the result

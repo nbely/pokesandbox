@@ -27,7 +27,7 @@ type ServerManageRolesCommand = ISlashCommand<
   ServerManageRolesCommandOptions
 >;
 
-export const ServerManageRolesCommand: ServerManageRolesCommand = {
+export const ServerManageRolesCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -38,6 +38,9 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options): Promise<AdminMenu> => {
+    if (!options) {
+      throw new Error('Options are required for ServerManageRolesCommand');
+    }
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getServerManageRolesButtons(menu, roleType))
@@ -52,7 +55,7 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
       .setReturnable()
       .build();
   },
-};
+} as ISlashCommand<any, ServerManageRolesCommandOptions>;
 
 export const getServerManageRolesButtons = async (
   menu: AdminMenu,
@@ -67,7 +70,7 @@ export const getServerManageRolesButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
+        MenuWorkflow.openMenu(menu as any, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,

@@ -19,7 +19,7 @@ import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';
 const COMMAND_NAME = 'server-manage-prefixes';
 export const SERVER_MANAGE_PREFIXES_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
+export const ServerManagePrefixesCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -39,11 +39,11 @@ export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
       .setReturnable()
       .setTrackedInHistory()
       .build(),
-};
+} as ISlashCommand<any>;
 
 export const getServerManagePrefixesButtons = async (
   menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig[]> => {
   const server = await menu.fetchServer();
 
   return [
@@ -52,7 +52,7 @@ export const getServerManagePrefixesButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
+        MenuWorkflow.openMenu(menu as any, SERVER_ADD_PREFIX_COMMAND_NAME),
     },
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,

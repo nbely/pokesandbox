@@ -9,6 +9,9 @@ export const getManagePokedexMenuEmbeds = async (
   defaultPrompt = 'Enter a space-separated Pokédex number (up to 1500) and Pokémon name to add a Pokémon to a blank Pokédex slot, or enter just a number to modify a Pokédex slot'
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
   const pokedexLines: string[] = [];
 
   for (
@@ -76,6 +79,9 @@ export const getAddPokedexSlotEmbeds = async (
   defaultPrompt = 'This slot is currently empty. Please enter the name of a Pokémon to add to the Pokédex slot.'
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
 
   return [
     new EmbedBuilder()
@@ -95,7 +101,13 @@ export const getEditPokedexSlotEmbeds = async (
   pokedexNo: string
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
   const dexEntry = await DexEntry.findById(region.pokedex[+pokedexNo - 1]?.id);
+  if (!dexEntry) {
+    throw new Error('Pokédex entry not found');
+  }
   // TODO: Decide on the final format of the embed
   const embed = new EmbedBuilder()
     .setColor('Gold')

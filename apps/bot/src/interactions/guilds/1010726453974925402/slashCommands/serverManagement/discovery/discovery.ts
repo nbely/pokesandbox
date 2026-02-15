@@ -19,7 +19,7 @@ import { DISCOVERY_DESCRIPTION_COMMAND_NAME } from './discoveryDescription';
 const COMMAND_NAME = 'discovery';
 export const DISCOVERY_COMMAND_NAME = COMMAND_NAME;
 
-export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
+export const DiscoveryCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -37,7 +37,7 @@ export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
       .setReturnable()
       .setTrackedInHistory()
       .build(),
-};
+} as ISlashCommand<any>;
 
 async function getDiscoveryButtons(
   menu: AdminMenu
@@ -61,7 +61,7 @@ async function getDiscoveryButtons(
       label: 'Set Description',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
+        MenuWorkflow.openMenu(menu as any, DISCOVERY_DESCRIPTION_COMMAND_NAME),
     },
   ];
 }

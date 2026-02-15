@@ -21,7 +21,7 @@ import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';
 const COMMAND_NAME = 'server';
 export const SERVER_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerCommand: ISlashCommand<AdminMenu> = {
+export const ServerCommand: ISlashCommand<AdminMenu<any>> = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -33,14 +33,14 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session): Promise<AdminMenu> =>
     new AdminMenuBuilder(session, COMMAND_NAME)
-      .setButtons(getServerButtons)
+      .setButtons(() => getServerButtons())
       .setEmbeds(getServerMenuEmbeds)
       .setCancellable()
       .setTrackedInHistory()
       .build(),
 };
 
-const getServerButtons = async (): Promise<MenuButtonConfig<AdminMenu>[]> => {
+const getServerButtons = async (): Promise<MenuButtonConfig[]> => {
   const subMenuButtons: { id: string; command: string; option?: string }[] = [
     { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
     {

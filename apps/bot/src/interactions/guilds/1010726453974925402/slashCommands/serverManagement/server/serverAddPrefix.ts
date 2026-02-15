@@ -9,7 +9,7 @@ import { getServerMenuEmbeds } from './server.embeds';
 const COMMAND_NAME = 'server-add-prefix';
 export const SERVER_ADD_PREFIX_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
+export const ServerAddPrefixCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -46,4 +46,4 @@ export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
       })
       .setTrackedInHistory()
       .build(),
-};
+} as ISlashCommand<any>;

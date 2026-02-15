@@ -307,6 +307,10 @@ export class Session {
       throw new Error(`Failed to find slash command: ${currentMenuName}`);
     }
     
+    if (!slashCommand.createMenu) {
+      throw new Error(`Slash command '${currentMenuName}' does not have a createMenu method.`);
+    }
+    
     const newMenu = await slashCommand.createMenu(this, currentOptions);
 
     if (!newMenu) {
@@ -496,7 +500,7 @@ export class Session {
         this._isReset = true;
         resolve({ value: message.content, type: MenuResponseType.MESSAGE });
       });
-      msgCollector?.on('end', async (collected: Collection<string, Message>) => {
+      msgCollector?.on('end', async (collected: Collection<string, Message>, reason: string) => {
         if (collected.size === 0) {
           if (compCollector) {
             if (compCollector?.ended && compCollector?.total === 0) {
