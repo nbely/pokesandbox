@@ -18,12 +18,8 @@ export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 type ManagePokedexCommandOptions = {
   regionId: string;
 };
-type ManagePokedexCommand = ISlashCommand<
-  AdminMenu<any>,
-  ManagePokedexCommandOptions
->;
 
-export const ManagePokedexCommand: ManagePokedexCommand = {
+export const ManagePokedexCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,

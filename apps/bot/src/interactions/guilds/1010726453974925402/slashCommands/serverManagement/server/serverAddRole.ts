@@ -20,10 +20,6 @@ export const SERVER_ADD_ROLE_COMMAND_NAME = COMMAND_NAME;
 type ServerAddRoleCommandOptions = {
   roleType: string;
 };
-type ServerAddRoleCommand = ISlashCommand<
-  AdminMenu,
-  ServerAddRoleCommandOptions
->;
 
 export const ServerAddRoleCommand = {
   name: COMMAND_NAME,
@@ -35,7 +31,7 @@ export const ServerAddRoleCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Add a new admin or mod role to your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options): Promise<AdminMenu> => {
+  createMenu: async (session, options): Promise<any> => {
     if (!options) {
       throw new Error('Options are required for ServerAddRoleCommand');
     }
@@ -43,11 +39,11 @@ export const ServerAddRoleCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) =>
         getServerMenuEmbeds(
-          menu,
+          menu as any,
           `Please select a role to grant Bot ${roleType} privileges to.`
         )
       )
-      .setSelectMenu((menu) => getServerAddRoleSelectMenu(menu, roleType))
+      .setSelectMenu((menu) => getServerAddRoleSelectMenu(menu as any, roleType))
       .setTrackedInHistory()
       .build();
   },
@@ -61,7 +57,7 @@ export const getServerAddRoleSelectMenu = (
     builder: new RoleSelectMenuBuilder()
       .setCustomId(`server-add-${roleType}-role`)
       .setPlaceholder('Select a role to add'),
-    onSelect: async (menu: AdminMenu, selectedRoleIds: string[]) => {
+    onSelect: async (menu: any, selectedRoleIds: string[]) => {
       const server = await menu.fetchServer();
       const roleIds =
         roleType === 'admin' ? server.adminRoleIds : server.modRoleIds;

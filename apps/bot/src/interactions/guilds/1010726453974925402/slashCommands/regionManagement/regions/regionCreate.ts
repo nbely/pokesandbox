@@ -14,7 +14,7 @@ import {
 const COMMAND_NAME = 'region-create';
 export const REGION_CREATE_COMMAND_NAME = COMMAND_NAME;
 
-export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
+export const RegionCreateCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,

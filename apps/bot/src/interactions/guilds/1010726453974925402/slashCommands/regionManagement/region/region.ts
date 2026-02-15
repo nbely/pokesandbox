@@ -23,9 +23,8 @@ export const REGION_COMMAND_NAME = COMMAND_NAME;
 type RegionCommandOptions = {
   regionId: string;
 };
-type RegionCommand = ISlashCommand<AdminMenu<any>, RegionCommandOptions>;
 
-export const RegionCommand: RegionCommand = {
+export const RegionCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,

@@ -57,7 +57,7 @@ export const getServerManagePrefixesButtons = async (
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,
       style: ButtonStyle.Danger,
-      onClick: (menu: AdminMenu) => handleRemovePrefixButtonClick(menu, idx),
+      onClick: (menu: any) => handleRemovePrefixButtonClick(menu, idx),
       id: idx.toString(),
     })),
   ];

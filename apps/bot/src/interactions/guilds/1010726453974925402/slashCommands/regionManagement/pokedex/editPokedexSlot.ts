@@ -27,12 +27,8 @@ type EditPokedexSlotCommandOptions = {
   regionId: string;
   pokedexNo: string;
 };
-type EditPokedexSlotCommand = ISlashCommand<
-  AdminMenu<any>,
-  EditPokedexSlotCommandOptions
->;
 
-export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
+export const EditPokedexSlotCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -139,7 +135,7 @@ const handleAddPokemonToSlot = async (
     return MenuWorkflow.openSubMenuWithContinuation(
       menu as any,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
-      async (_session, selectedPokemonId: string) => {
+      async (_session: any, selectedPokemonId: any) => {
         const selectedPokemon = potentialMatches.find(
           (match) => match._id.toString() === selectedPokemonId
         );

@@ -21,7 +21,7 @@ import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';
 const COMMAND_NAME = 'server';
 export const SERVER_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerCommand: ISlashCommand<AdminMenu<any>> = {
+export const ServerCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -31,7 +31,7 @@ export const ServerCommand: ISlashCommand<AdminMenu<any>> = {
     .setName(COMMAND_NAME)
     .setDescription('Update your PokeSandbox server settings')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session): Promise<AdminMenu> =>
+  createMenu: async (session: any): Promise<AdminMenu> =>
     new AdminMenuBuilder(session, COMMAND_NAME)
       .setButtons(() => getServerButtons())
       .setEmbeds(getServerMenuEmbeds)

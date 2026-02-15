@@ -22,12 +22,8 @@ type SelectMatchedPokemonCommandOptions = {
   regionId: string;
   matchedDexEntryIds: string[];
 };
-type SelectMatchedPokemonCommand = ISlashCommand<
-  AdminMenu<any>,
-  SelectMatchedPokemonCommandOptions
->;
 
-export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
+export const SelectMatchedPokemonCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   ignore: true,

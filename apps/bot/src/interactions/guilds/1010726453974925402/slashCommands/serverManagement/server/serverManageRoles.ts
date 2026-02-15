@@ -22,10 +22,6 @@ export const SERVER_MANAGE_ROLES_COMMAND_NAME = COMMAND_NAME;
 type ServerManageRolesCommandOptions = {
   roleType: string;
 };
-type ServerManageRolesCommand = ISlashCommand<
-  AdminMenu,
-  ServerManageRolesCommandOptions
->;
 
 export const ServerManageRolesCommand = {
   name: COMMAND_NAME,
@@ -37,16 +33,16 @@ export const ServerManageRolesCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options): Promise<AdminMenu> => {
+  createMenu: async (session, options): Promise<any> => {
     if (!options) {
       throw new Error('Options are required for ServerManageRolesCommand');
     }
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getServerManageRolesButtons(menu, roleType))
+      .setButtons((menu) => getServerManageRolesButtons(menu as any, roleType))
       .setEmbeds((menu) =>
         getServerMenuEmbeds(
-          menu,
+          menu as any,
           `Add or Remove a Role with Bot ${roleType} privileges.`
         )
       )

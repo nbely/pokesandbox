@@ -12,6 +12,6 @@ const getAllCommands = (
   }, [] as ISlashCommand[]);
 
 export const slashCommands = getAllCommands([
-  RegionManagementCommands,
-  ServerManagementCommands,
+  RegionManagementCommands as any,
+  ServerManagementCommands as any,
 ]);

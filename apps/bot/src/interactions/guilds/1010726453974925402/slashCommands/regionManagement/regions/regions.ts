@@ -20,7 +20,7 @@ import { getRegionsMenuEmbeds } from './regions.embeds';
 const COMMAND_NAME = 'regions';
 export const REGIONS_COMMAND_NAME = COMMAND_NAME;
 
-export const RegionsCommand: ISlashCommand<AdminMenu> = {
+export const RegionsCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -56,8 +56,8 @@ const getRegionsButtons = async (
       label: region.name,
       id: region._id.toString(),
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, REGION_COMMAND_NAME, {
+      onClick: async (menu: any) =>
+        MenuWorkflow.openMenu(menu, REGION_COMMAND_NAME, {
           regionId: region._id.toString(),
         }),
     })),
