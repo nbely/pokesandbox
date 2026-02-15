@@ -88,7 +88,7 @@ export class Session {
     return this._commandInteraction;
   }
 
-  get componentInteraction(): ComponentInteraction | undefined {
+  get componentInteraction(): MessageComponentInteraction | null {
     return this._componentInteraction;
   }
 
@@ -116,6 +116,9 @@ export class Session {
 
   // Add a new menu to the session and update the current menu
   public async next(menu: Menu, options?: MenuCommandOptions) {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to transition from.');
+    }
     if (this._currentMenu.isTrackedInHistory) {
       this._history.push({ menu: this._currentMenu, options });
     }
@@ -180,6 +183,10 @@ export class Session {
 
   // Go back to the previous menu, if available
   public async goBack() {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to go back from.');
+    }
+    
     // Store completion result from the current menu before going back
     const returningMenuName = this._currentMenu.name;
 
@@ -241,9 +248,11 @@ export class Session {
       },
       {} as Record<string, unknown>
     );
-    const menu: Menu = await this._client.slashCommands
-      .get(this._initialCommand)
-      .createMenu(this, options);
+    const slashCommand = this._client.slashCommands.get(this._initialCommand);
+    if (!slashCommand) {
+      throw new Error(`Slash command '${this._initialCommand}' not found.`);
+    }
+    const menu: Menu = await slashCommand.createMenu(this, options);
     await menu.refresh();
     this._currentMenu = menu;
     await this.processMenus();
@@ -293,9 +302,12 @@ export class Session {
     const currentOptions = this._currentMenu.commandOptions;
 
     // Recreate the menu from scratch using the original command
-    const newMenu = await this._client.slashCommands
-      .get(currentMenuName)
-      ?.createMenu(this, currentOptions);
+    const slashCommand = this._client.slashCommands.get(currentMenuName);
+    if (!slashCommand) {
+      throw new Error(`Failed to find slash command: ${currentMenuName}`);
+    }
+    
+    const newMenu = await slashCommand.createMenu(this, currentOptions);
 
     if (!newMenu) {
       throw new Error(`Failed to recreate menu: ${currentMenuName}`);
@@ -309,7 +321,10 @@ export class Session {
   /**** Private Methods ****/
 
   private async handleMessageResponse(message: string): Promise<void> {
-    this._responseHistory.push({
+    if (!this._currentMenu) {
+      throw new Error('No current menu to handle message response.');
+    }
+    this._responseHistory?.push({
       menuName: this._currentMenu.name,
       responseType: this._currentMenu.responseType,
       response: message,
@@ -319,9 +334,12 @@ export class Session {
   }
 
   private async handleComponentInteraction(): Promise<void> {
+    if (!this.componentInteraction) {
+      throw new Error('No component interaction to handle.');
+    }
     if (this.componentInteraction.isButton()) {
       const buttonId = await this.handleButtonInteraction();
-      if (buttonId !== undefined) {
+      if (buttonId !== undefined && this._currentMenu) {
         await this._currentMenu.handleButtonInteraction(buttonId);
       }
     } else if (this.componentInteraction.isRoleSelectMenu()) {
@@ -332,11 +350,14 @@ export class Session {
   }
 
   private async handleButtonInteraction(): Promise<string | undefined> {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to handle button interaction.');
+    }
     const buttonId = this.componentInteraction?.customId.split('_')[1];
-    this._responseHistory.push({
+    this._responseHistory?.push({
       menuName: this._currentMenu.name,
       responseType: MenuResponseType.COMPONENT,
-      response: buttonId,
+      response: buttonId ?? '',
     });
 
     if (buttonId !== undefined) {
@@ -345,9 +366,15 @@ export class Session {
       } else if (buttonId === 'Cancel') {
         await this.cancel();
       } else if (buttonId === 'Next') {
+        if (!this._currentMenu) {
+          throw new Error('No current menu for pagination.');
+        }
         this._currentMenu.currentPage++;
         await this._currentMenu.refresh();
       } else if (buttonId === 'Previous') {
+        if (!this._currentMenu) {
+          throw new Error('No current menu for pagination.');
+        }
         this._currentMenu.currentPage--;
         await this._currentMenu.refresh();
       } else {
@@ -360,9 +387,15 @@ export class Session {
   }
 
   private async handleRoleMenuInteraction(): Promise<void> {
+    if (!this.componentInteraction) {
+      throw new Error('No component interaction to handle.');
+    }
+    if (!this._currentMenu) {
+      throw new Error('No current menu to handle role menu interaction.');
+    }
     const values = (this.componentInteraction as RoleSelectMenuInteraction)
       .values;
-    this._responseHistory.push({
+    this._responseHistory?.push({
       menuName: this._currentMenu.name,
       responseType: MenuResponseType.COMPONENT,
       response: values,
@@ -376,13 +409,18 @@ export class Session {
     const filter = (message: Message): boolean => {
       return message.author.id === this.commandInteraction.user.id;
     };
-    const collectedMessage =
-      await this.commandInteraction.channel?.awaitMessages({
-        filter,
-        errors: ['time'],
-        max: 1,
-        time,
-      });
+    
+    const channel = this.commandInteraction.channel;
+    if (!channel || !('awaitMessages' in channel)) {
+      throw new Error('Cannot collect messages in this channel.');
+    }
+    
+    const collectedMessage = await channel.awaitMessages({
+      filter,
+      errors: ['time'],
+      max: 1,
+      time,
+    });
 
     const response: string | undefined = collectedMessage?.first()?.content;
     if (!response) {
@@ -395,13 +433,13 @@ export class Session {
 
   private async collectMessageOrButtonInteraction(
     time: number
-  ): Promise<MixedInteractionResponse> {
+  ): Promise<MixedInteractionResponse | undefined> {
     const collectMessageOrButton = async (
-      resolve: ({ type, value }: MixedInteractionResponse | undefined) => void
+      resolve: (value: MixedInteractionResponse | undefined) => void
     ) => {
       let compCollector: InteractionCollector<ButtonInteraction> | undefined;
 
-      if (this._currentMenu.components.length > 0) {
+      if (this._currentMenu && this._currentMenu.components.length > 0) {
         const compFilter = (
           componentInteraction: MessageComponentInteraction
         ): boolean => {
@@ -418,15 +456,21 @@ export class Session {
         });
       }
 
+      const channel = this.commandInteraction.channel;
+      if (!channel || !('createMessageCollector' in channel)) {
+        await this.handleError(new Error('Cannot collect messages in this channel.'));
+        resolve(undefined);
+        return;
+      }
+
       const msgFilter = (message: Message): boolean => {
         return message.author.id === this.commandInteraction.user.id;
       };
-      const msgCollector =
-        this.commandInteraction.channel?.createMessageCollector({
-          filter: msgFilter,
-          max: 1,
-          time,
-        });
+      const msgCollector = channel.createMessageCollector({
+        filter: msgFilter,
+        max: 1,
+        time,
+      });
 
       compCollector?.on('collect', async (componentInteraction) => {
         msgCollector?.stop();
@@ -447,12 +491,12 @@ export class Session {
         }
       });
 
-      msgCollector?.on('collect', async (message) => {
+      msgCollector?.on('collect', async (message: Message) => {
         compCollector?.stop();
         this._isReset = true;
         resolve({ value: message.content, type: MenuResponseType.MESSAGE });
       });
-      msgCollector?.on('end', async (collected) => {
+      msgCollector?.on('end', async (collected: Collection<string, Message>) => {
         if (collected.size === 0) {
           if (compCollector) {
             if (compCollector?.ended && compCollector?.total === 0) {
@@ -473,6 +517,9 @@ export class Session {
   }
 
   async sendEmbedMessage(): Promise<void> {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to send embed message.');
+    }
     if (!this.message) {
       this._message = await this.commandInteraction.followUp(
         this._currentMenu.getResponseOptions()
@@ -484,6 +531,9 @@ export class Session {
   }
 
   async updateEmbedMessage(): Promise<void> {
+    if (!this._currentMenu) {
+      throw new Error('No current menu to update embed message.');
+    }
     if (this._isReset) {
       if (
         this.componentInteraction?.deferred === false &&
@@ -517,10 +567,11 @@ export class Session {
     };
 
     try {
-      this._componentInteraction = await this.message?.awaitMessageComponent({
+      const interaction = await this.message?.awaitMessageComponent({
         filter,
         time,
       });
+      this._componentInteraction = interaction ?? null;
     } catch (error) {
       await this.handleError(error);
     }
@@ -544,9 +595,11 @@ export class Session {
       }
 
       if (menuResponseType === MenuResponseType.MIXED) {
-        const { value, type } = await this.collectMessageOrButtonInteraction(
-          120_000
-        );
+        const response = await this.collectMessageOrButtonInteraction(120_000);
+        if (!response) {
+          continue;
+        }
+        const { value, type } = response;
 
         if (!!value && type === MenuResponseType.MESSAGE) {
           await this.handleMessageResponse(value);

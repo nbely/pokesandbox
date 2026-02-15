@@ -50,7 +50,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   private _isTrackedInHistory: boolean;
   private _message?: Message;
   private _name: string;
-  private _paginationConfig: PaginationConfig;
+  private _paginationConfig: PaginationConfig<Menu<C>>;
   private _paginationState: PaginationState = {
     endIndex: 1,
     page: 1,
@@ -61,15 +61,15 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   };
   private _prompt = '';
   private _responseType: MenuResponseType;
-  private _selectMenu?: SelectMenuConfig;
+  private _selectMenu?: SelectMenuConfig<Menu<C>>;
   private _session: Session;
   private _thumbnail?: string;
 
-  protected _handleMessage?: (menu: Menu, response: string) => Promise<void>;
-  protected _setButtons?: (menu: Menu) => Promise<MenuButtonConfig[]>;
-  protected _setSelectMenu?: (menu: Menu) => SelectMenuConfig;
-  protected _setEmbeds: (menu: Menu) => Promise<EmbedBuilder[]>;
-  protected _onComplete?: (menu: Menu, result: unknown) => Promise<void>;
+  protected _handleMessage?: (menu: Menu<C>, response: string) => Promise<void>;
+  protected _setButtons?: (menu: Menu<C>) => Promise<MenuButtonConfig<Menu<C>>[]>;
+  protected _setSelectMenu?: (menu: Menu<C>) => SelectMenuConfig<Menu<C>>;
+  protected _setEmbeds: (menu: Menu<C>) => Promise<EmbedBuilder[]>;
+  protected _onComplete?: (menu: Menu<C>, result: unknown) => Promise<void>;
 
   /**** Constructor ****/
 
@@ -83,10 +83,10 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     this._client = session.client;
     this._interaction = session.lastInteraction;
 
-    this._commandOptions = options.commandOptions;
+    this._commandOptions = options.commandOptions ?? ({} as C);
     this._isTrackedInHistory = options.isTrackedInHistory;
     this._paginationConfig = options.paginationConfig;
-    this._reservedButtons = options.reservedButtons;
+    this._reservedButtons = options.reservedButtons ?? new Collection();
     this._responseType = options.responseType;
     this._handleMessage = options.handleMessage;
     this._setButtons = options.setButtons;
@@ -185,7 +185,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     return this._name;
   }
 
-  get paginationConfig(): PaginationConfig {
+  get paginationConfig(): PaginationConfig<Menu<C>> {
     return this._paginationConfig;
   }
 
@@ -229,6 +229,9 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   }
 
   public async refreshButtons() {
+    if (!this._setButtons) {
+      throw new Error('No setButtons callback defined for this menu.');
+    }
     const buttons = await this._setButtons(this);
 
     this._buttons.clear();
@@ -254,7 +257,14 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   }
 
   public refreshSelectMenu() {
+    if (!this._setSelectMenu) {
+      throw new Error('No setSelectMenu callback defined for this menu.');
+    }
     this._selectMenu = this._setSelectMenu(this);
+
+    if (!this._selectMenu) {
+      throw new Error('setSelectMenu returned undefined.');
+    }
 
     const actionRow = new ActionRowBuilder<AnySelectMenuBuilder>();
     actionRow.addComponents(this._selectMenu.builder);
@@ -389,7 +399,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
     const currentPageButtons = [...fixedStartButtons];
 
-    const filteredButtons = [];
+    const filteredButtons: ButtonBuilder[] = [];
     let startIndex = 0,
       endIndex = 0;
     buttonList.forEach((button, index) => {
@@ -471,6 +481,10 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     let showPreviousButton = false;
 
     const { itemsPerPage, getItemTotal } = this._paginationConfig;
+    
+    if (!getItemTotal) {
+      throw new Error('getItemTotal is required for list pagination.');
+    }
 
     const startIndex: number = (this.currentPage - 1) * itemsPerPage;
     const itemTotal = await getItemTotal(this);

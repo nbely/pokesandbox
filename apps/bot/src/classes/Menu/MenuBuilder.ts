@@ -16,7 +16,7 @@ import {
 } from '../types';
 
 export class MenuBuilder<
-  M extends Menu = Menu,
+  M extends Menu<O> = Menu,
   O extends MenuCommandOptions = MenuCommandOptions
 > {
   private _buttons: Collection<string, MenuButton> = new Collection();
@@ -27,7 +27,7 @@ export class MenuBuilder<
     ReservedButtonLabels,
     ReservedButtonOptions
   > = new Collection();
-  private _getListPaginationTotalQuantityItems: (menu: M) => Promise<number>;
+  private _getListPaginationTotalQuantityItems?: (menu: M) => Promise<number>;
   private _handleMessageCallback?: (menu: M, response: string) => Promise<void>;
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
@@ -42,7 +42,7 @@ export class MenuBuilder<
   public constructor(session: Session, name: string, commandOptions?: O) {
     this._name = name;
     this._session = session;
-    this._commandOptions = commandOptions;
+    this._commandOptions = commandOptions ?? ({} as O);
   }
 
   /**** Public Methods ****/
@@ -155,7 +155,7 @@ export class MenuBuilder<
    * Returns the options for the menu builder.
    * @returns {MenuBuilderOptions} The options for the menu builder.
    */
-  protected getBuilderOptions(): MenuBuilderOptions {
+  protected getBuilderOptions(): MenuBuilderOptions<M, O> {
     let responseType: MenuResponseType | undefined;
 
     if (
@@ -178,15 +178,15 @@ export class MenuBuilder<
       isTrackedInHistory: this._isTrackedInHistory,
       paginationConfig: {
         itemsPerPage: this._paginationItemsPerPage,
-        getItemTotal: this._getListPaginationTotalQuantityItems,
-        type: this._paginationType,
+        getItemTotal: this._getListPaginationTotalQuantityItems as ((menu: M) => Promise<number>) | undefined,
+        type: this._paginationType ?? MenuPaginationType.BUTTONS,
       },
       reservedButtons: this._reservedButtons,
-      responseType,
-      handleMessage: this._handleMessageCallback,
-      setButtons: this._setButtonsCallback,
-      setEmbeds: this._setEmbedsCallback,
-      setSelectMenu: this._setSelectMenuCallback,
+      responseType: responseType ?? MenuResponseType.COMPONENT,
+      handleMessage: this._handleMessageCallback as ((menu: M, response: string) => Promise<void>) | undefined,
+      setButtons: this._setButtonsCallback as ((menu: M) => Promise<MenuButtonConfig<M>[]>) | undefined,
+      setEmbeds: (this._setEmbedsCallback ?? (async () => [])) as (menu: M) => Promise<EmbedBuilder[]>,
+      setSelectMenu: this._setSelectMenuCallback as ((menu: M) => SelectMenuConfig<M>) | undefined,
     };
   }
 

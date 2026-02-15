@@ -4,38 +4,38 @@ import { Region, Server } from '@shared/models';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
-import { MenuBuilderOptions, MenuButtonConfig } from '../types';
+import { MenuBuilderOptions, MenuButtonConfig, MenuCommandOptions } from '../types';
 import { getServerInitializedEmbed } from './AdminMenu.embeds';
 
-export interface AdminMenuBuilderOptions extends MenuBuilderOptions<AdminMenu> {
+export interface AdminMenuBuilderOptions<C extends MenuCommandOptions = MenuCommandOptions> extends MenuBuilderOptions<AdminMenu<C>, C> {
   useAdminRoles?: boolean;
   useModRoles?: boolean;
 }
 
-export class AdminMenu extends Menu {
+export class AdminMenu<C extends MenuCommandOptions = MenuCommandOptions> extends Menu<C> {
   private _initialized = false;
 
   protected _handleMessage?: (
-    menu: AdminMenu,
+    menu: AdminMenu<C>,
     response: string
   ) => Promise<void>;
-  protected _setButtons: (menu: AdminMenu) => Promise<MenuButtonConfig[]>;
-  protected _setEmbeds: (menu: AdminMenu) => Promise<EmbedBuilder[]>;
+  protected _setButtons!: (menu: AdminMenu<C>) => Promise<MenuButtonConfig<AdminMenu<C>>[]>;
+  protected _setEmbeds!: (menu: AdminMenu<C>) => Promise<EmbedBuilder[]>;
 
   private constructor(
     session: Session,
     name: string,
-    options: AdminMenuBuilderOptions
+    options: AdminMenuBuilderOptions<C>
   ) {
     super(session, name, options);
   }
 
-  static async create(
+  static async create<C extends MenuCommandOptions = MenuCommandOptions>(
     session: Session,
     name: string,
-    options?: AdminMenuBuilderOptions
-  ): Promise<AdminMenu> {
-    const menu = new AdminMenu(session, name, options);
+    options: AdminMenuBuilderOptions<C>
+  ): Promise<AdminMenu<C>> {
+    const menu = new AdminMenu<C>(session, name, options);
     await menu.initialize();
     return menu;
   }
@@ -90,19 +90,22 @@ export class AdminMenu extends Menu {
 
   private async fetchNullableServer(): Promise<Server | null> {
     try {
-      return Server.findOne().byServerId(this.interaction.guild?.id);
+      const serverId = this.interaction.guild?.id;
+      if (!serverId) {
+        return null;
+      }
+      return Server.findOne().byServerId(serverId);
     } catch (error) {
       await this.session.handleError(error);
+      return null;
     }
   }
 
   public async fetchServer(): Promise<Server> {
     const server = await this.fetchNullableServer();
     if (!server) {
-      await this.session.handleError(
-        new Error(
-          'There was a problem fetching your server. Please try again later.'
-        )
+      throw new Error(
+        'There was a problem fetching your server. Please try again later.'
       );
     }
 
@@ -111,8 +114,12 @@ export class AdminMenu extends Menu {
 
   public async fetchServerAndRegions() {
     try {
+      const serverId = this.interaction.guild?.id;
+      if (!serverId) {
+        throw new Error('Guild ID is not available.');
+      }
       const server = await Server.findServerWithRegions({
-        serverId: this.interaction.guild?.id,
+        serverId,
       });
       if (!server) {
         throw new Error(
@@ -122,6 +129,7 @@ export class AdminMenu extends Menu {
       return server;
     } catch (error) {
       await this.session.handleError(error);
+      throw error;
     }
   }
 

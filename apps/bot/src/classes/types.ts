@@ -13,16 +13,16 @@ import { Menu } from './Menu/Menu';
 
 export type MenuCommandOptions = Record<string, unknown>;
 export type MenuBuilderOptions<
-  M extends Menu = Menu,
+  M extends Menu<O> = Menu,
   O extends MenuCommandOptions = MenuCommandOptions
 > = {
   commandOptions?: O;
   isTrackedInHistory: boolean;
   paginationConfig: PaginationConfig<M>;
   reservedButtons: Collection<ReservedButtonLabels, ReservedButtonOptions>;
-  responseType?: MenuResponseType;
+  responseType: MenuResponseType;
   handleMessage?: (menu: M, response: string) => Promise<void>;
-  setButtons?: (menu: M) => Promise<MenuButtonConfig[]>;
+  setButtons?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   setEmbeds: (menu: M) => Promise<EmbedBuilder[]>;
   setSelectMenu?: (menu: M) => SelectMenuConfig<M>;
   onComplete?: (menu: M, result: unknown) => Promise<void>;
