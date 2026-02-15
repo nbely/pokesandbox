@@ -154,7 +154,7 @@ const handleAddPokemonToSlot = async (
         ),
       }
     );
-  } else if (exactMatch) {
+  } else {
     // Handle exact match (original logic)
     await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
   }
