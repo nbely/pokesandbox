@@ -148,7 +148,7 @@ export class MenuBuilder<
   /**** Protected Methods ****/
 
   protected async createMenu(): Promise<M> {
-    return new Menu(this._session, this._name, this.getBuilderOptions()) as M;
+    return new Menu(this._session, this._name, this.getBuilderOptions() as MenuBuilderOptions<Menu<O>, O>) as M;
   }
 
   /**

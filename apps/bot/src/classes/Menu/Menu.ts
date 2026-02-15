@@ -236,7 +236,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
     this._buttons.clear();
 
-    buttons.forEach((button: MenuButtonConfig, index: number) => {
+    buttons.forEach((button: MenuButtonConfig<Menu<C>>, index: number) => {
       if (RESERVED_BUTTON_LABELS.includes(button.label)) {
         throw new Error(`Button label '${button.label}' is reserved.`);
       }
@@ -248,7 +248,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
           .setLabel(button.label)
           .setStyle(button.style),
         fixedPosition: button.fixedPosition,
-        onClick: button.onClick,
+        onClick: button.onClick as ((menu: Menu) => Promise<void>) | undefined,
         ordinal: index,
       });
     });
@@ -302,7 +302,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     }
 
     if (button.onClick) {
-      await button.onClick(this);
+      await button.onClick(this as Menu<MenuCommandOptions>);
     } else {
       throw new Error(`No action defined for button with ID '${buttonId}'.`);
     }

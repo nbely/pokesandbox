@@ -9,6 +9,7 @@ import {
   AdminMenuBuilder,
   MenuButtonConfig,
   MenuWorkflow,
+  Session,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles, searchPokemon } from '@bot/utils';
@@ -135,7 +136,7 @@ const handleAddPokemonToSlot = async (
     return MenuWorkflow.openSubMenuWithContinuation(
       menu,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
-      async (_session: any, selectedPokemonId: any) => {
+      async (_session: Session, selectedPokemonId: unknown) => {
         const selectedPokemon = potentialMatches.find(
           (match) => match._id.toString() === selectedPokemonId
         );

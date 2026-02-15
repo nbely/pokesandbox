@@ -7,6 +7,7 @@ import {
   InteractionCollector,
   Message,
   MessageComponentInteraction,
+  ReadonlyCollection,
   RoleSelectMenuInteraction,
 } from 'discord.js';
 
@@ -251,6 +252,9 @@ export class Session {
     const slashCommand = this._client.slashCommands.get(this._initialCommand);
     if (!slashCommand) {
       throw new Error(`Slash command '${this._initialCommand}' not found.`);
+    }
+    if (!slashCommand.createMenu) {
+      throw new Error(`Slash command '${this._initialCommand}' does not have a createMenu method.`);
     }
     const menu: Menu = await slashCommand.createMenu(this, options);
     await menu.refresh();
@@ -500,15 +504,15 @@ export class Session {
         this._isReset = true;
         resolve({ value: message.content, type: MenuResponseType.MESSAGE });
       });
-      msgCollector?.on('end', async (collected: Collection<string, Message>, reason: string) => {
+      msgCollector?.on('end', (collected: ReadonlyCollection<string, Message<boolean>>, reason: string) => {
         if (collected.size === 0) {
           if (compCollector) {
             if (compCollector?.ended && compCollector?.total === 0) {
-              await this.handleError(new Error('No response received.'));
+              void this.handleError(new Error('No response received.'));
               resolve(undefined);
             }
           } else {
-            await this.handleError(new Error('No response received.'));
+            void this.handleError(new Error('No response received.'));
             resolve(undefined);
           }
         }

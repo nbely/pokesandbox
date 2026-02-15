@@ -87,7 +87,7 @@ const getRegionButtons = async (
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: any) =>
+      onClick: async (menu: AdminMenu) =>
         MenuWorkflow.openMenu(menu, command, { regionId }),
       id,
     })),

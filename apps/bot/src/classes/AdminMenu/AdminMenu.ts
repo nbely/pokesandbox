@@ -4,30 +4,35 @@ import { Region, Server } from '@shared/models';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
-import { MenuBuilderOptions, MenuButtonConfig, MenuCommandOptions } from '../types';
+import { MenuBuilderOptions, MenuButtonConfig, MenuCommandOptions, SelectMenuConfig } from '../types';
 import { getServerInitializedEmbed } from './AdminMenu.embeds';
 
-export interface AdminMenuBuilderOptions<C extends MenuCommandOptions = MenuCommandOptions> extends MenuBuilderOptions<AdminMenu<C>, C> {
+export interface AdminMenuBuilderOptions<C extends MenuCommandOptions = MenuCommandOptions> extends Omit<MenuBuilderOptions<Menu<C>, C>, 'handleMessage' | 'setButtons' | 'setEmbeds' | 'setSelectMenu'> {
   useAdminRoles?: boolean;
   useModRoles?: boolean;
+  handleMessage?: (menu: AdminMenu<C>, response: string) => Promise<void>;
+  setButtons?: (menu: AdminMenu<C>) => Promise<MenuButtonConfig<Menu<C>>[]>;
+  setEmbeds: (menu: AdminMenu<C>) => Promise<EmbedBuilder[]>;
+  setSelectMenu?: (menu: AdminMenu<C>) => SelectMenuConfig<Menu<C>>;
 }
 
 export class AdminMenu<C extends MenuCommandOptions = MenuCommandOptions> extends Menu<C> {
   private _initialized = false;
-
-  protected _handleMessage?: (
-    menu: AdminMenu<C>,
-    response: string
-  ) => Promise<void>;
-  protected _setButtons!: (menu: AdminMenu<C>) => Promise<MenuButtonConfig<AdminMenu<C>>[]>;
-  protected _setEmbeds!: (menu: AdminMenu<C>) => Promise<EmbedBuilder[]>;
 
   private constructor(
     session: Session,
     name: string,
     options: AdminMenuBuilderOptions<C>
   ) {
-    super(session, name, options);
+    // Convert AdminMenuBuilderOptions to MenuBuilderOptions for super call
+    const menuOptions: MenuBuilderOptions<Menu<C>, C> = {
+      ...options,
+      handleMessage: options.handleMessage as ((menu: Menu<C>, response: string) => Promise<void>) | undefined,
+      setButtons: options.setButtons as ((menu: Menu<C>) => Promise<MenuButtonConfig<Menu<C>>[]>) | undefined,
+      setEmbeds: options.setEmbeds as (menu: Menu<C>) => Promise<EmbedBuilder[]>,
+      setSelectMenu: options.setSelectMenu as ((menu: Menu<C>) => SelectMenuConfig<Menu<C>>) | undefined,
+    };
+    super(session, name, menuOptions);
   }
 
   static async create<C extends MenuCommandOptions = MenuCommandOptions>(

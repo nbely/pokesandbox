@@ -57,7 +57,7 @@ export const getServerAddRoleSelectMenu = (
     builder: new RoleSelectMenuBuilder()
       .setCustomId(`server-add-${roleType}-role`)
       .setPlaceholder('Select a role to add'),
-    onSelect: async (menu: any, selectedRoleIds: string[]) => {
+    onSelect: async (menu: AdminMenu, selectedRoleIds: string[]) => {
       const server = await menu.fetchServer();
       const roleIds =
         roleType === 'admin' ? server.adminRoleIds : server.modRoleIds;
