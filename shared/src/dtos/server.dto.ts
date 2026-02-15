@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Region } from '../models/region.model';
+import { Region } from '../models/region/region.model';
 import { Server, serverEntitySchema } from '../models/server.model';
 import { regionDTOSchema } from './region.dto';
 import { convertToDTO } from './utils';

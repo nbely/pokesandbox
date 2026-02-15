@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Region, regionEntitySchema } from '../models/region.model';
+import { Region, regionEntitySchema } from '../models/region/region.model';
 
 export const regionDTOSchema = z.object({
   ...regionEntitySchema.shape,
