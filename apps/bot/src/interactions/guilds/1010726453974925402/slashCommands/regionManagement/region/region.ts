@@ -15,6 +15,7 @@ import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
+import { MANAGE_PROGRESSION_COMMAND_NAME } from '../progression/manageProgression';
 import { getRegionMenuEmbeds } from './region.embeds';
 import { RegionCommandOptions } from './types';
 
@@ -59,7 +60,7 @@ const getRegionButtons = async (
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
     { id: 'Moves', command: 'moves' },
-    { id: 'Progression', command: 'progression' },
+    { id: 'Progression', command: MANAGE_PROGRESSION_COMMAND_NAME },
     { id: 'Locations', command: 'locations' },
     { id: 'Transportation', command: 'transportation' },
     { id: 'Quests', command: 'quests' },
