@@ -42,6 +42,8 @@ export const progressionDefinitionSchema = z.discriminatedUnion('kind', [
   booleanProgressionSchema,
 ]);
 
+export type ProgressionDefinition = z.infer<typeof progressionDefinitionSchema>;
+
 // Mongoose Model Schemas
 
 const milestoneDbSchema = new Schema(

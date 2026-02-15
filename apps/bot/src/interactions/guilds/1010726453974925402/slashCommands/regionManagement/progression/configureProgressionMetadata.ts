@@ -1,18 +1,9 @@
-import {
-  InteractionContextType,
-  SlashCommandBuilder,
-} from 'discord.js';
+import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { Region } from '@shared/models';
-import type { z } from 'zod';
-import { progressionDefinitionSchema } from '@shared/models/region/progressionDefinition';
+import { ProgressionDefinition, Region } from '@shared/models';
 
 import { getConfigureProgressionMetadataEmbeds } from './progression.embeds';
 
@@ -29,32 +20,44 @@ type ConfigureProgressionMetadataCommand = ISlashCommand<
   ConfigureProgressionMetadataCommandOptions
 >;
 
-export const ConfigureProgressionMetadataCommand: ConfigureProgressionMetadataCommand = {
-  name: COMMAND_NAME,
-  anyUserPermissions: ['Administrator'],
-  onlyRoles: onlyAdminRoles,
-  onlyRolesOrAnyUserPermissions: true,
-  returnOnlyRolesError: false,
-  command: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Configure metadata for a progression definition')
-    .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) => {
-    const { regionId, progressionKey, kind } = options;
+export const ConfigureProgressionMetadataCommand: ConfigureProgressionMetadataCommand =
+  {
+    name: COMMAND_NAME,
+    anyUserPermissions: ['Administrator'],
+    onlyRoles: onlyAdminRoles,
+    onlyRolesOrAnyUserPermissions: true,
+    returnOnlyRolesError: false,
+    command: new SlashCommandBuilder()
+      .setName(COMMAND_NAME)
+      .setDescription('Configure metadata for a progression definition')
+      .setContexts(InteractionContextType.Guild),
+    createMenu: async (session, options) => {
+      const { regionId, progressionKey, kind } = options;
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) =>
-        getConfigureProgressionMetadataEmbeds(menu, regionId, progressionKey, kind)
-      )
-      .setMessageHandler(async (menu, response) => {
-        await handleMetadataInput(menu, regionId, progressionKey, kind, response);
-      })
-      .setCancellable()
-      .setReturnable()
-      .setTrackedInHistory()
-      .build();
-  },
-};
+      return new AdminMenuBuilder(session, COMMAND_NAME, options)
+        .setEmbeds((menu) =>
+          getConfigureProgressionMetadataEmbeds(
+            menu,
+            regionId,
+            progressionKey,
+            kind
+          )
+        )
+        .setMessageHandler(async (menu, response) => {
+          await handleMetadataInput(
+            menu,
+            regionId,
+            progressionKey,
+            kind,
+            response
+          );
+        })
+        .setCancellable()
+        .setReturnable()
+        .setTrackedInHistory()
+        .build();
+    },
+  };
 
 type MetadataState = {
   displayName?: string;
@@ -63,7 +66,14 @@ type MetadataState = {
   min?: number;
   max?: number;
   sequential?: boolean;
-  step: 'displayName' | 'description' | 'visibility' | 'min' | 'max' | 'sequential' | 'complete';
+  step:
+    | 'displayName'
+    | 'description'
+    | 'visibility'
+    | 'min'
+    | 'max'
+    | 'sequential'
+    | 'complete';
 };
 
 const handleMetadataInput = async (
@@ -73,7 +83,8 @@ const handleMetadataInput = async (
   kind: 'numeric' | 'boolean' | 'milestone',
   response: string
 ) => {
-  const state: MetadataState = (menu.metadata?.metadataState as MetadataState) || {
+  const state: MetadataState = (menu.metadata
+    ?.metadataState as MetadataState) || {
     step: 'displayName',
   };
 
@@ -82,7 +93,8 @@ const handleMetadataInput = async (
   switch (state.step) {
     case 'displayName':
       if (!trimmedResponse) {
-        menu.prompt = 'Display name cannot be empty. Please enter a display name.';
+        menu.prompt =
+          'Display name cannot be empty. Please enter a display name.';
         return menu.refresh();
       }
       state.displayName = trimmedResponse;
@@ -96,7 +108,8 @@ const handleMetadataInput = async (
         state.description = trimmedResponse;
       }
       state.step = 'visibility';
-      menu.prompt = 'Enter visibility (public/discoverable/hidden, or type "skip" for default "public"):';
+      menu.prompt =
+        'Enter visibility (public/discoverable/hidden, or type "skip" for default "public"):';
       menu.metadata = { ...menu.metadata, metadataState: state };
       return menu.refresh();
 
@@ -106,7 +119,8 @@ const handleMetadataInput = async (
         if (['public', 'discoverable', 'hidden'].includes(visibility)) {
           state.visibility = visibility as 'public' | 'discoverable' | 'hidden';
         } else {
-          menu.prompt = 'Invalid visibility. Enter public, discoverable, or hidden (or type "skip"):';
+          menu.prompt =
+            'Invalid visibility. Enter public, discoverable, or hidden (or type "skip"):';
           return menu.refresh();
         }
       }
@@ -119,20 +133,28 @@ const handleMetadataInput = async (
         return menu.refresh();
       } else if (kind === 'milestone') {
         state.step = 'sequential';
-        menu.prompt = 'Should milestones be sequential? (yes/no, or type "skip" for default "no"):';
+        menu.prompt =
+          'Should milestones be sequential? (yes/no, or type "skip" for default "no"):';
         menu.metadata = { ...menu.metadata, metadataState: state };
         return menu.refresh();
       } else {
         // boolean type - we're done
         state.step = 'complete';
-        return saveProgressionDefinition(menu, regionId, progressionKey, kind, state);
+        return saveProgressionDefinition(
+          menu,
+          regionId,
+          progressionKey,
+          kind,
+          state
+        );
       }
 
     case 'min':
       if (trimmedResponse.toLowerCase() !== 'skip') {
         const min = parseFloat(trimmedResponse);
         if (isNaN(min)) {
-          menu.prompt = 'Invalid number. Enter a minimum value (or type "skip"):';
+          menu.prompt =
+            'Invalid number. Enter a minimum value (or type "skip"):';
           return menu.refresh();
         }
         state.min = min;
@@ -146,13 +168,20 @@ const handleMetadataInput = async (
       if (trimmedResponse.toLowerCase() !== 'skip') {
         const max = parseFloat(trimmedResponse);
         if (isNaN(max)) {
-          menu.prompt = 'Invalid number. Enter a maximum value (or type "skip"):';
+          menu.prompt =
+            'Invalid number. Enter a maximum value (or type "skip"):';
           return menu.refresh();
         }
         state.max = max;
       }
       state.step = 'complete';
-      return saveProgressionDefinition(menu, regionId, progressionKey, kind, state);
+      return saveProgressionDefinition(
+        menu,
+        regionId,
+        progressionKey,
+        kind,
+        state
+      );
 
     case 'sequential':
       if (trimmedResponse.toLowerCase() !== 'skip') {
@@ -167,7 +196,13 @@ const handleMetadataInput = async (
         }
       }
       state.step = 'complete';
-      return saveProgressionDefinition(menu, regionId, progressionKey, kind, state);
+      return saveProgressionDefinition(
+        menu,
+        regionId,
+        progressionKey,
+        kind,
+        state
+      );
   }
 };
 
@@ -183,10 +218,10 @@ const saveProgressionDefinition = async (
   const baseDefinition = {
     displayName: state.displayName!,
     description: state.description,
-    visibility: state.visibility || 'public' as const,
+    visibility: state.visibility || ('public' as const),
   };
 
-  let progressionDefinition: z.infer<typeof progressionDefinitionSchema>;
+  let progressionDefinition: ProgressionDefinition;
 
   switch (kind) {
     case 'numeric':
@@ -217,7 +252,7 @@ const saveProgressionDefinition = async (
   await region.save();
 
   menu.prompt = `Successfully created progression definition "${progressionKey}"!`;
-  
+
   // Return to the manage progression menu
   await MenuWorkflow.returnToPreviousMenu(menu);
 };

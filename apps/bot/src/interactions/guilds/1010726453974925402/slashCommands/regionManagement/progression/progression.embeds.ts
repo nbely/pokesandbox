@@ -5,10 +5,9 @@ import { Region } from '@shared/models';
 
 export const getManageProgressionMenuEmbeds = async (
   menu: AdminMenu,
-  regionId: string,
+  region: Region,
   defaultPrompt = 'Manage progression definitions for this region. Enter a progression key to edit, or use the buttons below to add or delete.'
 ) => {
-  const region = await Region.findById(regionId);
   const progressionLines: string[] = [];
 
   const progressions = Array.from(region.progressionDefinitions.entries());
@@ -21,10 +20,13 @@ export const getManageProgressionMenuEmbeds = async (
       i++
     ) {
       if (i >= progressions.length) break;
-      
+
       const [key, progression] = progressions[i];
-      const kindLabel = progression.kind === 'boolean' ? 'Flag' : 
-                       progression.kind.charAt(0).toUpperCase() + progression.kind.slice(1);
+      const kindLabel =
+        progression.kind === 'boolean'
+          ? 'Flag'
+          : progression.kind.charAt(0).toUpperCase() +
+            progression.kind.slice(1);
       progressionLines.push(
         `\n**${key}** (${kindLabel}): ${progression.displayName}`
       );
@@ -62,13 +64,14 @@ export const getManageProgressionMenuEmbeds = async (
     .setDescription(menu.prompt || defaultPrompt)
     .addFields(fields)
     .setFooter({
-      text: progressions.length > 0 
-        ? `Showing progression${
-            menu.paginationState.startIndex === menu.paginationState.endIndex
-              ? ''
-              : 's'
-          } ${menu.paginationState.range} of ${menu.paginationState.total}`
-        : 'Use the Add button to create your first progression definition',
+      text:
+        progressions.length > 0
+          ? `Showing progression${
+              menu.paginationState.startIndex === menu.paginationState.endIndex
+                ? ''
+                : 's'
+            } ${menu.paginationState.range} of ${menu.paginationState.total}`
+          : 'Use the Add button to create your first progression definition',
     })
     .setTimestamp();
 
@@ -90,7 +93,7 @@ export const getSelectProgressionTypeEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region.name} - New Progression Definition`,
+        name: `${region?.name} - New Progression Definition`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(menu.prompt || defaultPrompt)
@@ -206,7 +209,7 @@ export const getConfigureProgressionMetadataEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region.name} - Configure "${progressionKey}" (${kind})`,
+        name: `${region?.name} - Configure "${progressionKey}" (${kind})`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(menu.prompt || defaultPrompt)
@@ -221,7 +224,7 @@ export const getEditProgressionDefinitionEmbeds = async (
   progressionKey: string
 ) => {
   const region = await Region.findById(regionId);
-  const progression = region.progressionDefinitions.get(progressionKey);
+  const progression = region?.progressionDefinitions.get(progressionKey);
 
   if (!progression) {
     return [
@@ -235,8 +238,11 @@ export const getEditProgressionDefinitionEmbeds = async (
   const fields: EmbedField[] = [
     {
       name: 'Type',
-      value: progression.kind === 'boolean' ? 'Flag' : 
-             progression.kind.charAt(0).toUpperCase() + progression.kind.slice(1),
+      value:
+        progression.kind === 'boolean'
+          ? 'Flag'
+          : progression.kind.charAt(0).toUpperCase() +
+            progression.kind.slice(1),
       inline: true,
     },
     {
@@ -295,7 +301,7 @@ export const getEditProgressionDefinitionEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region.name} - Edit "${progressionKey}"`,
+        name: `${region?.name} - Edit "${progressionKey}"`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(

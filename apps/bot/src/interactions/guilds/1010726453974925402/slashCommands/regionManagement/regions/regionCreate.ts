@@ -27,9 +27,9 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
   createMenu: async (session) =>
     new AdminMenuBuilder(session, COMMAND_NAME)
       .setEmbeds(async (menu) => {
-        const { regions } = await menu.fetchServerAndRegions();
+        const server = await menu.fetchServerAndRegions();
 
-        return regions.length === 0
+        return server?.regions.length === 0
           ? getCreateFirstRegionEmbeds(menu)
           : getRegionsMenuEmbeds(
               menu,
