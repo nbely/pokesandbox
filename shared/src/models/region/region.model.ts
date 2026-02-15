@@ -40,7 +40,7 @@ export const regionEntitySchema = z.object({
       })
       .nullable()
   ),
-  progressionTypes: z.record(progressionDefinitionSchema),
+  progressionDefinitions: z.record(progressionDefinitionSchema),
   quests: z.object({
     active: z.array(z.instanceof(Types.ObjectId)),
     passive: z.array(z.instanceof(Types.ObjectId)),
@@ -104,7 +104,7 @@ export const regionSchema = new Schema<
       ],
       required: true,
     },
-    progressionTypes: {
+    progressionDefinitions: {
       type: Map,
       of: progressionDefinitionDbSchema,
       required: true,
