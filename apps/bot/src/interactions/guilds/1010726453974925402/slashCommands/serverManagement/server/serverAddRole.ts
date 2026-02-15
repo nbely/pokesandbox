@@ -37,13 +37,13 @@ export const ServerAddRoleCommand = {
     }
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) =>
+      .setEmbeds((menu: AdminMenu) =>
         getServerMenuEmbeds(
-          menu as any,
+          menu,
           `Please select a role to grant Bot ${roleType} privileges to.`
         )
       )
-      .setSelectMenu((menu) => getServerAddRoleSelectMenu(menu as any, roleType))
+      .setSelectMenu((menu: AdminMenu) => getServerAddRoleSelectMenu(menu, roleType))
       .setTrackedInHistory()
       .build();
   },

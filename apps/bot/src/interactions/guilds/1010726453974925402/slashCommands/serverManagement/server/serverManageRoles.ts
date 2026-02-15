@@ -39,10 +39,10 @@ export const ServerManageRolesCommand = {
     }
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getServerManageRolesButtons(menu as any, roleType))
-      .setEmbeds((menu) =>
+      .setButtons((menu: AdminMenu) => getServerManageRolesButtons(menu, roleType))
+      .setEmbeds((menu: AdminMenu) =>
         getServerMenuEmbeds(
-          menu as any,
+          menu,
           `Add or Remove a Role with Bot ${roleType} privileges.`
         )
       )
@@ -65,8 +65,8 @@ export const getServerManageRolesButtons = async (
       label: 'Add Role',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,

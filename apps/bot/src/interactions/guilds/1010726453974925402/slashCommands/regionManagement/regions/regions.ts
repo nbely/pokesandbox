@@ -32,7 +32,7 @@ export const RegionsCommand = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session) =>
     new AdminMenuBuilder(session, COMMAND_NAME)
-      .setButtons((menu) => getRegionsButtons(menu as any))
+      .setButtons((menu: AdminMenu) => getRegionsButtons(menu))
       .setEmbeds(getRegionsMenuEmbeds)
       .setCancellable()
       .setTrackedInHistory()
@@ -49,8 +49,8 @@ const getRegionsButtons = async (
       label: 'Create Region',
       fixedPosition: 'start',
       style: ButtonStyle.Success,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, REGION_CREATE_COMMAND_NAME),
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, REGION_CREATE_COMMAND_NAME),
     },
     ...regions.map((region) => ({
       label: region.name,

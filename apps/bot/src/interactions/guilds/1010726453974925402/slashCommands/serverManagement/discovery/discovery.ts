@@ -60,8 +60,8 @@ async function getDiscoveryButtons(
     {
       label: 'Set Description',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, DISCOVERY_DESCRIPTION_COMMAND_NAME),
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
     },
   ];
 }

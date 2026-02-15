@@ -51,8 +51,8 @@ export const getServerManagePrefixesButtons = async (
       label: 'Add Prefix',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, SERVER_ADD_PREFIX_COMMAND_NAME),
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
     },
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,

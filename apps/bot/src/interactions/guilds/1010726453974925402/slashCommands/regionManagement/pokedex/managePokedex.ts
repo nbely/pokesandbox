@@ -35,7 +35,7 @@ export const ManagePokedexCommand = {
     }
     const { regionId } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu as any, regionId))
+      .setEmbeds((menu: AdminMenu) => getManagePokedexMenuEmbeds(menu, regionId))
       .setCancellable()
       .setListPagination({
         quantityItemsPerPage: 50,
@@ -62,14 +62,14 @@ export const ManagePokedexCommand = {
             new Error('Please enter a valid Pokédex number')
           );
         } else if (messageArgs.length < 2) {
-          await MenuWorkflow.openMenu(menu as any, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
+          await MenuWorkflow.openMenu(menu, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
             regionId,
             pokedexNo: pokedexNumber,
           });
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
-          await MenuWorkflow.openMenu(menu as any, 'search-pokemon', {
+          await MenuWorkflow.openMenu(menu, 'search-pokemon', {
             regionId,
             pokemonName,
           });

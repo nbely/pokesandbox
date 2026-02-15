@@ -55,17 +55,17 @@ export const EditPokedexSlotCommand = {
     if (!region.pokedex[+pokedexNo - 1]) {
       // handle add pokedex slot
       builder
-        .setEmbeds((menu) => getAddPokedexSlotEmbeds(menu as any, regionId, pokedexNo))
-        .setMessageHandler((menu, response) =>
-          handleAddPokemonToSlot(menu as any, region, pokedexNo, response)
+        .setEmbeds((menu: AdminMenu) => getAddPokedexSlotEmbeds(menu, regionId, pokedexNo))
+        .setMessageHandler((menu: AdminMenu, response) =>
+          handleAddPokemonToSlot(menu, region, pokedexNo, response)
         );
     } else {
       builder
-        .setEmbeds((menu) =>
-          getEditPokedexSlotEmbeds(menu as any, regionId, pokedexNo)
+        .setEmbeds((menu: AdminMenu) =>
+          getEditPokedexSlotEmbeds(menu, regionId, pokedexNo)
         )
-        .setButtons((menu) =>
-          getEditPokedexSlotButtons(menu as any, regionId, pokedexNo)
+        .setButtons((menu: AdminMenu) =>
+          getEditPokedexSlotButtons(menu, regionId, pokedexNo)
         );
     }
 
@@ -82,8 +82,8 @@ const getEditPokedexSlotButtons = async (
     {
       label: 'Customize',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, 'customize-pokedex-slot', {
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, 'customize-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -91,8 +91,8 @@ const getEditPokedexSlotButtons = async (
     {
       label: 'Swap',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu as any, 'swap-pokedex-slot', {
+      onClick: async (menu: AdminMenu) =>
+        MenuWorkflow.openMenu(menu, 'swap-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -100,7 +100,7 @@ const getEditPokedexSlotButtons = async (
     {
       label: 'Remove',
       style: ButtonStyle.Danger,
-      onClick: async (menu) => {
+      onClick: async (menu: AdminMenu) => {
         const region = await Region.findById(regionId);
         if (!region) {
           throw new Error('Region not found');
@@ -133,7 +133,7 @@ const handleAddPokemonToSlot = async (
     return menu.refresh();
   } else if (!exactMatch && !!potentialMatches.length) {
     return MenuWorkflow.openSubMenuWithContinuation(
-      menu as any,
+      menu,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
       async (_session: any, selectedPokemonId: any) => {
         const selectedPokemon = potentialMatches.find(

@@ -39,8 +39,8 @@ export const RegionCommand = {
       throw new Error('Options are required');
     }
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getRegionButtons(menu as any, options.regionId))
-      .setEmbeds((menu) => getRegionMenuEmbeds(menu as any, options.regionId))
+      .setButtons((menu: AdminMenu) => getRegionButtons(menu, options.regionId))
+      .setEmbeds((menu: AdminMenu) => getRegionMenuEmbeds(menu, options.regionId))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -75,7 +75,7 @@ const getRegionButtons = async (
       disabled: !region.deployable,
       fixedPosition: 'start',
       style: region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
-      onClick: async (menu) => {
+      onClick: async (menu: AdminMenu) => {
         region.deployed = !region.deployed;
         await region.save();
         menu.prompt = `Successfully ${
