@@ -15,7 +15,7 @@ export const getRegionMenuEmbeds = async (
       : `Modify Pokédex (${region.pokedex.length})`;
   const movesOptionText = 'Modify TM/HM/TR Lists';
   const progressionsOptionText =
-    Object.keys(region.progressionDefinitions).length === 0
+    region.progressionDefinitions.size === 0
       ? '***Create Progression Type***'
       : `Modify Progression Types`;
   const locationsOptionText =

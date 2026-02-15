@@ -10,13 +10,14 @@ import {
   Types,
 } from 'mongoose';
 import { z } from 'zod';
+
+import { zMapHydrator } from '../utils';
 import {
   progressionDefinitionDbSchema,
   progressionDefinitionSchema,
 } from './progressionDefinition';
 
 export const regionEntitySchema = z.object({
-  _id: z.instanceof(Types.ObjectId),
   baseGeneration: z.number(),
   charactersPerPlayer: z.number(),
   characterList: z.array(z.instanceof(Types.ObjectId)),
@@ -40,7 +41,7 @@ export const regionEntitySchema = z.object({
       })
       .nullable()
   ),
-  progressionDefinitions: z.record(progressionDefinitionSchema),
+  progressionDefinitions: zMapHydrator(progressionDefinitionSchema),
   quests: z.object({
     active: z.array(z.instanceof(Types.ObjectId)),
     passive: z.array(z.instanceof(Types.ObjectId)),

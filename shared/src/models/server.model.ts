@@ -11,7 +11,6 @@ import {
 } from 'mongoose';
 import { z } from 'zod';
 import { Region } from './region/region.model';
-import { User } from './user.model';
 import type { PopulatedQuery } from './types';
 
 export const serverEntitySchema = z.object({

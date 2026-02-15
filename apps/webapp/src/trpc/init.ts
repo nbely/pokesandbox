@@ -1,9 +1,12 @@
 import { initTRPC, TRPCError } from "@trpc/server";
+import type { Session } from "next-auth";
+import superjson from "superjson";
 
 import { type Context } from "./context";
-import { Session } from "next-auth";
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create({
+  transformer: superjson,
+});
 
 /**
  * Public Procedure

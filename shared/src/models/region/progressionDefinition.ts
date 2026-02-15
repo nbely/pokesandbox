@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import z from 'zod';
+import { z } from 'zod';
 
 // Zod Validation Schemas
 
@@ -29,7 +29,7 @@ const milestoneSchema = z.object({
 const milestoneProgressionSchema = progressionBaseSchema.extend({
   kind: z.literal('milestone'),
   sequential: z.boolean().optional().default(false),
-  milestones: z.array(milestoneSchema).min(1),
+  milestones: z.array(milestoneSchema),
 });
 
 const booleanProgressionSchema = progressionBaseSchema.extend({
@@ -49,7 +49,7 @@ const milestoneDbSchema = new Schema(
     key: { type: String, required: true },
     label: { type: String, required: true },
     description: { type: String },
-    image: { type: String },
+    imageUrl: { type: String },
     ordinal: { type: Number },
   },
   { _id: false }
