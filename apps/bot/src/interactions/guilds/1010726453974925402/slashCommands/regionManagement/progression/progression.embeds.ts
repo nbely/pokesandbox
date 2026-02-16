@@ -1,4 +1,5 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
+import capitalize from 'lodash/capitalize';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 import { ProgressionDefinition, Region } from '@shared/models';
@@ -8,7 +9,7 @@ export const getManageProgressionMenuEmbeds = async <
 >(
   menu: AdminMenu<C>,
   region: Region,
-  defaultPrompt = 'Manage progression definitions for this region. Enter a progression key to edit, or use the buttons below to add or delete.'
+  defaultPrompt = 'Manage progression definitions for this region. Use the buttons below to add or edit a progression.'
 ) => {
   const progressionLines: string[] = [];
 
@@ -25,10 +26,7 @@ export const getManageProgressionMenuEmbeds = async <
 
       const progression = progressions[i][1];
       const kindLabel =
-        progression.kind === 'boolean'
-          ? 'Flag'
-          : progression.kind.charAt(0).toUpperCase() +
-            progression.kind.slice(1);
+        progression.kind === 'boolean' ? 'Flag' : capitalize(progression.kind);
       progressionLines.push(`\n**${progression.displayName}** (${kindLabel})`);
     }
   }
@@ -72,8 +70,7 @@ export const getManageProgressionMenuEmbeds = async <
                 : 's'
             } ${menu.paginationState.range} of ${menu.paginationState.total}`
           : 'Use the Add button to create your first progression definition',
-    })
-    .setTimestamp();
+    });
 
   if (menu.thumbnail) {
     embed.setThumbnail(menu.thumbnail);
@@ -101,22 +98,23 @@ export const getSelectProgressionTypeEmbeds = async <
       .setDescription(menu.prompt || defaultPrompt)
       .addFields([
         {
-          name: '1️⃣ Numeric',
-          value: 'Track a numeric value with optional min/max bounds',
+          name: '1️⃣ Milestone',
+          value:
+            'Track achievement of discrete milestones (e.g. Badges for defeating Gyms, Z-Crystals for conquering trials)',
           inline: false,
         },
         {
-          name: '2️⃣ Flag (Boolean)',
-          value: 'Track a simple on/off binary state',
+          name: '2️⃣ Numeric',
+          value: 'Track a numeric value (e.g. Battle Tower Points)',
           inline: false,
         },
         {
-          name: '3️⃣ Milestone',
-          value: 'Track achievement of discrete milestones',
+          name: '3️⃣ Flag',
+          value:
+            'Track a simple on/off binary state (e.g. Unlocked a new location)',
           inline: false,
         },
-      ])
-      .setTimestamp(),
+      ]),
   ];
 };
 
@@ -159,13 +157,13 @@ export const getEditProgressionDefinitionEmbeds = async <
       inline: true,
     },
     {
-      name: 'Display Name',
+      name: 'Name',
       value: progression.displayName,
       inline: true,
     },
     {
       name: 'Visibility',
-      value: progression.visibility,
+      value: capitalize(progression.visibility),
       inline: true,
     },
   ];
@@ -221,7 +219,6 @@ export const getEditProgressionDefinitionEmbeds = async <
         menu.prompt ||
           'Edit the progression definition. Use the buttons below to modify properties.'
       )
-      .addFields(fields)
-      .setTimestamp(),
+      .addFields(fields),
   ];
 };

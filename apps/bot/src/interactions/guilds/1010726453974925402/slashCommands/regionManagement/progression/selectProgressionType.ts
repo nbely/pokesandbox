@@ -74,9 +74,9 @@ const getSelectProgressionTypeButtons = async (
   }
 
   const types: Array<{ label: string; kind: ProgressionDefinition['kind'] }> = [
-    { label: '1 - Numeric', kind: 'numeric' },
-    { label: '2 - Flag', kind: 'boolean' },
-    { label: '3 - Milestone', kind: 'milestone' },
+    { label: '1 - Milestone', kind: 'milestone' },
+    { label: '2 - Numeric', kind: 'numeric' },
+    { label: '3 - Flag', kind: 'boolean' },
   ];
 
   return types.map(({ label, kind }) => ({

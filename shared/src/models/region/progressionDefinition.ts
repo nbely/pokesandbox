@@ -37,8 +37,8 @@ const booleanProgressionSchema = progressionBaseSchema.extend({
 });
 
 export const progressionDefinitionSchema = z.discriminatedUnion('kind', [
-  numericProgressionSchema,
   milestoneProgressionSchema,
+  numericProgressionSchema,
   booleanProgressionSchema,
 ]);
 
@@ -61,7 +61,7 @@ export const progressionDefinitionDbSchema = new Schema(
   {
     kind: {
       type: String,
-      enum: ['numeric', 'milestone', 'boolean'],
+      enum: ['milestone', 'numeric', 'boolean'],
       required: true,
     },
 
