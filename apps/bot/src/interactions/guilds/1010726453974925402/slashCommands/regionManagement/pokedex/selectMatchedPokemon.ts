@@ -23,7 +23,7 @@ type SelectMatchedPokemonCommandOptions = {
   matchedDexEntryIds: string[];
 };
 type SelectMatchedPokemonCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<SelectMatchedPokemonCommandOptions>,
   SelectMatchedPokemonCommandOptions
 >;
 
@@ -38,8 +38,13 @@ export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Select a matched Pokémon from a search')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenu: async (session, options) => {
+    if (!options?.regionId || !options?.matchedDexEntryIds) {
+      throw new Error(
+        'Region ID and matched Dex entry IDs are required to select a matched Pokémon.'
+      );
+    }
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) =>
         getSelectMatchedPokemonButtons(menu, options.matchedDexEntryIds)
       )
@@ -47,13 +52,14 @@ export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
       .setEmbeds((menu) =>
         getSelectMatchedPokemonEmbeds(menu, options.matchedDexEntryIds)
       )
-      .build(),
+      .build();
+  },
 };
 
 const getSelectMatchedPokemonButtons = async (
-  _menu: AdminMenu,
+  _menu: AdminMenu<SelectMatchedPokemonCommandOptions>,
   matchedDexEntryIds: string[]
-): Promise<MenuButtonConfig<AdminMenu>[]> =>
+): Promise<MenuButtonConfig<AdminMenu<SelectMatchedPokemonCommandOptions>>[]> =>
   matchedDexEntryIds.map((dexEntryId, idx) => ({
     id: dexEntryId,
     label: `${idx + 1}`,

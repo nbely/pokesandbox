@@ -1,5 +1,6 @@
 import {
   ButtonInteraction,
+  ChannelType,
   ChatInputCommandInteraction,
   Collection,
   ComponentType,
@@ -7,7 +8,6 @@ import {
   InteractionCollector,
   Message,
   MessageComponentInteraction,
-  RoleSelectMenuInteraction,
 } from 'discord.js';
 
 import { buildErrorEmbed } from '@bot/embeds/errorEmbed';
@@ -44,7 +44,11 @@ export async function createSession<T extends Session>(
   initialCommand: string
 ): Promise<void> {
   const session = new SessionClass(client, interaction, initialCommand);
-  await session.initialize();
+  try {
+    await session.initialize();
+  } catch (error) {
+    await session.handleError(error);
+  }
 }
 
 export class Session {
@@ -56,13 +60,14 @@ export class Session {
   private _initialCommand: string;
   private _isCancelled = false;
   private _isCompleted = false;
+  private _isInitialized = false;
   private _isReset = false;
   private _lastInput: string | string[] | null = null;
   private _lastInteraction:
     | ChatInputCommandInteraction
     | MessageComponentInteraction;
   private _message?: Message;
-  private _responseHistory?: ResponseRecord[] = [];
+  private _responseHistory: ResponseRecord[] = [];
   private _state: Collection<string, unknown> = new Collection();
   private _continuationCallbacks: Array<{
     targetMenuName: string;
@@ -88,11 +93,20 @@ export class Session {
     return this._commandInteraction;
   }
 
-  get componentInteraction(): ComponentInteraction | undefined {
+  get componentInteraction(): ComponentInteraction | null {
     return this._componentInteraction;
   }
 
-  get currentMenu(): Menu | null {
+  /** Gets the current initialized menu.
+   * Throws an error if the session is not initialized or no menu is available
+   **/
+  get currentMenu(): Menu {
+    if (!this._isInitialized) {
+      throw new Error('Session not initialized yet');
+    }
+    if (!this._currentMenu) {
+      throw new Error('No current menu available');
+    }
     return this._currentMenu;
   }
 
@@ -116,11 +130,11 @@ export class Session {
 
   // Add a new menu to the session and update the current menu
   public async next(menu: Menu, options?: MenuCommandOptions) {
-    if (this._currentMenu.isTrackedInHistory) {
-      this._history.push({ menu: this._currentMenu, options });
+    if (this.currentMenu.isTrackedInHistory) {
+      this._history.push({ menu: this.currentMenu, options });
     }
     this._currentMenu = menu;
-    await this._currentMenu.refresh();
+    await this.currentMenu.refresh();
   }
 
   async cancel(): Promise<void> {
@@ -160,7 +174,7 @@ export class Session {
   /**
    * Get menu completion state data
    */
-  public getMenuCompletionState<T = unknown>(menuName: string): T | undefined {
+  public getMenuCompletionState<T = unknown>(menuName?: string): T | undefined {
     return this.getState(`completion:${menuName}`) as T | undefined;
   }
 
@@ -181,11 +195,13 @@ export class Session {
   // Go back to the previous menu, if available
   public async goBack() {
     // Store completion result from the current menu before going back
-    const returningMenuName = this._currentMenu.name;
+    const returningMenuName = this.currentMenu.name;
 
     // Check if there's a completion result from the current menu
     const completionResult = this.getMenuCompletionState(returningMenuName);
-    this.clearMenuCompletionState(returningMenuName);
+    if (returningMenuName && completionResult) {
+      this.clearMenuCompletionState(returningMenuName);
+    }
 
     const lastHistoryEntry = this._history.pop();
 
@@ -197,15 +213,17 @@ export class Session {
       return; // No menu to go back to, exit early
     }
 
-    // Now execute continuation callbacks for the submenu that just completed
-    await this.executeContinuations(
-      returningMenuName,
-      completionResult ?? this._lastInput
-    );
+    if (returningMenuName) {
+      // Now execute continuation callbacks for the submenu that just completed
+      await this.executeContinuations(
+        returningMenuName,
+        completionResult ?? this._lastInput
+      );
+    }
 
     // If no new menu was set during continuation, refresh the current menu
-    if (this._currentMenu.name === lastHistoryEntry.menu.name) {
-      await this._currentMenu.refresh();
+    if (this.currentMenu.name === lastHistoryEntry.menu.name) {
+      await this.currentMenu.refresh();
     }
   }
 
@@ -217,18 +235,40 @@ export class Session {
     } else {
       addSupportInfo = true;
     }
-    await this.message?.edit({
-      embeds: [
-        buildErrorEmbed(
-          this.client,
-          (this.componentInteraction?.member ??
-            this.commandInteraction.member) as GuildMember,
-          errorMessage,
-          addSupportInfo
-        ),
-      ],
-      components: [],
-    });
+
+    try {
+      if (this.message) {
+        await this.message.edit({
+          embeds: [
+            buildErrorEmbed(
+              this.client,
+              (this.componentInteraction?.member ??
+                this.commandInteraction.member) as GuildMember,
+              errorMessage,
+              addSupportInfo
+            ),
+          ],
+          components: [],
+        });
+      } else {
+        // If no message exists yet, send a new one
+        await this.commandInteraction.editReply({
+          embeds: [
+            buildErrorEmbed(
+              this.client,
+              this.commandInteraction.member as GuildMember,
+              errorMessage,
+              addSupportInfo
+            ),
+          ],
+          components: [],
+        });
+      }
+    } catch (discordError) {
+      // If Discord API call fails, log but don't throw
+      console.error('Failed to send error message to user:', discordError);
+    }
+
     this._isCancelled = true;
   }
 
@@ -241,11 +281,18 @@ export class Session {
       },
       {} as Record<string, unknown>
     );
-    const menu: Menu = await this._client.slashCommands
-      .get(this._initialCommand)
-      .createMenu(this, options);
+    const menu =
+      (await this._client.slashCommands
+        .get(this._initialCommand)
+        ?.createMenu?.(this, options)) ?? null;
+    if (!menu) {
+      throw new Error(
+        'Failed to create menu for command: ' + this._initialCommand
+      );
+    }
     await menu.refresh();
     this._currentMenu = menu;
+    this._isInitialized = true;
     await this.processMenus();
   }
 
@@ -285,17 +332,13 @@ export class Session {
    * Completely recreate the current menu from scratch using the original command and options
    */
   public async hardRefresh(): Promise<void> {
-    if (!this._currentMenu) {
-      throw new Error('No current menu to hard refresh');
-    }
-
-    const currentMenuName = this._currentMenu.name;
-    const currentOptions = this._currentMenu.commandOptions;
+    const currentMenuName = this.currentMenu.name;
+    const currentOptions = this.currentMenu.commandOptions;
 
     // Recreate the menu from scratch using the original command
     const newMenu = await this._client.slashCommands
       .get(currentMenuName)
-      ?.createMenu(this, currentOptions);
+      ?.createMenu?.(this, currentOptions);
 
     if (!newMenu) {
       throw new Error(`Failed to recreate menu: ${currentMenuName}`);
@@ -303,28 +346,32 @@ export class Session {
 
     // Replace the current menu without affecting history
     this._currentMenu = newMenu;
-    await this._currentMenu.refresh();
+    await this.currentMenu.refresh();
   }
 
   /**** Private Methods ****/
 
   private async handleMessageResponse(message: string): Promise<void> {
+    if (!this.currentMenu.responseType) {
+      throw new Error('Current menu does not accept message responses.');
+    }
+
     this._responseHistory.push({
-      menuName: this._currentMenu.name,
-      responseType: this._currentMenu.responseType,
+      menuName: this.currentMenu.name,
+      responseType: this.currentMenu.responseType,
       response: message,
     });
 
-    await this._currentMenu.handleMessageResponse(message);
+    await this.currentMenu.handleMessageResponse(message);
   }
 
   private async handleComponentInteraction(): Promise<void> {
-    if (this.componentInteraction.isButton()) {
+    if (this.componentInteraction?.isButton()) {
       const buttonId = await this.handleButtonInteraction();
       if (buttonId !== undefined) {
-        await this._currentMenu.handleButtonInteraction(buttonId);
+        await this.currentMenu.handleButtonInteraction(buttonId);
       }
-    } else if (this.componentInteraction.isRoleSelectMenu()) {
+    } else if (this.componentInteraction?.isRoleSelectMenu()) {
       await this.handleRoleMenuInteraction();
     } else {
       await this.handleError(new Error('Invalid Component Interaction'));
@@ -332,43 +379,51 @@ export class Session {
   }
 
   private async handleButtonInteraction(): Promise<string | undefined> {
-    const buttonId = this.componentInteraction?.customId.split('_')[1];
+    if (!this.componentInteraction?.isButton()) {
+      throw new Error('There was an error processing your button interaction.');
+    }
+    const buttonId = this.componentInteraction.customId.split('_')[1];
+
+    if (!buttonId) {
+      throw new Error('Invalid Button Menu Interaction');
+    }
+
     this._responseHistory.push({
-      menuName: this._currentMenu.name,
+      menuName: this.currentMenu.name,
       responseType: MenuResponseType.COMPONENT,
       response: buttonId,
     });
 
-    if (buttonId !== undefined) {
-      if (buttonId === 'Back') {
-        await this.goBack();
-      } else if (buttonId === 'Cancel') {
-        await this.cancel();
-      } else if (buttonId === 'Next') {
-        this._currentMenu.currentPage++;
-        await this._currentMenu.refresh();
-      } else if (buttonId === 'Previous') {
-        this._currentMenu.currentPage--;
-        await this._currentMenu.refresh();
-      } else {
-        this._lastInput = buttonId;
-        return buttonId;
-      }
+    if (buttonId === 'Back') {
+      await this.goBack();
+    } else if (buttonId === 'Cancel') {
+      await this.cancel();
+    } else if (buttonId === 'Next') {
+      this.currentMenu.currentPage++;
+      await this.currentMenu.refresh();
+    } else if (buttonId === 'Previous') {
+      this.currentMenu.currentPage--;
+      await this.currentMenu.refresh();
     } else {
-      await this.handleError(new Error('Invalid Button Menu Interaction'));
+      this._lastInput = buttonId;
+      return buttonId;
     }
   }
 
   private async handleRoleMenuInteraction(): Promise<void> {
-    const values = (this.componentInteraction as RoleSelectMenuInteraction)
-      .values;
+    if (!this.componentInteraction?.isRoleSelectMenu()) {
+      throw new Error(
+        'There was an error processing your role select menu interaction.'
+      );
+    }
+    const values = this.componentInteraction.values;
     this._responseHistory.push({
-      menuName: this._currentMenu.name,
+      menuName: this.currentMenu.name,
       responseType: MenuResponseType.COMPONENT,
       response: values,
     });
 
-    await this._currentMenu.handleSelectMenuInteraction(values);
+    await this.currentMenu.handleSelectMenuInteraction(values);
     this._lastInput = values;
   }
 
@@ -376,13 +431,18 @@ export class Session {
     const filter = (message: Message): boolean => {
       return message.author.id === this.commandInteraction.user.id;
     };
-    const collectedMessage =
-      await this.commandInteraction.channel?.awaitMessages({
-        filter,
-        errors: ['time'],
-        max: 1,
-        time,
-      });
+
+    const channel = this.commandInteraction.channel;
+    if (!channel || channel.type === ChannelType.GroupDM) {
+      throw new Error('Cannot collect messages in this type of channel.');
+    }
+
+    const collectedMessage = await channel.awaitMessages({
+      filter,
+      errors: ['time'],
+      max: 1,
+      time,
+    });
 
     const response: string | undefined = collectedMessage?.first()?.content;
     if (!response) {
@@ -397,11 +457,11 @@ export class Session {
     time: number
   ): Promise<MixedInteractionResponse> {
     const collectMessageOrButton = async (
-      resolve: ({ type, value }: MixedInteractionResponse | undefined) => void
+      resolve: (response: MixedInteractionResponse) => void
     ) => {
       let compCollector: InteractionCollector<ButtonInteraction> | undefined;
 
-      if (this._currentMenu.components.length > 0) {
+      if (this.currentMenu.components.length > 0) {
         const compFilter = (
           componentInteraction: MessageComponentInteraction
         ): boolean => {
@@ -421,12 +481,16 @@ export class Session {
       const msgFilter = (message: Message): boolean => {
         return message.author.id === this.commandInteraction.user.id;
       };
-      const msgCollector =
-        this.commandInteraction.channel?.createMessageCollector({
-          filter: msgFilter,
-          max: 1,
-          time,
-        });
+      const channel = this.commandInteraction.channel;
+      if (!channel || channel.type === ChannelType.GroupDM) {
+        throw new Error('Cannot collect messages in this type of channel.');
+      }
+
+      const msgCollector = channel.createMessageCollector({
+        filter: msgFilter,
+        max: 1,
+        time,
+      });
 
       compCollector?.on('collect', async (componentInteraction) => {
         msgCollector?.stop();
@@ -437,12 +501,10 @@ export class Session {
         if (collected.size === 0) {
           if (msgCollector) {
             if (msgCollector?.ended && msgCollector?.received === 0) {
-              await this.handleError(new Error('No response received.'));
-              resolve(undefined);
+              throw new Error('No response received.');
             }
           } else {
-            await this.handleError(new Error('No response received.'));
-            resolve(undefined);
+            throw new Error('No response received.');
           }
         }
       });
@@ -456,26 +518,22 @@ export class Session {
         if (collected.size === 0) {
           if (compCollector) {
             if (compCollector?.ended && compCollector?.total === 0) {
-              await this.handleError(new Error('No response received.'));
-              resolve(undefined);
+              throw new Error('No response received.');
             }
           } else {
-            await this.handleError(new Error('No response received.'));
-            resolve(undefined);
+            throw new Error('No response received.');
           }
         }
       });
     };
 
-    return new Promise<MixedInteractionResponse | undefined>(
-      collectMessageOrButton
-    );
+    return new Promise<MixedInteractionResponse>(collectMessageOrButton);
   }
 
   async sendEmbedMessage(): Promise<void> {
     if (!this.message) {
       this._message = await this.commandInteraction.followUp(
-        this._currentMenu.getResponseOptions()
+        this.currentMenu.getResponseOptions()
       );
       // this.info = '';
     } else {
@@ -493,15 +551,15 @@ export class Session {
       }
       this._message =
         (await this.componentInteraction?.followUp(
-          this._currentMenu.getResponseOptions()
+          this.currentMenu.getResponseOptions()
         )) ??
         (await this.commandInteraction.followUp(
-          this._currentMenu.getResponseOptions()
+          this.currentMenu.getResponseOptions()
         ));
       this._isReset = false;
     } else {
       await this.componentInteraction?.update(
-        this._currentMenu.getResponseOptions()
+        this.currentMenu.getResponseOptions()
       );
     }
   }
@@ -516,22 +574,17 @@ export class Session {
       );
     };
 
-    try {
-      this._componentInteraction = await this.message?.awaitMessageComponent({
+    this._componentInteraction =
+      (await this.message?.awaitMessageComponent({
         filter,
         time,
-      });
-    } catch (error) {
-      await this.handleError(error);
-    }
+      })) ?? null;
   }
 
   private async processMenus(): Promise<void> {
-    if (!this._currentMenu) return;
-
-    while (this._currentMenu && !this._isCancelled && !this._isCompleted) {
+    while (!this._isCancelled && !this._isCompleted) {
       await this.sendEmbedMessage();
-      const menuResponseType: MenuResponseType = this._currentMenu.responseType;
+      const menuResponseType = this.currentMenu.responseType;
 
       if (menuResponseType === MenuResponseType.MESSAGE) {
         const message = await this.awaitMessageReply(120_000);

@@ -1,8 +1,12 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 
-export const getServerInitializedEmbed = async (menu: AdminMenu) => {
+export const getServerInitializedEmbed = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>
+) => {
   const server = await menu.fetchServer();
   return new EmbedBuilder()
     .setColor('Gold')

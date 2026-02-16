@@ -31,12 +31,16 @@ import {
 
 type ReservedButtonLabels = 'Back' | 'Cancel' | 'Next' | 'Previous';
 
-export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
+export class Menu<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Self extends Menu<any, any> = any,
+  C extends MenuCommandOptions = MenuCommandOptions
+> {
   private _reservedButtons: Collection<
     ReservedButtonLabels,
     { label: string; style: ButtonStyle }
   > = new Collection();
-  private _buttons: Collection<string, MenuButton> = new Collection();
+  private _buttons: Collection<string, MenuButton<Self>> = new Collection();
   private _client: BotClient;
   private _interaction: ChatInputCommandInteraction | ComponentInteraction;
   private _commandOptions: C;
@@ -50,7 +54,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   private _isTrackedInHistory: boolean;
   private _message?: Message;
   private _name: string;
-  private _paginationConfig: PaginationConfig;
+  private _paginationConfig: PaginationConfig<Self>;
   private _paginationState: PaginationState = {
     endIndex: 1,
     page: 1,
@@ -60,23 +64,23 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     total: 1,
   };
   private _prompt = '';
-  private _responseType: MenuResponseType;
-  private _selectMenu?: SelectMenuConfig;
+  private _responseType: MenuResponseType | undefined;
+  private _selectMenu?: SelectMenuConfig<Self>;
   private _session: Session;
   private _thumbnail?: string;
 
-  protected _handleMessage?: (menu: Menu, response: string) => Promise<void>;
-  protected _setButtons?: (menu: Menu) => Promise<MenuButtonConfig[]>;
-  protected _setSelectMenu?: (menu: Menu) => SelectMenuConfig;
-  protected _setEmbeds: (menu: Menu) => Promise<EmbedBuilder[]>;
-  protected _onComplete?: (menu: Menu, result: unknown) => Promise<void>;
+  protected _handleMessage?: (menu: Self, response: string) => Promise<void>;
+  protected _setButtons?: (menu: Self) => Promise<MenuButtonConfig<Self>[]>;
+  protected _setSelectMenu?: (menu: Self) => SelectMenuConfig<Self>;
+  protected _setEmbeds: (menu: Self) => Promise<EmbedBuilder[]>;
+  protected _onComplete?: (menu: Self, result: unknown) => Promise<void>;
 
   /**** Constructor ****/
 
   public constructor(
     session: Session,
     name: string,
-    options: MenuBuilderOptions<Menu<C>, C>
+    options: MenuBuilderOptions<Self, C>
   ) {
     this._name = name;
     this._session = session;
@@ -96,6 +100,11 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   }
 
   /**** Getters/Setters ****/
+
+  /** Returns this instance typed as the Self type parameter for use in callbacks. */
+  protected get self(): Self {
+    return this as unknown as Self;
+  }
 
   get client(): BotClient {
     return this._client;
@@ -185,7 +194,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     return this._name;
   }
 
-  get paginationConfig(): PaginationConfig {
+  get paginationConfig(): PaginationConfig<Self> {
     return this._paginationConfig;
   }
 
@@ -202,7 +211,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     this.setDescription();
   }
 
-  get responseType(): MenuResponseType {
+  get responseType(): MenuResponseType | undefined {
     return this._responseType;
   }
 
@@ -229,11 +238,11 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   }
 
   public async refreshButtons() {
-    const buttons = await this._setButtons(this);
+    const buttons = await this._setButtons?.(this.self);
 
     this._buttons.clear();
 
-    buttons.forEach((button: MenuButtonConfig, index: number) => {
+    buttons?.forEach((button: MenuButtonConfig<Self>, index: number) => {
       if (RESERVED_BUTTON_LABELS.includes(button.label)) {
         throw new Error(`Button label '${button.label}' is reserved.`);
       }
@@ -254,7 +263,10 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
   }
 
   public refreshSelectMenu() {
-    this._selectMenu = this._setSelectMenu(this);
+    if (!this._setSelectMenu) {
+      throw new Error('Select Menu cannot be refreshed.');
+    }
+    this._selectMenu = this._setSelectMenu(this.self);
 
     const actionRow = new ActionRowBuilder<AnySelectMenuBuilder>();
     actionRow.addComponents(this._selectMenu.builder);
@@ -273,7 +285,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
     await this.updatePagination();
 
-    this._embeds = await this._setEmbeds(this);
+    this._embeds = await this._setEmbeds(this.self);
   }
 
   /**
@@ -292,7 +304,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     }
 
     if (button.onClick) {
-      await button.onClick(this);
+      await button.onClick(this.self);
     } else {
       throw new Error(`No action defined for button with ID '${buttonId}'.`);
     }
@@ -300,7 +312,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
   public async handleSelectMenuInteraction(values: string[]) {
     if (this._selectMenu) {
-      await this._selectMenu.onSelect?.(this, values);
+      await this._selectMenu.onSelect?.(this.self, values);
     } else {
       throw new Error('No select menu handler defined for this menu.');
     }
@@ -308,7 +320,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
   public async handleMessageResponse(response: string) {
     if (this._handleMessage) {
-      await this._handleMessage(this, response);
+      await this._handleMessage(this.self, response);
     } else {
       throw new Error('No message handler defined for this menu.');
     }
@@ -324,7 +336,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     }
 
     if (this._onComplete) {
-      await this._onComplete(this, result);
+      await this._onComplete(this.self, result);
     }
   }
 
@@ -389,7 +401,7 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
 
     const currentPageButtons = [...fixedStartButtons];
 
-    const filteredButtons = [];
+    const filteredButtons: ButtonBuilder[] = [];
     let startIndex = 0,
       endIndex = 0;
     buttonList.forEach((button, index) => {
@@ -471,9 +483,12 @@ export class Menu<C extends MenuCommandOptions = MenuCommandOptions> {
     let showPreviousButton = false;
 
     const { itemsPerPage, getItemTotal } = this._paginationConfig;
+    if (!getItemTotal) {
+      throw new Error('Must call setListPagination on MenuBuilder instance.');
+    }
 
     const startIndex: number = (this.currentPage - 1) * itemsPerPage;
-    const itemTotal = await getItemTotal(this);
+    const itemTotal = await getItemTotal(this.self);
 
     let endIndex: number = itemsPerPage * this.currentPage - 1;
     endIndex = endIndex > itemTotal ? itemTotal - 1 : endIndex;

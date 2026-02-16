@@ -11,10 +11,15 @@ export class MenuWorkflow {
     command: string,
     options?: MenuCommandOptions
   ) {
-    const pokedexMenu = await menu.client.slashCommands
+    const newMenu = await menu.client.slashCommands
       .get(command)
-      .createMenu(menu.session, options);
-    await menu.session.next(pokedexMenu, options);
+      ?.createMenu?.(menu.session, options);
+    if (!newMenu) {
+      return await menu.session.handleError(
+        new Error(`Could not open menu: ${command}`)
+      );
+    }
+    await menu.session.next(newMenu, options);
   }
 
   /**
@@ -34,7 +39,10 @@ export class MenuWorkflow {
     commandOptions?: MenuCommandOptions
   ): Promise<void> {
     // Register the continuation callback and open the sub-menu
-    currentMenu.session.registerContinuation(subMenuName, onComplete);
+    currentMenu.session.registerContinuation(
+      subMenuName,
+      onComplete as (session: Session, result: unknown) => Promise<void>
+    );
     return this.openMenu(currentMenu, subMenuName, commandOptions);
   }
 
