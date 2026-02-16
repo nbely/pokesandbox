@@ -87,13 +87,13 @@ const getSelectProgressionTypeButtons = async (
       if (kind === 'numeric' || kind === 'boolean') {
         region.progressionDefinitions.set(progressionKey, {
           kind,
-          displayName: progressionName,
+          name: progressionName,
           visibility: 'public',
         });
       } else {
         region.progressionDefinitions.set(progressionKey, {
           kind,
-          displayName: progressionName,
+          name: progressionName,
           visibility: 'public',
           sequential: true,
           milestones: [],

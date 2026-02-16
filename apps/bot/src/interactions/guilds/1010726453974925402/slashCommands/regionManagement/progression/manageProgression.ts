@@ -82,7 +82,7 @@ const getManageProgressionButtons = async (
     },
     ...progressionDefinitions.map(([key, definition]) => ({
       id: key,
-      label: `${definition.displayName}`,
+      label: `${definition.name}`,
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<ManageProgressionCommandOptions>) =>
         MenuWorkflow.openMenu(menu, EDIT_PROGRESSION_DEFINITION_COMMAND_NAME, {

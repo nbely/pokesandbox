@@ -71,7 +71,7 @@ export const AddProgressionDefinitionCommand: AddProgressionDefinitionCommand =
 
           if (
             Array.from(region.progressionDefinitions.values()).some(
-              (def) => def.displayName === progressionName
+              (def) => def.name === progressionName
             )
           ) {
             menu.prompt = `A progression with name "${progressionName}" already exists. Please enter a different name.`;

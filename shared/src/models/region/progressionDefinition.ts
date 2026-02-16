@@ -4,7 +4,7 @@ import { z } from 'zod';
 // Zod Validation Schemas
 
 const progressionBaseSchema = z.object({
-  displayName: z.string(),
+  name: z.string(),
   description: z.string().optional(),
   visibility: z
     .enum(['public', 'discoverable', 'hidden'])
@@ -65,7 +65,7 @@ export const progressionDefinitionDbSchema = new Schema(
       required: true,
     },
 
-    displayName: { type: String, required: true },
+    name: { type: String, required: true },
     description: { type: String },
 
     visibility: {

@@ -127,11 +127,11 @@ const getEditProgressionDefinitionButtons = async (
     AdminMenu<EditProgressionDefinitionCommandOptions>
   >[] = [
     {
-      id: 'displayName',
+      id: 'name',
       label: 'Name',
       style: ButtonStyle.Primary,
       onClick: async (menu) => {
-        menu.session.setState('progressionEditField', 'displayName');
+        menu.session.setState('progressionEditField', 'name');
         await menu.hardRefresh();
       },
     },

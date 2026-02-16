@@ -27,7 +27,7 @@ export const getManageProgressionMenuEmbeds = async <
       const progression = progressions[i][1];
       const kindLabel =
         progression.kind === 'boolean' ? 'Flag' : capitalize(progression.kind);
-      progressionLines.push(`\n**${progression.displayName}** (${kindLabel})`);
+      progressionLines.push(`\n**${progression.name}** (${kindLabel})`);
     }
   }
 
@@ -128,8 +128,8 @@ export const getEditProgressionDefinitionEmbeds = async <
 ) => {
   if (editField) {
     switch (editField) {
-      case 'displayName':
-        menu.prompt = 'Enter a new display name.';
+      case 'name':
+        menu.prompt = 'Enter a new name.';
         break;
       case 'description':
         menu.prompt = 'Enter a new description.';
@@ -158,7 +158,7 @@ export const getEditProgressionDefinitionEmbeds = async <
     },
     {
       name: 'Name',
-      value: progression.displayName,
+      value: progression.name,
       inline: true,
     },
     {
@@ -212,7 +212,7 @@ export const getEditProgressionDefinitionEmbeds = async <
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region?.name} - Edit "${progression.displayName}" Progression`,
+        name: `${region?.name} - Edit "${progression.name}" Progression`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(

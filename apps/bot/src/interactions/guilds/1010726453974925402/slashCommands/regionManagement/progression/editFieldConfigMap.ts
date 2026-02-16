@@ -8,14 +8,14 @@ import { assertProgressionKind, handleEditProgressionField } from './utils';
 
 export const editFieldConfigMap = new Map<string, EditFieldConfig>([
   [
-    'displayName',
+    'name',
     {
       hasMessageHandler: true,
       handleInput: async (
         progression: ProgressionDefinition,
         input: string
       ) => {
-        progression.displayName = input;
+        progression.name = input;
       },
     },
   ],
