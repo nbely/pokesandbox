@@ -13,12 +13,12 @@ export const getRegionsMenuEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${server.name} Region Manager`,
+        name: `${server?.name} Region Manager`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `${prompt ? '**' + prompt + '**\n\n' : ''}` +
-          server.regions.map((region) => `${region.name}: Inactive`).join('\n')
+          server?.regions.map((region) => `${region.name}: Inactive`).join('\n')
       )
       .setTimestamp(),
   ];

@@ -40,7 +40,7 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
       .build(),
 };
 
-const getServerButtons = async (): Promise<MenuButtonConfig<AdminMenu>[]> => {
+const getServerButtons = async (): Promise<MenuButtonConfig[]> => {
   const subMenuButtons: { id: string; command: string; option?: string }[] = [
     { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
     {

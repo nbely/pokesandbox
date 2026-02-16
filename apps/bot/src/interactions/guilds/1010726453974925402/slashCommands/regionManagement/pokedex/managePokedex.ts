@@ -19,7 +19,7 @@ type ManagePokedexCommandOptions = {
   regionId: string;
 };
 type ManagePokedexCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<ManagePokedexCommandOptions>,
   ManagePokedexCommandOptions
 >;
 
@@ -34,7 +34,11 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
     .setDescription('Manage the Pokédex for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
+    if (!options?.regionId) {
+      throw new Error('Region ID is required to manage a Pokédex.');
+    }
     const { regionId } = options;
+
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, regionId))
       .setCancellable()
@@ -44,6 +48,10 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         previousButton: { style: ButtonStyle.Primary },
         getTotalQuantityItems: async () => {
           const region = await Region.findById(regionId);
+          if (!region) {
+            throw new Error('Region not found');
+          }
+
           return region.pokedex.length;
         },
       })

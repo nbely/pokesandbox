@@ -1,14 +1,19 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 import { DexEntry, Region } from '@shared/models';
 
-export const getManagePokedexMenuEmbeds = async (
-  menu: AdminMenu,
+export const getManagePokedexMenuEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   regionId: string,
   defaultPrompt = 'Enter a space-separated Pokédex number (up to 1500) and Pokémon name to add a Pokémon to a blank Pokédex slot, or enter just a number to modify a Pokédex slot'
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
   const pokedexLines: string[] = [];
 
   for (
@@ -69,13 +74,18 @@ export const getManagePokedexMenuEmbeds = async (
   return [embed];
 };
 
-export const getAddPokedexSlotEmbeds = async (
-  menu: AdminMenu,
+export const getAddPokedexSlotEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   regionId: string,
   pokedexNo: string,
   defaultPrompt = 'This slot is currently empty. Please enter the name of a Pokémon to add to the Pokédex slot.'
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
 
   return [
     new EmbedBuilder()
@@ -89,13 +99,21 @@ export const getAddPokedexSlotEmbeds = async (
   ];
 };
 
-export const getEditPokedexSlotEmbeds = async (
-  menu: AdminMenu,
+export const getEditPokedexSlotEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   regionId: string,
   pokedexNo: string
 ) => {
   const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found');
+  }
   const dexEntry = await DexEntry.findById(region.pokedex[+pokedexNo - 1]?.id);
+  if (!dexEntry) {
+    throw new Error('Dex entry not found');
+  }
   // TODO: Decide on the final format of the embed
   const embed = new EmbedBuilder()
     .setColor('Gold')
@@ -119,8 +137,10 @@ export const getEditPokedexSlotEmbeds = async (
   return [embed];
 };
 
-export const getSelectMatchedPokemonEmbeds = async (
-  menu: AdminMenu,
+export const getSelectMatchedPokemonEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   matchedDexEntryIds: string[],
   defaultPrompt = 'Select a Pokémon from the search results by clicking the corresponding button.'
 ): Promise<EmbedBuilder[]> => {

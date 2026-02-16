@@ -10,20 +10,21 @@ import {
   MenuButtonConfig,
   MenuWorkflow,
 } from '@bot/classes';
-import type { ISlashCommand } from '@bot/structures/interfaces';
+import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
 
-import { getRegionMenuEmbeds } from './region.embeds';
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
+import { getRegionMenuEmbeds } from './region.embeds';
+import { RegionCommandOptions } from './types';
+
+export type RegionCommand = ISlashCommand<
+  AdminMenu<RegionCommandOptions>,
+  RegionCommandOptions
+>;
 
 const COMMAND_NAME = 'region';
 export const REGION_COMMAND_NAME = COMMAND_NAME;
-
-type RegionCommandOptions = {
-  regionId: string;
-};
-type RegionCommand = ISlashCommand<AdminMenu, RegionCommandOptions>;
 
 export const RegionCommand: RegionCommand = {
   name: COMMAND_NAME,
@@ -35,7 +36,7 @@ export const RegionCommand: RegionCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage a Region for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) =>
+  createMenu: async (session, options = { regionId: '' }) =>
     new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getRegionButtons(menu, options.regionId))
       .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.regionId))
@@ -46,10 +47,14 @@ export const RegionCommand: RegionCommand = {
 };
 
 const getRegionButtons = async (
-  _menu: AdminMenu,
+  _menu: AdminMenu<RegionCommandOptions>,
   regionId: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig<AdminMenu<RegionCommandOptions>>[]> => {
   const region = await Region.findById(regionId);
+
+  if (!region) {
+    throw new Error('Region not found');
+  }
 
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
@@ -81,7 +86,7 @@ const getRegionButtons = async (
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu) =>
+      onClick: async (menu: AdminMenu<RegionCommandOptions>) =>
         MenuWorkflow.openMenu(menu, command, { regionId }),
       id,
     })),

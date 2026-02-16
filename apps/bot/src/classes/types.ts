@@ -16,13 +16,13 @@ export type MenuBuilderOptions<
   M extends Menu = Menu,
   O extends MenuCommandOptions = MenuCommandOptions
 > = {
-  commandOptions?: O;
+  commandOptions: O;
   isTrackedInHistory: boolean;
   paginationConfig: PaginationConfig<M>;
   reservedButtons: Collection<ReservedButtonLabels, ReservedButtonOptions>;
   responseType?: MenuResponseType;
   handleMessage?: (menu: M, response: string) => Promise<void>;
-  setButtons?: (menu: M) => Promise<MenuButtonConfig[]>;
+  setButtons?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   setEmbeds: (menu: M) => Promise<EmbedBuilder[]>;
   setSelectMenu?: (menu: M) => SelectMenuConfig<M>;
   onComplete?: (menu: M, result: unknown) => Promise<void>;
@@ -45,7 +45,10 @@ export type MenuButtonConfig<M extends Menu = Menu> = {
   onClick?: (menu: M) => Promise<void>;
 };
 
-export type MenuButton = Pick<MenuButtonConfig, 'fixedPosition' | 'onClick'> & {
+export type MenuButton<M extends Menu = Menu> = Pick<
+  MenuButtonConfig<M>,
+  'fixedPosition' | 'onClick'
+> & {
   component: ButtonBuilder;
   ordinal: number;
 };
@@ -78,7 +81,7 @@ export type ReservedButtonOptions = {
 
 export type PaginationConfig<M extends Menu = Menu> = {
   itemsPerPage: number;
-  type: MenuPaginationType;
+  type?: MenuPaginationType;
   getItemTotal?: (menu: M) => Promise<number>;
 };
 

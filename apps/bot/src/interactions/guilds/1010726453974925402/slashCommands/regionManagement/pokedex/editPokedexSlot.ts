@@ -28,7 +28,7 @@ type EditPokedexSlotCommandOptions = {
   pokedexNo: string;
 };
 type EditPokedexSlotCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<EditPokedexSlotCommandOptions>,
   EditPokedexSlotCommandOptions
 >;
 
@@ -43,8 +43,18 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     .setDescription('Add a Pokémon to a regional Pokédex slot')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
+    if (!options?.regionId || !options?.pokedexNo) {
+      throw new Error(
+        'Region ID and Pokédex number are required to edit a Pokédex slot.'
+      );
+    }
     const { regionId, pokedexNo } = options;
+
     const region = await Region.findById(regionId);
+    if (!region) {
+      throw new Error('Region not found');
+    }
+
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
       .setReturnable()
@@ -72,10 +82,10 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
 };
 
 const getEditPokedexSlotButtons = async (
-  _menu: AdminMenu,
+  _menu: AdminMenu<EditPokedexSlotCommandOptions>,
   regionId: string,
   pokedexNo: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig<AdminMenu<EditPokedexSlotCommandOptions>>[]> => {
   return [
     {
       label: 'Customize',
@@ -100,6 +110,9 @@ const getEditPokedexSlotButtons = async (
       style: ButtonStyle.Danger,
       onClick: async (menu) => {
         const region = await Region.findById(regionId);
+        if (!region) {
+          throw new Error('Region not found');
+        }
         const pokedexIndex = +pokedexNo - 1;
 
         region.pokedex[pokedexIndex] = null;
@@ -111,7 +124,7 @@ const getEditPokedexSlotButtons = async (
 };
 
 const handleAddPokemonToSlot = async (
-  menu: AdminMenu,
+  menu: AdminMenu<EditPokedexSlotCommandOptions>,
   region: Region,
   pokedexNo: string,
   pokemonName: string
@@ -123,10 +136,12 @@ const handleAddPokemonToSlot = async (
     pokemonName
   );
 
-  if (!exactMatch && !potentialMatches.length) {
-    menu.prompt = `No Pokémon found with the name "${pokemonName}". Please try again.`;
-    return menu.refresh();
-  } else if (!exactMatch && !!potentialMatches.length) {
+  if (exactMatch) {
+    await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
+    return;
+  }
+
+  if (potentialMatches.length) {
     return MenuWorkflow.openSubMenuWithContinuation(
       menu,
       SELECT_MATCHED_POKEMON_COMMAND_NAME,
@@ -149,14 +164,14 @@ const handleAddPokemonToSlot = async (
         ),
       }
     );
-  } else {
-    // Handle exact match (original logic)
-    await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
   }
+
+  menu.prompt = `No Pokémon found with the name "${pokemonName}". Please try again.`;
+  return menu.refresh();
 };
 
 const handlePokemonSelected = async (
-  menu: AdminMenu,
+  menu: AdminMenu<EditPokedexSlotCommandOptions>,
   selectedPokemon: DexEntry,
   region: Region,
   pokedexNo: string

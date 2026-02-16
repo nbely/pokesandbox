@@ -15,15 +15,13 @@ import { onlyAdminRoles } from '@bot/utils';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_ROLE_COMMAND_NAME } from './serverAddRole';
+import { ServerManageRolesCommandOptions } from './types';
 
 const COMMAND_NAME = 'server-manage-roles';
 export const SERVER_MANAGE_ROLES_COMMAND_NAME = COMMAND_NAME;
 
-type ServerManageRolesCommandOptions = {
-  roleType: string;
-};
 type ServerManageRolesCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<ServerManageRolesCommandOptions>,
   ServerManageRolesCommandOptions
 >;
 
@@ -37,7 +35,11 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options): Promise<AdminMenu> => {
+  createMenu: async (session, options) => {
+    if (!options?.roleType) {
+      throw new Error('Role type is required to manage server roles.');
+    }
+
     const { roleType } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getServerManageRolesButtons(menu, roleType))
@@ -55,9 +57,9 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
 };
 
 export const getServerManageRolesButtons = async (
-  menu: AdminMenu,
+  menu: AdminMenu<ServerManageRolesCommandOptions>,
   roleType: string
-): Promise<MenuButtonConfig[]> => {
+): Promise<MenuButtonConfig<AdminMenu<ServerManageRolesCommandOptions>>[]> => {
   const server = await menu.fetchServer();
   const roles = await menu.getRoles(server, roleType);
 

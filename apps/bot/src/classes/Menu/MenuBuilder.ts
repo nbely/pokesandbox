@@ -27,11 +27,11 @@ export class MenuBuilder<
     ReservedButtonLabels,
     ReservedButtonOptions
   > = new Collection();
-  private _getListPaginationTotalQuantityItems: (menu: M) => Promise<number>;
+  private _getListPaginationTotalQuantityItems?: (menu: M) => Promise<number>;
   private _handleMessageCallback?: (menu: M, response: string) => Promise<void>;
-  private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig[]>;
+  private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
-  private _setSelectMenuCallback?: (menu: M) => SelectMenuConfig;
+  private _setSelectMenuCallback?: (menu: M) => SelectMenuConfig<M>;
 
   protected _name: string;
   protected _session: Session;
@@ -42,7 +42,7 @@ export class MenuBuilder<
   public constructor(session: Session, name: string, commandOptions?: O) {
     this._name = name;
     this._session = session;
-    this._commandOptions = commandOptions;
+    this._commandOptions = commandOptions ?? ({} as O);
   }
 
   /**** Public Methods ****/
@@ -59,7 +59,7 @@ export class MenuBuilder<
   }
 
   public setButtons(
-    callback: (menu: M) => Promise<MenuButtonConfig[]>,
+    callback: (menu: M) => Promise<MenuButtonConfig<M>[]>,
     paginationOptions?: PaginationOptions
   ) {
     this._setButtonsCallback = callback;
@@ -67,7 +67,7 @@ export class MenuBuilder<
     return this;
   }
 
-  public setSelectMenu(callback: (menu: M) => SelectMenuConfig) {
+  public setSelectMenu(callback: (menu: M) => SelectMenuConfig<M>) {
     this._setSelectMenuCallback = callback;
     return this;
   }
@@ -140,7 +140,7 @@ export class MenuBuilder<
       throw new Error(
         `Cannot set more than ${
           10 - reservedButtonCount
-        } custom buttons on a menu when list pagination is set.`
+        } custom buttons on this list paginated menu.`
       );
     }
   }
@@ -148,14 +148,18 @@ export class MenuBuilder<
   /**** Protected Methods ****/
 
   protected async createMenu(): Promise<M> {
-    return new Menu(this._session, this._name, this.getBuilderOptions()) as M;
+    return new Menu(
+      this._session,
+      this._name,
+      this.getBuilderOptions() as MenuBuilderOptions<Menu, O>
+    ) as M;
   }
 
   /**
    * Returns the options for the menu builder.
    * @returns {MenuBuilderOptions} The options for the menu builder.
    */
-  protected getBuilderOptions(): MenuBuilderOptions {
+  protected getBuilderOptions(): MenuBuilderOptions<M, O> {
     let responseType: MenuResponseType | undefined;
 
     if (
@@ -171,6 +175,10 @@ export class MenuBuilder<
       !!this._reservedButtons.size
     ) {
       responseType = MenuResponseType.COMPONENT;
+    }
+
+    if (!this._setEmbedsCallback) {
+      throw new Error('Embeds are required to build a menu.');
     }
 
     return {
@@ -195,8 +203,6 @@ export class MenuBuilder<
       throw new Error(
         'Cannot set a select menu on a menu with buttons or pagination.'
       );
-    } else if (this._paginationType === MenuPaginationType.BUTTONS) {
-      // this.validateButtonPaginationOptions();
     } else if (this._paginationType === MenuPaginationType.LIST) {
       this.validateListPaginationOptions();
     }

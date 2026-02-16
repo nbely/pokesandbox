@@ -1,9 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 
-export const getServerMenuEmbeds = async (
-  menu: AdminMenu,
+export const getServerMenuEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   defaultPrompt = 'Please select an option to manage your server settings.'
 ) => {
   const server = await menu.fetchServer();
