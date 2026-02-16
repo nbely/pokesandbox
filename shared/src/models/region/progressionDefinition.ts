@@ -37,10 +37,12 @@ const booleanProgressionSchema = progressionBaseSchema.extend({
 });
 
 export const progressionDefinitionSchema = z.discriminatedUnion('kind', [
-  numericProgressionSchema,
   milestoneProgressionSchema,
+  numericProgressionSchema,
   booleanProgressionSchema,
 ]);
+
+export type ProgressionDefinition = z.infer<typeof progressionDefinitionSchema>;
 
 // Mongoose Model Schemas
 
@@ -59,7 +61,7 @@ export const progressionDefinitionDbSchema = new Schema(
   {
     kind: {
       type: String,
-      enum: ['numeric', 'milestone', 'boolean'],
+      enum: ['milestone', 'numeric', 'boolean'],
       required: true,
     },
 
