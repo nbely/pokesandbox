@@ -1,10 +1,12 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
-import { Region } from '@shared/models';
+import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
+import { ProgressionDefinition, Region } from '@shared/models';
 
-export const getManageProgressionMenuEmbeds = async (
-  menu: AdminMenu,
+export const getManageProgressionMenuEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   region: Region,
   defaultPrompt = 'Manage progression definitions for this region. Enter a progression key to edit, or use the buttons below to add or delete.'
 ) => {
@@ -21,15 +23,13 @@ export const getManageProgressionMenuEmbeds = async (
     ) {
       if (i >= progressions.length) break;
 
-      const [key, progression] = progressions[i];
+      const progression = progressions[i][1];
       const kindLabel =
         progression.kind === 'boolean'
           ? 'Flag'
           : progression.kind.charAt(0).toUpperCase() +
             progression.kind.slice(1);
-      progressionLines.push(
-        `\n**${key}** (${kindLabel}): ${progression.displayName}`
-      );
+      progressionLines.push(`\n**${progression.displayName}** (${kindLabel})`);
     }
   }
 
@@ -82,8 +82,10 @@ export const getManageProgressionMenuEmbeds = async (
   return [embed];
 };
 
-export const getSelectProgressionTypeEmbeds = async (
-  menu: AdminMenu,
+export const getSelectProgressionTypeEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
   regionId: string,
   defaultPrompt = 'Select a progression type for the new progression definition.'
 ) => {
@@ -118,121 +120,32 @@ export const getSelectProgressionTypeEmbeds = async (
   ];
 };
 
-export const getConfigureProgressionMetadataEmbeds = async (
-  menu: AdminMenu,
-  regionId: string,
-  progressionKey: string,
-  kind: string,
-  defaultPrompt = 'Configure the progression definition metadata. Enter field values as prompted.'
+export const getEditProgressionDefinitionEmbeds = async <
+  C extends MenuCommandOptions = MenuCommandOptions
+>(
+  menu: AdminMenu<C>,
+  region: Region,
+  progression: ProgressionDefinition,
+  editField?: string
 ) => {
-  const region = await Region.findById(regionId);
-
-  const fields: EmbedField[] = [];
-
-  if (kind === 'numeric') {
-    fields.push(
-      {
-        name: 'Display Name',
-        value: 'Enter a user-facing name for this progression',
-        inline: false,
-      },
-      {
-        name: 'Description (optional)',
-        value: 'Enter a description (or "skip")',
-        inline: false,
-      },
-      {
-        name: 'Visibility',
-        value: 'Options: public, discoverable, hidden (default: public)',
-        inline: false,
-      },
-      {
-        name: 'Min Value (optional)',
-        value: 'Enter a minimum value (or "skip")',
-        inline: false,
-      },
-      {
-        name: 'Max Value (optional)',
-        value: 'Enter a maximum value (or "skip")',
-        inline: false,
-      }
-    );
-  } else if (kind === 'boolean') {
-    fields.push(
-      {
-        name: 'Display Name',
-        value: 'Enter a user-facing name for this progression',
-        inline: false,
-      },
-      {
-        name: 'Description (optional)',
-        value: 'Enter a description (or "skip")',
-        inline: false,
-      },
-      {
-        name: 'Visibility',
-        value: 'Options: public, discoverable, hidden (default: public)',
-        inline: false,
-      }
-    );
-  } else if (kind === 'milestone') {
-    fields.push(
-      {
-        name: 'Display Name',
-        value: 'Enter a user-facing name for this progression',
-        inline: false,
-      },
-      {
-        name: 'Description (optional)',
-        value: 'Enter a description (or "skip")',
-        inline: false,
-      },
-      {
-        name: 'Visibility',
-        value: 'Options: public, discoverable, hidden (default: public)',
-        inline: false,
-      },
-      {
-        name: 'Sequential',
-        value: 'Must milestones be completed in order? (yes/no, default: no)',
-        inline: false,
-      },
-      {
-        name: 'Milestones',
-        value: 'You will configure milestones in the next step',
-        inline: false,
-      }
-    );
-  }
-
-  return [
-    new EmbedBuilder()
-      .setColor('Gold')
-      .setAuthor({
-        name: `${region?.name} - Configure "${progressionKey}" (${kind})`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
-      })
-      .setDescription(menu.prompt || defaultPrompt)
-      .addFields(fields)
-      .setTimestamp(),
-  ];
-};
-
-export const getEditProgressionDefinitionEmbeds = async (
-  menu: AdminMenu,
-  regionId: string,
-  progressionKey: string
-) => {
-  const region = await Region.findById(regionId);
-  const progression = region?.progressionDefinitions.get(progressionKey);
-
-  if (!progression) {
-    return [
-      new EmbedBuilder()
-        .setColor('Red')
-        .setDescription(`Progression "${progressionKey}" not found.`)
-        .setTimestamp(),
-    ];
+  if (editField) {
+    switch (editField) {
+      case 'displayName':
+        menu.prompt = 'Enter a new display name.';
+        break;
+      case 'description':
+        menu.prompt = 'Enter a new description.';
+        break;
+      case 'visibility':
+        menu.prompt = 'Select a new visibility option.';
+        break;
+      case 'min':
+        menu.prompt = 'Enter a new minimum value, or clear the current value';
+        break;
+      case 'max':
+        menu.prompt = 'Enter a new maximum value, or clear the current value';
+        break;
+    }
   }
 
   const fields: EmbedField[] = [
@@ -252,7 +165,7 @@ export const getEditProgressionDefinitionEmbeds = async (
     },
     {
       name: 'Visibility',
-      value: progression.visibility || 'public',
+      value: progression.visibility,
       inline: true,
     },
   ];
@@ -301,7 +214,7 @@ export const getEditProgressionDefinitionEmbeds = async (
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region?.name} - Edit "${progressionKey}"`,
+        name: `${region?.name} - Edit "${progression.displayName}" Progression`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(

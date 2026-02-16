@@ -171,6 +171,10 @@ export class Session {
     return this._state.get(key) as T | undefined;
   }
 
+  public deleteState(key: string): void {
+    this._state.delete(key);
+  }
+
   /**
    * Get menu completion state data
    */
@@ -189,7 +193,7 @@ export class Session {
    * Clear the menu completion state for a specific menu
    */
   public clearMenuCompletionState(menuName: string): void {
-    this._state.delete(`completion:${menuName}`);
+    this.deleteState(`completion:${menuName}`);
   }
 
   // Go back to the previous menu, if available
@@ -223,7 +227,7 @@ export class Session {
 
     // If no new menu was set during continuation, refresh the current menu
     if (this.currentMenu.name === lastHistoryEntry.menu.name) {
-      await this.currentMenu.refresh();
+      await this.hardRefresh();
     }
   }
 

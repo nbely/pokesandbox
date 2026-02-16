@@ -25,7 +25,7 @@ type ManageProgressionCommandOptions = {
   regionId: string;
 };
 type ManageProgressionCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<ManageProgressionCommandOptions>,
   ManageProgressionCommandOptions
 >;
 
@@ -42,52 +42,31 @@ export const ManageProgressionCommand: ManageProgressionCommand = {
     )
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
+    if (!options?.regionId) {
+      throw new Error(
+        'Region ID is required to manage progression definitions.'
+      );
+    }
     const { regionId } = options;
     const region = await Region.findById(regionId);
+    if (!region) {
+      throw new Error('Region not found.');
+    }
 
-    return (
-      new AdminMenuBuilder(session, COMMAND_NAME, options)
-        .setButtons((menu) => getManageProgressionButtons(menu, region))
-        .setEmbeds((menu) => getManageProgressionMenuEmbeds(menu, region))
-        .setCancellable()
-        // .setListPagination({
-        //   quantityItemsPerPage: 10,
-        //   nextButton: { style: ButtonStyle.Primary },
-        //   previousButton: { style: ButtonStyle.Primary },
-        //   getTotalQuantityItems: async () => {
-        //     const region = await Region.findById(regionId);
-        //     return region.progressionDefinitions.size;
-        //   },
-        // })
-        // .setMessageHandler(async (menu, response) => {
-        //   const progressionKey = response.trim();
-        //   const region = await Region.findById(regionId);
-
-        //   if (region.progressionDefinitions.has(progressionKey)) {
-        //     await MenuWorkflow.openMenu(
-        //       menu,
-        //       EDIT_PROGRESSION_DEFINITION_COMMAND_NAME,
-        //       {
-        //         regionId,
-        //         progressionKey,
-        //       }
-        //     );
-        //   } else {
-        //     menu.prompt = `Progression "${progressionKey}" not found. Please enter a valid progression key or use the Add button.`;
-        //     await menu.refresh();
-        //   }
-        // })
-        .setReturnable()
-        .setTrackedInHistory()
-        .build()
-    );
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
+      .setButtons((menu) => getManageProgressionButtons(menu, region))
+      .setEmbeds((menu) => getManageProgressionMenuEmbeds(menu, region))
+      .setCancellable()
+      .setReturnable()
+      .setTrackedInHistory()
+      .build();
   },
 };
 
 const getManageProgressionButtons = async (
-  _menu: AdminMenu,
+  _menu: AdminMenu<ManageProgressionCommandOptions>,
   region: Region
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
+): Promise<MenuButtonConfig<AdminMenu<ManageProgressionCommandOptions>>[]> => {
   const progressionDefinitions = Array.from(
     region.progressionDefinitions.entries()
   );
@@ -105,7 +84,7 @@ const getManageProgressionButtons = async (
       id: key,
       label: `Edit "${definition.displayName}"`,
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
+      onClick: async (menu: AdminMenu<ManageProgressionCommandOptions>) =>
         MenuWorkflow.openMenu(menu, EDIT_PROGRESSION_DEFINITION_COMMAND_NAME, {
           regionId: region.id,
           progressionKey: key,

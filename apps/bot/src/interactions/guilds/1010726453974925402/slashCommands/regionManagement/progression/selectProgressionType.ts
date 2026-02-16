@@ -3,6 +3,7 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { randomUUID } from 'node:crypto';
 
 import {
   AdminMenu,
@@ -12,19 +13,20 @@ import {
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import { ProgressionDefinition, Region } from '@shared';
 
-import { CONFIGURE_PROGRESSION_METADATA_COMMAND_NAME } from './configureProgressionMetadata';
 import { getSelectProgressionTypeEmbeds } from './progression.embeds';
+import { EDIT_PROGRESSION_DEFINITION_COMMAND_NAME } from './editProgressionDefinition';
 
 const COMMAND_NAME = 'select-progression-type';
 export const SELECT_PROGRESSION_TYPE_COMMAND_NAME = COMMAND_NAME;
 
 type SelectProgressionTypeCommandOptions = {
   regionId: string;
-  progressionKey: string;
+  progressionName: string;
 };
 type SelectProgressionTypeCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<SelectProgressionTypeCommandOptions>,
   SelectProgressionTypeCommandOptions
 >;
 
@@ -36,31 +38,42 @@ export const SelectProgressionTypeCommand: SelectProgressionTypeCommand = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription('Select a progression type for a new progression definition')
+    .setDescription(
+      'Select a progression type for a new progression definition'
+    )
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    const { regionId, progressionKey } = options;
+    if (!options?.regionId || !options?.progressionName) {
+      throw new Error(
+        'Region ID and progression name are required to select a progression type.'
+      );
+    }
+    const { regionId, progressionName } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) =>
-        getSelectProgressionTypeButtons(menu, regionId, progressionKey)
+        getSelectProgressionTypeButtons(menu, regionId, progressionName)
       )
-      .setEmbeds((menu) =>
-        getSelectProgressionTypeEmbeds(menu, regionId)
-      )
+      .setEmbeds((menu) => getSelectProgressionTypeEmbeds(menu, regionId))
       .setCancellable()
       .setReturnable()
-      .setTrackedInHistory()
       .build();
   },
 };
 
 const getSelectProgressionTypeButtons = async (
-  _menu: AdminMenu,
+  _menu: AdminMenu<SelectProgressionTypeCommandOptions>,
   regionId: string,
-  progressionKey: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const types: Array<{ label: string; kind: string }> = [
+  progressionName: string
+): Promise<
+  MenuButtonConfig<AdminMenu<SelectProgressionTypeCommandOptions>>[]
+> => {
+  const region = await Region.findById(regionId);
+  if (!region) {
+    throw new Error('Region not found.');
+  }
+
+  const types: Array<{ label: string; kind: ProgressionDefinition['kind'] }> = [
     { label: '1 - Numeric', kind: 'numeric' },
     { label: '2 - Flag', kind: 'boolean' },
     { label: '3 - Milestone', kind: 'milestone' },
@@ -70,13 +83,30 @@ const getSelectProgressionTypeButtons = async (
     label,
     style: ButtonStyle.Primary,
     onClick: async (menu) => {
+      const progressionKey = randomUUID();
+      if (kind === 'numeric' || kind === 'boolean') {
+        region.progressionDefinitions.set(progressionKey, {
+          kind,
+          displayName: progressionName,
+          visibility: 'public',
+        });
+      } else {
+        region.progressionDefinitions.set(progressionKey, {
+          kind,
+          displayName: progressionName,
+          visibility: 'public',
+          sequential: true,
+          milestones: [],
+        });
+      }
+
+      await region.save();
       await MenuWorkflow.openMenu(
         menu,
-        CONFIGURE_PROGRESSION_METADATA_COMMAND_NAME,
+        EDIT_PROGRESSION_DEFINITION_COMMAND_NAME,
         {
           regionId,
           progressionKey,
-          kind,
         }
       );
     },

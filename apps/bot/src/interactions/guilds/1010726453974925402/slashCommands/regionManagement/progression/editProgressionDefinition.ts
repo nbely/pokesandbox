@@ -8,10 +8,11 @@ import {
   AdminMenu,
   AdminMenuBuilder,
   MenuButtonConfig,
+  MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { Region } from '@shared/models';
+import { ProgressionDefinition, Region } from '@shared/models';
 
 import { getEditProgressionDefinitionEmbeds } from './progression.embeds';
 
@@ -23,78 +24,131 @@ type EditProgressionDefinitionCommandOptions = {
   progressionKey: string;
 };
 type EditProgressionDefinitionCommand = ISlashCommand<
-  AdminMenu,
+  AdminMenu<EditProgressionDefinitionCommandOptions>,
   EditProgressionDefinitionCommandOptions
 >;
 
-export const EditProgressionDefinitionCommand: EditProgressionDefinitionCommand = {
-  name: COMMAND_NAME,
-  anyUserPermissions: ['Administrator'],
-  onlyRoles: onlyAdminRoles,
-  onlyRolesOrAnyUserPermissions: true,
-  returnOnlyRolesError: false,
-  command: new SlashCommandBuilder()
-    .setName(COMMAND_NAME)
-    .setDescription('Edit an existing progression definition')
-    .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) => {
-    const { regionId, progressionKey } = options;
+export const EditProgressionDefinitionCommand: EditProgressionDefinitionCommand =
+  {
+    name: COMMAND_NAME,
+    anyUserPermissions: ['Administrator'],
+    onlyRoles: onlyAdminRoles,
+    onlyRolesOrAnyUserPermissions: true,
+    returnOnlyRolesError: false,
+    command: new SlashCommandBuilder()
+      .setName(COMMAND_NAME)
+      .setDescription('Edit an existing progression definition')
+      .setContexts(InteractionContextType.Guild),
+    createMenu: async (session, options) => {
+      if (!options?.regionId || !options?.progressionKey) {
+        throw new Error(
+          'Region ID and progression key are required to edit a progression definition.'
+        );
+      }
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) =>
-        getEditProgressionDefinitionButtons(menu, regionId, progressionKey)
-      )
-      .setEmbeds((menu) =>
-        getEditProgressionDefinitionEmbeds(menu, regionId, progressionKey)
-      )
-      .setMessageHandler(async (menu, response) => {
-        await handleEditInput(menu, regionId, progressionKey, response);
-      })
-      .setCancellable()
-      .setReturnable()
-      .setTrackedInHistory()
-      .build();
-  },
-};
+      const { regionId, progressionKey } = options;
+      const region = await Region.findById(regionId);
+      if (!region) {
+        throw new Error('Region not found');
+      }
+
+      const progression = region.progressionDefinitions.get(progressionKey);
+      if (!progression) {
+        throw new Error('Progression definition not found');
+      }
+
+      const progressionEditField = session.getState<string>(
+        'progressionEditField'
+      );
+
+      const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
+        .setEmbeds((menu) =>
+          getEditProgressionDefinitionEmbeds(
+            menu,
+            region,
+            progression,
+            progressionEditField
+          )
+        )
+        .setCancellable()
+        .setReturnable()
+        .setTrackedInHistory();
+
+      if (!progressionEditField) {
+        builder.setButtons((menu) =>
+          getEditProgressionDefinitionButtons(
+            menu,
+            region,
+            progressionKey,
+            progression
+          )
+        );
+      } else {
+        if (progressionEditField !== 'displayName') {
+          builder.setButtons((menu) =>
+            getProgressionEditFieldButtons(
+              menu,
+              region,
+              progressionKey,
+              progression,
+              progressionEditField
+            )
+          );
+        }
+        if (progressionEditField !== 'visibility') {
+          builder.setMessageHandler(async (menu, response) => {
+            await handleEditInput(
+              menu,
+              region,
+              progressionKey,
+              progression,
+              progressionEditField,
+              response
+            );
+          });
+        }
+      }
+
+      return builder.build();
+    },
+  };
 
 const getEditProgressionDefinitionButtons = async (
-  _menu: AdminMenu,
-  regionId: string,
-  progressionKey: string
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const region = await Region.findById(regionId);
-  const progression = region.progressionDefinitions.get(progressionKey);
-
-  if (!progression) {
-    return [];
-  }
-
-  const buttons: MenuButtonConfig<AdminMenu>[] = [
+  _menu: AdminMenu<EditProgressionDefinitionCommandOptions>,
+  region: Region,
+  progressionKey: string,
+  progression: ProgressionDefinition
+): Promise<
+  MenuButtonConfig<AdminMenu<EditProgressionDefinitionCommandOptions>>[]
+> => {
+  const buttons: MenuButtonConfig<
+    AdminMenu<EditProgressionDefinitionCommandOptions>
+  >[] = [
     {
-      label: 'Edit Display Name',
+      id: 'displayName',
+      label: 'Name',
       style: ButtonStyle.Primary,
       onClick: async (menu) => {
-        menu.prompt = 'Enter a new display name:';
-        menu.metadata = { ...menu.metadata, editField: 'displayName' };
-        await menu.refresh();
+        menu.session.setState('progressionEditField', 'displayName');
+        await menu.hardRefresh();
       },
     },
     {
-      label: 'Edit Description',
+      id: 'description',
+      label: 'Description',
       style: ButtonStyle.Primary,
       onClick: async (menu) => {
-        menu.prompt = 'Enter a new description (or type "clear" to remove):';
-        menu.metadata = { ...menu.metadata, editField: 'description' };
-        await menu.refresh();
+        menu.session.setState('progressionEditField', 'description');
+        await menu.hardRefresh();
       },
     },
     {
-      label: 'Edit Visibility',
+      id: 'visibility',
+      label: 'Visibility',
       style: ButtonStyle.Primary,
       onClick: async (menu) => {
-        menu.prompt = 'Enter new visibility (public/discoverable/hidden):';
-        menu.metadata = { ...menu.metadata, editField: 'visibility' };
-        await menu.refresh();
+        menu.session.setState('progressionEditField', 'visibility');
+        await menu.hardRefresh();
       },
     },
   ];
@@ -103,37 +157,47 @@ const getEditProgressionDefinitionButtons = async (
   if (progression.kind === 'numeric') {
     buttons.push(
       {
-        label: 'Edit Min',
+        id: 'min',
+        label: 'Min Value',
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
-          menu.prompt = 'Enter a new minimum value (or type "clear" to remove):';
-          menu.metadata = { ...menu.metadata, editField: 'min' };
-          await menu.refresh();
+          menu.session.setState('progressionEditField', 'min');
+          await menu.hardRefresh();
         },
       },
       {
-        label: 'Edit Max',
+        id: 'max',
+        label: 'Max Value',
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
-          menu.prompt = 'Enter a new maximum value (or type "clear" to remove):';
-          menu.metadata = { ...menu.metadata, editField: 'max' };
-          await menu.refresh();
+          menu.session.setState('progressionEditField', 'max');
+          await menu.hardRefresh();
         },
       }
     );
   } else if (progression.kind === 'milestone') {
     buttons.push(
       {
+        label: 'Milestones',
+        style: ButtonStyle.Primary,
+        onClick: async (menu) => {
+          MenuWorkflow.openMenu(menu, 'edit-milestones', {
+            regionId: region.id,
+            progressionKey,
+          });
+        },
+      },
+      {
         label: 'Toggle Sequential',
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
-          const region = await Region.findById(regionId);
-          const progression = region.progressionDefinitions.get(progressionKey);
-          if (progression && progression.kind === 'milestone') {
+          if (progression.kind === 'milestone') {
             progression.sequential = !progression.sequential;
             region.progressionDefinitions.set(progressionKey, progression);
             await region.save();
-            menu.prompt = `Sequential mode ${progression.sequential ? 'enabled' : 'disabled'}`;
+            menu.prompt = `Sequential mode ${
+              progression.sequential ? 'enabled' : 'disabled'
+            }`;
             await menu.refresh();
           }
         },
@@ -146,66 +210,122 @@ const getEditProgressionDefinitionButtons = async (
     label: 'Delete',
     style: ButtonStyle.Danger,
     onClick: async (menu) => {
-      const region = await Region.findById(regionId);
       region.progressionDefinitions.delete(progressionKey);
       await region.save();
-      menu.prompt = `Successfully deleted progression "${progressionKey}"`;
-      await menu.returnToPreviousMenu();
+      await MenuWorkflow.completeAndReturn(menu);
+      await menu.hardRefresh();
     },
   });
 
   return buttons;
 };
 
-const handleEditInput = async (
-  menu: AdminMenu,
-  regionId: string,
+const getProgressionEditFieldButtons = async (
+  _menu: AdminMenu<EditProgressionDefinitionCommandOptions>,
+  region: Region,
   progressionKey: string,
+  progression: ProgressionDefinition,
+  editField: string
+): Promise<
+  MenuButtonConfig<AdminMenu<EditProgressionDefinitionCommandOptions>>[]
+> => {
+  const buttons: MenuButtonConfig<
+    AdminMenu<EditProgressionDefinitionCommandOptions>
+  >[] = [];
+
+  if (['description', 'min', 'max'].includes(editField)) {
+    buttons.push({
+      label: 'Clear',
+      style: ButtonStyle.Danger,
+      onClick: async (menu) => {
+        await handleEditInput(
+          menu,
+          region,
+          progressionKey,
+          progression,
+          editField,
+          ''
+        );
+      },
+    });
+  } else if (editField === 'visibility') {
+    if (progression.visibility !== 'public') {
+      buttons.push({
+        label: 'Set to Public',
+        style: ButtonStyle.Primary,
+        onClick: async (menu) => {
+          await handleEditInput(
+            menu,
+            region,
+            progressionKey,
+            progression,
+            editField,
+            'public'
+          );
+        },
+      });
+    }
+    if (progression.visibility !== 'discoverable') {
+      buttons.push({
+        label: 'Set to Discoverable',
+        style: ButtonStyle.Primary,
+        onClick: async (menu) => {
+          await handleEditInput(
+            menu,
+            region,
+            progressionKey,
+            progression,
+            editField,
+            'discoverable'
+          );
+        },
+      });
+    }
+    if (progression.visibility !== 'hidden') {
+      buttons.push({
+        label: 'Set to Hidden',
+        style: ButtonStyle.Primary,
+        onClick: async (menu) => {
+          await handleEditInput(
+            menu,
+            region,
+            progressionKey,
+            progression,
+            editField,
+            'hidden'
+          );
+        },
+      });
+    }
+  }
+
+  return buttons;
+};
+
+const handleEditInput = async (
+  menu: AdminMenu<EditProgressionDefinitionCommandOptions>,
+  region: Region,
+  progressionKey: string,
+  progression: ProgressionDefinition,
+  editField: string,
   response: string
 ) => {
-  const editField = menu.metadata?.editField as string | undefined;
-  
-  if (!editField) {
-    return;
-  }
-
-  const trimmedResponse = response.trim();
-  const region = await Region.findById(regionId);
-  const progression = region.progressionDefinitions.get(progressionKey);
-
-  if (!progression) {
-    menu.prompt = `Progression "${progressionKey}" not found.`;
-    return menu.refresh();
-  }
-
   switch (editField) {
     case 'displayName':
-      if (!trimmedResponse) {
-        menu.prompt = 'Display name cannot be empty. Please enter a valid name.';
-        return menu.refresh();
-      }
-      progression.displayName = trimmedResponse;
-      menu.prompt = 'Display name updated successfully.';
+      progression.displayName = response;
       break;
 
     case 'description':
-      if (trimmedResponse.toLowerCase() === 'clear') {
-        progression.description = undefined;
-        menu.prompt = 'Description cleared.';
-      } else {
-        progression.description = trimmedResponse;
-        menu.prompt = 'Description updated successfully.';
-      }
+      progression.description = response ? response : undefined;
       break;
 
     case 'visibility':
-      const visibility = trimmedResponse.toLowerCase();
-      if (!['public', 'discoverable', 'hidden'].includes(visibility)) {
-        menu.prompt = 'Invalid visibility. Please enter public, discoverable, or hidden.';
+      if (!['public', 'discoverable', 'hidden'].includes(response)) {
+        menu.prompt =
+          'Invalid visibility option. Please select a valid option.';
         return menu.refresh();
       }
-      progression.visibility = visibility as 'public' | 'discoverable' | 'hidden';
-      menu.prompt = 'Visibility updated successfully.';
+      progression.visibility = response as ProgressionDefinition['visibility'];
       break;
 
     case 'min':
@@ -213,17 +333,15 @@ const handleEditInput = async (
         menu.prompt = 'Min value is only applicable to numeric progressions.';
         return menu.refresh();
       }
-      if (trimmedResponse.toLowerCase() === 'clear') {
+      if (response === '') {
         progression.min = undefined;
-        menu.prompt = 'Min value cleared.';
       } else {
-        const min = parseFloat(trimmedResponse);
+        const min = parseFloat(response);
         if (isNaN(min)) {
           menu.prompt = 'Invalid number. Please enter a valid minimum value.';
           return menu.refresh();
         }
         progression.min = min;
-        menu.prompt = 'Min value updated successfully.';
       }
       break;
 
@@ -232,11 +350,11 @@ const handleEditInput = async (
         menu.prompt = 'Max value is only applicable to numeric progressions.';
         return menu.refresh();
       }
-      if (trimmedResponse.toLowerCase() === 'clear') {
+      if (response === '') {
         progression.max = undefined;
         menu.prompt = 'Max value cleared.';
       } else {
-        const max = parseFloat(trimmedResponse);
+        const max = parseFloat(response);
         if (isNaN(max)) {
           menu.prompt = 'Invalid number. Please enter a valid maximum value.';
           return menu.refresh();
@@ -245,16 +363,11 @@ const handleEditInput = async (
         menu.prompt = 'Max value updated successfully.';
       }
       break;
-
-    default:
-      menu.prompt = 'Unknown field.';
-      return menu.refresh();
   }
 
   region.progressionDefinitions.set(progressionKey, progression);
   await region.save();
-  
-  // Clear the edit field metadata
-  menu.metadata = { ...menu.metadata, editField: undefined };
-  await menu.refresh();
+
+  menu.session.deleteState('progressionEditField');
+  await menu.hardRefresh();
 };
