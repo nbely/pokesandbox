@@ -8,6 +8,8 @@ import {
   InteractionCollector,
   Message,
   MessageComponentInteraction,
+  MessageFlags,
+  ModalSubmitInteraction,
 } from 'discord.js';
 
 import { buildErrorEmbed } from '@bot/embeds/errorEmbed';
@@ -16,7 +18,11 @@ import { ComponentInteraction } from '@bot/structures/interfaces';
 import type { BotClient } from '../BotClient/BotClient';
 import { MenuResponseType } from '../constants';
 import { Menu } from '../Menu/Menu';
-import type { MenuCommandOptions, SessionHistoryEntry } from '../types';
+import type {
+  MenuCommandOptions,
+  ModalState,
+  SessionHistoryEntry,
+} from '../types';
 
 interface SessionConstructor<T extends Session> {
   new (
@@ -55,6 +61,7 @@ export class Session {
   private _client: BotClient;
   private _commandInteraction: ChatInputCommandInteraction;
   private _componentInteraction: MessageComponentInteraction | null = null;
+  private _modalSubmitInteraction: ModalSubmitInteraction | null = null;
   private _currentMenu: Menu | null = null;
   private _history: SessionHistoryEntry[] = [];
   private _initialCommand: string;
@@ -65,7 +72,8 @@ export class Session {
   private _lastInput: string | string[] | null = null;
   private _lastInteraction:
     | ChatInputCommandInteraction
-    | MessageComponentInteraction;
+    | MessageComponentInteraction
+    | ModalSubmitInteraction;
   private _message?: Message;
   private _responseHistory: ResponseRecord[] = [];
   private _state: Collection<string, unknown> = new Collection();
@@ -97,6 +105,10 @@ export class Session {
     return this._componentInteraction;
   }
 
+  get modalSubmitInteraction(): ModalSubmitInteraction | null {
+    return this._modalSubmitInteraction;
+  }
+
   /** Gets the current initialized menu.
    * Throws an error if the session is not initialized or no menu is available
    **/
@@ -124,8 +136,26 @@ export class Session {
 
   get lastInteraction():
     | ChatInputCommandInteraction
-    | MessageComponentInteraction {
+    | MessageComponentInteraction
+    | ModalSubmitInteraction {
     return this._lastInteraction;
+  }
+
+  get lastNonModalInteraction():
+    | ChatInputCommandInteraction
+    | MessageComponentInteraction {
+    return this._componentInteraction ?? this._commandInteraction;
+  }
+
+  get lastNonCommandInteraction():
+    | MessageComponentInteraction
+    | ModalSubmitInteraction
+    | null {
+    if (this.lastInteraction instanceof ChatInputCommandInteraction) {
+      return this.componentInteraction ?? this.modalSubmitInteraction;
+    } else {
+      return this.lastInteraction;
+    }
   }
 
   // Add a new menu to the session and update the current menu
@@ -431,6 +461,16 @@ export class Session {
     this._lastInput = values;
   }
 
+  private async handleModalSubmitInteraction(): Promise<void> {
+    if (!this.modalSubmitInteraction) {
+      throw new Error(
+        'There was an error processing your modal submit interaction.'
+      );
+    }
+    const fields = this.modalSubmitInteraction.fields;
+    await this.currentMenu.handleModalSubmit(fields);
+  }
+
   private async awaitMessageReply(time: number): Promise<string> {
     const filter = (message: Message): boolean => {
       return message.author.id === this.commandInteraction.user.id;
@@ -499,6 +539,7 @@ export class Session {
       compCollector?.on('collect', async (componentInteraction) => {
         msgCollector?.stop();
         this._componentInteraction = componentInteraction;
+        this._lastInteraction = componentInteraction;
         resolve({ type: MenuResponseType.COMPONENT });
       });
       compCollector?.on('end', async (collected) => {
@@ -535,10 +576,18 @@ export class Session {
   }
 
   async sendEmbedMessage(): Promise<void> {
-    if (!this.message) {
-      this._message = await this.commandInteraction.followUp(
-        this.currentMenu.getResponseOptions()
+    const activeModal = this.getState<ModalState>('activeModal');
+    if (
+      activeModal &&
+      this.currentMenu.modal &&
+      activeModal.id === this.currentMenu.modal.builder.data.custom_id
+    ) {
+      await this.lastNonModalInteraction?.showModal(
+        this.currentMenu.modal.builder
       );
+    } else if (!this.message) {
+      const responseOptions = this.currentMenu.getResponseOptions();
+      this._message = await this.commandInteraction.followUp(responseOptions);
       // this.info = '';
     } else {
       await this.updateEmbedMessage();
@@ -548,23 +597,27 @@ export class Session {
   async updateEmbedMessage(): Promise<void> {
     if (this._isReset) {
       if (
-        this.componentInteraction?.deferred === false &&
-        this.componentInteraction?.replied === false
+        this.lastInteraction?.deferred === false &&
+        this.lastInteraction?.replied === false
       ) {
-        await this.componentInteraction.deferReply();
+        await this.lastInteraction.deferReply();
       }
-      this._message =
-        (await this.componentInteraction?.followUp(
-          this.currentMenu.getResponseOptions()
-        )) ??
-        (await this.commandInteraction.followUp(
-          this.currentMenu.getResponseOptions()
-        ));
-      this._isReset = false;
-    } else {
-      await this.componentInteraction?.update(
+      this._message = await this.lastInteraction?.followUp(
         this.currentMenu.getResponseOptions()
       );
+      this._isReset = false;
+    } else {
+      if (this.lastInteraction instanceof ModalSubmitInteraction) {
+        if (!this.message) {
+          throw new Error('No message available to update after modal submit.');
+        }
+        // await this.lastInteraction.deleteReply();
+        await this.message.edit(this.currentMenu.getResponseOptions());
+      } else {
+        await this.componentInteraction?.update(
+          this.currentMenu.getResponseOptions()
+        );
+      }
     }
   }
 
@@ -578,17 +631,50 @@ export class Session {
       );
     };
 
-    this._componentInteraction =
-      (await this.message?.awaitMessageComponent({
+    if (!this.message) {
+      throw new Error(
+        'No message available to collect component interactions.'
+      );
+    }
+
+    const newComponentInteraction = await this.message.awaitMessageComponent({
+      filter,
+      time,
+    });
+    this._componentInteraction = newComponentInteraction;
+    this._lastInteraction = newComponentInteraction;
+  }
+
+  private async awaitModalInteraction(time: number): Promise<void> {
+    const filter = (interaction: ModalSubmitInteraction): boolean => {
+      return (
+        interaction.customId === this.currentMenu.modal?.builder.data.custom_id
+      );
+    };
+
+    const newModalSubmitInteraction =
+      await this.lastNonModalInteraction.awaitModalSubmit({
         filter,
         time,
-      })) ?? null;
+      });
+
+    await newModalSubmitInteraction.deferUpdate();
+
+    this._modalSubmitInteraction = newModalSubmitInteraction;
+    this._lastInteraction = newModalSubmitInteraction;
   }
 
   private async processMenus(): Promise<void> {
     while (!this._isCancelled && !this._isCompleted) {
       await this.sendEmbedMessage();
       const menuResponseType = this.currentMenu.responseType;
+
+      const activeModal = this.getState<ModalState>('activeModal');
+      if (activeModal) {
+        await this.awaitModalInteraction(5_000);
+        await this.handleModalSubmitInteraction();
+        continue;
+      }
 
       if (menuResponseType === MenuResponseType.MESSAGE) {
         const message = await this.awaitMessageReply(120_000);

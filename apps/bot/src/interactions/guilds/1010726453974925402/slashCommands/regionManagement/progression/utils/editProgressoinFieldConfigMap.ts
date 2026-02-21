@@ -1,12 +1,16 @@
+import { ButtonStyle } from 'discord.js';
 import capitalize from 'lodash/capitalize';
 
 import type { ProgressionDefinition, Region } from '@shared';
 
-import type { EditFieldConfig } from './types';
-import { ButtonStyle } from 'discord.js';
-import { assertProgressionKind, handleEditProgressionField } from './utils';
+import type { EditProgressionFieldConfig } from '../types';
+import { assertProgressionKind } from './assertProgressionKind';
+import { handleEditProgressionField } from './handleEditProgressionField';
 
-export const editFieldConfigMap = new Map<string, EditFieldConfig>([
+export const editProgressionFieldConfigMap = new Map<
+  string,
+  EditProgressionFieldConfig
+>([
   [
     'name',
     {
@@ -46,7 +50,7 @@ export const editFieldConfigMap = new Map<string, EditFieldConfig>([
         progression.visibility = input as ProgressionDefinition['visibility'];
       },
       getCustomButtons: async (
-        config: EditFieldConfig,
+        config: EditProgressionFieldConfig,
         region: Region,
         progressionKey: string,
         progression: ProgressionDefinition

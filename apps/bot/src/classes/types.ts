@@ -4,6 +4,8 @@ import {
   Collection,
   EmbedBuilder,
   MessageActionRowComponentBuilder,
+  ModalBuilder,
+  ModalSubmitFields,
 } from 'discord.js';
 
 import { MenuPaginationType, MenuResponseType } from './constants';
@@ -24,7 +26,11 @@ export type MenuBuilderOptions<
   handleMessage?: (menu: M, response: string) => Promise<void>;
   setButtons?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   setEmbeds: (menu: M) => Promise<EmbedBuilder[]>;
-  setSelectMenu?: (menu: M) => SelectMenuConfig<M>;
+  setSelectMenu?: (menu: M) => Promise<SelectMenuConfig<M>>;
+  setModal?: (
+    menu: M,
+    options?: ModalState['options']
+  ) => Promise<ModalConfig<M>>;
   onComplete?: (menu: M, result: unknown) => Promise<void>;
 };
 
@@ -51,6 +57,22 @@ export type MenuButton<M extends Menu = Menu> = Pick<
 > & {
   component: ButtonBuilder;
   ordinal: number;
+};
+
+export type ModalConfig<M extends Menu = Menu> = {
+  /** The builder for the modal */
+  builder: ModalBuilder;
+  /** The onSubmit handler for the modal */
+  onSubmit?: (
+    menu: M,
+    fields: ModalSubmitFields,
+    options?: ModalState['options']
+  ) => Promise<void>;
+};
+
+export type ModalState = {
+  id: string;
+  options?: Record<string, unknown>;
 };
 
 export type AnySelectMenuBuilder = Exclude<

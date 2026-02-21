@@ -14,22 +14,22 @@ import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
 
-import { ADD_PROGRESSION_DEFINITION_COMMAND_NAME } from './addProgressionDefinition';
-import { EDIT_PROGRESSION_DEFINITION_COMMAND_NAME } from './editProgressionDefinition';
-import { getManageProgressionMenuEmbeds } from './progression.embeds';
+import { progressionsMenuEmbeds } from './progression.embeds';
+import { PROGRESSION_CREATE_NAME_COMMAND_NAME } from './progressionCreateName';
+import { PROGRESSION_EDIT_COMMAND_NAME } from './progressionEdit';
 
-const COMMAND_NAME = 'manage-progression';
-export const MANAGE_PROGRESSION_COMMAND_NAME = COMMAND_NAME;
+const COMMAND_NAME = 'progressions';
+export const PROGRESSIONS_COMMAND_NAME = COMMAND_NAME;
 
-type ManageProgressionCommandOptions = {
+type ProgressionsCommandOptions = {
   regionId: string;
 };
-type ManageProgressionCommand = ISlashCommand<
-  AdminMenu<ManageProgressionCommandOptions>,
-  ManageProgressionCommandOptions
+type ProgressionsCommand = ISlashCommand<
+  AdminMenu<ProgressionsCommandOptions>,
+  ProgressionsCommandOptions
 >;
 
-export const ManageProgressionCommand: ManageProgressionCommand = {
+export const ProgressionsCommand: ProgressionsCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -55,7 +55,7 @@ export const ManageProgressionCommand: ManageProgressionCommand = {
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getManageProgressionButtons(menu, region))
-      .setEmbeds((menu) => getManageProgressionMenuEmbeds(menu, region))
+      .setEmbeds((menu) => progressionsMenuEmbeds(menu, region))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -64,9 +64,9 @@ export const ManageProgressionCommand: ManageProgressionCommand = {
 };
 
 const getManageProgressionButtons = async (
-  _menu: AdminMenu<ManageProgressionCommandOptions>,
+  _menu: AdminMenu<ProgressionsCommandOptions>,
   region: Region
-): Promise<MenuButtonConfig<AdminMenu<ManageProgressionCommandOptions>>[]> => {
+): Promise<MenuButtonConfig<AdminMenu<ProgressionsCommandOptions>>[]> => {
   const progressionDefinitions = Array.from(
     region.progressionDefinitions.entries()
   );
@@ -76,7 +76,7 @@ const getManageProgressionButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, ADD_PROGRESSION_DEFINITION_COMMAND_NAME, {
+        MenuWorkflow.openMenu(menu, PROGRESSION_CREATE_NAME_COMMAND_NAME, {
           regionId: region.id,
         }),
     },
@@ -84,8 +84,8 @@ const getManageProgressionButtons = async (
       id: key,
       label: `${definition.name}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu<ManageProgressionCommandOptions>) =>
-        MenuWorkflow.openMenu(menu, EDIT_PROGRESSION_DEFINITION_COMMAND_NAME, {
+      onClick: async (menu: AdminMenu<ProgressionsCommandOptions>) =>
+        MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
           regionId: region.id,
           progressionKey: key,
         }),

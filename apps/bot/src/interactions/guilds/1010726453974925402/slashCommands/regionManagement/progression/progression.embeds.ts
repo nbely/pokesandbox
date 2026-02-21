@@ -4,7 +4,7 @@ import capitalize from 'lodash/capitalize';
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 import { ProgressionDefinition, Region } from '@shared/models';
 
-export const getManageProgressionMenuEmbeds = async <
+export const progressionsMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,
@@ -79,7 +79,7 @@ export const getManageProgressionMenuEmbeds = async <
   return [embed];
 };
 
-export const getSelectProgressionTypeEmbeds = async <
+export const progressionCreateKindMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,
@@ -118,7 +118,7 @@ export const getSelectProgressionTypeEmbeds = async <
   ];
 };
 
-export const getEditProgressionDefinitionEmbeds = async <
+export const progressionEditMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,

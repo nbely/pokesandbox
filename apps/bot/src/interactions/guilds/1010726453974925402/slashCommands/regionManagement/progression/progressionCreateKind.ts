@@ -1,9 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import {
   ButtonStyle,
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
-import { randomUUID } from 'node:crypto';
 
 import {
   AdminMenu,
@@ -15,22 +15,22 @@ import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { ProgressionDefinition, Region } from '@shared';
 
-import { getSelectProgressionTypeEmbeds } from './progression.embeds';
-import { EDIT_PROGRESSION_DEFINITION_COMMAND_NAME } from './editProgressionDefinition';
+import { progressionCreateKindMenuEmbeds } from './progression.embeds';
+import { PROGRESSION_EDIT_COMMAND_NAME } from './progressionEdit';
 
-const COMMAND_NAME = 'select-progression-type';
-export const SELECT_PROGRESSION_TYPE_COMMAND_NAME = COMMAND_NAME;
+const COMMAND_NAME = 'progression-create-kind';
+export const PROGRESSION_CREATE_KIND_COMMAND_NAME = COMMAND_NAME;
 
-type SelectProgressionTypeCommandOptions = {
+type ProgressionCreateKindCommandOptions = {
   regionId: string;
   progressionName: string;
 };
-type SelectProgressionTypeCommand = ISlashCommand<
-  AdminMenu<SelectProgressionTypeCommandOptions>,
-  SelectProgressionTypeCommandOptions
+type ProgressionCreateKindCommand = ISlashCommand<
+  AdminMenu<ProgressionCreateKindCommandOptions>,
+  ProgressionCreateKindCommandOptions
 >;
 
-export const SelectProgressionTypeCommand: SelectProgressionTypeCommand = {
+export const ProgressionCreateKindCommand: ProgressionCreateKindCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -54,7 +54,7 @@ export const SelectProgressionTypeCommand: SelectProgressionTypeCommand = {
       .setButtons((menu) =>
         getSelectProgressionTypeButtons(menu, regionId, progressionName)
       )
-      .setEmbeds((menu) => getSelectProgressionTypeEmbeds(menu, regionId))
+      .setEmbeds((menu) => progressionCreateKindMenuEmbeds(menu, regionId))
       .setCancellable()
       .setReturnable()
       .build();
@@ -62,11 +62,11 @@ export const SelectProgressionTypeCommand: SelectProgressionTypeCommand = {
 };
 
 const getSelectProgressionTypeButtons = async (
-  _menu: AdminMenu<SelectProgressionTypeCommandOptions>,
+  _menu: AdminMenu<ProgressionCreateKindCommandOptions>,
   regionId: string,
   progressionName: string
 ): Promise<
-  MenuButtonConfig<AdminMenu<SelectProgressionTypeCommandOptions>>[]
+  MenuButtonConfig<AdminMenu<ProgressionCreateKindCommandOptions>>[]
 > => {
   const region = await Region.findById(regionId);
   if (!region) {
@@ -101,14 +101,10 @@ const getSelectProgressionTypeButtons = async (
       }
 
       await region.save();
-      await MenuWorkflow.openMenu(
-        menu,
-        EDIT_PROGRESSION_DEFINITION_COMMAND_NAME,
-        {
-          regionId,
-          progressionKey,
-        }
-      );
+      await MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
+        regionId,
+        progressionKey,
+      });
     },
   }));
 };

@@ -1,4 +1,5 @@
-export { AddProgressionDefinitionCommand } from './addProgressionDefinition';
-export { EditProgressionDefinitionCommand } from './editProgressionDefinition';
-export { ManageProgressionCommand } from './manageProgression';
-export { SelectProgressionTypeCommand } from './selectProgressionType';
+export { MilestonesCommand } from './milestones';
+export { ProgressionCreateKindCommand } from './progressionCreateKind';
+export { ProgressionCreateNameCommand } from './progressionCreateName';
+export { ProgressionEditCommand } from './progressionEdit';
+export { ProgressionsCommand } from './progressions';

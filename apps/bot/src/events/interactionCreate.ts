@@ -130,10 +130,8 @@ const handleMessageComponentInteraction = async (
     const button: IButtonCommand | undefined =
       client.buttons.get(interaction.customId) ||
       client.buttons.get(interaction.customId.split('_')[0]);
+
     if (!button) return;
-    // interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-    // return;
-    // }
 
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
@@ -170,10 +168,7 @@ const handleMessageComponentInteraction = async (
     const stringSelectMenu: IStringSelectMenu | undefined =
       client.stringSelectMenus.get(interaction.customId);
 
-    if (!stringSelectMenu) {
-      interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-      return;
-    }
+    if (!stringSelectMenu) return;
 
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
@@ -190,10 +185,9 @@ const handleMessageComponentInteraction = async (
   if (interaction.isUserSelectMenu()) {
     const userSelectMenu: IUserSelectMenu | undefined =
       client.userSelectMenus.get(interaction.customId);
-    if (!userSelectMenu) {
-      interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-      return;
-    }
+
+    if (!userSelectMenu) return;
+
     const authenticatedCMDOptions = await commandOptionsProcessor(
       client,
       interaction,
@@ -215,10 +209,8 @@ const handleModalSubmitInteraction = async (
   const modalForm: IModalForm | undefined = client.modalForms.get(
     interaction.customId
   );
-  if (!modalForm) {
-    interaction.reply({ content: 'An error has ocurred', ephemeral: true });
-    return;
-  }
+  if (!modalForm) return;
+
   const authenticatedCMDOptions = await commandOptionsProcessor(
     client,
     interaction,
