@@ -1,7 +1,7 @@
 import type { AdminMenu, MenuButtonConfig } from '@bot/classes';
 import type { ProgressionDefinition, Region } from '@shared';
 
-export type EditFieldConfig = {
+export type EditProgressionFieldConfig = {
   handleInput: (
     progression: ProgressionDefinition,
     input: string
@@ -9,16 +9,14 @@ export type EditFieldConfig = {
   hasClearButton?: boolean;
   hasMessageHandler?: boolean;
   getCustomButtons?: (
-    config: EditFieldConfig,
+    config: EditProgressionFieldConfig,
     region: Region,
     progressionKey: string,
     progression: ProgressionDefinition
-  ) => Promise<
-    MenuButtonConfig<AdminMenu<EditProgressionDefinitionCommandOptions>>[]
-  >;
+  ) => Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]>;
 };
 
-export type EditProgressionDefinitionCommandOptions = {
+export type ProgressionEditCommandOptions = {
   regionId: string;
   progressionKey: string;
 };

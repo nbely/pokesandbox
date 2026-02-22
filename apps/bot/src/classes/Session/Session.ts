@@ -8,6 +8,7 @@ import {
   InteractionCollector,
   Message,
   MessageComponentInteraction,
+  ModalSubmitInteraction,
 } from 'discord.js';
 
 import { buildErrorEmbed } from '@bot/embeds/errorEmbed';
@@ -16,7 +17,11 @@ import { ComponentInteraction } from '@bot/structures/interfaces';
 import type { BotClient } from '../BotClient/BotClient';
 import { MenuResponseType } from '../constants';
 import { Menu } from '../Menu/Menu';
-import type { MenuCommandOptions, SessionHistoryEntry } from '../types';
+import type {
+  MenuCommandOptions,
+  ModalState,
+  SessionHistoryEntry,
+} from '../types';
 
 interface SessionConstructor<T extends Session> {
   new (
@@ -30,6 +35,11 @@ type MixedInteractionResponse = {
   type: MenuResponseType.MESSAGE | MenuResponseType.COMPONENT;
   value?: string;
 };
+
+type ModalInteractionResult =
+  | { outcome: 'modal' }
+  | { outcome: 'component' }
+  | { outcome: 'message'; value: string };
 
 type ResponseRecord = {
   menuName: string;
@@ -55,6 +65,7 @@ export class Session {
   private _client: BotClient;
   private _commandInteraction: ChatInputCommandInteraction;
   private _componentInteraction: MessageComponentInteraction | null = null;
+  private _modalSubmitInteraction: ModalSubmitInteraction | null = null;
   private _currentMenu: Menu | null = null;
   private _history: SessionHistoryEntry[] = [];
   private _initialCommand: string;
@@ -65,7 +76,8 @@ export class Session {
   private _lastInput: string | string[] | null = null;
   private _lastInteraction:
     | ChatInputCommandInteraction
-    | MessageComponentInteraction;
+    | MessageComponentInteraction
+    | ModalSubmitInteraction;
   private _message?: Message;
   private _responseHistory: ResponseRecord[] = [];
   private _state: Collection<string, unknown> = new Collection();
@@ -97,6 +109,10 @@ export class Session {
     return this._componentInteraction;
   }
 
+  get modalSubmitInteraction(): ModalSubmitInteraction | null {
+    return this._modalSubmitInteraction;
+  }
+
   /** Gets the current initialized menu.
    * Throws an error if the session is not initialized or no menu is available
    **/
@@ -124,8 +140,26 @@ export class Session {
 
   get lastInteraction():
     | ChatInputCommandInteraction
-    | MessageComponentInteraction {
+    | MessageComponentInteraction
+    | ModalSubmitInteraction {
     return this._lastInteraction;
+  }
+
+  get lastNonModalInteraction():
+    | ChatInputCommandInteraction
+    | MessageComponentInteraction {
+    return this._componentInteraction ?? this._commandInteraction;
+  }
+
+  get lastNonCommandInteraction():
+    | MessageComponentInteraction
+    | ModalSubmitInteraction
+    | null {
+    if (this.lastInteraction instanceof ChatInputCommandInteraction) {
+      return this.componentInteraction ?? this.modalSubmitInteraction;
+    } else {
+      return this.lastInteraction;
+    }
   }
 
   // Add a new menu to the session and update the current menu
@@ -431,6 +465,16 @@ export class Session {
     this._lastInput = values;
   }
 
+  private async handleModalSubmitInteraction(): Promise<void> {
+    if (!this.modalSubmitInteraction) {
+      throw new Error(
+        'There was an error processing your modal submit interaction.'
+      );
+    }
+    const fields = this.modalSubmitInteraction.fields;
+    await this.currentMenu.handleModalSubmit(fields);
+  }
+
   private async awaitMessageReply(time: number): Promise<string> {
     const filter = (message: Message): boolean => {
       return message.author.id === this.commandInteraction.user.id;
@@ -448,7 +492,9 @@ export class Session {
       time,
     });
 
-    const response: string | undefined = collectedMessage?.first()?.content;
+    const response: string | undefined = collectedMessage
+      ?.first()
+      ?.content?.trim();
     if (!response) {
       throw new Error('Invalid response received.');
     }
@@ -499,6 +545,7 @@ export class Session {
       compCollector?.on('collect', async (componentInteraction) => {
         msgCollector?.stop();
         this._componentInteraction = componentInteraction;
+        this._lastInteraction = componentInteraction;
         resolve({ type: MenuResponseType.COMPONENT });
       });
       compCollector?.on('end', async (collected) => {
@@ -515,8 +562,10 @@ export class Session {
 
       msgCollector?.on('collect', async (message) => {
         compCollector?.stop();
+        const response = message.content?.trim();
         this._isReset = true;
-        resolve({ value: message.content, type: MenuResponseType.MESSAGE });
+        this._lastInput = response;
+        resolve({ value: response, type: MenuResponseType.MESSAGE });
       });
       msgCollector?.on('end', async (collected) => {
         if (collected.size === 0) {
@@ -535,10 +584,18 @@ export class Session {
   }
 
   async sendEmbedMessage(): Promise<void> {
-    if (!this.message) {
-      this._message = await this.commandInteraction.followUp(
-        this.currentMenu.getResponseOptions()
+    const activeModal = this.getState<ModalState>('activeModal');
+    if (
+      activeModal &&
+      this.currentMenu.modal &&
+      activeModal.id === this.currentMenu.modal.builder.data.custom_id
+    ) {
+      await this.lastNonModalInteraction?.showModal(
+        this.currentMenu.modal.builder
       );
+    } else if (!this.message) {
+      const responseOptions = this.currentMenu.getResponseOptions();
+      this._message = await this.commandInteraction.followUp(responseOptions);
       // this.info = '';
     } else {
       await this.updateEmbedMessage();
@@ -548,23 +605,27 @@ export class Session {
   async updateEmbedMessage(): Promise<void> {
     if (this._isReset) {
       if (
-        this.componentInteraction?.deferred === false &&
-        this.componentInteraction?.replied === false
+        this.lastInteraction?.deferred === false &&
+        this.lastInteraction?.replied === false
       ) {
-        await this.componentInteraction.deferReply();
+        await this.lastInteraction.deferReply();
       }
-      this._message =
-        (await this.componentInteraction?.followUp(
-          this.currentMenu.getResponseOptions()
-        )) ??
-        (await this.commandInteraction.followUp(
-          this.currentMenu.getResponseOptions()
-        ));
-      this._isReset = false;
-    } else {
-      await this.componentInteraction?.update(
+      this._message = await this.lastInteraction?.followUp(
         this.currentMenu.getResponseOptions()
       );
+      this._isReset = false;
+    } else {
+      if (this.lastInteraction instanceof ModalSubmitInteraction) {
+        if (!this.message) {
+          throw new Error('No message available to update after modal submit.');
+        }
+        // await this.lastInteraction.deleteReply();
+        await this.message.edit(this.currentMenu.getResponseOptions());
+      } else {
+        await this.componentInteraction?.update(
+          this.currentMenu.getResponseOptions()
+        );
+      }
     }
   }
 
@@ -578,11 +639,138 @@ export class Session {
       );
     };
 
-    this._componentInteraction =
-      (await this.message?.awaitMessageComponent({
-        filter,
-        time,
-      })) ?? null;
+    if (!this.message) {
+      throw new Error(
+        'No message available to collect component interactions.'
+      );
+    }
+
+    const newComponentInteraction = await this.message.awaitMessageComponent({
+      filter,
+      time,
+    });
+    this._componentInteraction = newComponentInteraction;
+    this._lastInteraction = newComponentInteraction;
+  }
+
+  /**
+   * Race the modal submit against the menu's normal interaction listeners.
+   * If the user dismisses the modal and interacts with the underlying menu,
+   * we get the fallback result. If all listeners time out, throws an error.
+   */
+  private async awaitModalInteraction(
+    time: number
+  ): Promise<ModalInteractionResult> {
+    const message = this.message;
+    if (!message) {
+      throw new Error('No message available to collect interactions.');
+    }
+
+    const modalFilter = (interaction: ModalSubmitInteraction): boolean =>
+      interaction.customId === this.currentMenu.modal?.builder.data.custom_id;
+
+    const componentFilter = (
+      interaction: MessageComponentInteraction
+    ): boolean =>
+      interaction.user.id ===
+      (this.componentInteraction?.user.id ?? this.commandInteraction.user.id);
+
+    const menuResponseType = this.currentMenu.responseType;
+    let settled = false;
+
+    // Track how many listeners are active so we know when all have failed
+    let listenerCount = 1; // modal is always active
+    if (
+      menuResponseType === MenuResponseType.COMPONENT ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    if (
+      menuResponseType === MenuResponseType.MESSAGE ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    let failedCount = 0;
+
+    return new Promise<ModalInteractionResult>((resolve, reject) => {
+      const settle = (result: ModalInteractionResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+
+      const onListenerFailed = () => {
+        failedCount++;
+        if (failedCount >= listenerCount && !settled) {
+          settled = true;
+          reject(new Error('No response received.'));
+        }
+      };
+
+      // Always listen for modal submit
+      this.lastNonModalInteraction
+        .awaitModalSubmit({ filter: modalFilter, time })
+        .then(async (interaction) => {
+          if (settled) return;
+          await interaction.deferUpdate();
+          this._modalSubmitInteraction = interaction;
+          this._lastInteraction = interaction;
+          settle({ outcome: 'modal' });
+        })
+        .catch(() => {
+          onListenerFailed();
+        });
+
+      // Listen for component interactions if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.COMPONENT ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        message
+          .awaitMessageComponent({ filter: componentFilter, time })
+          .then((interaction) => {
+            this._componentInteraction = interaction;
+            this._lastInteraction = interaction;
+            settle({ outcome: 'component' });
+          })
+          .catch(() => {
+            onListenerFailed();
+          });
+      }
+
+      // Listen for message responses if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.MESSAGE ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        const channel = this.commandInteraction.channel;
+        if (channel && channel.type !== ChannelType.GroupDM) {
+          const msgFilter = (msg: Message): boolean =>
+            msg.author.id === this.commandInteraction.user.id;
+
+          channel
+            .awaitMessages({
+              filter: msgFilter,
+              max: 1,
+              time,
+              errors: ['time'],
+            })
+            .then((collected) => {
+              const response = collected.first()?.content?.trim();
+              if (response) {
+                this._isReset = true;
+                this._lastInput = response;
+                settle({ outcome: 'message', value: response });
+              }
+            })
+            .catch(() => {
+              onListenerFailed();
+            });
+        }
+      }
+    });
   }
 
   private async processMenus(): Promise<void> {
@@ -590,14 +778,30 @@ export class Session {
       await this.sendEmbedMessage();
       const menuResponseType = this.currentMenu.responseType;
 
+      const activeModal = this.getState<ModalState>('activeModal');
+      if (activeModal) {
+        const result = await this.awaitModalInteraction(120_000);
+
+        if (result.outcome === 'modal') {
+          await this.handleModalSubmitInteraction();
+        } else if (result.outcome === 'component') {
+          await this.handleComponentInteraction();
+        } else if (result.outcome === 'message') {
+          await this.handleMessageResponse(result.value);
+        }
+        continue;
+      }
+
       if (menuResponseType === MenuResponseType.MESSAGE) {
         const message = await this.awaitMessageReply(120_000);
         await this.handleMessageResponse(message);
+        continue;
       }
 
       if (menuResponseType === MenuResponseType.COMPONENT) {
         await this.awaitMenuInteraction(120_000);
         await this.handleComponentInteraction();
+        continue;
       }
 
       if (menuResponseType === MenuResponseType.MIXED) {

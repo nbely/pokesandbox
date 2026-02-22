@@ -9,6 +9,8 @@ import {
   MenuButton,
   MenuButtonConfig,
   MenuCommandOptions,
+  ModalConfig,
+  ModalState,
   PaginationOptions,
   ReservedButtonLabels,
   ReservedButtonOptions,
@@ -31,7 +33,11 @@ export class MenuBuilder<
   private _handleMessageCallback?: (menu: M, response: string) => Promise<void>;
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
-  private _setSelectMenuCallback?: (menu: M) => SelectMenuConfig<M>;
+  private _setModalCallback?: (
+    menu: M,
+    options?: ModalState['options']
+  ) => Promise<ModalConfig<M>>;
+  private _setSelectMenuCallback?: (menu: M) => Promise<SelectMenuConfig<M>>;
 
   protected _name: string;
   protected _session: Session;
@@ -67,7 +73,17 @@ export class MenuBuilder<
     return this;
   }
 
-  public setSelectMenu(callback: (menu: M) => SelectMenuConfig<M>) {
+  public setModal(
+    callback: (
+      menu: M,
+      options?: ModalState['options']
+    ) => Promise<ModalConfig<M>>
+  ) {
+    this._setModalCallback = callback;
+    return this;
+  }
+
+  public setSelectMenu(callback: (menu: M) => Promise<SelectMenuConfig<M>>) {
     this._setSelectMenuCallback = callback;
     return this;
   }
@@ -194,6 +210,7 @@ export class MenuBuilder<
       handleMessage: this._handleMessageCallback,
       setButtons: this._setButtonsCallback,
       setEmbeds: this._setEmbedsCallback,
+      setModal: this._setModalCallback,
       setSelectMenu: this._setSelectMenuCallback,
     };
   }

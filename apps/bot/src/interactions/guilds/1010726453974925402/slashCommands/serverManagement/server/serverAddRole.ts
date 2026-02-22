@@ -48,16 +48,16 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
           `Please select a role to grant Bot ${roleType} privileges to.`
         )
       )
-      .setSelectMenu((menu) => getServerAddRoleSelectMenu(menu, roleType))
+      .setSelectMenu(async (menu) => getServerAddRoleSelectMenu(menu, roleType))
       .setTrackedInHistory()
       .build();
   },
 };
 
-export const getServerAddRoleSelectMenu = (
+export const getServerAddRoleSelectMenu = async (
   _menu: AdminMenu<ServerAddRoleCommandOptions>,
   roleType: string
-): SelectMenuConfig<AdminMenu<ServerAddRoleCommandOptions>> => {
+): Promise<SelectMenuConfig<AdminMenu<ServerAddRoleCommandOptions>>> => {
   return {
     builder: new RoleSelectMenuBuilder()
       .setCustomId(`server-add-${roleType}-role`)

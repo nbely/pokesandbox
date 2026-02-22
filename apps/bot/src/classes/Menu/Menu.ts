@@ -7,6 +7,8 @@ import {
   type EmbedBuilder,
   type Message,
   type MessageActionRowComponentBuilder,
+  ModalSubmitFields,
+  ModalSubmitInteraction,
 } from 'discord.js';
 
 import type { ComponentInteraction } from '@bot/structures/interfaces';
@@ -24,6 +26,8 @@ import {
   MenuButton,
   MenuButtonConfig,
   MenuCommandOptions,
+  ModalConfig,
+  ModalState,
   PaginationConfig,
   PaginationState,
   SelectMenuConfig,
@@ -42,7 +46,10 @@ export class Menu<
   > = new Collection();
   private _buttons: Collection<string, MenuButton<Self>> = new Collection();
   private _client: BotClient;
-  private _interaction: ChatInputCommandInteraction | ComponentInteraction;
+  private _interaction:
+    | ChatInputCommandInteraction
+    | ComponentInteraction
+    | ModalSubmitInteraction;
   private _commandOptions: C;
   private _components: ActionRowBuilder<MessageActionRowComponentBuilder>[] =
     [];
@@ -53,6 +60,7 @@ export class Menu<
   private _isRootMenu = true;
   private _isTrackedInHistory: boolean;
   private _message?: Message;
+  private _modal?: ModalConfig<Self>;
   private _name: string;
   private _paginationConfig: PaginationConfig<Self>;
   private _paginationState: PaginationState = {
@@ -68,10 +76,15 @@ export class Menu<
   private _selectMenu?: SelectMenuConfig<Self>;
   private _session: Session;
   private _thumbnail?: string;
+  private _warningMessage?: string;
 
   protected _handleMessage?: (menu: Self, response: string) => Promise<void>;
   protected _setButtons?: (menu: Self) => Promise<MenuButtonConfig<Self>[]>;
-  protected _setSelectMenu?: (menu: Self) => SelectMenuConfig<Self>;
+  protected _setModal?: (
+    menu: Self,
+    options?: ModalState['options']
+  ) => Promise<ModalConfig<Self>>;
+  protected _setSelectMenu?: (menu: Self) => Promise<SelectMenuConfig<Self>>;
   protected _setEmbeds: (menu: Self) => Promise<EmbedBuilder[]>;
   protected _onComplete?: (menu: Self, result: unknown) => Promise<void>;
 
@@ -94,6 +107,7 @@ export class Menu<
     this._responseType = options.responseType;
     this._handleMessage = options.handleMessage;
     this._setButtons = options.setButtons;
+    this._setModal = options.setModal;
     this._setSelectMenu = options.setSelectMenu;
     this._setEmbeds = options.setEmbeds;
     this._onComplete = options.onComplete;
@@ -166,7 +180,10 @@ export class Menu<
     this.setDescription();
   }
 
-  get interaction(): ChatInputCommandInteraction | ComponentInteraction {
+  get interaction():
+    | ChatInputCommandInteraction
+    | ComponentInteraction
+    | ModalSubmitInteraction {
     return this._interaction;
   }
 
@@ -188,6 +205,10 @@ export class Menu<
 
   set message(message: Message | undefined) {
     this._message = message;
+  }
+
+  get modal(): ModalConfig<Self> | undefined {
+    return this._modal;
   }
 
   get name(): string {
@@ -227,6 +248,14 @@ export class Menu<
     this._thumbnail = thumbnail;
   }
 
+  get warningMessage(): string | undefined {
+    return this._warningMessage;
+  }
+
+  set warningMessage(warningMessage: string | undefined) {
+    this._warningMessage = warningMessage;
+  }
+
   /**** Public Methods ****/
 
   public getResponseOptions() {
@@ -262,16 +291,25 @@ export class Menu<
     this.validateButtonPaginationOptions();
   }
 
-  public refreshSelectMenu() {
+  public async refreshSelectMenu() {
     if (!this._setSelectMenu) {
       throw new Error('Select Menu cannot be refreshed.');
     }
-    this._selectMenu = this._setSelectMenu(this.self);
+    this._selectMenu = await this._setSelectMenu(this.self);
 
     const actionRow = new ActionRowBuilder<AnySelectMenuBuilder>();
     actionRow.addComponents(this._selectMenu.builder);
 
     this.components = [actionRow];
+  }
+
+  public async refreshModal(options?: ModalState['options']) {
+    if (!this._setModal) {
+      throw new Error('Modal cannot be refreshed.');
+    }
+    const resolvedOptions =
+      options ?? this.session.getState<ModalState>('activeModal')?.options;
+    this._modal = await this._setModal(this.self, resolvedOptions);
   }
 
   public async refresh() {
@@ -280,7 +318,11 @@ export class Menu<
     }
 
     if (this._setSelectMenu) {
-      this.refreshSelectMenu();
+      await this.refreshSelectMenu();
+    }
+
+    if (this._setModal) {
+      await this.refreshModal();
     }
 
     await this.updatePagination();
@@ -326,6 +368,16 @@ export class Menu<
     }
   }
 
+  public async handleModalSubmit(fields: ModalSubmitFields) {
+    const activeModal = this.session.getState<ModalState>('activeModal');
+    if (!this._modal || !activeModal) {
+      throw new Error('No modal defined for receiving submission.');
+    }
+
+    await this._modal.onSubmit?.(this.self, fields, activeModal.options);
+    this.session.deleteState('activeModal');
+  }
+
   /**
    * Trigger the completion handler for this menu
    */
@@ -338,6 +390,31 @@ export class Menu<
     if (this._onComplete) {
       await this._onComplete(this.self, result);
     }
+  }
+
+  public async openModal(options?: ModalState['options']): Promise<void> {
+    if (!this._setModal) {
+      throw new Error('No modal defined for this menu.');
+    }
+
+    await this.refreshModal(options);
+
+    const modalId = this.modal?.builder.data.custom_id;
+
+    if (!modalId) {
+      throw new Error('Modal must have a custom ID.');
+    }
+
+    // Set state once with the final (post-refresh) modal ID
+    this.session.setState('activeModal', { id: modalId, options });
+  }
+
+  /**
+   * Clear modal state without processing a submission.
+   * Called when the user dismisses/cancels the modal and interacts with the menu instead.
+   */
+  public cancelModal(): void {
+    this.session.deleteState('activeModal');
   }
 
   /**** Private Methods ****/

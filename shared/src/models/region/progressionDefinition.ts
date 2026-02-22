@@ -4,7 +4,7 @@ import { z } from 'zod';
 // Zod Validation Schemas
 
 const progressionBaseSchema = z.object({
-  displayName: z.string(),
+  name: z.string(),
   description: z.string().optional(),
   visibility: z
     .enum(['public', 'discoverable', 'hidden'])
@@ -25,6 +25,8 @@ const milestoneSchema = z.object({
   imageUrl: z.string().optional(),
   ordinal: z.number().optional(),
 });
+
+export type ProgressionMilestone = z.infer<typeof milestoneSchema>;
 
 const milestoneProgressionSchema = progressionBaseSchema.extend({
   kind: z.literal('milestone'),
@@ -65,7 +67,7 @@ export const progressionDefinitionDbSchema = new Schema(
       required: true,
     },
 
-    displayName: { type: String, required: true },
+    name: { type: String, required: true },
     description: { type: String },
 
     visibility: {
