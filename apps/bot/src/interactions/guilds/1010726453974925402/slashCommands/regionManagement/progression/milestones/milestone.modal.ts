@@ -22,6 +22,7 @@ import { MilestonesCommandOptions } from './types';
 export const getMilestoneUpsertModal = async (
   _menu: AdminMenu<MilestonesCommandOptions>,
   region: Region,
+  progressionKey: string,
   progression: ProgressionDefinition,
   options?: ModalState['options']
 ): Promise<ModalConfig<AdminMenu<MilestonesCommandOptions>>> => {
@@ -132,7 +133,7 @@ export const getMilestoneUpsertModal = async (
         }
 
         progression.milestones.push({
-          key: `milestone-${Date.now()}`,
+          key: `milestone-${randomUUID()}`,
           label: name,
           description: description,
           ordinal: ordinal,
@@ -160,6 +161,7 @@ export const getMilestoneUpsertModal = async (
         milestone.ordinal = ordinal;
       }
 
+      region.progressionDefinitions.set(progressionKey, progression);
       await region.save();
       await menu.refresh();
     },

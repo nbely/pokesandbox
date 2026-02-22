@@ -60,7 +60,13 @@ export const MilestonesCommand: MilestonesCommand = {
       .setEmbeds((menu) => milestonesMenuEmbeds(menu, progression))
       .setButtons((menu) => getMilestonesButtons(menu, progression))
       .setModal((menu, options) =>
-        getMilestoneUpsertModal(menu, region, progression, options)
+        getMilestoneUpsertModal(
+          menu,
+          region,
+          progressionKey,
+          progression,
+          options
+        )
       )
       .setTrackedInHistory()
       .setCancellable()

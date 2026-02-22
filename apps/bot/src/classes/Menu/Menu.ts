@@ -303,12 +303,13 @@ export class Menu<
     this.components = [actionRow];
   }
 
-  public async refreshModal() {
-    const activeModal = this.session.getState<ModalState>('activeModal');
+  public async refreshModal(options?: ModalState['options']) {
     if (!this._setModal) {
       throw new Error('Modal cannot be refreshed.');
     }
-    this._modal = await this._setModal(this.self, activeModal?.options);
+    const resolvedOptions =
+      options ?? this.session.getState<ModalState>('activeModal')?.options;
+    this._modal = await this._setModal(this.self, resolvedOptions);
   }
 
   public async refresh() {
@@ -396,21 +397,15 @@ export class Menu<
       throw new Error('No modal defined for this menu.');
     }
 
-    let modalId = this.modal?.builder.data.custom_id;
+    await this.refreshModal(options);
+
+    const modalId = this.modal?.builder.data.custom_id;
 
     if (!modalId) {
       throw new Error('Modal must have a custom ID.');
     }
 
-    this.session.setState('activeModal', { id: modalId, options });
-    await this.refreshModal();
-
-    modalId = this.modal?.builder.data.custom_id;
-
-    if (!modalId) {
-      throw new Error('Modal must have a custom ID.');
-    }
-
+    // Set state once with the final (post-refresh) modal ID
     this.session.setState('activeModal', { id: modalId, options });
   }
 
