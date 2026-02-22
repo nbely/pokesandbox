@@ -11,6 +11,7 @@ import type {
   RoleSelectMenuInteraction,
   SlashCommandBuilder,
   SlashCommandOptionsOnlyBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   UserContextMenuCommandInteraction,
@@ -105,7 +106,7 @@ export interface ISlashCommand<
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
-    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
+    | SlashCommandSubcommandsOnlyBuilder;
   createMenu?: CreateMenuFunction<T, TOptions>;
   execute?: (session: Session) => void;
 }

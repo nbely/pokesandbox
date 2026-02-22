@@ -11,7 +11,7 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { ProgressionDefinition, Region } from '@shared';
+import { ProgressionDefinition, Region, Server } from '@shared';
 
 import { assertProgressionKind } from '../utils';
 import { milestonesMenuEmbeds } from './milestone.embeds';
@@ -32,12 +32,71 @@ export const MilestonesCommand: MilestonesCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: async (_client, interaction) => {
+    const guildId = interaction.guildId;
+    if (!guildId) return;
+
+    const focused = interaction.options.getFocused(true);
+
+    if (focused.name === 'region_id') {
+      const server = await Server.findServerWithRegions({
+        serverId: guildId,
+      });
+      if (!server) return interaction.respond([]);
+
+      const choices = server.regions
+        .filter((region) =>
+          region.name.toLowerCase().includes(focused.value.toLowerCase())
+        )
+        .slice(0, 25)
+        .map((region) => ({
+          name: region.name,
+          value: region._id.toString(),
+        }));
+
+      await interaction.respond(choices);
+    }
+
+    if (focused.name === 'progression_key') {
+      const regionId = interaction.options.getString('region_id');
+      if (!regionId) return interaction.respond([]);
+
+      const region = await Region.findById(regionId);
+      if (!region) return interaction.respond([]);
+
+      const choices = Array.from(region.progressionDefinitions.entries())
+        .filter(([, def]) =>
+          def.name.toLowerCase().includes(focused.value.toLowerCase())
+        )
+        .slice(0, 25)
+        .map(([key, def]) => ({
+          name: def.name,
+          value: key,
+        }));
+
+      await interaction.respond(choices);
+    }
+  },
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription(
       'Create a new milestone for a region progression definition'
     )
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region to manage')
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('progression_key')
+        .setDescription('The progression definition to manage milestones for')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
   createMenu: async (session, options) => {
     if (!options?.regionId || !options?.progressionKey) {
       throw new Error(
