@@ -1,7 +1,7 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 import { Types } from 'mongoose';
 
-import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
+import { AdminMenuBuilder, MenuWorkflow, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
@@ -69,7 +69,9 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
           await server.save();
 
           menu.prompt = `Successfully created the new region: \`${region.name}\``;
-          await menu.session.goBack();
+          await menu.session.goBack(async () =>
+            MenuWorkflow.openMenu(menu, 'regions')
+          );
         }
       )
       .setTrackedInHistory()

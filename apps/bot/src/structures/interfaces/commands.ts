@@ -1,4 +1,5 @@
 import type {
+  AutocompleteInteraction,
   ButtonBuilder,
   ButtonInteraction,
   ContextMenuCommandBuilder,
@@ -10,6 +11,7 @@ import type {
   RoleSelectMenuInteraction,
   SlashCommandBuilder,
   SlashCommandOptionsOnlyBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   UserContextMenuCommandInteraction,
@@ -97,10 +99,14 @@ export interface ISlashCommand<
   T extends Menu = Menu,
   TOptions extends MenuCommandOptions = MenuCommandOptions
 > extends IBaseCommand {
+  autocomplete?: (
+    client: BotClient,
+    interaction: AutocompleteInteraction
+  ) => void | Promise<void>;
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
-    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
+    | SlashCommandSubcommandsOnlyBuilder;
   createMenu?: CreateMenuFunction<T, TOptions>;
   execute?: (session: Session) => void;
 }
