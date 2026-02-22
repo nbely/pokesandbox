@@ -231,7 +231,7 @@ export class Session {
   }
 
   // Go back to the previous menu, if available
-  public async goBack() {
+  public async goBack(fallbackFn?: () => Promise<void>) {
     // Store completion result from the current menu before going back
     const returningMenuName = this.currentMenu.name;
 
@@ -246,6 +246,8 @@ export class Session {
     // First, restore the previous menu context
     if (lastHistoryEntry) {
       this._currentMenu = lastHistoryEntry.menu;
+    } else if (fallbackFn) {
+      return await fallbackFn();
     } else {
       this._isCompleted = true;
       return; // No menu to go back to, exit early
