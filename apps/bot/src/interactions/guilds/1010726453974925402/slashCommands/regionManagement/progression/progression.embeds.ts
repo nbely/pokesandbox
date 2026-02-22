@@ -4,6 +4,8 @@ import capitalize from 'lodash/capitalize';
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 import { ProgressionDefinition, Region } from '@shared/models';
 
+import { assertProgressionKind } from './utils';
+
 export const progressionsMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
@@ -198,13 +200,7 @@ export const progressionEditMenuEmbeds = async <
         value: progression.sequential ? 'Yes' : 'No',
         inline: true,
       },
-      {
-        name: 'Milestones',
-        value: progression.milestones?.length
-          ? progression.milestones.map((m) => `• ${m.label}`).join('\n')
-          : 'None',
-        inline: false,
-      }
+      buildMilestoneListField(progression)
     );
   }
 
@@ -221,4 +217,30 @@ export const progressionEditMenuEmbeds = async <
       )
       .addFields(fields),
   ];
+};
+
+export const buildMilestoneListField = (
+  progression: ProgressionDefinition
+): EmbedField => {
+  assertProgressionKind(progression, 'milestone');
+  return {
+    name: 'Milestones',
+    value: progression.milestones?.length
+      ? progression.milestones
+          .sort((a, b) => {
+            if (a.ordinal != null && b.ordinal != null) {
+              return a.ordinal - b.ordinal;
+            } else if (a.ordinal != null) {
+              return -1;
+            } else if (b.ordinal != null) {
+              return 1;
+            } else {
+              return 0;
+            }
+          })
+          .map((m) => `${m.ordinal ? `${m.ordinal}.` : '•'} ${m.label}`)
+          .join('\n')
+      : 'None',
+    inline: false,
+  };
 };
