@@ -1,4 +1,4 @@
-import { ModalSubmitFields } from 'discord.js';
+import { ModalSubmitFields, TextInputBuilder } from 'discord.js';
 
 export function getModalTextValue(
   fields: ModalSubmitFields['fields'],
@@ -41,3 +41,14 @@ export function getModalSelectValues(
   if (!field || !('values' in field)) return undefined;
   return [...field.values];
 }
+
+export const setValueOnInputBuilderIfExists = (
+  builder: TextInputBuilder,
+  value?: string
+) => {
+  if (value) {
+    builder.setValue(value);
+  }
+
+  return builder;
+};

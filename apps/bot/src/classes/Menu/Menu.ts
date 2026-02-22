@@ -76,6 +76,7 @@ export class Menu<
   private _selectMenu?: SelectMenuConfig<Self>;
   private _session: Session;
   private _thumbnail?: string;
+  private _warningMessage?: string;
 
   protected _handleMessage?: (menu: Self, response: string) => Promise<void>;
   protected _setButtons?: (menu: Self) => Promise<MenuButtonConfig<Self>[]>;
@@ -247,6 +248,14 @@ export class Menu<
     this._thumbnail = thumbnail;
   }
 
+  get warningMessage(): string | undefined {
+    return this._warningMessage;
+  }
+
+  set warningMessage(warningMessage: string | undefined) {
+    this._warningMessage = warningMessage;
+  }
+
   /**** Public Methods ****/
 
   public getResponseOptions() {
@@ -403,6 +412,14 @@ export class Menu<
     }
 
     this.session.setState('activeModal', { id: modalId, options });
+  }
+
+  /**
+   * Clear modal state without processing a submission.
+   * Called when the user dismisses/cancels the modal and interacts with the menu instead.
+   */
+  public cancelModal(): void {
+    this.session.deleteState('activeModal');
   }
 
   /**** Private Methods ****/

@@ -26,6 +26,8 @@ const milestoneSchema = z.object({
   ordinal: z.number().optional(),
 });
 
+export type ProgressionMilestone = z.infer<typeof milestoneSchema>;
+
 const milestoneProgressionSchema = progressionBaseSchema.extend({
   kind: z.literal('milestone'),
   sequential: z.boolean().optional().default(false),

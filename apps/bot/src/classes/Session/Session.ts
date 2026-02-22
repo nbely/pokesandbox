@@ -8,7 +8,6 @@ import {
   InteractionCollector,
   Message,
   MessageComponentInteraction,
-  MessageFlags,
   ModalSubmitInteraction,
 } from 'discord.js';
 
@@ -36,6 +35,11 @@ type MixedInteractionResponse = {
   type: MenuResponseType.MESSAGE | MenuResponseType.COMPONENT;
   value?: string;
 };
+
+type ModalInteractionResult =
+  | { outcome: 'modal' }
+  | { outcome: 'component' }
+  | { outcome: 'message'; value: string };
 
 type ResponseRecord = {
   menuName: string;
@@ -488,7 +492,9 @@ export class Session {
       time,
     });
 
-    const response: string | undefined = collectedMessage?.first()?.content;
+    const response: string | undefined = collectedMessage
+      ?.first()
+      ?.content?.trim();
     if (!response) {
       throw new Error('Invalid response received.');
     }
@@ -556,8 +562,10 @@ export class Session {
 
       msgCollector?.on('collect', async (message) => {
         compCollector?.stop();
+        const response = message.content?.trim();
         this._isReset = true;
-        resolve({ value: message.content, type: MenuResponseType.MESSAGE });
+        this._lastInput = response;
+        resolve({ value: response, type: MenuResponseType.MESSAGE });
       });
       msgCollector?.on('end', async (collected) => {
         if (collected.size === 0) {
@@ -645,23 +653,124 @@ export class Session {
     this._lastInteraction = newComponentInteraction;
   }
 
-  private async awaitModalInteraction(time: number): Promise<void> {
-    const filter = (interaction: ModalSubmitInteraction): boolean => {
-      return (
-        interaction.customId === this.currentMenu.modal?.builder.data.custom_id
-      );
-    };
+  /**
+   * Race the modal submit against the menu's normal interaction listeners.
+   * If the user dismisses the modal and interacts with the underlying menu,
+   * we get the fallback result. If all listeners time out, throws an error.
+   */
+  private async awaitModalInteraction(
+    time: number
+  ): Promise<ModalInteractionResult> {
+    const message = this.message;
+    if (!message) {
+      throw new Error('No message available to collect interactions.');
+    }
 
-    const newModalSubmitInteraction =
-      await this.lastNonModalInteraction.awaitModalSubmit({
-        filter,
-        time,
-      });
+    const modalFilter = (interaction: ModalSubmitInteraction): boolean =>
+      interaction.customId === this.currentMenu.modal?.builder.data.custom_id;
 
-    await newModalSubmitInteraction.deferUpdate();
+    const componentFilter = (
+      interaction: MessageComponentInteraction
+    ): boolean =>
+      interaction.user.id ===
+      (this.componentInteraction?.user.id ?? this.commandInteraction.user.id);
 
-    this._modalSubmitInteraction = newModalSubmitInteraction;
-    this._lastInteraction = newModalSubmitInteraction;
+    const menuResponseType = this.currentMenu.responseType;
+    let settled = false;
+
+    // Track how many listeners are active so we know when all have failed
+    let listenerCount = 1; // modal is always active
+    if (
+      menuResponseType === MenuResponseType.COMPONENT ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    if (
+      menuResponseType === MenuResponseType.MESSAGE ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    let failedCount = 0;
+
+    return new Promise<ModalInteractionResult>((resolve, reject) => {
+      const settle = (result: ModalInteractionResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+
+      const onListenerFailed = () => {
+        failedCount++;
+        if (failedCount >= listenerCount && !settled) {
+          settled = true;
+          reject(new Error('No response received.'));
+        }
+      };
+
+      // Always listen for modal submit
+      this.lastNonModalInteraction
+        .awaitModalSubmit({ filter: modalFilter, time })
+        .then(async (interaction) => {
+          if (settled) return;
+          await interaction.deferUpdate();
+          this._modalSubmitInteraction = interaction;
+          this._lastInteraction = interaction;
+          settle({ outcome: 'modal' });
+        })
+        .catch(() => {
+          onListenerFailed();
+        });
+
+      // Listen for component interactions if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.COMPONENT ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        message
+          .awaitMessageComponent({ filter: componentFilter, time })
+          .then((interaction) => {
+            this._componentInteraction = interaction;
+            this._lastInteraction = interaction;
+            settle({ outcome: 'component' });
+          })
+          .catch(() => {
+            onListenerFailed();
+          });
+      }
+
+      // Listen for message responses if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.MESSAGE ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        const channel = this.commandInteraction.channel;
+        if (channel && channel.type !== ChannelType.GroupDM) {
+          const msgFilter = (msg: Message): boolean =>
+            msg.author.id === this.commandInteraction.user.id;
+
+          channel
+            .awaitMessages({
+              filter: msgFilter,
+              max: 1,
+              time,
+              errors: ['time'],
+            })
+            .then((collected) => {
+              const response = collected.first()?.content?.trim();
+              if (response) {
+                this._isReset = true;
+                this._lastInput = response;
+                settle({ outcome: 'message', value: response });
+              }
+            })
+            .catch(() => {
+              onListenerFailed();
+            });
+        }
+      }
+    });
   }
 
   private async processMenus(): Promise<void> {
@@ -671,19 +780,28 @@ export class Session {
 
       const activeModal = this.getState<ModalState>('activeModal');
       if (activeModal) {
-        await this.awaitModalInteraction(5_000);
-        await this.handleModalSubmitInteraction();
+        const result = await this.awaitModalInteraction(120_000);
+
+        if (result.outcome === 'modal') {
+          await this.handleModalSubmitInteraction();
+        } else if (result.outcome === 'component') {
+          await this.handleComponentInteraction();
+        } else if (result.outcome === 'message') {
+          await this.handleMessageResponse(result.value);
+        }
         continue;
       }
 
       if (menuResponseType === MenuResponseType.MESSAGE) {
         const message = await this.awaitMessageReply(120_000);
         await this.handleMessageResponse(message);
+        continue;
       }
 
       if (menuResponseType === MenuResponseType.COMPONENT) {
         await this.awaitMenuInteraction(120_000);
         await this.handleComponentInteraction();
+        continue;
       }
 
       if (menuResponseType === MenuResponseType.MIXED) {
