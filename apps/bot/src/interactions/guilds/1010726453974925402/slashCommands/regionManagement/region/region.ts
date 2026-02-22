@@ -1,4 +1,5 @@
 import {
+  type AutocompleteInteraction,
   ButtonStyle,
   InteractionContextType,
   SlashCommandBuilder,
@@ -12,7 +13,7 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { Region } from '@shared/models';
+import { Region, Server } from '@shared/models';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';
@@ -36,11 +37,36 @@ export const RegionCommand: RegionCommand = {
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Manage a Region for your PokéSandbox server')
-    .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options = { regionId: '' }) =>
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) => {
+      return option
+        .setName('region_id')
+        .setDescription('The ID of the region to manage')
+        .setRequired(true)
+        .setAutocomplete(true);
+    }),
+  autocomplete: async (_client, interaction: AutocompleteInteraction) => {
+    const guildId = interaction.guildId;
+    if (!guildId) return;
+
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    const server = await Server.findServerWithRegions({ serverId: guildId });
+    if (!server) return interaction.respond([]);
+
+    const choices = server.regions
+      .filter((region) => region.name.toLowerCase().includes(focusedValue))
+      .slice(0, 25)
+      .map((region) => ({
+        name: region.name,
+        value: region._id.toString(),
+      }));
+
+    await interaction.respond(choices);
+  },
+  createMenu: async (session, options = { region_id: '' }) =>
     new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getRegionButtons(menu, options.regionId))
-      .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.regionId))
+      .setButtons((menu) => getRegionButtons(menu, options.region_id))
+      .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()

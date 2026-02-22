@@ -1,5 +1,6 @@
 import {
   ApplicationCommandType,
+  type AutocompleteInteraction,
   type CommandInteraction,
   type Interaction,
   InteractionType,
@@ -31,6 +32,9 @@ export const InteractionCreate: IBotEvent = {
       if (interaction.type === InteractionType.ApplicationCommand) {
         await handleApplicationCommandInteraction(client, interaction);
       }
+      if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
+        await handleAutocompleteInteraction(client, interaction);
+      }
       if (interaction.type === InteractionType.MessageComponent) {
         await handleMessageComponentInteraction(client, interaction);
       }
@@ -39,6 +43,23 @@ export const InteractionCreate: IBotEvent = {
       }
     });
   },
+};
+
+const handleAutocompleteInteraction = async (
+  client: BotClient,
+  interaction: AutocompleteInteraction
+): Promise<void> => {
+  const slashCommand: ISlashCommand | undefined = client.slashCommands.get(
+    interaction.commandName
+  );
+
+  if (!slashCommand?.autocomplete) return;
+
+  try {
+    await slashCommand.autocomplete(client, interaction);
+  } catch (error) {
+    console.error(`Autocomplete error for /${interaction.commandName}:`, error);
+  }
 };
 
 const handleApplicationCommandInteraction = async (

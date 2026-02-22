@@ -1,3 +1,3 @@
 export type RegionCommandOptions = {
-  regionId: string;
+  region_id: string;
 };

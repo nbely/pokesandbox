@@ -1,4 +1,5 @@
 import type {
+  AutocompleteInteraction,
   ButtonBuilder,
   ButtonInteraction,
   ContextMenuCommandBuilder,
@@ -97,6 +98,10 @@ export interface ISlashCommand<
   T extends Menu = Menu,
   TOptions extends MenuCommandOptions = MenuCommandOptions
 > extends IBaseCommand {
+  autocomplete?: (
+    client: BotClient,
+    interaction: AutocompleteInteraction
+  ) => void | Promise<void>;
   command:
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder

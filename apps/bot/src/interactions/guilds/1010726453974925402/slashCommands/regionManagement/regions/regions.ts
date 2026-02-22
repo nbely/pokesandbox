@@ -58,7 +58,7 @@ const getRegionsButtons = async (
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu) =>
         MenuWorkflow.openMenu(menu, REGION_COMMAND_NAME, {
-          regionId: region._id.toString(),
+          region_id: region._id.toString(),
         }),
     })),
   ];
