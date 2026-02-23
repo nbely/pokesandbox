@@ -10,13 +10,13 @@ import {
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
-import { ProgressionDefinition, Region, Server } from '@shared';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { assertProgressionKind } from '../utils';
 import { milestonesMenuEmbeds } from './milestone.embeds';
 import { getMilestoneUpsertModal } from './milestone.modal';
 import { MilestonesCommandOptions } from './types';
+import { getCachedRegion, getCachedRegions, getCachedServer } from '@bot/cache';
 
 const COMMAND_NAME = 'milestones';
 export const MILESTONES_COMMAND_NAME = COMMAND_NAME;
@@ -39,12 +39,11 @@ export const MilestonesCommand: MilestonesCommand = {
     const focused = interaction.options.getFocused(true);
 
     if (focused.name === 'region_id') {
-      const server = await Server.findServerWithRegions({
-        serverId: guildId,
-      });
+      const server = await getCachedServer(guildId);
       if (!server) return interaction.respond([]);
+      const regions = await getCachedRegions(server.regions);
 
-      const choices = server.regions
+      const choices = regions
         .filter((region) =>
           region.name.toLowerCase().includes(focused.value.toLowerCase())
         )
@@ -61,7 +60,7 @@ export const MilestonesCommand: MilestonesCommand = {
       const regionId = interaction.options.getString('region_id');
       if (!regionId) return interaction.respond([]);
 
-      const region = await Region.findById(regionId);
+      const region = await getCachedRegion(regionId);
       if (!region) return interaction.respond([]);
 
       const choices = Array.from(region.progressionDefinitions.entries())
@@ -98,34 +97,16 @@ export const MilestonesCommand: MilestonesCommand = {
         .setAutocomplete(true)
     ),
   createMenu: async (session, options) => {
-    if (!options?.regionId || !options?.progressionKey) {
-      throw new Error(
-        'Region and Progression are required to create a milestone.'
-      );
-    }
-
+    assertOptions(options);
     const { regionId, progressionKey } = options;
-    const region = await Region.findById(regionId);
-    if (!region) {
-      throw new Error('Region not found.');
-    }
-
-    const progression = region.progressionDefinitions.get(progressionKey);
-    if (!progression) {
-      throw new Error('Progression definition not found.');
-    }
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => milestonesMenuEmbeds(menu, progression))
-      .setButtons((menu) => getMilestonesButtons(menu, progression))
+      .setEmbeds((menu) => milestonesMenuEmbeds(menu, regionId, progressionKey))
+      .setButtons((menu) =>
+        getMilestonesButtons(menu, regionId, progressionKey)
+      )
       .setModal((menu, options) =>
-        getMilestoneUpsertModal(
-          menu,
-          region,
-          progressionKey,
-          progression,
-          options
-        )
+        getMilestoneUpsertModal(menu, regionId, progressionKey, options)
       )
       .setTrackedInHistory()
       .setCancellable()
@@ -135,10 +116,13 @@ export const MilestonesCommand: MilestonesCommand = {
 };
 
 export const getMilestonesButtons = async (
-  _menu: AdminMenu<MilestonesCommandOptions>,
-  progression: ProgressionDefinition
+  menu: AdminMenu<MilestonesCommandOptions>,
+  regionId: string,
+  progressionKey: string
 ): Promise<MenuButtonConfig<AdminMenu<MilestonesCommandOptions>>[]> => {
-  assertProgressionKind(progression, 'milestone');
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assertProgressionKind('milestone', progression);
 
   return [
     {

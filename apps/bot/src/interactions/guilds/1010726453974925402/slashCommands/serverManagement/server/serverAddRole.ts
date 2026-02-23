@@ -4,13 +4,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import {
   AdminMenuBuilder,
   SelectMenuConfig,
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { getServerMenuEmbeds } from './server.embeds';
 
@@ -36,9 +37,7 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
     .setDescription('Add a new admin or mod role to your server')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    if (!options?.roleType) {
-      throw new Error('Role type is required to add a server role.');
-    }
+    assertOptions(options);
     const { roleType } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
@@ -66,7 +65,7 @@ export const getServerAddRoleSelectMenu = async (
       menu: AdminMenu<ServerAddRoleCommandOptions>,
       selectedRoleIds: string[]
     ) => {
-      const server = await menu.fetchServer();
+      const server = await menu.getServer();
       const roleIds =
         roleType === 'admin' ? server.adminRoleIds : server.modRoleIds;
       const newRoleIds = selectedRoleIds.filter(
@@ -85,7 +84,7 @@ export const getServerAddRoleSelectMenu = async (
             server.modRoleIds = roleIds.concat(newRoleIds);
           }
 
-          await server.save();
+          await saveServer(server);
           menu.prompt = `Successfully added the ${roleType} roles: ${newRoles.join(
             ', '
           )}`;

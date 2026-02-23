@@ -8,7 +8,7 @@ export const getServerMenuEmbeds = async <
   menu: AdminMenu<C>,
   defaultPrompt = 'Please select an option to manage your server settings.'
 ) => {
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
   const prompt = menu.prompt || defaultPrompt;
 
   const prefixes: string =
@@ -16,11 +16,11 @@ export const getServerMenuEmbeds = async <
       ? server.prefixes.map((prefix) => `\`${prefix}\``).join(', ')
       : '`.` (default)';
 
-  const adminRoles = await menu.getRoles(server, 'admin');
+  const adminRoles = await menu.getRoles('admin');
   const adminRolesList: string = adminRoles.length
     ? adminRoles.join(', ')
     : 'None';
-  const modRoles = await menu.getRoles(server, 'mod');
+  const modRoles = await menu.getRoles('mod');
   const modRolesList: string = modRoles.length ? modRoles.join(', ') : 'None';
 
   return [

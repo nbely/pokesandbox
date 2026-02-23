@@ -42,7 +42,7 @@ export const RegionsCommand: ISlashCommand<AdminMenu> = {
 const getRegionsButtons = async (
   menu: AdminMenu
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const { regions } = await menu.fetchServerAndRegions();
+  const regions = await menu.getRegions();
 
   return [
     {

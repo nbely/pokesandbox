@@ -6,11 +6,10 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
-import { Region } from '@shared/models';
 
 const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
@@ -34,9 +33,7 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
     .setDescription('Manage the Pokédex for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    if (!options?.regionId) {
-      throw new Error('Region ID is required to manage a Pokédex.');
-    }
+    assertOptions(options);
     const { regionId } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
@@ -46,12 +43,8 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         quantityItemsPerPage: 50,
         nextButton: { style: ButtonStyle.Primary },
         previousButton: { style: ButtonStyle.Primary },
-        getTotalQuantityItems: async () => {
-          const region = await Region.findById(regionId);
-          if (!region) {
-            throw new Error('Region not found');
-          }
-
+        getTotalQuantityItems: async (menu) => {
+          const region = await menu.getRegion(regionId);
           return region.pokedex.length;
         },
       })

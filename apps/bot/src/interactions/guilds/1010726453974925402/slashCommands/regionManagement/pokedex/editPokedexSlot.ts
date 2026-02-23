@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -11,8 +12,8 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles, searchPokemon } from '@bot/utils';
-import { DexEntry, Region } from '@shared';
+import { assertOptions, onlyAdminRoles, searchPokemon } from '@bot/utils';
+import { DexEntry, type Region } from '@shared/models';
 
 import {
   getAddPokedexSlotEmbeds,
@@ -42,18 +43,13 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Add a Pokémon to a regional Pokédex slot')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) => {
-    if (!options?.regionId || !options?.pokedexNo) {
-      throw new Error(
-        'Region ID and Pokédex number are required to edit a Pokédex slot.'
-      );
-    }
+  createMenu: async (
+    session,
+    options: EditPokedexSlotCommandOptions | undefined
+  ) => {
+    assertOptions(options);
     const { regionId, pokedexNo } = options;
-
-    const region = await Region.findById(regionId);
-    if (!region) {
-      throw new Error('Region not found');
-    }
+    const region = await getAssertedCachedRegion(regionId);
 
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
@@ -65,7 +61,7 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
       builder
         .setEmbeds((menu) => getAddPokedexSlotEmbeds(menu, regionId, pokedexNo))
         .setMessageHandler((menu, response) =>
-          handleAddPokemonToSlot(menu, region, pokedexNo, response)
+          handleAddPokemonToSlot(menu, regionId, pokedexNo, response)
         );
     } else {
       builder
@@ -109,14 +105,11 @@ const getEditPokedexSlotButtons = async (
       label: 'Remove',
       style: ButtonStyle.Danger,
       onClick: async (menu) => {
-        const region = await Region.findById(regionId);
-        if (!region) {
-          throw new Error('Region not found');
-        }
+        const region = await menu.getRegion(regionId);
         const pokedexIndex = +pokedexNo - 1;
 
         region.pokedex[pokedexIndex] = null;
-        await region.save();
+        await saveRegion(region);
         await menu.hardRefresh();
       },
     },
@@ -125,11 +118,12 @@ const getEditPokedexSlotButtons = async (
 
 const handleAddPokemonToSlot = async (
   menu: AdminMenu<EditPokedexSlotCommandOptions>,
-  region: Region,
+  regionId: string,
   pokedexNo: string,
   pokemonName: string
 ) => {
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
+  const region = await menu.getRegion(regionId);
 
   const { exactMatch, potentialMatches } = await searchPokemon(
     server._id.toString(),
@@ -184,7 +178,7 @@ const handlePokemonSelected = async (
       id: selectedPokemon._id,
       name: selectedPokemon.name,
     };
-    await region.save();
+    await saveRegion(region);
     return menu.hardRefresh();
   }
 };

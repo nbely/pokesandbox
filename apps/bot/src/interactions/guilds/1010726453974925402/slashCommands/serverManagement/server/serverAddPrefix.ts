@@ -1,5 +1,6 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
@@ -28,12 +29,12 @@ export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
         )
       )
       .setMessageHandler(async (menu, response) => {
-        const server = await menu.fetchServer();
+        const server = await menu.getServer();
 
         try {
-          if (!server.prefixes?.includes(response)) {
+          if (!server.prefixes.includes(response)) {
             server.prefixes = [...server.prefixes, response];
-            await server.save();
+            await saveServer(server);
             menu.prompt = `Successfully added the prefix: \`${response}\``;
           } else {
             menu.prompt =

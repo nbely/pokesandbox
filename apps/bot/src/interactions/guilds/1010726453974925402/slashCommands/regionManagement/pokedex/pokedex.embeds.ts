@@ -1,7 +1,7 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
-import { DexEntry, Region } from '@shared/models';
+import { getAssertedCachedDexEntry, getCachedDexEntries } from '@bot/cache';
 
 export const getManagePokedexMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
@@ -10,10 +10,7 @@ export const getManagePokedexMenuEmbeds = async <
   regionId: string,
   defaultPrompt = 'Enter a space-separated Pokédex number (up to 1500) and Pokémon name to add a Pokémon to a blank Pokédex slot, or enter just a number to modify a Pokédex slot'
 ) => {
-  const region = await Region.findById(regionId);
-  if (!region) {
-    throw new Error('Region not found');
-  }
+  const region = await menu.getRegion(regionId);
   const pokedexLines: string[] = [];
 
   for (
@@ -82,10 +79,7 @@ export const getAddPokedexSlotEmbeds = async <
   pokedexNo: string,
   defaultPrompt = 'This slot is currently empty. Please enter the name of a Pokémon to add to the Pokédex slot.'
 ) => {
-  const region = await Region.findById(regionId);
-  if (!region) {
-    throw new Error('Region not found');
-  }
+  const region = await menu.getRegion(regionId);
 
   return [
     new EmbedBuilder()
@@ -106,14 +100,10 @@ export const getEditPokedexSlotEmbeds = async <
   regionId: string,
   pokedexNo: string
 ) => {
-  const region = await Region.findById(regionId);
-  if (!region) {
-    throw new Error('Region not found');
-  }
-  const dexEntry = await DexEntry.findById(region.pokedex[+pokedexNo - 1]?.id);
-  if (!dexEntry) {
-    throw new Error('Dex entry not found');
-  }
+  const region = await menu.getRegion(regionId);
+  const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
+  const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
+
   // TODO: Decide on the final format of the embed
   const embed = new EmbedBuilder()
     .setColor('Gold')
@@ -145,9 +135,7 @@ export const getSelectMatchedPokemonEmbeds = async <
   defaultPrompt = 'Select a Pokémon from the search results by clicking the corresponding button.'
 ): Promise<EmbedBuilder[]> => {
   const matchedOptions: string[] = [];
-  const matchedPokemon: DexEntry[] = await DexEntry.find().byIds(
-    matchedDexEntryIds
-  );
+  const matchedPokemon = await getCachedDexEntries(matchedDexEntryIds);
   matchedPokemon.sort((a, b) => a.num - b.num);
 
   for (

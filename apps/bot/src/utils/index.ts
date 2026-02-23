@@ -1,4 +1,5 @@
 export { assertNumericInput } from './assertNumericInput';
+export { assertOptions } from './assertOptions';
 export {
   getModalSelectValues,
   getModalTextValue,

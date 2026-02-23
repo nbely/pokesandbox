@@ -7,7 +7,7 @@ const getDiscoveryMenuEmbeds = async (
   defaultPrompt = 'Please enter a new server description to be displayed on the server discovery page.'
 ) => {
   const prompt = menu.prompt || defaultPrompt;
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
 
   return [
     new EmbedBuilder()

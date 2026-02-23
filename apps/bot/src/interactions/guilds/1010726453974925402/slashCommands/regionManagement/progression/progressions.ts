@@ -11,8 +11,7 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
-import { Region } from '@shared/models';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { progressionsMenuEmbeds } from './progression.embeds';
 import { PROGRESSION_CREATE_NAME_COMMAND_NAME } from './progressionCreateName';
@@ -42,20 +41,12 @@ export const ProgressionsCommand: ProgressionsCommand = {
     )
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    if (!options?.regionId) {
-      throw new Error(
-        'Region ID is required to manage progression definitions.'
-      );
-    }
+    assertOptions(options);
     const { regionId } = options;
-    const region = await Region.findById(regionId);
-    if (!region) {
-      throw new Error('Region not found.');
-    }
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getManageProgressionButtons(menu, region))
-      .setEmbeds((menu) => progressionsMenuEmbeds(menu, region))
+      .setButtons((menu) => getManageProgressionButtons(menu, regionId))
+      .setEmbeds((menu) => progressionsMenuEmbeds(menu, regionId))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -64,12 +55,14 @@ export const ProgressionsCommand: ProgressionsCommand = {
 };
 
 const getManageProgressionButtons = async (
-  _menu: AdminMenu<ProgressionsCommandOptions>,
-  region: Region
+  menu: AdminMenu<ProgressionsCommandOptions>,
+  regionId: string
 ): Promise<MenuButtonConfig<AdminMenu<ProgressionsCommandOptions>>[]> => {
+  const region = await menu.getRegion(regionId);
   const progressionDefinitions = Array.from(
     region.progressionDefinitions.entries()
   );
+
   return [
     {
       label: 'Add',
@@ -77,17 +70,17 @@ const getManageProgressionButtons = async (
       fixedPosition: 'start',
       onClick: async (menu) =>
         MenuWorkflow.openMenu(menu, PROGRESSION_CREATE_NAME_COMMAND_NAME, {
-          regionId: region.id,
+          regionId,
         }),
     },
-    ...progressionDefinitions.map(([key, definition]) => ({
-      id: key,
+    ...progressionDefinitions.map(([progressionKey, definition]) => ({
+      id: progressionKey,
       label: `${definition.name}`,
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<ProgressionsCommandOptions>) =>
         MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
-          regionId: region.id,
-          progressionKey: key,
+          regionId,
+          progressionKey,
         }),
     })),
   ];

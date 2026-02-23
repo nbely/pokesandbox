@@ -1,7 +1,7 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
-import { Types } from 'mongoose';
 
-import { AdminMenuBuilder, MenuWorkflow, type AdminMenu } from '@bot/classes';
+import { saveServer } from '@bot/cache';
+import { type AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
@@ -27,9 +27,9 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
   createMenu: async (session) =>
     new AdminMenuBuilder(session, COMMAND_NAME)
       .setEmbeds(async (menu) => {
-        const server = await menu.fetchServerAndRegions();
+        const regions = await menu.getRegions();
 
-        return server?.regions.length === 0
+        return regions.length === 0
           ? getCreateFirstRegionEmbeds(menu)
           : getRegionsMenuEmbeds(
               menu,
@@ -38,7 +38,7 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
       })
       .setMessageHandler(
         async (menu: AdminMenu, response: string): Promise<void> => {
-          const server = await menu.fetchServer();
+          const server = await menu.getServer();
 
           const region: Region = await Region.create({
             baseGeneration: 10,
@@ -65,8 +65,8 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
             transportationTypes: [],
           });
 
-          server.regions.push(new Types.ObjectId(region._id));
-          await server.save();
+          server.regions.push(region._id);
+          await saveServer(server);
 
           menu.prompt = `Successfully created the new region: \`${region.name}\``;
           await menu.session.goBack(async () =>

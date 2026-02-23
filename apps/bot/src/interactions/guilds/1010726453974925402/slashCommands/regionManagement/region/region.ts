@@ -5,6 +5,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { getCachedRegions, getCachedServer, saveRegion } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -13,7 +14,6 @@ import {
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import { Region, Server } from '@shared/models';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';
@@ -50,10 +50,12 @@ export const RegionCommand: RegionCommand = {
     if (!guildId) return;
 
     const focusedValue = interaction.options.getFocused().toLowerCase();
-    const server = await Server.findServerWithRegions({ serverId: guildId });
-    if (!server) return interaction.respond([]);
 
-    const choices = server.regions
+    const server = await getCachedServer(guildId);
+    if (!server) return interaction.respond([]);
+    const regions = await getCachedRegions(server.regions);
+
+    const choices = regions
       .filter((region) => region.name.toLowerCase().includes(focusedValue))
       .slice(0, 25)
       .map((region) => ({
@@ -74,14 +76,10 @@ export const RegionCommand: RegionCommand = {
 };
 
 const getRegionButtons = async (
-  _menu: AdminMenu<RegionCommandOptions>,
+  menu: AdminMenu<RegionCommandOptions>,
   regionId: string
 ): Promise<MenuButtonConfig<AdminMenu<RegionCommandOptions>>[]> => {
-  const region = await Region.findById(regionId);
-
-  if (!region) {
-    throw new Error('Region not found');
-  }
+  const region = await menu.getRegion(regionId);
 
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
@@ -102,8 +100,9 @@ const getRegionButtons = async (
       fixedPosition: 'start',
       style: region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
       onClick: async (menu) => {
+        const region = await menu.getRegion(regionId);
         region.deployed = !region.deployed;
-        await region.save();
+        await saveRegion(region);
         menu.prompt = `Successfully ${
           region.deployed ? 'deployed' : 'undeployed'
         } the ${region.name} Region`;

@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import {
   AdminMenuBuilder,
   MenuButtonConfig,
@@ -60,8 +61,7 @@ export const getServerManageRolesButtons = async (
   menu: AdminMenu<ServerManageRolesCommandOptions>,
   roleType: string
 ): Promise<MenuButtonConfig<AdminMenu<ServerManageRolesCommandOptions>>[]> => {
-  const server = await menu.fetchServer();
-  const roles = await menu.getRoles(server, roleType);
+  const roles = await menu.getRoles(roleType);
 
   return [
     {
@@ -75,7 +75,7 @@ export const getServerManageRolesButtons = async (
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,
       style: ButtonStyle.Danger,
       onClick: async () => {
-        const server = await menu.fetchServer();
+        const server = await menu.getServer();
 
         if (roleType === 'admin') {
           server.adminRoleIds.splice(idx, 1);
@@ -83,7 +83,7 @@ export const getServerManageRolesButtons = async (
           server.modRoleIds.splice(idx, 1);
         }
 
-        await server.save();
+        await saveServer(server);
         await menu.refresh();
       },
       id: idx.toString(),

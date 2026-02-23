@@ -1,12 +1,15 @@
 import type { ProgressionDefinition } from '@shared';
 
 export const assertProgressionKind: <K extends ProgressionDefinition['kind']>(
-  progression: ProgressionDefinition,
-  expectedKind: K
+  expectedKind: K,
+  progression?: ProgressionDefinition
 ) => asserts progression is Extract<ProgressionDefinition, { kind: K }> = (
-  progression,
-  expectedKind
+  expectedKind,
+  progression
 ) => {
+  if (!progression) {
+    throw new Error('Progression definition not found.');
+  }
   if (progression.kind !== expectedKind) {
     throw new Error(
       `Expected progression kind to be ${expectedKind}, but got ${progression.kind}`
