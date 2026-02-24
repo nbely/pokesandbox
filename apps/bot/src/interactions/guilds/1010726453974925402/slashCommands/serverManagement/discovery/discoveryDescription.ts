@@ -1,5 +1,6 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
@@ -23,10 +24,10 @@ export const DiscoveryDescriptionCommand: ISlashCommand<AdminMenu> = {
     new AdminMenuBuilder(session, COMMAND_NAME)
       .setEmbeds(getDiscoveryMenuEmbeds)
       .setMessageHandler(async (menu: AdminMenu, response: string) => {
-        const server = await menu.fetchServer();
+        const server = await menu.getServer();
         server.discovery.description = response;
 
-        await server.save();
+        await saveServer(server);
         await menu.session.goBack();
         menu.prompt = `Successfully updated the server description.`;
       })

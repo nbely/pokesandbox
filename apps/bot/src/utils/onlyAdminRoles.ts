@@ -1,6 +1,6 @@
-import { Server } from '@shared/models';
+import { getCachedServer } from '@bot/cache';
 
 export const onlyAdminRoles = async (guildId: string): Promise<string[]> => {
-  const server: Server | null = await Server.findOne().byServerId(guildId);
+  const server = await getCachedServer(guildId);
   return server?.adminRoleIds ?? [];
 };

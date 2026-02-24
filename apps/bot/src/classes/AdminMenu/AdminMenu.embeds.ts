@@ -7,7 +7,7 @@ export const getServerInitializedEmbed = async <
 >(
   menu: AdminMenu<C>
 ) => {
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
   return new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({

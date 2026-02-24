@@ -1,7 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
-import { ProgressionDefinition } from '@shared';
 
 import { buildMilestoneListField } from '../progression.embeds';
 import { assertProgressionKind } from '../utils';
@@ -10,9 +9,12 @@ export const milestonesMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,
-  progression: ProgressionDefinition
+  regionId: string,
+  progressionKey: string
 ) => {
-  assertProgressionKind(progression, 'milestone');
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assertProgressionKind('milestone', progression);
 
   const embed = new EmbedBuilder()
     .setTitle(`${progression.name} Milestones`)

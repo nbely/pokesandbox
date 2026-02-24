@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import {
   AdminMenuBuilder,
   MenuButtonConfig,
@@ -44,7 +45,7 @@ export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
 export const getServerManagePrefixesButtons = async (
   menu: AdminMenu
 ): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
 
   return [
     {
@@ -67,11 +68,11 @@ export const handleRemovePrefixButtonClick = async (
   menu: AdminMenu,
   idx: number
 ) => {
-  const server = await menu.fetchServer();
+  const server = await menu.getServer();
 
   try {
     const removedPrefix = server.prefixes?.splice(idx, 1)[0];
-    await server.save();
+    await saveServer(server);
     menu.prompt = `Successfully removed the prefix: \`${removedPrefix}\``;
   } catch (error) {
     await menu.session.handleError(error);

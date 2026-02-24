@@ -7,6 +7,7 @@ import {
   TextInputStyle,
 } from 'discord.js';
 
+import { saveRegion } from '@bot/cache';
 import { AdminMenu, ModalConfig, ModalState } from '@bot/classes';
 import {
   assertNumericInput,
@@ -14,19 +15,21 @@ import {
   getModalTextValue,
   setValueOnInputBuilderIfExists,
 } from '@bot/utils';
-import { ProgressionDefinition, ProgressionMilestone, Region } from '@shared';
+import type { ProgressionMilestone } from '@shared/models';
 
 import { assertProgressionKind } from '../utils';
 import { MilestonesCommandOptions } from './types';
 
 export const getMilestoneUpsertModal = async (
-  _menu: AdminMenu<MilestonesCommandOptions>,
-  region: Region,
+  menu: AdminMenu<MilestonesCommandOptions>,
+  regionId: string,
   progressionKey: string,
-  progression: ProgressionDefinition,
   options?: ModalState['options']
 ): Promise<ModalConfig<AdminMenu<MilestonesCommandOptions>>> => {
-  assertProgressionKind(progression, 'milestone');
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assertProgressionKind('milestone', progression);
+
   const milestone = progression.milestones.find(
     (m) => m.key === options?.milestoneKey
   );
@@ -109,6 +112,10 @@ export const getMilestoneUpsertModal = async (
   return {
     builder,
     onSubmit: async (menu, { fields }) => {
+      const region = await menu.getRegion(regionId);
+      const progression = region.progressionDefinitions.get(progressionKey);
+      assertProgressionKind('milestone', progression);
+
       const name = getModalTextValue(fields, 'milestone-name', true);
       const description = getModalTextValue(fields, 'milestone-description');
       const ordinal = assertNumericInput(
@@ -162,7 +169,7 @@ export const getMilestoneUpsertModal = async (
       }
 
       region.progressionDefinitions.set(progressionKey, progression);
-      await region.save();
+      await saveRegion(region);
       await menu.refresh();
     },
   };

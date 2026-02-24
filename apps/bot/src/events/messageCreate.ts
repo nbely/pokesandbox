@@ -1,9 +1,9 @@
 import { Message } from 'discord.js';
 
+import { getCachedServer } from '@bot/cache';
 import type { BotClient } from '@bot/classes';
 import { commandOptionsProcessor } from '@bot/structures/commandOptions/processor';
 import type { IBotEvent } from '@bot/structures/interfaces';
-import { Server } from '@shared/models';
 
 const prefix = process.env.PREFIX as string;
 
@@ -12,9 +12,7 @@ export const MessageCreate: IBotEvent = {
   execute: (name: string, client?: BotClient) => {
     if (!client) return;
     client.on(name, async (message: Message) => {
-      const server: Server | null = await Server.findOne().byServerId(
-        message.guild?.id
-      );
+      const server = await getCachedServer(message.guild?.id);
       const prefixes: string[] = server?.prefixes || [prefix];
 
       prefixes.forEach(async (botPrefix) => {

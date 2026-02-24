@@ -6,19 +6,20 @@ export const getRegionsMenuEmbeds = async (
   menu: AdminMenu,
   defaultPrompt = 'Please select a Region to manage.'
 ): Promise<EmbedBuilder[]> => {
-  const server = await menu.fetchServerAndRegions();
+  const server = await menu.getServer();
+  const regions = await menu.getRegions();
   const prompt = menu.prompt || defaultPrompt;
 
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${server?.name} Region Manager`,
+        name: `${server.name} Region Manager`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `${prompt ? '**' + prompt + '**\n\n' : ''}` +
-          server?.regions.map((region) => `${region.name}: Inactive`).join('\n')
+          regions.map((region) => `${region.name}: Inactive`).join('\n')
       )
       .setTimestamp(),
   ];

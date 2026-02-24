@@ -65,9 +65,8 @@ export const editProgressionFieldConfigMap = new Map<
               await handleEditProgressionField(
                 menu,
                 config,
-                region,
+                region.id,
                 progressionKey,
-                progression,
                 option
               );
             },
@@ -84,7 +83,7 @@ export const editProgressionFieldConfigMap = new Map<
         progression: ProgressionDefinition,
         input: string
       ) => {
-        assertProgressionKind(progression, 'numeric');
+        assertProgressionKind('numeric', progression);
         if (input === '') {
           progression.min = undefined;
         } else {
@@ -106,7 +105,7 @@ export const editProgressionFieldConfigMap = new Map<
         progression: ProgressionDefinition,
         input: string
       ) => {
-        assertProgressionKind(progression, 'numeric');
+        assertProgressionKind('numeric', progression);
         if (input === '') {
           progression.max = undefined;
         } else {

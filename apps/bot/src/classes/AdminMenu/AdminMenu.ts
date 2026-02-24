@@ -1,6 +1,8 @@
 import { Role } from 'discord.js';
 
+import { getCachedRegion, getCachedRegions, getCachedServer } from '@bot/cache';
 import { Server } from '@shared/models';
+import type { Region } from '@shared/models';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
@@ -43,10 +45,9 @@ export class AdminMenu<
 
   /* Public Builder Methods */
 
-  public async getRoles(
-    server: Server,
-    type: string
-  ): Promise<(string | Role)[]> {
+  public async getRoles(type: string): Promise<(string | Role)[]> {
+    const server = await this.getServer();
+
     let ids: string[] = [];
     if (type === 'admin') {
       ids = server.adminRoleIds ?? [];
@@ -86,11 +87,11 @@ export class AdminMenu<
   }
 
   private async fetchNullableServer(): Promise<Server | null> {
-    return Server.findOne().byServerId(this.interaction.guild?.id);
+    return getCachedServer(this.interaction.guild?.id);
   }
 
-  public async fetchServer(): Promise<Server> {
-    const server = await this.fetchNullableServer();
+  public async getServer(): Promise<Server> {
+    const server = await getCachedServer(this.interaction.guild?.id);
     if (!server) {
       throw new Error(
         'There was a problem fetching your server. Please try again later.'
@@ -100,16 +101,19 @@ export class AdminMenu<
     return server;
   }
 
-  public async fetchServerAndRegions() {
-    const server = await Server.findServerWithRegions({
-      serverId: this.interaction.guild?.id,
-    });
-    if (!server) {
+  public async getRegion(regionId: string): Promise<Region> {
+    const region = await getCachedRegion(regionId);
+    if (!region) {
       throw new Error(
-        'There was a problem fetching your server. Please try again later.'
+        'There was a problem fetching the region. Please try again later.'
       );
     }
-    return server;
+    return region;
+  }
+
+  public async getRegions(): Promise<Region[]> {
+    const server = await this.getServer();
+    return getCachedRegions(server.regions);
   }
 
   public async getGuildRole(roleId: string): Promise<string | Role> {

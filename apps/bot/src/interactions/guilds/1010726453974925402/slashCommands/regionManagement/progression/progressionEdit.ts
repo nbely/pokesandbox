@@ -1,9 +1,11 @@
+import assert from 'node:assert';
 import {
   ButtonStyle,
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -11,8 +13,8 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
-import { ProgressionDefinition, Region } from '@shared/models';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import { ProgressionDefinition } from '@shared/models';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
@@ -44,22 +46,11 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
     .setDescription('Edit an existing progression definition')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    if (!options?.regionId || !options?.progressionKey) {
-      throw new Error(
-        'Region ID and progression key are required to edit a progression definition.'
-      );
-    }
-
+    assertOptions(options);
     const { regionId, progressionKey } = options;
-    const region = await Region.findById(regionId);
-    if (!region) {
-      throw new Error('Region not found');
-    }
-
+    const region = await getAssertedCachedRegion(regionId);
     const progression = region.progressionDefinitions.get(progressionKey);
-    if (!progression) {
-      throw new Error('Progression definition not found');
-    }
+    assert(progression, 'Progression definition not found');
 
     const progressionEditField = session.getState<string>(
       'progressionEditField'
@@ -72,8 +63,8 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
       .setEmbeds((menu) =>
         progressionEditMenuEmbeds(
           menu,
-          region,
-          progression,
+          regionId,
+          progressionKey,
           progressionEditField
         )
       )
@@ -83,22 +74,12 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
 
     if (!progressionEditField) {
       builder.setButtons((menu) =>
-        getEditProgressionDefinitionButtons(
-          menu,
-          region,
-          progressionKey,
-          progression
-        )
+        getEditProgressionDefinitionButtons(menu, regionId, progressionKey)
       );
     } else {
       if (config?.getCustomButtons) {
-        builder.setButtons(() =>
-          getProgressionEditFieldButtons(
-            config,
-            region,
-            progressionKey,
-            progression
-          )
+        builder.setButtons((menu) =>
+          getProgressionEditFieldButtons(menu, config, regionId, progressionKey)
         );
       }
       if (config?.hasMessageHandler) {
@@ -106,9 +87,8 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
           await handleEditProgressionField(
             menu,
             config,
-            region,
+            regionId,
             progressionKey,
-            progression,
             response
           );
         });
@@ -120,11 +100,14 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
 };
 
 const getEditProgressionDefinitionButtons = async (
-  _menu: AdminMenu<ProgressionEditCommandOptions>,
-  region: Region,
-  progressionKey: string,
-  progression: ProgressionDefinition
+  menu: AdminMenu<ProgressionEditCommandOptions>,
+  regionId: string,
+  progressionKey: string
 ): Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]> => {
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assert(progression, 'Progression definition not found');
+
   const buttons: MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[] =
     [
       {
@@ -185,7 +168,7 @@ const getEditProgressionDefinitionButtons = async (
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
           await MenuWorkflow.openMenu(menu, MILESTONES_COMMAND_NAME, {
-            regionId: region.id,
+            regionId,
             progressionKey,
           });
         },
@@ -194,10 +177,11 @@ const getEditProgressionDefinitionButtons = async (
         label: 'Toggle Sequential',
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
+          const region = await menu.getRegion(regionId);
           if (progression.kind === 'milestone') {
             progression.sequential = !progression.sequential;
             region.progressionDefinitions.set(progressionKey, progression);
-            await region.save();
+            await saveRegion(region);
             menu.prompt = `Sequential mode ${
               progression.sequential ? 'enabled' : 'disabled'
             }`;
@@ -213,8 +197,9 @@ const getEditProgressionDefinitionButtons = async (
     label: 'Delete',
     style: ButtonStyle.Danger,
     onClick: async (menu) => {
+      const region = await menu.getRegion(regionId);
       region.progressionDefinitions.delete(progressionKey);
-      await region.save();
+      await saveRegion(region);
       await MenuWorkflow.completeAndReturn(menu);
     },
   });
@@ -223,11 +208,15 @@ const getEditProgressionDefinitionButtons = async (
 };
 
 const getProgressionEditFieldButtons = async (
+  menu: AdminMenu<ProgressionEditCommandOptions>,
   config: EditProgressionFieldConfig,
-  region: Region,
-  progressionKey: string,
-  progression: ProgressionDefinition
+  regionId: string,
+  progressionKey: string
 ): Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]> => {
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assert(progression, 'Progression definition not found');
+
   const buttons: MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[] =
     [];
 
@@ -239,9 +228,8 @@ const getProgressionEditFieldButtons = async (
         await handleEditProgressionField(
           menu,
           config,
-          region,
+          regionId,
           progressionKey,
-          progression,
           ''
         );
       },

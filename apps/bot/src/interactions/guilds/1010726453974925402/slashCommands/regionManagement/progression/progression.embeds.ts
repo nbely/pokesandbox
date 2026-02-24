@@ -2,17 +2,19 @@ import { EmbedBuilder, type EmbedField } from 'discord.js';
 import capitalize from 'lodash/capitalize';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
-import { ProgressionDefinition, Region } from '@shared/models';
+import { ProgressionDefinition } from '@shared/models';
 
 import { assertProgressionKind } from './utils';
+import assert from 'node:assert';
 
 export const progressionsMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,
-  region: Region,
+  regionId: string,
   defaultPrompt = 'Manage progression definitions for this region. Use the buttons below to add or edit a progression.'
 ) => {
+  const region = await menu.getRegion(regionId);
   const progressionLines: string[] = [];
 
   const progressions = Array.from(region.progressionDefinitions.entries());
@@ -88,13 +90,13 @@ export const progressionCreateKindMenuEmbeds = async <
   regionId: string,
   defaultPrompt = 'Select a progression type for the new progression definition.'
 ) => {
-  const region = await Region.findById(regionId);
+  const region = await menu.getRegion(regionId);
 
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
-        name: `${region?.name} - New Progression Definition`,
+        name: `${region.name} - New Progression Definition`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(menu.prompt || defaultPrompt)
@@ -124,10 +126,14 @@ export const progressionEditMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(
   menu: AdminMenu<C>,
-  region: Region,
-  progression: ProgressionDefinition,
+  regionId: string,
+  progressionKey: string,
   editField?: string
 ) => {
+  const region = await menu.getRegion(regionId);
+  const progression = region.progressionDefinitions.get(progressionKey);
+  assert(progression, 'Progression definition not found.');
+
   if (editField) {
     switch (editField) {
       case 'name':
@@ -222,7 +228,7 @@ export const progressionEditMenuEmbeds = async <
 export const buildMilestoneListField = (
   progression: ProgressionDefinition
 ): EmbedField => {
-  assertProgressionKind(progression, 'milestone');
+  assertProgressionKind('milestone', progression);
   return {
     name: 'Milestones',
     value: progression.milestones?.length

@@ -4,10 +4,10 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { getAssertedCachedRegion } from '@bot/cache';
 import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
-import { Region } from '@shared/models';
+import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { PROGRESSION_CREATE_KIND_COMMAND_NAME } from './progressionCreateKind';
 
@@ -33,15 +33,9 @@ export const ProgressionCreateNameCommand: ProgressionCreateNameCommand = {
     .setDescription('Add a new progression definition to a region')
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
-    if (!options?.regionId) {
-      throw new Error('Region ID is required to add a progression definition.');
-    }
+    assertOptions(options);
     const { regionId } = options;
-
-    const region = await Region.findById(regionId);
-    if (!region) {
-      throw new Error('Region not found.');
-    }
+    const region = await getAssertedCachedRegion(regionId);
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds(async (menu) => [

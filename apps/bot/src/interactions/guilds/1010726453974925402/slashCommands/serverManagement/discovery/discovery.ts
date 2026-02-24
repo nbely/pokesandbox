@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
+import { saveServer } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -41,8 +42,8 @@ export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
 
 async function getDiscoveryButtons(
   menu: AdminMenu
-): Promise<MenuButtonConfig[]> {
-  const server = await menu.fetchServer();
+): Promise<MenuButtonConfig<AdminMenu>[]> {
+  const server = await menu.getServer();
 
   return [
     {
@@ -51,9 +52,10 @@ async function getDiscoveryButtons(
       style: server.discovery.enabled
         ? ButtonStyle.Danger
         : ButtonStyle.Success,
-      onClick: async () => {
+      onClick: async (menu) => {
+        const server = await menu.getServer();
         server.discovery.enabled = !server.discovery.enabled;
-        await server.save();
+        await saveServer(server);
         await menu.refresh();
       },
     },

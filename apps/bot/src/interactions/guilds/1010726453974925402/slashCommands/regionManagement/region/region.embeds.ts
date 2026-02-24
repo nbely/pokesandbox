@@ -1,7 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 
 import { AdminMenu } from '@bot/classes';
-import { Region } from '@shared/models';
 
 import { RegionCommandOptions } from './types';
 
@@ -9,10 +8,7 @@ export const getRegionMenuEmbeds = async (
   menu: AdminMenu<RegionCommandOptions>,
   regionId: string
 ) => {
-  const region = await Region.findById(regionId);
-  if (!region) {
-    throw new Error('Region not found');
-  }
+  const region = await menu.getRegion(regionId);
 
   const pokedexOptionText =
     region.pokedex.length === 0
