@@ -7,6 +7,7 @@ import {
 import { saveServer } from '@bot/cache';
 import {
   AdminMenuBuilder,
+  MenuWorkflow,
   SelectMenuConfig,
   type AdminMenu,
 } from '@bot/classes';
@@ -14,6 +15,7 @@ import { ISlashCommand } from '@bot/structures/interfaces';
 import { assertOptions, onlyAdminRoles } from '@bot/utils';
 
 import { getServerMenuEmbeds } from './server.embeds';
+import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';
 
 const COMMAND_NAME = 'server-add-role';
 export const SERVER_ADD_ROLE_COMMAND_NAME = COMMAND_NAME;
@@ -60,7 +62,6 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
       .setSelectMenu(async (menu) =>
         getServerAddRoleSelectMenu(menu, role_type)
       )
-      .setTrackedInHistory()
       .build();
   },
 };
@@ -106,7 +107,11 @@ export const getServerAddRoleSelectMenu = async (
       } else {
         menu.prompt = `No new ${roleType} roles were selected.`;
       }
-      await menu.session.goBack();
+      await menu.session.goBack(() =>
+        MenuWorkflow.openMenu(menu, SERVER_MANAGE_ROLES_COMMAND_NAME, {
+          role_type: roleType,
+        })
+      );
     },
   };
 };

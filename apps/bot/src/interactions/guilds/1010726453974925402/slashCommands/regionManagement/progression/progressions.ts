@@ -11,7 +11,11 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 
 import { progressionsMenuEmbeds } from './progression.embeds';
 import { PROGRESSION_CREATE_NAME_COMMAND_NAME } from './progressionCreateName';
@@ -39,7 +43,15 @@ export const ProgressionsCommand: ProgressionsCommand = {
     .setDescription(
       'Manage progression definitions for one of your PokéSandbox Regions'
     )
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) => {
+      return option
+        .setName('region_id')
+        .setDescription('The ID of the region to manage')
+        .setRequired(true)
+        .setAutocomplete(true);
+    }),
+  autocomplete: handleRegionAutocomplete,
   createMenu: async (session, options) => {
     assertOptions(options);
     const { region_id } = options;
