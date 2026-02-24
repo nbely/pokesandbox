@@ -6,6 +6,7 @@ import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
 
+import { REGIONS_COMMAND_NAME } from './regions';
 import {
   getCreateFirstRegionEmbeds,
   getRegionsMenuEmbeds,
@@ -70,7 +71,7 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
 
           menu.prompt = `Successfully created the new region: \`${region.name}\``;
           await menu.session.goBack(async () =>
-            MenuWorkflow.openMenu(menu, 'regions')
+            MenuWorkflow.openMenu(menu, REGIONS_COMMAND_NAME)
           );
         }
       )

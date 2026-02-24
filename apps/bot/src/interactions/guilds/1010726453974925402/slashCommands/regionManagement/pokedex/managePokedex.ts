@@ -6,7 +6,11 @@ import {
 
 import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 
 import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
@@ -15,7 +19,7 @@ const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 
 type ManagePokedexCommandOptions = {
-  regionId: string;
+  region_id: string;
 };
 type ManagePokedexCommand = ISlashCommand<
   AdminMenu<ManagePokedexCommandOptions>,
@@ -28,23 +32,31 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: handleRegionAutocomplete,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Manage the Pokédex for one of your PokéSandbox Regions')
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region to manage')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId } = options;
+    const { region_id } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, regionId))
+      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, region_id))
       .setCancellable()
       .setListPagination({
         quantityItemsPerPage: 50,
         nextButton: { style: ButtonStyle.Primary },
         previousButton: { style: ButtonStyle.Primary },
         getTotalQuantityItems: async (menu) => {
-          const region = await menu.getRegion(regionId);
+          const region = await menu.getRegion(region_id);
           return region.pokedex.length;
         },
       })
@@ -62,14 +74,14 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
           );
         } else if (messageArgs.length < 2) {
           await MenuWorkflow.openMenu(menu, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
-            regionId,
-            pokedexNo: pokedexNumber,
+            region_id,
+            pokedex_no: pokedexNumber,
           });
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
           await MenuWorkflow.openMenu(menu, 'search-pokemon', {
-            regionId,
+            region_id,
             pokemonName,
           });
         }

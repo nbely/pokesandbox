@@ -1,4 +1,4 @@
 export type MilestonesCommandOptions = {
-  regionId: string;
-  progressionKey: string;
+  region_id: string;
+  progression_key: string;
 };

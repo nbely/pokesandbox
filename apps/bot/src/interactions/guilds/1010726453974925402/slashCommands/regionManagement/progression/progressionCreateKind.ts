@@ -13,7 +13,11 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 import type { ProgressionDefinition } from '@shared/models';
 
 import { progressionCreateKindMenuEmbeds } from './progression.embeds';
@@ -23,8 +27,8 @@ const COMMAND_NAME = 'progression-create-kind';
 export const PROGRESSION_CREATE_KIND_COMMAND_NAME = COMMAND_NAME;
 
 type ProgressionCreateKindCommandOptions = {
-  regionId: string;
-  progressionName: string;
+  region_id: string;
+  progression_name: string;
 };
 type ProgressionCreateKindCommand = ISlashCommand<
   AdminMenu<ProgressionCreateKindCommandOptions>,
@@ -37,21 +41,35 @@ export const ProgressionCreateKindCommand: ProgressionCreateKindCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: handleRegionAutocomplete,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription(
       'Select a progression type for a new progression definition'
     )
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region to add a progression to')
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('progression_name')
+        .setDescription('The name for the new progression definition')
+        .setRequired(true)
+    ),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId, progressionName } = options;
+    const { region_id, progression_name } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) =>
-        getSelectProgressionTypeButtons(menu, regionId, progressionName)
+        getSelectProgressionTypeButtons(menu, region_id, progression_name)
       )
-      .setEmbeds((menu) => progressionCreateKindMenuEmbeds(menu, regionId))
+      .setEmbeds((menu) => progressionCreateKindMenuEmbeds(menu, region_id))
       .setCancellable()
       .setReturnable()
       .build();
@@ -96,8 +114,8 @@ const getSelectProgressionTypeButtons = async (
 
       await saveRegion(region);
       await MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
-        regionId,
-        progressionKey,
+        region_id: regionId,
+        progression_key: progressionKey,
       });
     },
   }));

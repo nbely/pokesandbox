@@ -17,6 +17,6 @@ export type EditProgressionFieldConfig = {
 };
 
 export type ProgressionEditCommandOptions = {
-  regionId: string;
-  progressionKey: string;
+  region_id: string;
+  progression_key: string;
 };

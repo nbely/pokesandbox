@@ -1,7 +1,7 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenuBuilder, type AdminMenu } from '@bot/classes';
+import { AdminMenuBuilder, MenuWorkflow, type AdminMenu } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 
@@ -43,8 +43,9 @@ export const ServerAddPrefixCommand: ISlashCommand<AdminMenu> = {
         } catch (error) {
           await menu.session.handleError(error);
         }
-        await menu.session.goBack();
+        await menu.session.goBack(() =>
+          MenuWorkflow.openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME)
+        );
       })
-      .setTrackedInHistory()
       .build(),
 };

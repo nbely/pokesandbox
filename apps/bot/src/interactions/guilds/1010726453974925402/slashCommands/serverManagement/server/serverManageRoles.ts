@@ -35,19 +35,29 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('role_type')
+        .setDescription('The type of role to manage')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Admin', value: 'admin' },
+          { name: 'Mod', value: 'mod' }
+        )
+    ),
   createMenu: async (session, options) => {
-    if (!options?.roleType) {
+    if (!options?.role_type) {
       throw new Error('Role type is required to manage server roles.');
     }
 
-    const { roleType } = options;
+    const { role_type } = options;
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getServerManageRolesButtons(menu, roleType))
+      .setButtons((menu) => getServerManageRolesButtons(menu, role_type))
       .setEmbeds((menu) =>
         getServerMenuEmbeds(
           menu,
-          `Add or Remove a Role with Bot ${roleType} privileges.`
+          `Add or Remove a Role with Bot ${role_type} privileges.`
         )
       )
       .setCancellable()
@@ -69,7 +79,9 @@ export const getServerManageRolesButtons = async (
       style: ButtonStyle.Success,
       fixedPosition: 'start',
       onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, { roleType }),
+        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, {
+          role_type: roleType,
+        }),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,

@@ -61,6 +61,6 @@ const getServerButtons = async (): Promise<MenuButtonConfig[]> => {
     id,
     style: ButtonStyle.Primary,
     onClick: async (menu) =>
-      MenuWorkflow.openMenu(menu, command, { roleType: option }),
+      MenuWorkflow.openMenu(menu, command, { role_type: option }),
   }));
 };

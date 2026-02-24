@@ -1,11 +1,10 @@
 import {
-  type AutocompleteInteraction,
   ButtonStyle,
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { getCachedRegions, getCachedServer, saveRegion } from '@bot/cache';
+import { saveRegion } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -13,7 +12,7 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { handleRegionAutocomplete, onlyAdminRoles } from '@bot/utils';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';
@@ -45,26 +44,7 @@ export const RegionCommand: RegionCommand = {
         .setRequired(true)
         .setAutocomplete(true);
     }),
-  autocomplete: async (_client, interaction: AutocompleteInteraction) => {
-    const guildId = interaction.guildId;
-    if (!guildId) return;
-
-    const focusedValue = interaction.options.getFocused().toLowerCase();
-
-    const server = await getCachedServer(guildId);
-    if (!server) return interaction.respond([]);
-    const regions = await getCachedRegions(server.regions);
-
-    const choices = regions
-      .filter((region) => region.name.toLowerCase().includes(focusedValue))
-      .slice(0, 25)
-      .map((region) => ({
-        name: region.name,
-        value: region._id.toString(),
-      }));
-
-    await interaction.respond(choices);
-  },
+  autocomplete: handleRegionAutocomplete,
   createMenu: async (session, options = { region_id: '' }) =>
     new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getRegionButtons(menu, options.region_id))
@@ -113,7 +93,7 @@ const getRegionButtons = async (
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<RegionCommandOptions>) =>
-        MenuWorkflow.openMenu(menu, command, { regionId }),
+        MenuWorkflow.openMenu(menu, command, { region_id: regionId }),
       id,
     })),
   ];

@@ -12,7 +12,12 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles, searchPokemon } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+  searchPokemon,
+} from '@bot/utils';
 import { DexEntry, type Region } from '@shared/models';
 
 import {
@@ -25,8 +30,8 @@ const COMMAND_NAME = 'edit-pokedex-slot';
 export const EDIT_POKEDEX_SLOT_COMMAND_NAME = COMMAND_NAME;
 
 type EditPokedexSlotCommandOptions = {
-  regionId: string;
-  pokedexNo: string;
+  region_id: string;
+  pokedex_no: string;
 };
 type EditPokedexSlotCommand = ISlashCommand<
   AdminMenu<EditPokedexSlotCommandOptions>,
@@ -39,37 +44,55 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: handleRegionAutocomplete,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Add a Pokémon to a regional Pokédex slot')
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region to manage')
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName('pokedex_no')
+        .setDescription('The Pokédex slot number')
+        .setRequired(true)
+        .setMinValue(1)
+        .setMaxValue(1500)
+    ),
   createMenu: async (
     session,
     options: EditPokedexSlotCommandOptions | undefined
   ) => {
     assertOptions(options);
-    const { regionId, pokedexNo } = options;
-    const region = await getAssertedCachedRegion(regionId);
+    const { region_id, pokedex_no } = options;
+    const region = await getAssertedCachedRegion(region_id);
 
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory();
 
-    if (!region.pokedex[+pokedexNo - 1]) {
+    if (!region.pokedex[+pokedex_no - 1]) {
       // handle add pokedex slot
       builder
-        .setEmbeds((menu) => getAddPokedexSlotEmbeds(menu, regionId, pokedexNo))
+        .setEmbeds((menu) =>
+          getAddPokedexSlotEmbeds(menu, region_id, pokedex_no)
+        )
         .setMessageHandler((menu, response) =>
-          handleAddPokemonToSlot(menu, regionId, pokedexNo, response)
+          handleAddPokemonToSlot(menu, region_id, pokedex_no, response)
         );
     } else {
       builder
         .setEmbeds((menu) =>
-          getEditPokedexSlotEmbeds(menu, regionId, pokedexNo)
+          getEditPokedexSlotEmbeds(menu, region_id, pokedex_no)
         )
         .setButtons((menu) =>
-          getEditPokedexSlotButtons(menu, regionId, pokedexNo)
+          getEditPokedexSlotButtons(menu, region_id, pokedex_no)
         );
     }
 
