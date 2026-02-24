@@ -2,7 +2,7 @@
 
 Navigation: [Discord Server][1] | [Pokémon Showdown Fork][3]
 
-[1]: https://discord.gg/5SuaqNh
+[1]: https://discord.gg/5BSMak3m9V
 [2]: https://github.com/nbely/pokemon-showdown#pok%C3%A9mon-showdown
 
 ## Introduction
@@ -29,8 +29,6 @@ Navigation: [Discord Server][1] | [Pokémon Showdown Fork][3]
 **Development Team**
 
 - Nick Bely [Chronicler] - Lead of Design & Development
-- [Luceta Taav] - Architectural Consultant
-- [Dazel] - Development
 
 **Other Credits**
 
