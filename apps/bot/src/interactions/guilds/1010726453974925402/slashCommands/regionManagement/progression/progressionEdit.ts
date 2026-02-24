@@ -197,6 +197,7 @@ const getEditProgressionDefinitionButtons = async (
     label: 'Delete',
     style: ButtonStyle.Danger,
     onClick: async (menu) => {
+      const region = await menu.getRegion(regionId);
       region.progressionDefinitions.delete(progressionKey);
       await saveRegion(region);
       await MenuWorkflow.completeAndReturn(menu);

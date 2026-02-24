@@ -59,17 +59,12 @@ export const ProgressionCreateKindCommand: ProgressionCreateKindCommand = {
 };
 
 const getSelectProgressionTypeButtons = async (
-  menu: AdminMenu<ProgressionCreateKindCommandOptions>,
+  _menu: AdminMenu<ProgressionCreateKindCommandOptions>,
   regionId: string,
   progressionName: string
 ): Promise<
   MenuButtonConfig<AdminMenu<ProgressionCreateKindCommandOptions>>[]
 > => {
-  const region = await menu.getRegion(regionId);
-  if (!region) {
-    throw new Error('Region not found.');
-  }
-
   const types: Array<{ label: string; kind: ProgressionDefinition['kind'] }> = [
     { label: 'Milestone', kind: 'milestone' },
     { label: 'Numeric', kind: 'numeric' },
@@ -80,6 +75,8 @@ const getSelectProgressionTypeButtons = async (
     label,
     style: ButtonStyle.Primary,
     onClick: async (menu) => {
+      const region = await menu.getRegion(regionId);
+
       const progressionKey = randomUUID();
       if (kind === 'numeric' || kind === 'boolean') {
         region.progressionDefinitions.set(progressionKey, {
