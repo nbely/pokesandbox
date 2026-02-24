@@ -21,7 +21,7 @@ const COMMAND_NAME = 'progressions';
 export const PROGRESSIONS_COMMAND_NAME = COMMAND_NAME;
 
 type ProgressionsCommandOptions = {
-  regionId: string;
+  region_id: string;
 };
 type ProgressionsCommand = ISlashCommand<
   AdminMenu<ProgressionsCommandOptions>,
@@ -42,11 +42,11 @@ export const ProgressionsCommand: ProgressionsCommand = {
     .setContexts(InteractionContextType.Guild),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId } = options;
+    const { region_id } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getManageProgressionButtons(menu, regionId))
-      .setEmbeds((menu) => progressionsMenuEmbeds(menu, regionId))
+      .setButtons((menu) => getManageProgressionButtons(menu, region_id))
+      .setEmbeds((menu) => progressionsMenuEmbeds(menu, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -70,7 +70,7 @@ const getManageProgressionButtons = async (
       fixedPosition: 'start',
       onClick: async (menu) =>
         MenuWorkflow.openMenu(menu, PROGRESSION_CREATE_NAME_COMMAND_NAME, {
-          regionId,
+          region_id: regionId,
         }),
     },
     ...progressionDefinitions.map(([progressionKey, definition]) => ({
@@ -79,8 +79,8 @@ const getManageProgressionButtons = async (
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<ProgressionsCommandOptions>) =>
         MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
-          regionId,
-          progressionKey,
+          region_id: regionId,
+          progression_key: progressionKey,
         }),
     })),
   ];

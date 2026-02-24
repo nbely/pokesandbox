@@ -10,13 +10,16 @@ import {
   type AdminMenu,
 } from '@bot/classes';
 import { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAndProgressionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 
 import { assertProgressionKind } from '../utils';
 import { milestonesMenuEmbeds } from './milestone.embeds';
 import { getMilestoneUpsertModal } from './milestone.modal';
 import { MilestonesCommandOptions } from './types';
-import { getCachedRegion, getCachedRegions, getCachedServer } from '@bot/cache';
 
 const COMMAND_NAME = 'milestones';
 export const MILESTONES_COMMAND_NAME = COMMAND_NAME;
@@ -33,48 +36,7 @@ export const MilestonesCommand: MilestonesCommand = {
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
   autocomplete: async (_client, interaction) => {
-    const guildId = interaction.guildId;
-    if (!guildId) return;
-
-    const focused = interaction.options.getFocused(true);
-
-    if (focused.name === 'region_id') {
-      const server = await getCachedServer(guildId);
-      if (!server) return interaction.respond([]);
-      const regions = await getCachedRegions(server.regions);
-
-      const choices = regions
-        .filter((region) =>
-          region.name.toLowerCase().includes(focused.value.toLowerCase())
-        )
-        .slice(0, 25)
-        .map((region) => ({
-          name: region.name,
-          value: region._id.toString(),
-        }));
-
-      await interaction.respond(choices);
-    }
-
-    if (focused.name === 'progression_key') {
-      const regionId = interaction.options.getString('region_id');
-      if (!regionId) return interaction.respond([]);
-
-      const region = await getCachedRegion(regionId);
-      if (!region) return interaction.respond([]);
-
-      const choices = Array.from(region.progressionDefinitions.entries())
-        .filter(([, def]) =>
-          def.name.toLowerCase().includes(focused.value.toLowerCase())
-        )
-        .slice(0, 25)
-        .map(([key, def]) => ({
-          name: def.name,
-          value: key,
-        }));
-
-      await interaction.respond(choices);
-    }
+    await handleRegionAndProgressionAutocomplete(interaction);
   },
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
@@ -98,15 +60,17 @@ export const MilestonesCommand: MilestonesCommand = {
     ),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId, progressionKey } = options;
+    const { region_id, progression_key } = options;
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => milestonesMenuEmbeds(menu, regionId, progressionKey))
+      .setEmbeds((menu) =>
+        milestonesMenuEmbeds(menu, region_id, progression_key)
+      )
       .setButtons((menu) =>
-        getMilestonesButtons(menu, regionId, progressionKey)
+        getMilestonesButtons(menu, region_id, progression_key)
       )
       .setModal((menu, options) =>
-        getMilestoneUpsertModal(menu, regionId, progressionKey, options)
+        getMilestoneUpsertModal(menu, region_id, progression_key, options)
       )
       .setTrackedInHistory()
       .setCancellable()

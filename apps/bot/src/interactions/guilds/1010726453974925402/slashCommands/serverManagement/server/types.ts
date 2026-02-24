@@ -1,3 +1,3 @@
 export type ServerManageRolesCommandOptions = {
-  roleType: string;
+  role_type: string;
 };

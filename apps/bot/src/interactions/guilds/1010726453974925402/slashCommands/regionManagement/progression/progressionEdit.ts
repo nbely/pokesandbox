@@ -13,8 +13,11 @@ import {
   MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
-import { ProgressionDefinition } from '@shared/models';
+import {
+  assertOptions,
+  handleRegionAndProgressionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
@@ -41,15 +44,32 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: async (_client, interaction) => {
+    await handleRegionAndProgressionAutocomplete(interaction);
+  },
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Edit an existing progression definition')
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region containing the progression')
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('progression_key')
+        .setDescription('The progression definition to edit')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId, progressionKey } = options;
-    const region = await getAssertedCachedRegion(regionId);
-    const progression = region.progressionDefinitions.get(progressionKey);
+    const { region_id, progression_key } = options;
+    const region = await getAssertedCachedRegion(region_id);
+    const progression = region.progressionDefinitions.get(progression_key);
     assert(progression, 'Progression definition not found');
 
     const progressionEditField = session.getState<string>(
@@ -63,8 +83,8 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
       .setEmbeds((menu) =>
         progressionEditMenuEmbeds(
           menu,
-          regionId,
-          progressionKey,
+          region_id,
+          progression_key,
           progressionEditField
         )
       )
@@ -74,12 +94,17 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
 
     if (!progressionEditField) {
       builder.setButtons((menu) =>
-        getEditProgressionDefinitionButtons(menu, regionId, progressionKey)
+        getEditProgressionDefinitionButtons(menu, region_id, progression_key)
       );
     } else {
       if (config?.getCustomButtons) {
         builder.setButtons((menu) =>
-          getProgressionEditFieldButtons(menu, config, regionId, progressionKey)
+          getProgressionEditFieldButtons(
+            menu,
+            config,
+            region_id,
+            progression_key
+          )
         );
       }
       if (config?.hasMessageHandler) {
@@ -87,8 +112,8 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
           await handleEditProgressionField(
             menu,
             config,
-            regionId,
-            progressionKey,
+            region_id,
+            progression_key,
             response
           );
         });
@@ -168,8 +193,8 @@ const getEditProgressionDefinitionButtons = async (
         style: ButtonStyle.Primary,
         onClick: async (menu) => {
           await MenuWorkflow.openMenu(menu, MILESTONES_COMMAND_NAME, {
-            regionId,
-            progressionKey,
+            region_id: regionId,
+            progression_key: progressionKey,
           });
         },
       },

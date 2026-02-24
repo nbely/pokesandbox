@@ -7,7 +7,11 @@ import {
 import { getAssertedCachedRegion } from '@bot/cache';
 import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import {
+  assertOptions,
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+} from '@bot/utils';
 
 import { PROGRESSION_CREATE_KIND_COMMAND_NAME } from './progressionCreateKind';
 
@@ -15,7 +19,7 @@ const COMMAND_NAME = 'progression-create-name';
 export const PROGRESSION_CREATE_NAME_COMMAND_NAME = COMMAND_NAME;
 
 type ProgressionCreateNameCommandOptions = {
-  regionId: string;
+  region_id: string;
 };
 type ProgressionCreateNameCommand = ISlashCommand<
   AdminMenu<ProgressionCreateNameCommandOptions>,
@@ -28,14 +32,24 @@ export const ProgressionCreateNameCommand: ProgressionCreateNameCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
+  autocomplete: async (_client, interaction) => {
+    await handleRegionAutocomplete(interaction);
+  },
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Add a new progression definition to a region')
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName('region_id')
+        .setDescription('The region to add a progression to')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
   createMenu: async (session, options) => {
     assertOptions(options);
-    const { regionId } = options;
-    const region = await getAssertedCachedRegion(regionId);
+    const { region_id } = options;
+    const region = await getAssertedCachedRegion(region_id);
 
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds(async (menu) => [
@@ -74,8 +88,8 @@ export const ProgressionCreateNameCommand: ProgressionCreateNameCommand = {
           menu,
           PROGRESSION_CREATE_KIND_COMMAND_NAME,
           {
-            regionId,
-            progressionName,
+            region_id,
+            progression_name: progressionName,
           }
         );
       })
