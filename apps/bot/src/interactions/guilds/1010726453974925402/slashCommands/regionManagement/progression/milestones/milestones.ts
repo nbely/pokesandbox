@@ -35,9 +35,7 @@ export const MilestonesCommand: MilestonesCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
-  autocomplete: async (_client, interaction) => {
-    await handleRegionAndProgressionAutocomplete(interaction);
-  },
+  autocomplete: handleRegionAndProgressionAutocomplete,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription(

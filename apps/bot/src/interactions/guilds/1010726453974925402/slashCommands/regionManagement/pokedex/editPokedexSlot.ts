@@ -44,9 +44,7 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
   onlyRoles: onlyAdminRoles,
   onlyRolesOrAnyUserPermissions: true,
   returnOnlyRolesError: false,
-  autocomplete: async (_client, interaction) => {
-    await handleRegionAutocomplete(interaction);
-  },
+  autocomplete: handleRegionAutocomplete,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
     .setDescription('Add a Pokémon to a regional Pokédex slot')

@@ -44,9 +44,7 @@ export const RegionCommand: RegionCommand = {
         .setRequired(true)
         .setAutocomplete(true);
     }),
-  autocomplete: async (_client, interaction) => {
-    await handleRegionAutocomplete(interaction);
-  },
+  autocomplete: handleRegionAutocomplete,
   createMenu: async (session, options = { region_id: '' }) =>
     new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getRegionButtons(menu, options.region_id))

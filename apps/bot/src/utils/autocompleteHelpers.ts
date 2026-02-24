@@ -1,6 +1,7 @@
 import type { AutocompleteInteraction } from 'discord.js';
 
 import { getCachedRegion, getCachedRegions, getCachedServer } from '@bot/cache';
+import type { BotClient } from '@bot/classes';
 
 type AutocompleteChoice = { name: string; value: string };
 
@@ -61,6 +62,7 @@ export const getProgressionKeyChoices = async (
  * Handles autocomplete for a single region_id field.
  */
 export const handleRegionAutocomplete = async (
+  _client: BotClient,
   interaction: AutocompleteInteraction
 ): Promise<void> => {
   const guildId = interaction.guildId;
@@ -75,6 +77,7 @@ export const handleRegionAutocomplete = async (
  * Handles autocomplete for commands with both region_id and progression_key fields.
  */
 export const handleRegionAndProgressionAutocomplete = async (
+  _client: BotClient,
   interaction: AutocompleteInteraction
 ): Promise<void> => {
   const guildId = interaction.guildId;
