@@ -13,7 +13,7 @@ export const milestonesMenuEmbeds = async <
   progressionKey: string
 ) => {
   const region = await menu.getRegion(regionId);
-  const progression = await region.progressionDefinitions.get(progressionKey);
+  const progression = region.progressionDefinitions.get(progressionKey);
   assertProgressionKind('milestone', progression);
 
   const embed = new EmbedBuilder()
