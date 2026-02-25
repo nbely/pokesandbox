@@ -4,6 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "outDir": "../tmp/scripts"
   },
   "include": ["./**/*.ts", "../shared/src/**/*.ts"]

@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "000000000000000000000001",
+    "userId": "100000000000000001",
+    "username": "ash_ketchum",
+    "globalName": "Ash Ketchum",
+    "avatarUrl": "https://example.com/avatars/ash.png",
+    "servers": ["000000000000000000000004"]
+  },
+  {
+    "_id": "000000000000000000000002",
+    "userId": "100000000000000002",
+    "username": "misty_cerulean",
+    "globalName": "Misty",
+    "avatarUrl": "https://example.com/avatars/misty.png",
+    "servers": ["000000000000000000000005"]
+  },
+  {
+    "_id": "000000000000000000000003",
+    "userId": "100000000000000003",
+    "username": "brock_pewter",
+    "globalName": "Brock",
+    "avatarUrl": "https://example.com/avatars/brock.png",
+    "servers": ["000000000000000000000004"]
+  }
+]

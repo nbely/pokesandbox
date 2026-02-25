@@ -1,12 +1,17 @@
 /**
  * Database seed script.
  *
- * Drops all seeded collections and re-inserts fictional data.
- * Accepts an optional --reset flag (no-op; reset is always performed).
+ * Drops all seeded collections and re-inserts data from the JSON files in
+ * scripts/seed/data/.  Cross-references (user.servers, server.regions) are
+ * already embedded in the JSON files, so no back-linking step is required.
+ *
+ * Update the JSON files by running:
+ *   npm run db:export                        # export all collections
+ *   npm run db:export -- --collection=users  # export a single collection
  *
  * Usage:
- *   npm run db:seed          # clear + seed
- *   npm run db:reset         # alias for db:seed
+ *   npm run db:seed   # clear + seed
+ *   npm run db:reset  # alias for db:seed
  */
 
 import * as dotenv from 'dotenv';
@@ -20,10 +25,10 @@ import { User } from '../../shared/src/models/user.model';
 import { Server } from '../../shared/src/models/server.model';
 import { Region } from '../../shared/src/models/region/region.model';
 
-// Import seed data
-import { users } from './data/users';
-import { servers } from './data/servers';
-import { regions, serverRegionMap } from './data/regions';
+// Load seed data from JSON files
+import usersData from './data/users.json';
+import serversData from './data/servers.json';
+import regionsData from './data/regions.json';
 
 const DATABASE_URI =
   process.env.DATABASE_URI || 'mongodb://localhost:27017/pokesandbox';
@@ -48,50 +53,20 @@ async function dropCollections(): Promise<void> {
 
 async function seedUsers(): Promise<void> {
   console.info('\nSeeding users…');
-  await User.insertMany(users);
-  console.info(`  Inserted ${users.length} users.`);
+  await User.insertMany(usersData as any[]);
+  console.info(`  Inserted ${usersData.length} users.`);
 }
 
 async function seedServers(): Promise<void> {
   console.info('\nSeeding servers…');
-
-  // Back-populate server.regions before inserting
-  const enrichedServers = servers.map((server) => ({
-    ...server,
-    regions: serverRegionMap[server._id.toHexString()] ?? [],
-  }));
-
-  await Server.insertMany(enrichedServers);
-  console.info(`  Inserted ${enrichedServers.length} servers.`);
+  await Server.insertMany(serversData as any[]);
+  console.info(`  Inserted ${serversData.length} servers.`);
 }
 
 async function seedRegions(): Promise<void> {
   console.info('\nSeeding regions…');
-  await Region.insertMany(regions);
-  console.info(`  Inserted ${regions.length} regions.`);
-}
-
-async function updateUserServers(): Promise<void> {
-  console.info('\nLinking users → servers…');
-
-  // Map each user to the servers they appear in
-  const userServerMap: Record<string, mongoose.Types.ObjectId[]> = {};
-
-  for (const server of servers) {
-    for (const userId of server.playerList) {
-      const key = userId.toHexString();
-      if (!userServerMap[key]) userServerMap[key] = [];
-      userServerMap[key].push(server._id);
-    }
-  }
-
-  for (const [userObjectId, serverList] of Object.entries(userServerMap)) {
-    await User.findByIdAndUpdate(userObjectId, {
-      $set: { servers: serverList },
-    });
-  }
-
-  console.info('  User ↔ server links updated.');
+  await Region.insertMany(regionsData as any[]);
+  console.info(`  Inserted ${regionsData.length} regions.`);
 }
 
 async function main(): Promise<void> {
@@ -105,7 +80,6 @@ async function main(): Promise<void> {
   await seedUsers();
   await seedServers();
   await seedRegions();
-  await updateUserServers();
 
   console.info('\n✅ Database seeded successfully.');
 }

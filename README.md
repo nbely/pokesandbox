@@ -122,6 +122,8 @@ After running `npm run db:env` (or `db:setup`), open `.env` and fill in:
 | `npm run db:seed` | Drop all collections and re-seed with sample data |
 | `npm run db:reset` | Alias for `db:seed` — wipe and re-seed |
 | `npm run db:env` | Copy `.env.example` → `.env` (skips if already exists) |
+| `npm run db:export` | Export all live local collections back to the JSON seed files |
+| `npm run db:export -- --collection=<name>` | Export a single collection (e.g. `regions`) |
 
 ## Development
 
