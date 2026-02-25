@@ -132,36 +132,16 @@ export enum OtherSpriteGroup {
 }
 export interface ISprites {
   footprint?: string;
-  g1?: {
-    [value in Gen1]?: Gen1Sprite;
-  };
-  g2?: {
-    [value in Gen2]?: Sprite;
-  };
-  g3?: {
-    [value in Gen3]?: Sprite;
-  };
-  g4?: {
-    [value in Gen4]?: Sprite;
-  };
-  g5?: {
-    [value in Gen5]?: Sprite;
-  };
-  g6?: {
-    [value in Gen6]?: Sprite;
-  };
-  g7?: {
-    [value in Gen7]?: Sprite;
-  };
-  g8?: {
-    [value in Gen8]?: Sprite;
-  };
-  g9?: {
-    [value in Gen9]?: Sprite;
-  };
-  other?: {
-    [value in OtherSpriteGroup]?: Sprite;
-  };
+  g1?: Map<Gen1, Gen1Sprite>;
+  g2?: Map<Gen2, Sprite>;
+  g3?: Map<Gen3, Sprite>;
+  g4?: Map<Gen4, Sprite>;
+  g5?: Map<Gen5, Sprite>;
+  g6?: Map<Gen6, Sprite>;
+  g7?: Map<Gen7, Sprite>;
+  g8?: Map<Gen8, Sprite>;
+  g9?: Map<Gen9, Sprite>;
+  other?: Map<OtherSpriteGroup, Sprite>;
   shape?: string;
 }
 

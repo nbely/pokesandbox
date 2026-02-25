@@ -1,7 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { Region, RegionDTO } from "@shared";
+import { RegionDTO } from "@shared/dtos";
+import { Region } from "@shared/models";
 
 import { router, publicProcedure } from "../init";
 

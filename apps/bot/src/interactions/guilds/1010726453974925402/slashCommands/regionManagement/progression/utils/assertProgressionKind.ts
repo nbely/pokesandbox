@@ -1,4 +1,4 @@
-import type { ProgressionDefinition } from '@shared';
+import type { ProgressionDefinition } from '@shared/models';
 
 export const assertProgressionKind: <K extends ProgressionDefinition['kind']>(
   expectedKind: K,

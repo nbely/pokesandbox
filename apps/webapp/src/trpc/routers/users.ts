@@ -3,11 +3,11 @@ import { Types } from "mongoose";
 import { z } from "zod";
 
 import {
-  User,
   UserDTO,
   userRequestDTOSchema,
   UserWithServersDTO,
-} from "@shared";
+} from "@shared/dtos";
+import { User } from "@shared/models";
 
 import { router, publicProcedure, protectedProcedure } from "../init";
 

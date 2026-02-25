@@ -1,5 +1,5 @@
 import type { AdminMenu, MenuButtonConfig } from '@bot/classes';
-import type { ProgressionDefinition, Region } from '@shared';
+import type { ProgressionDefinition, Region } from '@shared/models';
 
 export type EditProgressionFieldConfig = {
   handleInput: (

@@ -1,6 +1,6 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
 
-import { connectDb } from '@shared';
+import { connectDb } from '@shared/connectDb';
 
 import { BotClient } from '@bot/classes';
 import {
