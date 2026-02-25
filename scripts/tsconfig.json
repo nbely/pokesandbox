@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "outDir": "../tmp/scripts"
+  },
+  "include": ["./**/*.ts", "../shared/src/**/*.ts"]
+}

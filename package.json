@@ -5,7 +5,11 @@
   "scripts": {
     "start:app": "nx run webapp:dev",
     "start:bot": "nx run bot:serve",
-    "start:server": "nx run server:serve"
+    "start:server": "nx run server:serve",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:seed": "ts-node --project scripts/tsconfig.json scripts/seed/index.ts",
+    "db:reset": "npm run db:seed"
   },
   "private": true,
   "dependencies": {
