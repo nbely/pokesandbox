@@ -6,10 +6,12 @@
     "start:app": "nx run webapp:dev",
     "start:bot": "nx run bot:serve",
     "start:server": "nx run server:serve",
-    "db:up": "docker compose up -d",
+    "db:env": "node -e \"const fs=require('fs');if(!fs.existsSync('.env')){fs.copyFileSync('.env.example','.env');console.log('Created .env from .env.example — fill in the required values before starting the app.');}else{console.log('.env already exists — skipping.')}\"",
+    "db:up": "docker compose up --wait -d",
     "db:down": "docker compose down",
     "db:seed": "ts-node --project scripts/tsconfig.json scripts/seed/index.ts",
-    "db:reset": "npm run db:seed"
+    "db:reset": "npm run db:seed",
+    "db:setup": "npm run db:env && npm run db:up && npm run db:seed"
   },
   "private": true,
   "dependencies": {
