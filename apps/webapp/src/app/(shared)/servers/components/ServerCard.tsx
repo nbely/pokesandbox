@@ -4,7 +4,7 @@ import { ReadOutlined } from "@ant-design/icons";
 import { Avatar, Card } from "antd";
 import Link from "next/link";
 
-import type { ServerDTO } from "@shared";
+import type { ServerDTO } from "@shared/dtos";
 import { DiscordIcon } from "@webapp/components/assets/DiscordIcon";
 
 interface ServerCardProps {

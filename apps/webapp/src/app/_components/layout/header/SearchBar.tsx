@@ -5,7 +5,7 @@ import { AutoComplete, Input } from "antd";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { RegionDTO, ServerDTO, UserDTO } from "@shared";
+import type { RegionDTO, ServerDTO, UserDTO } from "@shared/dtos";
 import { trpc } from "@webapp/trpc";
 
 export enum SearchType {

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { trpc } from "@webapp/trpc";
-import { RegionDTO, ServerDTO, UserDTO } from "@shared";
+import { RegionDTO, ServerDTO, UserDTO } from "@shared/dtos";
 
 type AppData = {
   regions: RegionDTO[];

@@ -1,4 +1,4 @@
-import { connectDb } from "@shared";
+import { connectDb } from "@shared/connectDb";
 import { auth } from "@webapp/auth";
 
 // Define the shape of the options tRPC passes in

@@ -1,7 +1,7 @@
 import { ButtonStyle } from 'discord.js';
 import capitalize from 'lodash/capitalize';
 
-import type { ProgressionDefinition, Region } from '@shared';
+import type { ProgressionDefinition, Region } from '@shared/models';
 
 import type { EditProgressionFieldConfig } from '../types';
 import { assertProgressionKind } from './assertProgressionKind';

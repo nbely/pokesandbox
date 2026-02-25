@@ -1,6 +1,6 @@
 "use client";
 
-import type { ServerDTO } from "@shared";
+import type { ServerDTO } from "@shared/dtos";
 import { trpc } from "@webapp/trpc";
 
 import ServerCard from "./components/ServerCard";

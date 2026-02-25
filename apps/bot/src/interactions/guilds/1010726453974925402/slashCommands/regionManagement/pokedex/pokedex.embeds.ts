@@ -2,6 +2,7 @@ import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
 import { getAssertedCachedDexEntry, getCachedDexEntries } from '@bot/cache';
+import { Gen5 } from '@shared/models';
 
 export const getManagePokedexMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
@@ -119,7 +120,7 @@ export const getEditPokedexSlotEmbeds = async <
     )
     .setTimestamp();
 
-  const thumbnail = dexEntry.sprites.g5?.bw?.normal.front;
+  const thumbnail = dexEntry.sprites.g5?.get(Gen5.bw)?.normal?.front;
   if (thumbnail) {
     embed.setThumbnail(thumbnail);
   }
