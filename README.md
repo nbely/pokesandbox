@@ -1,18 +1,18 @@
 # PokeSandbox - The Discord Pokémon Fan-Game Engine
 
-Navigation: [Discord Server][1] | [Pokémon Showdown Fork][3]
+Navigation: [Discord Server][1] | [Pokémon Showdown Fork][2]
 
 ## Introduction
 
-**What exactly is the PokeSandbox?**
+**What exactly is PokeSandbox?**
 
-- PokeSandbox is a node.js application that interfaces with the Discord API to provide custom responses to user-entered commands for server-owners to craft their own fan-game directly in Discord, and to then deploy their game to their server users to enjoy.
+- PokeSandbox is a full-stack TypeScript platform that lets Discord server owners build and deploy custom Pokémon fan-game experiences directly within Discord. Admins create and configure their games through an interactive menu-driven bot interface — defining regions, Pokédexes, progression systems, quests, shops, and more — then deploy them for their server's players to enjoy. No coding or external tools required.
 
-**What else does it do or will it do?**
+**What else does it do?**
 
-- PokeSandbox includes a React-based web-application. This web application will allow for log-in using Discord Oauth account verification. There, users can use server discovery to see what servers/games are publically available to play. In addition, profile data for each of a user's characters on every server will be avaialble for viewing and updating.
+- PokeSandbox includes a Next.js web application with Discord OAuth sign-in. Players can browse the **Server Discovery** page to find publicly listed games, view server and region details, and access player profiles. The web app serves as a companion to the in-Discord gameplay experience.
 
-- PokeSandobx interacts integrally with a customized Pokémon Showdown forked repository. For now, custom Pokemon, Types, Moves and Abilities need to be developed, reviewed, and approved for merging into the controlled Showdown Fork. Future plans would attempt to allow for these custom additions without direct code updates.
+- PokeSandbox integrates with a customized [Pokémon Showdown][2] fork for its battle system. The fork supports custom Pokémon, Types, Moves, and Abilities. Currently, custom additions require direct merges into the controlled Showdown fork; future plans aim to allow server owners to define these without code changes.
 
 ## Prerequisites
 
@@ -20,18 +20,16 @@ Before setting up the project locally, ensure you have the following installed:
 
 | Prerequisite        | Version      | Notes                                                       |
 | ------------------- | ------------ | ----------------------------------------------------------- |
-| [Node.js][6]        | **18.x LTS** | The project targets Node 18. Using [nvm][7] is recommended. |
-| [npm][8]            | 9+           | Bundled with Node 18                                        |
-| [Docker Desktop][9] | Latest       | Required to run the local MongoDB instance                  |
-| [Git][10]           | Latest       |                                                             |
-
-> **Note:** Node.js 20+ may work but is not officially targeted. Check `@types/node` in `package.json` for the pinned version.
+| [Node.js][3]        | **22.x LTS** | The project targets Node 22. Using [nvm][4] is recommended. |
+| [npm][5]            | 10+          | Bundled with Node 22                                        |
+| [Docker Desktop][6] | Latest       | Required to run the local MongoDB instance                  |
+| [Git][7]            | Latest       |                                                             |
 
 ### Discord Bot
 
 You must register your own Discord application and bot in order to run the bot locally.
 
-1. Go to the [Discord Developer Portal][11] and create a **New Application**.
+1. Go to the [Discord Developer Portal][8] and create a **New Application**.
 2. Navigate to the **Bot** tab and click **Add Bot**.
 3. Under the Bot tab, enable the following **Privileged Gateway Intents**:
    - Server Members Intent
@@ -41,7 +39,7 @@ You must register your own Discord application and bot in order to run the bot l
 5. Copy the **Bot Token** — you will need it for `DISCORD_BOT_TOKEN` in your `.env`.
 6. Copy the **Client Secret** (under OAuth2 → General) — you will need it for `AUTH_DISCORD_SECRET`.
 
-See the official [Discord Getting Started guide][12] and [Discord.js guide][13] for more detail.
+See the official [Discord Getting Started guide][9] and [Discord.js guide][10] for more detail.
 
 ## Local Setup
 
@@ -117,34 +115,32 @@ After running `npm run env-setup` (or `npm run setup`), open `.env` and fill in:
 | `npm run db:export`                        | Export all live local collections back to the JSON seed files |
 | `npm run db:export -- --collection=<name>` | Export a single collection (e.g. `regions`)                   |
 
-## Development
+## Interested in helping?
 
-- The codebase is currently being refactored and carried in from the deprecated [Turq-Bot Repository][3]. Along with converting the project from JavaScript to TypeScript, additional plans to conver the application to a Next.JS application are in the works.
-- For those interested in joining the development team, please see the link to the Discord server linked at the top of this README.
+- For those interested in contributing, please see the link to the Discord server at the top of this README.
 
 ## Credits
 
 **Development Team**
 
-- Nick Bely [Chronicler] - Lead of Design & Development
+- Nick Bely [Chronicler] - Architect, Primary Developer & Team Lead
 
 **Other Credits**
 
 - Pokémon Showdown Team - for the Pokémon Battle Simulator Base
 - Phoenixsong - for providing base battle calculator algorithms for various game functions.
 
-  - Visit [Altered Origin][4] or the [PhoenixDex][5] for more of her work!
+  - Visit [Altered Origin][11] or the [PhoenixDex][12] for more of her work!
 
 [1]: https://discord.gg/5BSMak3m9V
 [2]: https://github.com/nbely/pokemon-showdown#pok%C3%A9mon-showdown
-[3]: https://github.com/nbely/turq-bot
-[4]: https://alteredorigin.net/
-[5]: https://phoenixdex.alteredorigin.net/
-[6]: https://nodejs.org/en/download
-[7]: https://github.com/nvm-sh/nvm
-[8]: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-[9]: https://www.docker.com/products/docker-desktop/
-[10]: https://git-scm.com/downloads
-[11]: https://discord.com/developers/applications
-[12]: https://discord.com/developers/docs/getting-started
-[13]: https://discordjs.guide/preparations/setting-up-a-bot-application.html
+[3]: https://nodejs.org/en/download
+[4]: https://github.com/nvm-sh/nvm
+[5]: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+[6]: https://www.docker.com/products/docker-desktop/
+[7]: https://git-scm.com/downloads
+[8]: https://discord.com/developers/applications
+[9]: https://discord.com/developers/docs/getting-started
+[10]: https://discordjs.guide/preparations/setting-up-a-bot-application.html
+[11]: https://alteredorigin.net/
+[12]: https://phoenixdex.alteredorigin.net/
