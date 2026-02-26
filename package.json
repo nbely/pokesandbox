@@ -6,7 +6,6 @@
     "setup": "npm run env-setup && npm run db:up && npm run db:seed",
     "start:app": "nx run webapp:dev",
     "start:bot": "nx run bot:serve",
-    "start:server": "nx run server:serve",
     "env-setup": "node scripts/env-setup.js",
     "db:up": "docker compose up --wait -d",
     "db:down": "docker compose down",
