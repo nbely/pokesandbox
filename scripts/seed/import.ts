@@ -50,17 +50,15 @@ async function main(): Promise<void> {
   console.info('Resetting collections…');
   await dropCollections();
 
-  Array.from(Object.entries(collectionSeedMap)).forEach(
-    ([name, { model, seedData }]) => {
-      if (!Array.isArray(seedData)) {
-        console.warn(`  Skipping ${name}: seed data is not an array.`);
-        return;
-      }
-      console.info(`Seeding ${name}…`);
-      model.insertMany(seedData);
-      console.info(`  Inserted ${seedData.length} ${name}.`);
+  for (const [name, { model, seedData }] of Object.entries(collectionSeedMap)) {
+    if (!Array.isArray(seedData)) {
+      console.warn(`  Skipping ${name}: seed data is not an array.`);
+      continue;
     }
-  );
+    console.info(`Seeding ${name}…`);
+    await model.insertMany(seedData);
+    console.info(`  Inserted ${seedData.length} ${name}.`);
+  }
 
   console.info('\n✅ Database seeded successfully.');
 }
