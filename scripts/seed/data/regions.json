@@ -1,0 +1,839 @@
+[
+  {
+    "_id": "651f42c3a39ac73fde4cd54c",
+    "baseGeneration": 10,
+    "charactersPerPlayer": 1,
+    "characterList": [],
+    "currencyType": "P",
+    "deployable": false,
+    "deployed": false,
+    "graphicSettings": {
+      "backSpritesEnabled": false,
+      "frontSpritesEnabled": false,
+      "iconSpritesEnabled": false,
+      "_id": "651f42c3a39ac73fde4cd54d"
+    },
+    "locations": [],
+    "name": "Kanto",
+    "playerList": [
+      "000000000000000000000001",
+      "000000000000000000000002",
+      "000000000000000000000003"
+    ],
+    "pokedex": [
+      {
+        "id": "6503c386d5ce71f0a746733e",
+        "name": "Bulbasaur",
+        "_id": "699d314cc021c86f25f761e7"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467384",
+        "name": "Ivysaur",
+        "_id": "699d3155c021c86f25f761f1"
+      },
+      {
+        "id": "6503c386d5ce71f0a74673bb",
+        "name": "Venusaur",
+        "_id": "699d315fc021c86f25f761ff"
+      },
+      {
+        "id": "6503c386d5ce71f0a746749c",
+        "name": "Charmander",
+        "_id": "699d3166c021c86f25f7620d"
+      },
+      {
+        "id": "6503c386d5ce71f0a74674e6",
+        "name": "Charmeleon",
+        "_id": "699d3195c021c86f25f76256"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467525",
+        "name": "Charizard",
+        "_id": "699d31a0c021c86f25f76269"
+      },
+      {
+        "id": "6503c386d5ce71f0a74675f9",
+        "name": "Squirtle",
+        "_id": "699d31aac021c86f25f7627c"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467638",
+        "name": "Wartortle",
+        "_id": "699d31b2c021c86f25f7628c"
+      },
+      {
+        "id": "6503c386d5ce71f0a746767c",
+        "name": "Blastoise",
+        "_id": "699d31b9c021c86f25f762a0"
+      },
+      {
+        "id": "6503c389d5ce71f0a74680f7",
+        "name": "Caterpie",
+        "_id": "699d31ccc021c86f25f762b4"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468125",
+        "name": "Metapod",
+        "_id": "699d31d5c021c86f25f762c7"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468163",
+        "name": "Butterfree",
+        "_id": "699d31e2c021c86f25f762db"
+      },
+      {
+        "id": "6503c389d5ce71f0a74681ed",
+        "name": "Weedle",
+        "_id": "699d31eac021c86f25f762ef"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468222",
+        "name": "Kakuna",
+        "_id": "699d31f6c021c86f25f76305"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468253",
+        "name": "Beedrill",
+        "_id": "699d3208c021c86f25f7631f"
+      },
+      {
+        "id": "6503c389d5ce71f0a74682c3",
+        "name": "Pidgey",
+        "_id": "699d3219c021c86f25f76347"
+      },
+      {
+        "id": "6503c389d5ce71f0a74682ed",
+        "name": "Pidgeotto",
+        "_id": "699d3222c021c86f25f7635e"
+      },
+      {
+        "id": "6503c389d5ce71f0a746832b",
+        "name": "Pidgeot",
+        "_id": "699d3228c021c86f25f7637a"
+      },
+      {
+        "id": "6503c389d5ce71f0a74683b0",
+        "name": "Rattata",
+        "_id": "699d322ec021c86f25f76395"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468421",
+        "name": "Raticate",
+        "_id": "699d3237c021c86f25f763b6"
+      },
+      {
+        "id": "6503c389d5ce71f0a74684bc",
+        "name": "Spearow",
+        "_id": "699d323ec021c86f25f763d5"
+      },
+      {
+        "id": "6503c389d5ce71f0a74684f9",
+        "name": "Fearow",
+        "_id": "699d3245c021c86f25f763f2"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468531",
+        "name": "Ekans",
+        "_id": "699d3257c021c86f25f76410"
+      },
+      {
+        "id": "6503c38ad5ce71f0a746857b",
+        "name": "Arbok",
+        "_id": "699d325dc021c86f25f7642f"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74685dc",
+        "name": "Pikachu",
+        "_id": "699d3264c021c86f25f76456"
+      },
+      {
+        "id": "6503c38ad5ce71f0a746874a",
+        "name": "Raichu",
+        "_id": "699d326dc021c86f25f76481"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74687d2",
+        "name": "Sandshrew",
+        "_id": "699d3274c021c86f25f764a9"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468830",
+        "name": "Sandslash",
+        "_id": "699d327bc021c86f25f764d2"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74688b0",
+        "name": "Nidoran-F",
+        "_id": "699d329dc021c86f25f764fb"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74688f0",
+        "name": "Nidorina",
+        "_id": "699d32adc021c86f25f76521"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468944",
+        "name": "Nidoqueen",
+        "_id": "699d32b6c021c86f25f76548"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468987",
+        "name": "Nidoran-M",
+        "_id": "699d32bcc021c86f25f7656f"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74689da",
+        "name": "Nidorino",
+        "_id": "699d32c3c021c86f25f76598"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a07",
+        "name": "Nidoking",
+        "_id": "699d32cbc021c86f25f765c2"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a4d",
+        "name": "Clefairy",
+        "_id": "699d32d4c021c86f25f765ed"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a89",
+        "name": "Clefable",
+        "_id": "699d32e1c021c86f25f76619"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468adf",
+        "name": "Vulpix",
+        "_id": "699d32f8c021c86f25f76648"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468b8a",
+        "name": "Ninetales",
+        "_id": "699d3307c021c86f25f7667b"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468c03",
+        "name": "Jigglypuff",
+        "_id": "699d3322c021c86f25f766ad"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468c4b",
+        "name": "Wigglytuff",
+        "_id": "699d332cc021c86f25f766dd"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468cc1",
+        "name": "Zubat",
+        "_id": "699d3333c021c86f25f7670d"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d12",
+        "name": "Golbat",
+        "_id": "699d334fc021c86f25f7673f"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d4d",
+        "name": "Oddish",
+        "_id": "699d335dc021c86f25f76772"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d90",
+        "name": "Gloom",
+        "_id": "699d3363c021c86f25f767a7"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468dc6",
+        "name": "Vileplume",
+        "_id": "699d336bc021c86f25f767dd"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e01",
+        "name": "Paras",
+        "_id": "699d3371c021c86f25f76813"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e3b",
+        "name": "Parasect",
+        "_id": "699d337bc021c86f25f76849"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e90",
+        "name": "Venonat",
+        "_id": "699d3381c021c86f25f76880"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468ec4",
+        "name": "Venomoth",
+        "_id": "699d3387c021c86f25f768b8"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468f12",
+        "name": "Diglett",
+        "_id": "699d361dfc6c255faede8793"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468f97",
+        "name": "Dugtrio",
+        "_id": "699fae7c61ad064b25f89b45"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7469012",
+        "name": "Meowth",
+        "_id": "699fae9161ad064b25f89b87"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746919b",
+        "name": "Persian",
+        "_id": "699faeb061ad064b25f89bca"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746922c",
+        "name": "Psyduck",
+        "_id": "699faec461ad064b25f89c09"
+      },
+      {
+        "id": "6503c38cd5ce71f0a7469275",
+        "name": "Golduck",
+        "_id": "699faed261ad064b25f89c46"
+      },
+      {
+        "id": "6503c38cd5ce71f0a74692b8",
+        "name": "Mankey",
+        "_id": "699faed861ad064b25f89c84"
+      },
+      {
+        "id": "6503c38cd5ce71f0a74692f2",
+        "name": "Primeape",
+        "_id": "699faee261ad064b25f89cc4"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746932d",
+        "name": "Growlithe",
+        "_id": "699faf0161ad064b25f89d08"
+      },
+      {
+        "id": "6503c38cd5ce71f0a7469395",
+        "name": "Arcanine",
+        "_id": "699faf0e61ad064b25f89d4f"
+      },
+      {
+        "id": "6503c38cd5ce71f0a7469402",
+        "name": "Poliwag",
+        "_id": "699faf1861ad064b25f89d94"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746944c",
+        "name": "Poliwhirl",
+        "_id": "699faf2461ad064b25f89dd9"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746947a",
+        "name": "Poliwrath",
+        "_id": "699faf2d61ad064b25f89e1e"
+      },
+      {
+        "id": "6503c38cd5ce71f0a74694bb",
+        "name": "Abra",
+        "_id": "699faf3761ad064b25f89e65"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746950b",
+        "name": "Kadabra",
+        "_id": "699faf4261ad064b25f89eac"
+      },
+      {
+        "id": "6503c38cd5ce71f0a746954b",
+        "name": "Alakazam",
+        "_id": "699faf4861ad064b25f89ef6"
+      },
+      {
+        "id": "6503c38cd5ce71f0a74695b6",
+        "name": "Machop",
+        "_id": "699faf5f61ad064b25f89f41"
+      },
+      {
+        "id": "6503c38cd5ce71f0a74695df",
+        "name": "Machoke",
+        "_id": "699faf6561ad064b25f89f8b"
+      },
+      {
+        "id": "6503c38cd5ce71f0a7469612",
+        "name": "Machamp",
+        "_id": "699faf7361ad064b25f89fd5"
+      },
+      {
+        "id": "6503c38dd5ce71f0a74696ae",
+        "name": "Bellsprout",
+        "_id": "699faf8a61ad064b25f8a020"
+      },
+      {
+        "id": "6503c38dd5ce71f0a74696e0",
+        "name": "Weepinbell",
+        "_id": "699faf9561ad064b25f8a06d"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469709",
+        "name": "Victreebel",
+        "_id": "699fafa561ad064b25f8a0bb"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469750",
+        "name": "Tentacool",
+        "_id": "699fafad61ad064b25f8a109"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469794",
+        "name": "Tentacruel",
+        "_id": "699fafc761ad064b25f8a158"
+      },
+      {
+        "id": "6503c38dd5ce71f0a74697d5",
+        "name": "Geodude",
+        "_id": "699fafd461ad064b25f8a1ab"
+      },
+      {
+        "id": "6503c38dd5ce71f0a746984a",
+        "name": "Graveler",
+        "_id": "699fafdc61ad064b25f8a203"
+      },
+      {
+        "id": "6503c38dd5ce71f0a74698c0",
+        "name": "Golem",
+        "_id": "699fafe161ad064b25f8a25b"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469935",
+        "name": "Ponyta",
+        "_id": "699fafe861ad064b25f8a2b4"
+      },
+      {
+        "id": "6503c38dd5ce71f0a74699ab",
+        "name": "Rapidash",
+        "_id": "699fafee61ad064b25f8a30e"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469a0e",
+        "name": "Slowpoke",
+        "_id": "699faff561ad064b25f8a36a"
+      },
+      {
+        "id": "6503c38dd5ce71f0a7469a95",
+        "name": "Slowbro",
+        "_id": "699faffb61ad064b25f8a3c9"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469b6a",
+        "name": "Magnemite",
+        "_id": "699fb00461ad064b25f8a425"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469ba3",
+        "name": "Magneton",
+        "_id": "699fb00b61ad064b25f8a47e"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469bd1",
+        "name": "Farfetch’d",
+        "_id": "699fb01361ad064b25f8a4de"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469c66",
+        "name": "Doduo",
+        "_id": "699fb02261ad064b25f8a537"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469cc7",
+        "name": "Dodrio",
+        "_id": "699fb02861ad064b25f8a592"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469d04",
+        "name": "Seel",
+        "_id": "699fb02f61ad064b25f8a5ee"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469d38",
+        "name": "Dewgong",
+        "_id": "699fb03661ad064b25f8a64b"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469d78",
+        "name": "Grimer",
+        "_id": "699fb03c61ad064b25f8a6ac"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469dec",
+        "name": "Muk",
+        "_id": "699fb04361ad064b25f8a711"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469e72",
+        "name": "Shellder",
+        "_id": "699fb05361ad064b25f8a774"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469eb3",
+        "name": "Cloyster",
+        "_id": "699fb05861ad064b25f8a7d5"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469ee0",
+        "name": "Gastly",
+        "_id": "699fb05e61ad064b25f8a837"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469f19",
+        "name": "Haunter",
+        "_id": "699fb06461ad064b25f8a89b"
+      },
+      {
+        "id": "6503c38ed5ce71f0a7469f64",
+        "name": "Gengar",
+        "_id": "699fb07461ad064b25f8a902"
+      },
+      {
+        "id": "6503c38ed5ce71f0a746a00e",
+        "name": "Onix",
+        "_id": "699fb07a61ad064b25f8a96a"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a042",
+        "name": "Drowzee",
+        "_id": "699fb08261ad064b25f8a9d1"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a09a",
+        "name": "Hypno",
+        "_id": "699fb08861ad064b25f8aa38"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a0d8",
+        "name": "Krabby",
+        "_id": "699fb09061ad064b25f8aaa0"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a105",
+        "name": "Kingler",
+        "_id": "699fb09661ad064b25f8ab09"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a17b",
+        "name": "Voltorb",
+        "_id": "699fb09c61ad064b25f8ab76"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a20e",
+        "name": "Electrode",
+        "_id": "699fb0a461ad064b25f8abe7"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a277",
+        "name": "Exeggcute",
+        "_id": "699fb0ad61ad064b25f8ac57"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a2b2",
+        "name": "Exeggutor",
+        "_id": "699fb0c861ad064b25f8acca"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a325",
+        "name": "Cubone",
+        "_id": "699fb0d361ad064b25f8ad3c"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a35b",
+        "name": "Marowak",
+        "_id": "699fb0dd61ad064b25f8adaf"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a3d8",
+        "name": "Hitmonlee",
+        "_id": "699fb0ed61ad064b25f8ae21"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a41c",
+        "name": "Hitmonchan",
+        "_id": "699fb0f461ad064b25f8ae91"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a456",
+        "name": "Lickitung",
+        "_id": "699fb0fc61ad064b25f8af03"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a486",
+        "name": "Koffing",
+        "_id": "699fb10461ad064b25f8af78"
+      },
+      {
+        "id": "6503c38fd5ce71f0a746a4bf",
+        "name": "Weezing",
+        "_id": "699fb10b61ad064b25f8aff0"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a526",
+        "name": "Rhyhorn",
+        "_id": "699fb11061ad064b25f8b068"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a56c",
+        "name": "Rhydon",
+        "_id": "699fb12861ad064b25f8b0df"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a5b0",
+        "name": "Chansey",
+        "_id": "699fb12f61ad064b25f8b157"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a5f7",
+        "name": "Tangela",
+        "_id": "699fb13761ad064b25f8b1d0"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a63d",
+        "name": "Kangaskhan",
+        "_id": "699fb13f61ad064b25f8b24c"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a6d3",
+        "name": "Horsea",
+        "_id": "699fb14761ad064b25f8b2c9"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a704",
+        "name": "Seadra",
+        "_id": "699fb14d61ad064b25f8b345"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a72b",
+        "name": "Goldeen",
+        "_id": "699fb15861ad064b25f8b3c2"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a780",
+        "name": "Seaking",
+        "_id": "699fb16161ad064b25f8b43f"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a7b4",
+        "name": "Staryu",
+        "_id": "699fb16961ad064b25f8b4bd"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a803",
+        "name": "Starmie",
+        "_id": "699fb17161ad064b25f8b53c"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a839",
+        "name": "Mr. Mime",
+        "_id": "699fb17961ad064b25f8b5be"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a8aa",
+        "name": "Scyther",
+        "_id": "699fb18161ad064b25f8b643"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a8e4",
+        "name": "Jynx",
+        "_id": "699fb19f61ad064b25f8b6c6"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a916",
+        "name": "Electabuzz",
+        "_id": "699fb1b161ad064b25f8b749"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a944",
+        "name": "Magmar",
+        "_id": "699fb1b761ad064b25f8b7ce"
+      },
+      {
+        "id": "6503c390d5ce71f0a746a988",
+        "name": "Pinsir",
+        "_id": "699fb1be61ad064b25f8b856"
+      },
+      {
+        "id": "6503c391d5ce71f0a746a9fe",
+        "name": "Tauros",
+        "_id": "699fb1c661ad064b25f8b8e5"
+      },
+      {
+        "id": "6503c391d5ce71f0a746aafe",
+        "name": "Magikarp",
+        "_id": "699fb1ce61ad064b25f8b973"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ab4a",
+        "name": "Gyarados",
+        "_id": "699fb1da61ad064b25f8b9fe"
+      },
+      {
+        "id": "6503c391d5ce71f0a746abd3",
+        "name": "Lapras",
+        "_id": "699fb1e061ad064b25f8ba89"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ac54",
+        "name": "Ditto",
+        "_id": "699fb1e561ad064b25f8bb12"
+      },
+      {
+        "id": "6503c391d5ce71f0a746aca0",
+        "name": "Eevee",
+        "_id": "699fb1ec61ad064b25f8bba7"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ad90",
+        "name": "Vaporeon",
+        "_id": "699fb21b61ad064b25f8bc3d"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ade6",
+        "name": "Jolteon",
+        "_id": "699fb23261ad064b25f8bcc9"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ae22",
+        "name": "Flareon",
+        "_id": "699fb23861ad064b25f8bd56"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ae5a",
+        "name": "Porygon",
+        "_id": "699fb24461ad064b25f8bde6"
+      },
+      {
+        "id": "6503c391d5ce71f0a746ae88",
+        "name": "Omanyte",
+        "_id": "699fb24c61ad064b25f8be77"
+      },
+      {
+        "id": "6503c391d5ce71f0a746aec8",
+        "name": "Omastar",
+        "_id": "699fb25161ad064b25f8bf08"
+      },
+      {
+        "id": "6503c391d5ce71f0a746af10",
+        "name": "Kabuto",
+        "_id": "699fb25761ad064b25f8bf9a"
+      },
+      {
+        "id": "6503c392d5ce71f0a746af4f",
+        "name": "Kabutops",
+        "_id": "699fb27061ad064b25f8c02d"
+      },
+      {
+        "id": "6503c392d5ce71f0a746afa3",
+        "name": "Aerodactyl",
+        "_id": "699fb27d61ad064b25f8c0c3"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b024",
+        "name": "Snorlax",
+        "_id": "699fb28561ad064b25f8c15a"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b0b7",
+        "name": "Articuno",
+        "_id": "699fb28b61ad064b25f8c1f2"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b15b",
+        "name": "Zapdos",
+        "_id": "699fb29861ad064b25f8c28e"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b1ee",
+        "name": "Moltres",
+        "_id": "699fb29e61ad064b25f8c32b"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b274",
+        "name": "Dratini",
+        "_id": "699fb2a461ad064b25f8c3c7"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b2c7",
+        "name": "Dragonair",
+        "_id": "699fb2b061ad064b25f8c462"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b302",
+        "name": "Dragonite",
+        "_id": "699fb2b961ad064b25f8c4fd"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b342",
+        "name": "Mewtwo",
+        "_id": "699fb2be61ad064b25f8c59d"
+      },
+      {
+        "id": "6503c392d5ce71f0a746b3fe",
+        "name": "Mew",
+        "_id": "699d307cc021c86f25f761c7"
+      }
+    ],
+    "progressionDefinitions": {
+      "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
+        "kind": "milestone",
+        "name": "Badges",
+        "visibility": "public",
+        "sequential": true,
+        "milestones": [
+          {
+            "key": "milestone-9a9b8ffd-d25a-47ba-a03f-3e9ae60aab9c",
+            "label": "Boulder Badge",
+            "ordinal": 1
+          },
+          {
+            "key": "milestone-4c0d1aa9-af6a-471b-9177-49a2ee23a60e",
+            "label": "Cascade Badge",
+            "ordinal": 2
+          },
+          {
+            "key": "milestone-de3e1b6e-2242-4b85-9d30-bcd6aafee1cc",
+            "label": "Thunder Badge",
+            "ordinal": 3
+          },
+          {
+            "key": "milestone-0ef7b48a-79eb-412e-a9dd-fb4447ffc202",
+            "label": "Rainbow Badge",
+            "ordinal": 4
+          },
+          {
+            "key": "milestone-dd941383-642f-4cd2-a09b-7117a3102714",
+            "label": "Soul Badge",
+            "ordinal": 5
+          },
+          {
+            "key": "milestone-78cc5088-ebae-4b9c-8b61-61d958544839",
+            "label": "Marsh Badge",
+            "ordinal": 6
+          },
+          {
+            "key": "milestone-37163c52-cd64-406c-94b5-05f096bfe5b9",
+            "label": "Volcano Badge",
+            "ordinal": 7
+          },
+          {
+            "key": "milestone-6e1b831c-4ba8-42a7-afb4-13c9cf16ba03",
+            "label": "Earth Badge",
+            "ordinal": 8
+          }
+        ]
+      }
+    },
+    "quests": {
+      "active": [],
+      "passive": [],
+      "_id": "651f42c3a39ac73fde4cd54e"
+    },
+    "shops": [],
+    "transportationTypes": [],
+    "__v": 0
+  }
+]

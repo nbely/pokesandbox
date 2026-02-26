@@ -5,15 +5,13 @@ import type { BotClient } from '@bot/classes';
 import { commandOptionsProcessor } from '@bot/structures/commandOptions/processor';
 import type { IBotEvent } from '@bot/structures/interfaces';
 
-const prefix = process.env.PREFIX as string;
-
 export const MessageCreate: IBotEvent = {
   name: 'messageCreate',
   execute: (name: string, client?: BotClient) => {
     if (!client) return;
     client.on(name, async (message: Message) => {
       const server = await getCachedServer(message.guild?.id);
-      const prefixes: string[] = server?.prefixes || [prefix];
+      const prefixes: string[] = server?.prefixes || ['.'];
 
       prefixes.forEach(async (botPrefix) => {
         if (!message.content.startsWith(botPrefix)) return;

@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "6473e4885458cbb9b7060155",
+    "serverId": "1010726453974925402",
+    "adminRoleIds": ["1106393344453640252", "1475892500416823356"],
+    "discovery": {
+      "description": "This is the best server you'll ever see in your life.",
+      "enabled": true,
+      "icon": "8c5facd2162cf0f39c12a688b0ac2066",
+      "inviteLink": "https://discord.gg/2BDghKaGQu",
+      "_id": "6473e4885458cbb9b7060156"
+    },
+    "modRoleIds": [],
+    "name": "PokéSandbox",
+    "playerList": ["644d77a7af310377e1584b96"],
+    "prefixes": [],
+    "regions": ["651f42c3a39ac73fde4cd54c"],
+    "__v": 0
+  }
+]
