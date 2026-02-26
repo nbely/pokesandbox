@@ -131,12 +131,23 @@ const getEditPokedexSlotButtons = async (
         const region = await menu.getRegion(regionId);
         const pokedexIndex = +pokedexNo - 1;
 
-        region.pokedex[pokedexIndex] = null;
+        removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
         await menu.hardRefresh();
       },
     },
   ];
+};
+
+const removePokedexSlot = (region: Region, pokedexIndex: number): void => {
+  region.pokedex[pokedexIndex] = null;
+  removeNullsFromEndOfPokedex(region);
+};
+
+const removeNullsFromEndOfPokedex = (region: Region): void => {
+  while (region.pokedex[region.pokedex.length - 1] === null) {
+    region.pokedex.pop();
+  }
 };
 
 const handleAddPokemonToSlot = async (
