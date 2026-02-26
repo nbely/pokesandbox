@@ -3,16 +3,16 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "setup": "npm run env-setup && npm run db:up && npm run db:seed",
     "start:app": "nx run webapp:dev",
     "start:bot": "nx run bot:serve",
     "start:server": "nx run server:serve",
-    "db:env": "node scripts/env-setup.js",
+    "env-setup": "node scripts/env-setup.js",
     "db:up": "docker compose up --wait -d",
     "db:down": "docker compose down",
-    "db:seed": "ts-node --project scripts/tsconfig.json scripts/seed/index.ts",
+    "db:seed": "ts-node --project scripts/tsconfig.json scripts/seed/import.ts",
     "db:reset": "npm run db:seed",
-    "db:export": "ts-node --project scripts/tsconfig.json scripts/export.ts",
-    "db:setup": "npm run db:env && npm run db:up && npm run db:seed"
+    "db:export": "ts-node --project scripts/tsconfig.json scripts/seed/export.ts"
   },
   "private": true,
   "dependencies": {

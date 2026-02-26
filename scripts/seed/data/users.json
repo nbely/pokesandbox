@@ -5,7 +5,7 @@
     "username": "ash_ketchum",
     "globalName": "Ash Ketchum",
     "avatarUrl": "https://example.com/avatars/ash.png",
-    "servers": ["000000000000000000000004"]
+    "servers": ["6473e4885458cbb9b7060155"]
   },
   {
     "_id": "000000000000000000000002",
@@ -13,7 +13,7 @@
     "username": "misty_cerulean",
     "globalName": "Misty",
     "avatarUrl": "https://example.com/avatars/misty.png",
-    "servers": ["000000000000000000000005"]
+    "servers": ["6473e4885458cbb9b70601555"]
   },
   {
     "_id": "000000000000000000000003",
@@ -21,6 +21,6 @@
     "username": "brock_pewter",
     "globalName": "Brock",
     "avatarUrl": "https://example.com/avatars/brock.png",
-    "servers": ["000000000000000000000004"]
+    "servers": ["6473e4885458cbb9b7060155"]
   }
 ]

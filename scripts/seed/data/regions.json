@@ -1,97 +1,439 @@
 [
   {
-    "_id": "000000000000000000000006",
-    "name": "Kanto Classic",
-    "baseGeneration": 1,
+    "_id": "651f42c3a39ac73fde4cd54c",
+    "baseGeneration": 10,
     "charactersPerPlayer": 1,
     "characterList": [],
-    "currencyType": "PokéDollars",
-    "deployable": true,
-    "deployed": true,
+    "currencyType": "P",
+    "deployable": false,
+    "deployed": false,
     "graphicSettings": {
-      "frontSpritesEnabled": true,
-      "backSpritesEnabled": true,
-      "iconSpritesEnabled": true
+      "backSpritesEnabled": false,
+      "frontSpritesEnabled": false,
+      "iconSpritesEnabled": false,
+      "_id": "651f42c3a39ac73fde4cd54d"
     },
     "locations": [],
-    "playerList": ["000000000000000000000001", "000000000000000000000003"],
-    "pokedex": [],
+    "name": "Kanto",
+    "playerList": [
+      "000000000000000000000001",
+      "000000000000000000000002",
+      "000000000000000000000003"
+    ],
+    "pokedex": [
+      {
+        "id": "6503c386d5ce71f0a746733e",
+        "name": "Bulbasaur",
+        "_id": "699d314cc021c86f25f761e7"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467384",
+        "name": "Ivysaur",
+        "_id": "699d3155c021c86f25f761f1"
+      },
+      {
+        "id": "6503c386d5ce71f0a74673bb",
+        "name": "Venusaur",
+        "_id": "699d315fc021c86f25f761ff"
+      },
+      {
+        "id": "6503c386d5ce71f0a746749c",
+        "name": "Charmander",
+        "_id": "699d3166c021c86f25f7620d"
+      },
+      {
+        "id": "6503c386d5ce71f0a74674e6",
+        "name": "Charmeleon",
+        "_id": "699d3195c021c86f25f76256"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467525",
+        "name": "Charizard",
+        "_id": "699d31a0c021c86f25f76269"
+      },
+      {
+        "id": "6503c386d5ce71f0a74675f9",
+        "name": "Squirtle",
+        "_id": "699d31aac021c86f25f7627c"
+      },
+      {
+        "id": "6503c386d5ce71f0a7467638",
+        "name": "Wartortle",
+        "_id": "699d31b2c021c86f25f7628c"
+      },
+      {
+        "id": "6503c386d5ce71f0a746767c",
+        "name": "Blastoise",
+        "_id": "699d31b9c021c86f25f762a0"
+      },
+      {
+        "id": "6503c389d5ce71f0a74680f7",
+        "name": "Caterpie",
+        "_id": "699d31ccc021c86f25f762b4"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468125",
+        "name": "Metapod",
+        "_id": "699d31d5c021c86f25f762c7"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468163",
+        "name": "Butterfree",
+        "_id": "699d31e2c021c86f25f762db"
+      },
+      {
+        "id": "6503c389d5ce71f0a74681ed",
+        "name": "Weedle",
+        "_id": "699d31eac021c86f25f762ef"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468222",
+        "name": "Kakuna",
+        "_id": "699d31f6c021c86f25f76305"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468253",
+        "name": "Beedrill",
+        "_id": "699d3208c021c86f25f7631f"
+      },
+      {
+        "id": "6503c389d5ce71f0a74682c3",
+        "name": "Pidgey",
+        "_id": "699d3219c021c86f25f76347"
+      },
+      {
+        "id": "6503c389d5ce71f0a74682ed",
+        "name": "Pidgeotto",
+        "_id": "699d3222c021c86f25f7635e"
+      },
+      {
+        "id": "6503c389d5ce71f0a746832b",
+        "name": "Pidgeot",
+        "_id": "699d3228c021c86f25f7637a"
+      },
+      {
+        "id": "6503c389d5ce71f0a74683b0",
+        "name": "Rattata",
+        "_id": "699d322ec021c86f25f76395"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468421",
+        "name": "Raticate",
+        "_id": "699d3237c021c86f25f763b6"
+      },
+      {
+        "id": "6503c389d5ce71f0a74684bc",
+        "name": "Spearow",
+        "_id": "699d323ec021c86f25f763d5"
+      },
+      {
+        "id": "6503c389d5ce71f0a74684f9",
+        "name": "Fearow",
+        "_id": "699d3245c021c86f25f763f2"
+      },
+      {
+        "id": "6503c389d5ce71f0a7468531",
+        "name": "Ekans",
+        "_id": "699d3257c021c86f25f76410"
+      },
+      {
+        "id": "6503c38ad5ce71f0a746857b",
+        "name": "Arbok",
+        "_id": "699d325dc021c86f25f7642f"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74685dc",
+        "name": "Pikachu",
+        "_id": "699d3264c021c86f25f76456"
+      },
+      {
+        "id": "6503c38ad5ce71f0a746874a",
+        "name": "Raichu",
+        "_id": "699d326dc021c86f25f76481"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74687d2",
+        "name": "Sandshrew",
+        "_id": "699d3274c021c86f25f764a9"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468830",
+        "name": "Sandslash",
+        "_id": "699d327bc021c86f25f764d2"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74688b0",
+        "name": "Nidoran-F",
+        "_id": "699d329dc021c86f25f764fb"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74688f0",
+        "name": "Nidorina",
+        "_id": "699d32adc021c86f25f76521"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468944",
+        "name": "Nidoqueen",
+        "_id": "699d32b6c021c86f25f76548"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468987",
+        "name": "Nidoran-M",
+        "_id": "699d32bcc021c86f25f7656f"
+      },
+      {
+        "id": "6503c38ad5ce71f0a74689da",
+        "name": "Nidorino",
+        "_id": "699d32c3c021c86f25f76598"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a07",
+        "name": "Nidoking",
+        "_id": "699d32cbc021c86f25f765c2"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a4d",
+        "name": "Clefairy",
+        "_id": "699d32d4c021c86f25f765ed"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468a89",
+        "name": "Clefable",
+        "_id": "699d32e1c021c86f25f76619"
+      },
+      {
+        "id": "6503c38ad5ce71f0a7468adf",
+        "name": "Vulpix",
+        "_id": "699d32f8c021c86f25f76648"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468b8a",
+        "name": "Ninetales",
+        "_id": "699d3307c021c86f25f7667b"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468c03",
+        "name": "Jigglypuff",
+        "_id": "699d3322c021c86f25f766ad"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468c4b",
+        "name": "Wigglytuff",
+        "_id": "699d332cc021c86f25f766dd"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468cc1",
+        "name": "Zubat",
+        "_id": "699d3333c021c86f25f7670d"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d12",
+        "name": "Golbat",
+        "_id": "699d334fc021c86f25f7673f"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d4d",
+        "name": "Oddish",
+        "_id": "699d335dc021c86f25f76772"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468d90",
+        "name": "Gloom",
+        "_id": "699d3363c021c86f25f767a7"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468dc6",
+        "name": "Vileplume",
+        "_id": "699d336bc021c86f25f767dd"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e01",
+        "name": "Paras",
+        "_id": "699d3371c021c86f25f76813"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e3b",
+        "name": "Parasect",
+        "_id": "699d337bc021c86f25f76849"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468e90",
+        "name": "Venonat",
+        "_id": "699d3381c021c86f25f76880"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468ec4",
+        "name": "Venomoth",
+        "_id": "699d3387c021c86f25f768b8"
+      },
+      {
+        "id": "6503c38bd5ce71f0a7468f12",
+        "name": "Diglett",
+        "_id": "699d361dfc6c255faede8793"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "id": "6503c392d5ce71f0a746b3fe",
+        "name": "Mew",
+        "_id": "699d307cc021c86f25f761c7"
+      }
+    ],
     "progressionDefinitions": {
-      "badges": {
+      "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
         "kind": "milestone",
-        "name": "Gym Badges",
-        "description": "Collect all 8 Kanto gym badges",
+        "name": "Badges",
         "visibility": "public",
         "sequential": true,
         "milestones": [
-          { "key": "boulder", "label": "Boulder Badge", "ordinal": 1 },
-          { "key": "cascade", "label": "Cascade Badge", "ordinal": 2 },
-          { "key": "thunder", "label": "Thunder Badge", "ordinal": 3 },
-          { "key": "rainbow", "label": "Rainbow Badge", "ordinal": 4 },
-          { "key": "soul",    "label": "Soul Badge",    "ordinal": 5 },
-          { "key": "marsh",   "label": "Marsh Badge",   "ordinal": 6 },
-          { "key": "volcano", "label": "Volcano Badge", "ordinal": 7 },
-          { "key": "earth",   "label": "Earth Badge",   "ordinal": 8 }
+          {
+            "key": "milestone-9a9b8ffd-d25a-47ba-a03f-3e9ae60aab9c",
+            "label": "Boulder Badge",
+            "ordinal": 1
+          },
+          {
+            "key": "milestone-4c0d1aa9-af6a-471b-9177-49a2ee23a60e",
+            "label": "Cascade Badge",
+            "ordinal": 2
+          },
+          {
+            "key": "milestone-de3e1b6e-2242-4b85-9d30-bcd6aafee1cc",
+            "label": "Thunder Badge",
+            "ordinal": 3
+          },
+          {
+            "key": "milestone-0ef7b48a-79eb-412e-a9dd-fb4447ffc202",
+            "label": "Rainbow Badge",
+            "ordinal": 4
+          },
+          {
+            "key": "milestone-dd941383-642f-4cd2-a09b-7117a3102714",
+            "label": "Soul Badge",
+            "ordinal": 5
+          },
+          {
+            "key": "milestone-78cc5088-ebae-4b9c-8b61-61d958544839",
+            "label": "Marsh Badge",
+            "ordinal": 6
+          },
+          {
+            "key": "milestone-37163c52-cd64-406c-94b5-05f096bfe5b9",
+            "label": "Volcano Badge",
+            "ordinal": 7
+          },
+          {
+            "key": "milestone-6e1b831c-4ba8-42a7-afb4-13c9cf16ba03",
+            "label": "Earth Badge",
+            "ordinal": 8
+          }
         ]
-      },
-      "pokédex": {
-        "kind": "numeric",
-        "name": "Pokédex Completion",
-        "description": "Number of Pokémon registered in the Pokédex",
-        "visibility": "public",
-        "min": 0,
-        "max": 151
       }
     },
     "quests": {
       "active": [],
       "passive": [],
-      "maxPassiveQuests": 3
+      "_id": "651f42c3a39ac73fde4cd54e"
     },
     "shops": [],
-    "transportationTypes": ["walk", "bike", "surf"]
-  },
-  {
-    "_id": "000000000000000000000007",
-    "name": "Johto League",
-    "baseGeneration": 2,
-    "charactersPerPlayer": 2,
-    "characterList": [],
-    "currencyType": "PokéDollars",
-    "deployable": true,
-    "deployed": false,
-    "graphicSettings": {
-      "frontSpritesEnabled": true,
-      "backSpritesEnabled": false,
-      "iconSpritesEnabled": true
-    },
-    "locations": [],
-    "playerList": [],
-    "pokedex": [],
-    "progressionDefinitions": {
-      "badges": {
-        "kind": "milestone",
-        "name": "Johto Badges",
-        "description": "Collect all 8 Johto gym badges",
-        "visibility": "public",
-        "sequential": true,
-        "milestones": [
-          { "key": "zephyr",  "label": "Zephyr Badge",  "ordinal": 1 },
-          { "key": "hive",    "label": "Hive Badge",    "ordinal": 2 },
-          { "key": "plain",   "label": "Plain Badge",   "ordinal": 3 },
-          { "key": "fog",     "label": "Fog Badge",     "ordinal": 4 },
-          { "key": "storm",   "label": "Storm Badge",   "ordinal": 5 },
-          { "key": "mineral", "label": "Mineral Badge", "ordinal": 6 },
-          { "key": "glacier", "label": "Glacier Badge", "ordinal": 7 },
-          { "key": "rising",  "label": "Rising Badge",  "ordinal": 8 }
-        ]
-      }
-    },
-    "quests": {
-      "active": [],
-      "passive": []
-    },
-    "shops": [],
-    "transportationTypes": ["walk", "bike", "surf", "fly"]
+    "transportationTypes": [],
+    "__v": 9
   }
 ]

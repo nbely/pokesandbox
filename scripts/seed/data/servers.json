@@ -1,34 +1,20 @@
 [
   {
-    "_id": "000000000000000000000004",
-    "serverId": "200000000000000001",
-    "name": "Pallet Town Trainer Hub",
-    "adminRoleIds": ["300000000000000001"],
-    "modRoleIds": ["300000000000000002"],
+    "_id": "6473e4885458cbb9b7060155",
+    "serverId": "1010726453974925402",
+    "adminRoleIds": ["1106393344453640252", "1475892500416823356"],
     "discovery": {
+      "description": "This is the best server you'll ever see in your life.",
       "enabled": true,
-      "description": "The premier destination for Pokémon trainers starting their journey!",
-      "icon": "https://example.com/icons/pallet.png",
-      "inviteLink": "https://discord.gg/pallettown"
+      "icon": "8c5facd2162cf0f39c12a688b0ac2066",
+      "inviteLink": "https://discord.gg/2BDghKaGQu",
+      "_id": "6473e4885458cbb9b7060156"
     },
-    "playerList": ["000000000000000000000001", "000000000000000000000003"],
-    "prefixes": ["!", "."],
-    "regions": ["000000000000000000000006", "000000000000000000000007"]
-  },
-  {
-    "_id": "000000000000000000000005",
-    "serverId": "200000000000000002",
-    "name": "Cerulean City Gym",
-    "adminRoleIds": ["300000000000000003"],
     "modRoleIds": [],
-    "discovery": {
-      "enabled": true,
-      "description": "Home of the Cascade Badge. Water-type trainers welcome!",
-      "icon": "https://example.com/icons/cerulean.png",
-      "inviteLink": "https://discord.gg/ceruleangym"
-    },
-    "playerList": ["000000000000000000000002"],
-    "prefixes": ["!"],
-    "regions": []
+    "name": "PokéSandbox",
+    "playerList": ["644d77a7af310377e1584b96"],
+    "prefixes": [],
+    "regions": ["651f42c3a39ac73fde4cd54c"],
+    "__v": 31
   }
 ]
