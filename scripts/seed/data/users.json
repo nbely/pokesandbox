@@ -1,26 +1,29 @@
 [
   {
     "_id": "000000000000000000000001",
+    "avatarUrl": "https://example.com/avatars/ash.png",
+    "globalName": "Ash Ketchum",
+    "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000001",
     "username": "ash_ketchum",
-    "globalName": "Ash Ketchum",
-    "avatarUrl": "https://example.com/avatars/ash.png",
-    "servers": ["6473e4885458cbb9b7060155"]
+    "__v": 0
   },
   {
     "_id": "000000000000000000000002",
+    "avatarUrl": "https://example.com/avatars/misty.png",
+    "globalName": "Misty",
+    "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000002",
     "username": "misty_cerulean",
-    "globalName": "Misty",
-    "avatarUrl": "https://example.com/avatars/misty.png",
-    "servers": ["6473e4885458cbb9b7060155"]
+    "__v": 0
   },
   {
     "_id": "000000000000000000000003",
+    "avatarUrl": "https://example.com/avatars/brock.png",
+    "globalName": "Brock",
+    "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000003",
     "username": "brock_pewter",
-    "globalName": "Brock",
-    "avatarUrl": "https://example.com/avatars/brock.png",
-    "servers": ["6473e4885458cbb9b7060155"]
+    "__v": 0
   }
 ]
