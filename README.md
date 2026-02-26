@@ -2,9 +2,6 @@
 
 Navigation: [Discord Server][1] | [Pokémon Showdown Fork][3]
 
-[1]: https://discord.gg/5BSMak3m9V
-[2]: https://github.com/nbely/pokemon-showdown#pok%C3%A9mon-showdown
-
 ## Introduction
 
 **What exactly is the PokeSandbox?**
@@ -21,12 +18,12 @@ Navigation: [Discord Server][1] | [Pokémon Showdown Fork][3]
 
 Before setting up the project locally, ensure you have the following installed:
 
-| Prerequisite | Version | Notes |
-|---|---|---|
-| [Node.js][6] | **18.x LTS** | The project targets Node 18. Using [nvm][7] is recommended. |
-| [npm][8] | 9+ | Bundled with Node 18 |
-| [Docker Desktop][9] | Latest | Required to run the local MongoDB instance |
-| [Git][10] | Latest | |
+| Prerequisite        | Version      | Notes                                                       |
+| ------------------- | ------------ | ----------------------------------------------------------- |
+| [Node.js][6]        | **18.x LTS** | The project targets Node 18. Using [nvm][7] is recommended. |
+| [npm][8]            | 9+           | Bundled with Node 18                                        |
+| [Docker Desktop][9] | Latest       | Required to run the local MongoDB instance                  |
+| [Git][10]           | Latest       |                                                             |
 
 > **Note:** Node.js 20+ may work but is not officially targeted. Check `@types/node` in `package.json` for the pinned version.
 
@@ -42,8 +39,7 @@ You must register your own Discord application and bot in order to run the bot l
    - Presence Intent
 4. On the **OAuth2 → URL Generator** page, generate an invite URL with the `bot` scope and the necessary permissions, then add the bot to your test server.
 5. Copy the **Bot Token** — you will need it for `DISCORD_BOT_TOKEN` in your `.env`.
-6. Copy the **Application ID** — you will need it for `DISCORD_CLIENT_ID`.
-7. Copy the **Client Secret** (under OAuth2 → General) — you will need it for `DISCORD_CLIENT_SECRET`.
+6. Copy the **Client Secret** (under OAuth2 → General) — you will need it for `AUTH_DISCORD_SECRET`.
 
 See the official [Discord Getting Started guide][12] and [Discord.js guide][13] for more detail.
 
@@ -62,10 +58,11 @@ npm install
 The fastest way to get a fully working local environment is to run the setup script:
 
 ```bash
-npm run db:setup
+npm run setup
 ```
 
 This single command will:
+
 1. Copy `.env.example` → `.env` (skips if `.env` already exists)
 2. Start the MongoDB 7 Docker container and wait until it is healthy
 3. Seed the database with fictional sample data
@@ -78,7 +75,7 @@ If you prefer to run each step individually:
 
 ```bash
 # 1. Create your .env file
-npm run db:env
+npm run env-setup
 
 # 2. Start MongoDB (Docker)
 npm run db:up
@@ -99,46 +96,31 @@ npm run start:app
 
 ## Environment Variables
 
-After running `npm run db:env` (or `db:setup`), open `.env` and fill in:
+After running `npm run env-setup` (or `npm run setup`), open `.env` and fill in:
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URI` | MongoDB connection string. Pre-filled with the local Docker URI. |
-| `DISCORD_BOT_TOKEN` | Bot token from the Discord Developer Portal |
-| `DISCORD_CLIENT_ID` | Application / Client ID |
-| `DISCORD_CLIENT_SECRET` | OAuth2 Client Secret |
-| `DISCORD_GUILD_ID` | ID of your test Discord server |
-| `NEXTAUTH_SECRET` | Random secret for NextAuth session encryption (`openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | Base URL of the web app (default: `http://localhost:3000`) |
-| `APP_TYPE` | Set to `bot` for the Discord bot process, `webapp` for the Next.js process |
+| Variable              | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `DATABASE_URI`        | MongoDB connection string. Pre-filled with the local Docker URI.              |
+| `DISCORD_BOT_TOKEN`   | Bot token from the Discord Developer Portal                                   |
+| `AUTH_DISCORD_ID`     | ID of your test Discord server                                                |
+| `AUTH_DISCORD_SECRET` | OAuth2 Client Secret                                                          |
+| `AUTH_SECRET`         | Random secret for NextAuth session encryption (run `openssl rand -base64 32`) |
 
 ## Database Scripts
 
-| Script | Description |
-|---|---|
-| `npm run db:setup` | Full first-time setup: env file + Docker + seed |
-| `npm run db:up` | Start the local MongoDB Docker container |
-| `npm run db:down` | Stop the local MongoDB Docker container |
-| `npm run db:seed` | Drop all collections and re-seed with sample data |
-| `npm run db:reset` | Alias for `db:seed` — wipe and re-seed |
-| `npm run db:env` | Copy `.env.example` → `.env` (skips if already exists) |
-| `npm run db:export` | Export all live local collections back to the JSON seed files |
-| `npm run db:export -- --collection=<name>` | Export a single collection (e.g. `regions`) |
+| Script                                     | Description                                                   |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| `npm run db:up`                            | Start the local MongoDB Docker container                      |
+| `npm run db:down`                          | Stop the local MongoDB Docker container                       |
+| `npm run db:seed`                          | Drop all collections and re-seed with sample data             |
+| `npm run db:reset`                         | Alias for `db:seed` — wipe and re-seed                        |
+| `npm run db:export`                        | Export all live local collections back to the JSON seed files |
+| `npm run db:export -- --collection=<name>` | Export a single collection (e.g. `regions`)                   |
 
 ## Development
 
 - The codebase is currently being refactored and carried in from the deprecated [Turq-Bot Repository][3]. Along with converting the project from JavaScript to TypeScript, additional plans to conver the application to a Next.JS application are in the works.
 - For those interested in joining the development team, please see the link to the Discord server linked at the top of this README.
-
-[3]: https://github.com/nbely/turq-bot
-[6]: https://nodejs.org/en/download
-[7]: https://github.com/nvm-sh/nvm
-[8]: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-[9]: https://www.docker.com/products/docker-desktop/
-[10]: https://git-scm.com/downloads
-[11]: https://discord.com/developers/applications
-[12]: https://discord.com/developers/docs/getting-started
-[13]: https://discordjs.guide/preparations/setting-up-a-bot-application.html
 
 ## Credits
 
@@ -153,5 +135,16 @@ After running `npm run db:env` (or `db:setup`), open `.env` and fill in:
 
   - Visit [Altered Origin][4] or the [PhoenixDex][5] for more of her work!
 
-  [4]: https://alteredorigin.net/
-  [5]: https://phoenixdex.alteredorigin.net/
+[1]: https://discord.gg/5BSMak3m9V
+[2]: https://github.com/nbely/pokemon-showdown#pok%C3%A9mon-showdown
+[3]: https://github.com/nbely/turq-bot
+[4]: https://alteredorigin.net/
+[5]: https://phoenixdex.alteredorigin.net/
+[6]: https://nodejs.org/en/download
+[7]: https://github.com/nvm-sh/nvm
+[8]: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+[9]: https://www.docker.com/products/docker-desktop/
+[10]: https://git-scm.com/downloads
+[11]: https://discord.com/developers/applications
+[12]: https://discord.com/developers/docs/getting-started
+[13]: https://discordjs.guide/preparations/setting-up-a-bot-application.html
