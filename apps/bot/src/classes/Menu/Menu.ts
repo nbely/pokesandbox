@@ -280,6 +280,7 @@ export class Menu<
       this._buttons.set(buttonId, {
         component: new ButtonBuilder()
           .setCustomId(`${this._name}_${buttonId}`)
+          .setDisabled(button.disabled ?? false)
           .setLabel(button.label)
           .setStyle(button.style),
         fixedPosition: button.fixedPosition,
