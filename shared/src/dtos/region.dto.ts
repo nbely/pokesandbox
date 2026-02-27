@@ -7,7 +7,6 @@ export const regionDTOSchema = z.object({
   _id: z.string(),
   characterList: z.array(z.string()),
   locations: z.array(z.string()),
-  playerList: z.array(z.string()),
   pokedex: z.array(
     z
       .object({
@@ -33,7 +32,6 @@ export const RegionDTO = {
       _id: entity._id.toHexString(),
       characterList: entity.characterList.map((c) => c.toHexString()),
       locations: entity.locations.map((l) => l.toHexString()),
-      playerList: entity.playerList.map((p) => p.toHexString()),
       pokedex: entity.pokedex.map((p) =>
         p
           ? {

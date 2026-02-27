@@ -12,43 +12,272 @@ import { Schema } from 'mongoose';
 
 interface EntityField {
   name: string;
+  displayName: string;
   type: string;
   isRequired: boolean;
   isArray: boolean;
   ref?: string;
+  depth: number;
+  isParent: boolean; // true for object/embedded containers
+}
+
+interface MapValueSchema {
+  mapFieldPath: string;
+  valueType: string;
+  fields: Array<{
+    name: string;
+    type: string;
+    required: boolean;
+    ref?: string;
+    depth?: number;
+    isNestedField?: boolean;
+  }>;
 }
 
 interface EntityDefinition {
   name: string;
   fields: EntityField[];
   relationships: Array<{ to: string; type: string }>;
+  mapSchemas: MapValueSchema[];
+}
+
+/**
+ * Map a Mongoose instance name to a display-friendly type string
+ */
+function mapInstanceToType(instance: string): string {
+  switch (instance) {
+    case 'ObjectID':
+    case 'ObjectId':
+      return 'ObjectId';
+    case 'String':
+      return 'string';
+    case 'Number':
+      return 'number';
+    case 'Boolean':
+      return 'boolean';
+    case 'Date':
+      return 'date';
+    case 'Map':
+      return 'Map';
+    case 'Embedded':
+    case 'SubDocument':
+      return 'object';
+    default:
+      return instance || 'unknown';
+  }
+}
+
+/**
+ * Determine the display type for an array schema path using Mongoose 9's
+ * embeddedSchemaType API. Falls back to ref name or 'object[]'.
+ */
+function getArrayElementType(schemaPath: any): string {
+  const ref = schemaPath.options?.ref;
+  const elementInstance = schemaPath.embeddedSchemaType?.instance;
+
+  if (ref) {
+    return `${ref}[]`;
+  }
+  if (elementInstance) {
+    return `${mapInstanceToType(elementInstance)}[]`;
+  }
+  return 'object[]';
 }
 
 /**
  * Extract type name from schema path
  */
 function getTypeName(schemaPath: any): string {
-  if (!schemaPath) return 'Unknown';
+  if (!schemaPath) return 'unknown';
 
-  if (schemaPath.instance) {
-    const instance = schemaPath.instance;
-    if (instance === 'ObjectID') return 'ObjectId';
-    if (instance === 'String') return 'string';
-    if (instance === 'Number') return 'number';
-    if (instance === 'Boolean') return 'boolean';
-    if (instance === 'Date') return 'date';
-    if (instance === 'Array') {
-      // Access caster safely for array element types
-      const caster =
-        (schemaPath as any).caster?._schema || (schemaPath as any).caster;
-      const arrayType = caster?.instance || 'unknown';
-      return `${arrayType}[]`;
-    }
-    if (instance === 'Embedded') return 'object';
-    return instance;
+  const instance = schemaPath.instance;
+  if (!instance) return 'unknown';
+
+  if (instance === 'Array') {
+    return getArrayElementType(schemaPath);
   }
 
-  return 'unknown';
+  return mapInstanceToType(instance);
+}
+
+/**
+ * Walk a schema path and collect fields + relationships. Recurses into
+ * embedded subdocuments and document arrays so that nested refs
+ * (e.g. quests.active → Quest, pokedex.id → DexEntry) are captured.
+ */
+function walkSchemaPath(
+  normalizedName: string,
+  displayName: string,
+  depth: number,
+  schemaPath: any,
+  fields: EntityField[],
+  relationships: Map<string, string>
+): void {
+  const instance: string | undefined = schemaPath.instance;
+  if (!instance) return;
+
+  const isEmbedded = instance === 'Embedded' || instance === 'SubDocument';
+  const isArray = instance === 'Array';
+
+  // Recurse into embedded subdocuments (e.g. quests, graphicSettings)
+  if (isEmbedded && schemaPath.schema) {
+    // Add the parent object field
+    fields.push({
+      name: normalizedName,
+      displayName,
+      type: 'object',
+      isRequired: !!schemaPath.isRequired,
+      isArray: false,
+      depth,
+      isParent: true,
+    });
+
+    schemaPath.schema.eachPath((childName: string, childPath: any) => {
+      if (childName === '_id' || childName === '__v') return;
+      walkSchemaPath(
+        `${normalizedName}_${childName}`,
+        childName,
+        depth + 1,
+        childPath,
+        fields,
+        relationships
+      );
+    });
+    return;
+  }
+
+  // Recurse into document arrays with sub-schemas (e.g. pokedex[].id)
+  if (isArray && schemaPath.embeddedSchemaType?.schema) {
+    // Add the array field itself
+    fields.push({
+      name: normalizedName,
+      displayName,
+      type: 'object[]',
+      isRequired: !!schemaPath.isRequired,
+      isArray: true,
+      depth,
+      isParent: true,
+    });
+
+    schemaPath.embeddedSchemaType.schema.eachPath(
+      (childName: string, childPath: any) => {
+        if (childName === '_id' || childName === '__v') return;
+        walkSchemaPath(
+          `${normalizedName}_${childName}`,
+          childName,
+          depth + 1,
+          childPath,
+          fields,
+          relationships
+        );
+      }
+    );
+    return;
+  }
+
+  // Leaf field — add it directly
+  const ref = schemaPath.options?.ref;
+  const typeName = getTypeName(schemaPath);
+
+  fields.push({
+    name: normalizedName,
+    displayName,
+    type: typeName,
+    isRequired: !!schemaPath.isRequired,
+    isArray,
+    ref,
+    depth,
+    isParent: false,
+  });
+
+  if (ref && typeof ref === 'string') {
+    relationships.set(normalizedName, ref);
+  }
+}
+
+/**
+ * Extract Map value schema fields for documentation.
+ * For document arrays, descends into nested schema to show structure.
+ */
+function extractMapValueSchema(
+  mapFieldPath: string,
+  valueSchema: any,
+  relationships: Map<string, string>
+): MapValueSchema {
+  const fields: Array<{
+    name: string;
+    type: string;
+    required: boolean;
+    ref?: string;
+    depth?: number;
+    isNestedField?: boolean;
+  }> = [];
+
+  if (valueSchema && valueSchema.eachPath) {
+    valueSchema.eachPath((childName: string, childPath: any) => {
+      if (childName === '_id' || childName === '__v') return;
+
+      const ref = childPath.options?.ref;
+      const isArray = childPath.instance === 'Array';
+      const hasEmbeddedSchema = isArray && childPath.embeddedSchemaType?.schema;
+
+      // For document arrays, descend into the schema to show nested fields
+      if (hasEmbeddedSchema) {
+        // Add the array field itself
+        fields.push({
+          name: childName,
+          type: 'object[]',
+          required: !!childPath.isRequired,
+          depth: 0,
+          isNestedField: false,
+        });
+
+        // Add nested fields with indentation
+        childPath.embeddedSchemaType.schema.eachPath(
+          (nestedName: string, nestedPath: any) => {
+            if (nestedName === '_id' || nestedName === '__v') return;
+
+            const nestedRef = nestedPath.options?.ref;
+            fields.push({
+              name: `${childName}.${nestedName}`,
+              type: getTypeName(nestedPath),
+              required: !!nestedPath.isRequired,
+              ref: nestedRef,
+              depth: 1,
+              isNestedField: true,
+            });
+
+            if (nestedRef && typeof nestedRef === 'string') {
+              const normalizedName = `${mapFieldPath}_${childName}_${nestedName}`;
+              relationships.set(normalizedName, nestedRef);
+            }
+          }
+        );
+      } else {
+        // Regular field (not a document array)
+        fields.push({
+          name: childName,
+          type: getTypeName(childPath),
+          required: !!childPath.isRequired,
+          ref,
+          depth: 0,
+          isNestedField: false,
+        });
+
+        // Track relationships for Map value fields
+        if (ref && typeof ref === 'string') {
+          const normalizedName = `${mapFieldPath}_${childName}`;
+          relationships.set(normalizedName, ref);
+        }
+      }
+    });
+  }
+
+  return {
+    mapFieldPath,
+    valueType: valueSchema?.constructor?.name || 'object',
+    fields,
+  };
 }
 
 /**
@@ -60,48 +289,38 @@ function extractEntityDefinition(
 ): EntityDefinition {
   const fields: EntityField[] = [];
   const relationships: Map<string, string> = new Map();
+  const mapSchemas: MapValueSchema[] = [];
 
-  // Iterate through all schema paths
   schema.eachPath((pathName: string) => {
-    if (pathName === '_id') return;
+    if (pathName === '_id' || pathName === '__v') return;
 
     const schemaPath = schema.path(pathName);
+    if (!schemaPath || pathName.startsWith('_')) return;
 
-    // Skip virtuals and internal mongoose fields, and fields with special characters (Draw.io incompatible)
-    if (!schemaPath || pathName.startsWith('_') || /[.$*]/.test(pathName))
+    // Skip Map sub-paths like "progressionDefinitions.$*"
+    if (/[$*]/.test(pathName)) return;
+
+    // Handle Maps specially - inspect value schema
+    if (schemaPath.instance === 'Map' && schemaPath.options?.of) {
+      const valueSchema = schemaPath.options.of;
+      mapSchemas.push(
+        extractMapValueSchema(pathName, valueSchema, relationships)
+      );
+
+      // Still add the Map field itself
+      fields.push({
+        name: pathName,
+        displayName: pathName,
+        type: 'Map',
+        isRequired: !!schemaPath.isRequired,
+        isArray: false,
+        depth: 0,
+        isParent: false,
+      });
       return;
-
-    const isArray = schemaPath.instance === 'Array';
-    const ref = schemaPath.options?.ref;
-    const isRequired = schemaPath.isRequired;
-
-    let typeName = getTypeName(schemaPath);
-
-    // Handle array types
-    if (isArray) {
-      const caster = (schemaPath as any).caster;
-      if (caster && getTypeName(caster) !== 'ObjectId') {
-        const casterType = getTypeName(caster);
-        typeName = `${casterType}[]`;
-      } else if (ref) {
-        typeName = `${ref}[]`;
-      } else {
-        typeName = 'ObjectId[]';
-      }
     }
 
-    fields.push({
-      name: pathName,
-      type: typeName,
-      isRequired: !!isRequired,
-      isArray,
-      ref,
-    });
-
-    // Track relationships
-    if (ref && typeof ref === 'string') {
-      relationships.set(pathName, ref);
-    }
+    walkSchemaPath(pathName, pathName, 0, schemaPath, fields, relationships);
   });
 
   return {
@@ -109,8 +328,9 @@ function extractEntityDefinition(
     fields,
     relationships: Array.from(relationships.entries()).map(([field, to]) => ({
       to,
-      type: 'references',
+      type: field,
     })),
+    mapSchemas,
   };
 }
 
@@ -148,11 +368,12 @@ function generateMermaidERD(entities: EntityDefinition[]): string {
     mermaid += `    }\n\n`;
   }
 
-  // Generate relationships
+  // Generate relationships — dedupe by entity + target + field name to preserve
+  // distinct and bi-directional references between the same entity pair
   const processedRels = new Set<string>();
   for (const entity of entities) {
     for (const rel of entity.relationships) {
-      const relKey = [entity.name, rel.to].sort().join('-');
+      const relKey = `${entity.name}-${rel.to}-${rel.type}`;
       if (!processedRels.has(relKey)) {
         mermaid += `    ${entity.name} ||--o{ ${rel.to} : "${rel.type}"\n`;
         processedRels.add(relKey);
@@ -194,29 +415,61 @@ ${mermaid}\`\`\`
     for (const field of entity.fields) {
       const required = field.isRequired ? '✓' : '';
       const notes = field.ref ? `References: ${field.ref}` : '';
-      markdown += `| \`${field.name}\` | ${field.type} | ${required} | ${notes} |\n`;
+
+      // Add indentation for nested fields - repeat ↳ for each depth level
+      const indent = '↳ '.repeat(field.depth);
+      const displayName = indent + field.displayName;
+
+      markdown += `| \`${displayName}\` | ${field.type} | ${required} | ${notes} |\n`;
     }
 
     markdown += '\n';
+
+    // Add Map value schemas inline with the entity
+    if (entity.mapSchemas.length > 0) {
+      for (const map of entity.mapSchemas) {
+        markdown += `#### Map: \`${map.mapFieldPath}\`\n\n`;
+        markdown += `**Value Type:** \`${map.valueType}\`\n\n`;
+
+        if (map.fields.length > 0) {
+          markdown += '| Field | Type | Required | Notes |\n';
+          markdown += '|-------|------|----------|-------|\n';
+
+          for (const field of map.fields) {
+            const required = field.required ? '✓' : '';
+            const notes = field.ref ? `References: ${field.ref}` : '';
+            // Add indentation for nested fields
+            const indent = field.depth ? '↳ '.repeat(field.depth) : '';
+            const displayName = indent + field.name;
+            markdown += `| \`${displayName}\` | ${field.type} | ${required} | ${notes} |\n`;
+          }
+          markdown += '\n';
+        } else {
+          markdown +=
+            '_No structured fields (primitive values or complex schema)._\n\n';
+        }
+      }
+    }
   }
 
   markdown += `## Relationships\n\n`;
-  const allRels: Array<{ from: string; to: string }> = [];
+  const allRels: Array<{ from: string; to: string; field: string }> = [];
 
   for (const entity of entities) {
     for (const rel of entity.relationships) {
-      allRels.push({ from: entity.name, to: rel.to });
+      allRels.push({ from: entity.name, to: rel.to, field: rel.type });
     }
   }
 
   if (allRels.length === 0) {
     markdown += 'No relationships defined.\n';
   } else {
-    markdown += '| From | To |\n';
-    markdown += '|------|----|\n';
+    markdown += '| From | Field | To |\n';
+    markdown += '|------|-------|----|';
     for (const rel of allRels) {
-      markdown += `| ${rel.from} | ${rel.to} |\n`;
+      markdown += `\n| ${rel.from} | \`${rel.field}\` | ${rel.to} |`;
     }
+    markdown += '\n';
   }
 
   return markdown;
