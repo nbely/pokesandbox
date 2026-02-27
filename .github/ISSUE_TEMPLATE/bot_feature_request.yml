@@ -1,0 +1,145 @@
+name: Bot Feature Request
+description: Suggest an enhancement or new feature for the Discord bot
+labels: ['enhancement', 'bot']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to PokéSandbox!
+        See [agents.md — Discord Bot](https://github.com/nbely/pokesandbox/tree/master/.github/agents.md#discord-bot-appsbot) for bot development conventions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: What feature or enhancement would you like to see?
+      placeholder: |
+        Describe the feature or enhancement you'd like to see implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Why is it needed?
+      placeholder: |
+        Is your feature request related to a problem? Describe the problem or use case.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature_type
+    attributes:
+      label: Feature Type
+      description: What type of bot feature is this?
+      options:
+        - Slash Command
+        - Context Menu Command
+        - Admin Slash Command
+        - Gameplay Mechanic
+        - Event Handler
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_flow
+    attributes:
+      label: User Flow
+      description: Describe the Discord interaction flow step by step. Include commands, buttons, selects, modals, and embeds.
+      placeholder: |
+        1. User runs `/command` in a guild channel
+        2. Bot responds with an embed showing X and buttons [A] [B] [Cancel]
+        3. User clicks [A] → modal opens with fields for Y and Z
+        4. User submits → bot updates data and shows confirmation embed
+        5. User clicks [Back] → returns to the initial menu
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_requirements
+    attributes:
+      label: Data Requirements
+      description: What data does this feature read or write? List any models, fields, or new entities needed.
+      placeholder: |
+        - Reads: Server (name, regions), Region (pokedex)
+        - Writes: New field `Server.settings.maxPlayers`
+        - New model: Item (name, description, rarity, region ref)
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we verify this feature is complete? List specific, testable conditions.
+      placeholder: |
+        - [ ] Slash command is registered and appears in Discord
+        - [ ] Menu displays correct embed with dynamic data
+        - [ ] Button click opens the expected sub-menu or modal
+        - [ ] Data persists correctly in MongoDB
+        - [ ] Back/Cancel navigation works correctly
+        - [ ] Error states show the errorEmbed pattern
+        - [ ] Permissions are enforced (admin-only, role-gated, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope & Boundaries
+      description: What is explicitly in and out of scope for this feature?
+      placeholder: |
+        In scope:
+        - Basic CRUD for items via slash command menus
+        - Admin-only access
+
+        Out of scope:
+        - Web app integration (separate issue)
+        - Player-facing item usage (future issue)
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference_implementation
+    attributes:
+      label: Reference Implementation
+      description: Point to existing code that follows a similar pattern, or an example command to use as a starting point.
+      placeholder: |
+        Similar to: apps/bot/src/interactions/guilds/.../serverManagement/server/server.ts
+        Uses the AdminMenu + MenuBuilder pattern with button navigation.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - 'Low'
+        - 'Medium'
+        - 'High'
+        - 'Critical'
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Mockups, screenshots, or any other relevant information.
+      placeholder: Add screenshots, mockups, or any other relevant information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: I have described acceptance criteria
+          required: true

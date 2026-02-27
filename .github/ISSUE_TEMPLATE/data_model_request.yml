@@ -1,0 +1,155 @@
+name: Data Model Addition
+description: Add or modify a Mongoose model, zod schema, or DTO in the shared library
+labels: ['enhancement', 'data model']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for adding or modifying models, DTOs, and zod schemas in `/shared`.
+        See [agents.md — Adding a New Model](https://github.com/nbely/pokesandbox/tree/master/.github/agents.md#adding-a-new-model) for the exact implementation pattern.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What model or data structure are you adding/modifying and why?
+      placeholder: |
+        Add an Item model to support collectible items that can be found in regions.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Change Type
+      description: Is this a new model or a modification to an existing one?
+      options:
+        - New Model + DTO
+        - Modify Existing Model
+        - Modify Existing DTO
+        - New DTO Only (model already exists)
+    validations:
+      required: true
+
+  - type: textarea
+    id: entity_schema
+    attributes:
+      label: Entity Schema
+      description: Describe the fields, types, and constraints for the zod entity schema.
+      placeholder: |
+        name: string (required)
+        description: string (required)
+        rarity: enum ['common', 'uncommon', 'rare', 'legendary'] (required)
+        region: ObjectId ref → Region (required)
+        quantity: number (optional, default 1)
+    validations:
+      required: true
+
+  - type: textarea
+    id: relationships
+    attributes:
+      label: Relationships
+      description: What other models does this reference or get referenced by?
+      placeholder: |
+        - Item.region → Region (many-to-one)
+        - Region.items → Item[] (will need new field on Region)
+        - Server.items → Item[] (will need new field on Server)
+    validations:
+      required: true
+
+  - type: textarea
+    id: access_patterns
+    attributes:
+      label: Access Patterns
+      description: What queries will consumers need? List model statics, query helpers, and populated queries.
+      placeholder: |
+        Statics:
+        - createItem(item: IItem): Promise<Item>
+        - findItemWithRegion(filter): PopulatedQuery<Item | null, IItem, { region: Region }>
+
+        Query helpers:
+        - .byRegion(regionId: string)
+        - .byRarity(rarity: string)
+
+        Populated queries:
+        - ItemWithRegionDTO for webapp display (populate region)
+    validations:
+      required: true
+
+  - type: textarea
+    id: dto_requirements
+    attributes:
+      label: DTO Requirements
+      description: What DTOs are needed? List the base DTO and any populated variants.
+      placeholder: |
+        - ItemDTO — base DTO (ObjectId fields → string)
+        - ItemWithRegionDTO — region populated as nested RegionDTO
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we verify this is complete?
+      placeholder: |
+        - [ ] Zod entity schema validates correctly
+        - [ ] Mongoose schema matches zod schema shape
+        - [ ] Model statics and query helpers work as specified
+        - [ ] DTO converts and validates via zod .parse()
+        - [ ] Populated DTO variant works with .populate()
+        - [ ] Exported from shared/src/models/index.ts and shared/src/dtos/index.ts
+        - [ ] Consumers (bot or webapp) can import via @shared/models and @shared/dtos
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope & Boundaries
+      description: What is explicitly in and out of scope?
+      placeholder: |
+        In scope:
+        - Model, DTO, and zod schemas in /shared
+        - Index re-exports
+        - Any field additions to existing models needed for relationships
+
+        Out of scope:
+        - tRPC router (webapp issue)
+        - Bot cache helpers and slash commands (bot issue)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this?
+      options:
+        - 'Low'
+        - 'Medium'
+        - 'High'
+        - 'Critical'
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information, diagrams, or examples?
+      placeholder: Add any other relevant information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this hasn't been requested
+          required: true
+        - label: I have described acceptance criteria
+          required: true
+        - label: I have listed all relationships to existing models
+          required: true

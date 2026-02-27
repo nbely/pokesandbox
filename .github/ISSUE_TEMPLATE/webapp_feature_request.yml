@@ -1,0 +1,162 @@
+name: Web App Feature Request
+description: Suggest an enhancement or new feature for the web app
+labels: ['enhancement', 'webapp']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to the web app!
+        See [agents.md — Web App](https://github.com/nbely/pokesandbox/tree/master/.github/agents.md#web-app-appswebapp) for webapp development conventions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: What feature or enhancement would you like to see?
+      placeholder: |
+        Describe the feature or enhancement you'd like to see implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Why is it needed?
+      placeholder: |
+        Is your feature request related to a problem? Describe the problem or use case.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature_area
+    attributes:
+      label: Feature Area
+      description: Which part of the web app does this affect?
+      options:
+        - Server/Game Discovery
+        - Player Dashboard
+        - Progress Tracking
+        - Authentication
+        - User Profile
+        - UI/UX
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth_requirement
+    attributes:
+      label: Auth Requirement
+      description: Does this page/feature require authentication?
+      options:
+        - Public (no auth)
+        - Private (auth required)
+        - Shared (renders differently based on auth state)
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_flow
+    attributes:
+      label: User Flow
+      description: Describe the user experience step by step. Include pages, interactions, and data displayed.
+      placeholder: |
+        1. User navigates to /items
+        2. Page displays a grid of item cards with name, image, and rarity
+        3. User clicks an item card → navigates to /items/[id]
+        4. Detail page shows full item info with description and stats
+        5. Authenticated users see a "Add to inventory" button
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_requirements
+    attributes:
+      label: Data Requirements
+      description: What tRPC procedures and data does this feature need? List any new or existing endpoints.
+      placeholder: |
+        New procedures:
+        - items.getAll (publicProcedure) — list all items
+        - items.getById (publicProcedure) — single item by ID
+        - items.addToInventory (protectedProcedure) — requires auth
+
+        Existing data:
+        - servers.getAll (already hydrated in root layout)
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we verify this feature is complete? List specific, testable conditions.
+      placeholder: |
+        - [ ] Page renders with correct data from tRPC
+        - [ ] Auth guarding works (protected routes redirect, protectedProcedure enforced)
+        - [ ] Dark mode styling works on all new components
+        - [ ] Page is responsive (mobile, tablet, desktop)
+        - [ ] Loading and error states are handled
+        - [ ] Sidebar navigation is updated
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope & Boundaries
+      description: What is explicitly in and out of scope for this feature?
+      placeholder: |
+        In scope:
+        - Items list page with server-side hydration
+        - Item detail page with dynamic routing
+
+        Out of scope:
+        - Admin item management (separate issue)
+        - Bot integration for item drops (separate issue)
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference_implementation
+    attributes:
+      label: Reference Implementation
+      description: Point to existing pages or components that follow a similar pattern.
+      placeholder: |
+        Similar to: apps/webapp/src/app/(shared)/servers/ (ServersPage + ServerPage + ServerCard)
+        Uses the "page.tsx thin wrapper → client component" pattern with trpc hooks.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - 'Low'
+        - 'Medium'
+        - 'High'
+        - 'Critical'
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Mockups, wireframes, design comps, or any other relevant information.
+      placeholder: Add screenshots, mockups, design comps, or any other relevant information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: I have described acceptance criteria
+          required: true
