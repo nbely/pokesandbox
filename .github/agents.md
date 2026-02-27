@@ -289,6 +289,8 @@ export enum CacheTTL {
 import { getCacheService } from '@shared/cache';
 import { Item } from '@shared/models';
 import { CachePrefix, CacheTTL } from './constants';
+import { Types } from 'mongoose';
+import { toIdStrings } from './utils';
 
 /** Fetch a single item by ID, cache-first. */
 export async function getCachedItem(
