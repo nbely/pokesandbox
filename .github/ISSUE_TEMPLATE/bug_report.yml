@@ -1,0 +1,124 @@
+name: Bug Report
+description: Report a bug to help us improve
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Well-structured reports help both human devs and AI agents resolve issues faster.
+        See [agents.md](https://github.com/nbely/pokesandbox/tree/master/.github/agents.md) for project conventions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is the bug? A clear and concise description of what the problem is.
+      placeholder: |
+        Describe the bug clearly and concisely.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Specific steps to trigger the bug. Include commands, inputs, and user actions.
+      placeholder: |
+        1. Run `/server` slash command in Discord
+        2. Click the 'Edit' button
+        3. Enter a region name longer than 50 characters
+        4. See error embed with "Unknown error"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: Describe what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens? Include error messages, stack traces, or unexpected output.
+      placeholder: |
+        Describe what actually happens.
+        Paste any error messages, stack traces, or console output.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected_component
+    attributes:
+      label: Affected Component
+      description: Which part of the application is affected?
+      options:
+        - Discord Bot
+        - Web App
+        - Shared Library
+        - Database
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_files
+    attributes:
+      label: Affected Files or Areas
+      description: 'If known, list the files, routes, commands, or models involved. Helps agents locate relevant code quickly.'
+      placeholder: |
+        e.g.,
+        - apps/bot/src/interactions/guilds/.../server.ts
+        - shared/src/models/server.model.ts
+        - apps/webapp/src/app/(shared)/servers/[id]/page.tsx
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we verify the fix is complete? List specific, testable conditions.
+      placeholder: |
+        - [ ] Error no longer occurs when following the reproduction steps
+        - [ ] Existing tests pass
+        - [ ] Edge case X is handled gracefully
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Information about your environment.
+      placeholder: |
+        - OS: [e.g., Windows, Linux, macOS]
+        - Node Version: [e.g., 18.0.0]
+        - Environment: [e.g., development, production]
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context (screenshots, error logs, related issues).
+      placeholder: Add screenshots, error logs, or any other relevant information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have provided sufficient detail to reproduce the issue
+          required: true
+        - label: I have included error messages or logs if applicable
+          required: false
