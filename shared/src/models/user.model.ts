@@ -50,7 +50,7 @@ export const userSchema = new Schema<
   {
     avatarUrl: String,
     globalName: { type: String, required: true },
-    servers: { type: [Schema.Types.ObjectId], ref: 'Server' },
+    servers: { type: [Schema.Types.ObjectId], ref: 'Server', required: true },
     userId: { type: String, required: true },
     username: { type: String, required: true },
   },

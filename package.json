@@ -11,7 +11,8 @@
     "db:down": "docker compose down",
     "db:seed": "ts-node --project scripts/tsconfig.json scripts/seed/import.ts",
     "db:reset": "npm run db:seed",
-    "db:export": "ts-node --project scripts/tsconfig.json scripts/seed/export.ts"
+    "db:export": "ts-node --project scripts/tsconfig.json scripts/seed/export.ts",
+    "erd:generate": "ts-node --project scripts/tsconfig.json scripts/generate-erd.ts"
   },
   "private": true,
   "dependencies": {

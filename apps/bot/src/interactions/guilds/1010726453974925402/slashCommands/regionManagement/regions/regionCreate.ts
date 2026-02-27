@@ -55,7 +55,6 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
             },
             locations: [],
             name: response,
-            playerList: [],
             pokedex: [],
             progressionDefinitions: new Map(),
             quests: {
