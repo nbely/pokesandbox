@@ -82,16 +82,6 @@ body:
     validations:
       required: false
 
-  - type: textarea
-    id: proposed_solution
-    attributes:
-      label: Proposed Solution
-      description: How would you like this to be implemented?
-      placeholder: |
-        Describe your proposed solution or implementation approach.
-    validations:
-      required: false
-
   - type: dropdown
     id: priority
     attributes:
