@@ -123,7 +123,8 @@ After running `npm run env-setup` (or `npm run setup`), open `.env` and fill in:
 
 **Development Team**
 
-- Nick Bely [Chronicler] - Architect, Primary Developer & Team Lead
+- [Nick Bely](https://github.com/nbely) (Chronicler) - Architect, Team Lead, and Full-stack Developer
+- [Kevin Nguyen](https://github.com/Kevnien) - Full-stack Developer
 
 **Other Credits**
 
