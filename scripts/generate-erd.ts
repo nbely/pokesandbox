@@ -345,11 +345,6 @@ function generateMermaidERD(entities: EntityDefinition[]): string {
     mermaid += `    ${entity.name} {\n`;
 
     for (const field of entity.fields) {
-      // Determine primary key
-      const isPK = field.name === '_id' ? 'PK' : '';
-      const isFK = field.ref ? 'FK' : '';
-      const key = [isFK, isPK].filter(Boolean).join(' ') || 'string';
-
       // Format field type
       let displayType = field.type;
       if (field.isArray && !field.type.includes('[]')) {
@@ -391,11 +386,7 @@ function generateMarkdown(
   mermaid: string,
   entities: EntityDefinition[]
 ): string {
-  const timestamp = new Date().toISOString();
-
   let markdown = `# Entity Relationship Diagram
-
-**Generated:** ${timestamp}
 
 ## Diagram
 
@@ -480,17 +471,10 @@ ${mermaid}\`\`\`
  */
 async function generateERD() {
   try {
-    // Import all models dynamically
-    const modelsPath = path.join(__dirname, '../shared/src/models');
-
     // Manually import models (since we can't use dynamic requires in ts-node safely)
-    const { User, userSchema } = await import(
-      '../shared/src/models/user.model'
-    );
-    const { Server, serverSchema } = await import(
-      '../shared/src/models/server.model'
-    );
-    const { Region, regionSchema } = await import(
+    const { userSchema } = await import('../shared/src/models/user.model');
+    const { serverSchema } = await import('../shared/src/models/server.model');
+    const { regionSchema } = await import(
       '../shared/src/models/region/region.model'
     );
 

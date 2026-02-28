@@ -1,7 +1,5 @@
 # Entity Relationship Diagram
 
-**Generated:** 2026-02-27T22:21:12.865Z
-
 ## Diagram
 
 ```mermaid
