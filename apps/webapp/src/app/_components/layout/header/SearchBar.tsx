@@ -117,7 +117,7 @@ export const SearchBar = () => {
               options: filteredRegions.map((region: RegionDTO) =>
                 renderItem(
                   region.name,
-                  region.playerList.length,
+                  undefined,
                   SearchType.Regions,
                   region._id.toString()
                 )

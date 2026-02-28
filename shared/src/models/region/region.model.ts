@@ -32,7 +32,6 @@ export const regionEntitySchema = z.object({
   }),
   locations: z.array(z.instanceof(Types.ObjectId)),
   name: z.string(),
-  playerList: z.array(z.instanceof(Types.ObjectId)),
   pokedex: z.array(
     z
       .object({
@@ -95,7 +94,6 @@ export const regionSchema = new Schema<
       required: true,
     },
     name: { type: String, required: true },
-    playerList: { type: [Schema.Types.ObjectId], ref: 'User', required: true },
     pokedex: {
       type: [
         {

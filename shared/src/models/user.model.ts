@@ -17,7 +17,7 @@ import type { PopulatedQuery } from './types';
 export const userEntitySchema = z.object({
   avatarUrl: z.string().optional(),
   globalName: z.string(),
-  servers: z.array(z.instanceof(Types.ObjectId)),
+  servers: z.array(z.instanceof(Types.ObjectId)).default([]),
   userId: z.string(),
   username: z.string(),
 });
@@ -50,7 +50,12 @@ export const userSchema = new Schema<
   {
     avatarUrl: String,
     globalName: { type: String, required: true },
-    servers: { type: [Schema.Types.ObjectId], ref: 'Server' },
+    servers: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Server',
+      required: true,
+      default: [],
+    },
     userId: { type: String, required: true },
     username: { type: String, required: true },
   },
@@ -75,6 +80,7 @@ export const userSchema = new Schema<
         const { servers, ...otherUpdates } = update;
 
         const updateOps: UpdateQuery<IUser> = { $set: otherUpdates };
+
         if (servers && servers.length > 0) {
           updateOps.$addToSet = { servers: { $each: servers } };
         }
