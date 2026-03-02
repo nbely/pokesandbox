@@ -80,9 +80,10 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
-          await MenuWorkflow.openMenu(menu, 'search-pokemon', {
+          await MenuWorkflow.openMenu(menu, 'edit-pokedex-slot', {
             region_id,
-            pokemonName,
+            pokemon_name: pokemonName,
+            pokedex_no: pokedexNumber,
           });
         }
       })
