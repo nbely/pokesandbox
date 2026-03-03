@@ -5,8 +5,7 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2721",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2721"
       }
     ],
     "trainerIds": [],
@@ -18,12 +17,10 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2720",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2720"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2722",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2722"
       }
     ],
     "trainerIds": [],
@@ -34,8 +31,8 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "Pidgey", "minLevel": 2, "maxLevel": 5, "weight": 50 },
-              { "speciesId": "Rattata", "minLevel": 2, "maxLevel": 4, "weight": 50 }
+              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 2, "maxLevel": 5, "weight": 50 },
+              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 2, "maxLevel": 4, "weight": 50 }
             ]
           }
         ]
@@ -48,21 +45,13 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2721",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2721"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2723",
-        "requirements": {
-          "progressions": {
-            "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 7 }
-          }
-        },
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2723"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2724",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2724"
       }
     ],
     "trainerIds": [],
@@ -79,8 +68,7 @@
     },
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2722",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2722"
       }
     ],
     "trainerIds": [],
@@ -92,12 +80,10 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2722",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2722"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2725",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2725"
       }
     ],
     "trainerIds": [],
@@ -108,10 +94,10 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "Pidgey", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "Rattata", "minLevel": 2, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 15 },
-              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 15 }
+              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 2, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 15 },
+              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 15 }
             ]
           }
         ]
@@ -124,12 +110,10 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2724",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2724"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2726",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2726"
       }
     ],
     "trainerIds": [],
@@ -140,31 +124,31 @@
           {
             "timeOfDay": "morning",
             "slots": [
-              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 40 },
-              { "speciesId": "Metapod", "minLevel": 4, "maxLevel": 6, "weight": 15 },
-              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 30 },
-              { "speciesId": "Kakuna", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 5 }
+              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 40 },
+              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 15 },
+              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 30 },
+              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 5 }
             ]
           },
           {
             "timeOfDay": "day",
             "slots": [
-              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "Metapod", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "Kakuna", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 10 }
+              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 10 }
             ]
           },
           {
             "timeOfDay": "night",
             "slots": [
-              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 20 },
-              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 20 },
-              { "speciesId": "Hoothoot", "minLevel": 3, "maxLevel": 5, "weight": 40 },
-              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 5 },
-              { "speciesId": "Spinarak", "minLevel": 3, "maxLevel": 5, "weight": 15 }
+              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 30 },
+              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 30 },
+              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 10 },
+              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 15 },
+              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 15 }
             ]
           }
         ]
@@ -177,12 +161,25 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2725",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2725"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2727",
-        "oneWay": false
+        "toLocationId": "69a6782e642bd6ca270ce7d6"
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2727"
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a6782e642bd6ca270ce7d6",
+    "name": "Pewter Gym",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2726"
       }
     ],
     "trainerIds": [],
@@ -192,14 +189,17 @@
     "_id": "69a66f9c3aa03cbffdea2727",
     "name": "Route 3",
     "regionId": "651f42c3a39ac73fde4cd54c",
+    "requirements": {
+      "progressions": {
+        "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 1 }
+      }
+    },
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2726",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2726"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2728",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2728"
       }
     ],
     "trainerIds": [],
@@ -210,11 +210,11 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "Pidgey", "minLevel": 6, "maxLevel": 8, "weight": 30 },
-              { "speciesId": "Spearow", "minLevel": 6, "maxLevel": 8, "weight": 30 },
-              { "speciesId": "NidoranM", "minLevel": 6, "maxLevel": 8, "weight": 15 },
-              { "speciesId": "NidoranF", "minLevel": 6, "maxLevel": 8, "weight": 15 },
-              { "speciesId": "Jigglypuff", "minLevel": 5, "maxLevel": 7, "weight": 10 }
+              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 6, "maxLevel": 8, "weight": 30 },
+              { "speciesId": "6503c389d5ce71f0a74684bc", "minLevel": 6, "maxLevel": 8, "weight": 30 },
+              { "speciesId": "6503c38ad5ce71f0a7468987", "minLevel": 6, "maxLevel": 8, "weight": 15 },
+              { "speciesId": "6503c38ad5ce71f0a74688b0", "minLevel": 6, "maxLevel": 8, "weight": 15 },
+              { "speciesId": "6503c38bd5ce71f0a7468c03", "minLevel": 5, "maxLevel": 7, "weight": 10 }
             ]
           }
         ]
@@ -227,12 +227,10 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2727",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2727"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2729",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2729"
       }
     ],
     "trainerIds": [],
@@ -243,11 +241,11 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "Zubat", "minLevel": 7, "maxLevel": 10, "weight": 40 },
-              { "speciesId": "Geodude", "minLevel": 7, "maxLevel": 10, "weight": 25 },
-              { "speciesId": "Paras", "minLevel": 8, "maxLevel": 10, "weight": 15 },
-              { "speciesId": "Clefairy", "minLevel": 8, "maxLevel": 12, "weight": 10 },
-              { "speciesId": "Sandshrew", "minLevel": 8, "maxLevel": 10, "weight": 10 }
+              { "speciesId": "6503c38bd5ce71f0a7468cc1", "minLevel": 7, "maxLevel": 10, "weight": 40 },
+              { "speciesId": "6503c38dd5ce71f0a74697d5", "minLevel": 7, "maxLevel": 10, "weight": 25 },
+              { "speciesId": "6503c38bd5ce71f0a7468e01", "minLevel": 8, "maxLevel": 10, "weight": 15 },
+              { "speciesId": "6503c38ad5ce71f0a7468a4d", "minLevel": 8, "maxLevel": 12, "weight": 10 },
+              { "speciesId": "6503c38ad5ce71f0a74687d2", "minLevel": 8, "maxLevel": 10, "weight": 10 }
             ]
           }
         ]
@@ -260,12 +258,10 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2728",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2728"
       },
       {
-        "toLocationId": "69a66f9c3aa03cbffdea272a",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea272a"
       }
     ],
     "trainerIds": [],
@@ -276,10 +272,10 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "Rattata", "minLevel": 8, "maxLevel": 12, "weight": 30 },
-              { "speciesId": "Spearow", "minLevel": 8, "maxLevel": 12, "weight": 30 },
-              { "speciesId": "Ekans", "minLevel": 8, "maxLevel": 12, "weight": 20 },
-              { "speciesId": "Sandshrew", "minLevel": 8, "maxLevel": 12, "weight": 20 }
+              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 8, "maxLevel": 12, "weight": 30 },
+              { "speciesId": "6503c389d5ce71f0a74684bc", "minLevel": 8, "maxLevel": 12, "weight": 30 },
+              { "speciesId": "6503c389d5ce71f0a7468531", "minLevel": 8, "maxLevel": 12, "weight": 20 },
+              { "speciesId": "6503c38ad5ce71f0a74687d2", "minLevel": 8, "maxLevel": 12, "weight": 20 }
             ]
           }
         ]
@@ -292,8 +288,22 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "connections": [
       {
-        "toLocationId": "69a66f9c3aa03cbffdea2729",
-        "oneWay": false
+        "toLocationId": "69a66f9c3aa03cbffdea2729"
+      },
+      {
+        "toLocationId": "69a6782e642bd6ca270ce7d7"
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a6782e642bd6ca270ce7d7",
+    "name": "Cerulean Gym",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea272a"
       }
     ],
     "trainerIds": [],

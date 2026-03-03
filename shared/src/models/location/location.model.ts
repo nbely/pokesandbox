@@ -22,7 +22,7 @@ import {
  * Encounter slot — a single species entry in a wild encounter table
  */
 export const encounterSlotSchema = z.object({
-  speciesId: z.string(),
+  speciesId: z.instanceof(Types.ObjectId),
   minLevel: z.number().int(),
   maxLevel: z.number().int(),
   weight: z.number().int().positive(),
@@ -58,7 +58,6 @@ export const wildTableSchema = z.object({
 export const connectionSchema = z.object({
   toLocationId: z.instanceof(Types.ObjectId),
   requirements: requirementSchema.optional(),
-  oneWay: z.boolean().default(false),
 });
 
 /**
@@ -95,7 +94,7 @@ interface ILocationModel extends Model<ILocation, ILocationQueryHelpers> {
 
 const encounterSlotDbSchema = new Schema(
   {
-    speciesId: { type: String, required: true },
+    speciesId: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: true },
     minLevel: { type: Number, required: true },
     maxLevel: { type: Number, required: true },
     weight: { type: Number, required: true },
@@ -143,7 +142,6 @@ const connectionDbSchema = new Schema(
       required: true,
     },
     requirements: { type: requirementDbSchema, required: false },
-    oneWay: { type: Boolean, default: false },
   },
   { _id: false }
 );

@@ -4,17 +4,18 @@ import { z } from 'zod';
 // Zod Validation Schemas
 
 /**
- * Numeric requirement — e.g. badges >= 2
+ * Numeric requirement — e.g. badges >= 2, badges <= 5
  */
 export const numericRequirementSchema = z.object({
-  min: z.number(),
+  min: z.number().optional(),
+  max: z.number().optional(),
 });
 
 /**
- * Exact match requirement — e.g. rocket_defeated === true
+ * Exact match requirement — e.g. rocket_defeated === true, or specific milestone keys
  */
 export const equalityRequirementSchema = z.object({
-  equals: z.union([z.boolean(), z.string(), z.number()]),
+  equals: z.union([z.boolean(), z.string(), z.number(), z.array(z.string())]),
 });
 
 /**
@@ -63,7 +64,7 @@ export type Requirement = z.infer<typeof requirementSchema>;
 
 const itemRequirementDbSchema = new Schema(
   {
-    itemId: { type: Schema.Types.ObjectId, required: true },
+    itemId: { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     minQuantity: { type: Number, default: 1 },
   },
   { _id: false }
