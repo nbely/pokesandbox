@@ -9,6 +9,8 @@ import { z } from 'zod';
 export const numericRequirementSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
+}).refine((data) => data.min !== undefined || data.max !== undefined, {
+  message: 'At least one of min or max must be provided',
 });
 
 /**
