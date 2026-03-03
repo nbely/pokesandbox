@@ -13,7 +13,19 @@
       "iconSpritesEnabled": false,
       "_id": "651f42c3a39ac73fde4cd54d"
     },
-    "locations": [],
+    "locations": [
+      "69a66f9c3aa03cbffdea2720",
+      "69a66f9c3aa03cbffdea2721",
+      "69a66f9c3aa03cbffdea2722",
+      "69a66f9c3aa03cbffdea2723",
+      "69a66f9c3aa03cbffdea2724",
+      "69a66f9c3aa03cbffdea2725",
+      "69a66f9c3aa03cbffdea2726",
+      "69a66f9c3aa03cbffdea2727",
+      "69a66f9c3aa03cbffdea2728",
+      "69a66f9c3aa03cbffdea2729",
+      "69a66f9c3aa03cbffdea272a"
+    ],
     "name": "Kanto",
     "pokedex": [
       {
@@ -428,7 +440,7 @@
       },
       {
         "id": "6503c38ed5ce71f0a7469bd1",
-        "name": "Farfetch’d",
+        "name": "Farfetch\u2019d",
         "_id": "699fb01361ad064b25f8a4de"
       },
       {

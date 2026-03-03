@@ -1,0 +1,302 @@
+[
+  {
+    "_id": "69a66f9c3aa03cbffdea2720",
+    "name": "Pallet Town",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2721",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2721",
+    "name": "Route 1",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2720",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2722",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "any",
+            "slots": [
+              { "speciesId": "Pidgey", "minLevel": 2, "maxLevel": 5, "weight": 50 },
+              { "speciesId": "Rattata", "minLevel": 2, "maxLevel": 4, "weight": 50 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2722",
+    "name": "Viridian City",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2721",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2723",
+        "requirements": {
+          "progressions": {
+            "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 7 }
+          }
+        },
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2724",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2723",
+    "name": "Viridian Gym",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "requirements": {
+      "progressions": {
+        "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 7 }
+      }
+    },
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2722",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2724",
+    "name": "Route 2",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2722",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2725",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "any",
+            "slots": [
+              { "speciesId": "Pidgey", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "Rattata", "minLevel": 2, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 15 },
+              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 15 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2725",
+    "name": "Viridian Forest",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2724",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2726",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "morning",
+            "slots": [
+              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 40 },
+              { "speciesId": "Metapod", "minLevel": 4, "maxLevel": 6, "weight": 15 },
+              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 30 },
+              { "speciesId": "Kakuna", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 5 }
+            ]
+          },
+          {
+            "timeOfDay": "day",
+            "slots": [
+              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "Metapod", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 35 },
+              { "speciesId": "Kakuna", "minLevel": 4, "maxLevel": 6, "weight": 10 },
+              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 10 }
+            ]
+          },
+          {
+            "timeOfDay": "night",
+            "slots": [
+              { "speciesId": "Caterpie", "minLevel": 3, "maxLevel": 5, "weight": 20 },
+              { "speciesId": "Weedle", "minLevel": 3, "maxLevel": 5, "weight": 20 },
+              { "speciesId": "Hoothoot", "minLevel": 3, "maxLevel": 5, "weight": 40 },
+              { "speciesId": "Pikachu", "minLevel": 3, "maxLevel": 5, "weight": 5 },
+              { "speciesId": "Spinarak", "minLevel": 3, "maxLevel": 5, "weight": 15 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2726",
+    "name": "Pewter City",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2725",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2727",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2727",
+    "name": "Route 3",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2726",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2728",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "any",
+            "slots": [
+              { "speciesId": "Pidgey", "minLevel": 6, "maxLevel": 8, "weight": 30 },
+              { "speciesId": "Spearow", "minLevel": 6, "maxLevel": 8, "weight": 30 },
+              { "speciesId": "NidoranM", "minLevel": 6, "maxLevel": 8, "weight": 15 },
+              { "speciesId": "NidoranF", "minLevel": 6, "maxLevel": 8, "weight": 15 },
+              { "speciesId": "Jigglypuff", "minLevel": 5, "maxLevel": 7, "weight": 10 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2728",
+    "name": "Mt. Moon",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2727",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2729",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "any",
+            "slots": [
+              { "speciesId": "Zubat", "minLevel": 7, "maxLevel": 10, "weight": 40 },
+              { "speciesId": "Geodude", "minLevel": 7, "maxLevel": 10, "weight": 25 },
+              { "speciesId": "Paras", "minLevel": 8, "maxLevel": 10, "weight": 15 },
+              { "speciesId": "Clefairy", "minLevel": 8, "maxLevel": 12, "weight": 10 },
+              { "speciesId": "Sandshrew", "minLevel": 8, "maxLevel": 10, "weight": 10 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea2729",
+    "name": "Route 4",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2728",
+        "oneWay": false
+      },
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea272a",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": [
+      {
+        "encounterType": "grass",
+        "timeBlocks": [
+          {
+            "timeOfDay": "any",
+            "slots": [
+              { "speciesId": "Rattata", "minLevel": 8, "maxLevel": 12, "weight": 30 },
+              { "speciesId": "Spearow", "minLevel": 8, "maxLevel": 12, "weight": 30 },
+              { "speciesId": "Ekans", "minLevel": 8, "maxLevel": 12, "weight": 20 },
+              { "speciesId": "Sandshrew", "minLevel": 8, "maxLevel": 12, "weight": 20 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "69a66f9c3aa03cbffdea272a",
+    "name": "Cerulean City",
+    "regionId": "651f42c3a39ac73fde4cd54c",
+    "connections": [
+      {
+        "toLocationId": "69a66f9c3aa03cbffdea2729",
+        "oneWay": false
+      }
+    ],
+    "trainerIds": [],
+    "wildTables": []
+  }
+]

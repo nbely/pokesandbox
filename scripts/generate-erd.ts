@@ -477,11 +477,15 @@ async function generateERD() {
     const { regionSchema } = await import(
       '../shared/src/models/region/region.model'
     );
+    const { locationSchema } = await import(
+      '../shared/src/models/location/location.model'
+    );
 
     const entities: EntityDefinition[] = [
       extractEntityDefinition('User', userSchema),
       extractEntityDefinition('Server', serverSchema),
       extractEntityDefinition('Region', regionSchema),
+      extractEntityDefinition('Location', locationSchema),
     ];
 
     // Generate Mermaid diagram
