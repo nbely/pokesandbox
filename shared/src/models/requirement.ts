@@ -14,7 +14,7 @@ export const numericRequirementSchema = z.object({
  * Exact match requirement — e.g. rocket_defeated === true
  */
 export const equalityRequirementSchema = z.object({
-  equals: z.any(),
+  equals: z.union([z.boolean(), z.string(), z.number()]),
 });
 
 /**
