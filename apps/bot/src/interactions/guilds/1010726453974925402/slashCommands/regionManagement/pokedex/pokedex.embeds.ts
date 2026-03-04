@@ -94,30 +94,6 @@ export const getAddPokedexSlotEmbeds = async <
   ];
 };
 
-export const getAddPokedexSlotConfirmationEmbed = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
-  regionId: string,
-  pokedexNo: string,
-  pokemonName: string
-) => {
-  const region = await menu.getRegion(regionId);
-
-  return [
-    new EmbedBuilder()
-      .setColor('Gold')
-      .setAuthor({
-        name: `${region.name} Pokédex Slot #${pokedexNo}`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
-      })
-      .setDescription(
-        `You entered "${pokemonName}" for Pokédex slot #${pokedexNo}, but that slot is currently empty. Please confirm that you want to add "${pokemonName}" to Pokédex slot #${pokedexNo}, or enter a different Pokémon name.`
-      )
-      .setTimestamp(),
-  ];
-}
-
 export const getEditPokedexSlotEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
 >(

@@ -16,24 +16,21 @@ import {
   assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
-  searchPokemon,
 } from '@bot/utils';
-import { DexEntry, type Region } from '@shared/models';
+import { type Region } from '@shared/models';
 
 import {
   getAddPokedexSlotEmbeds,
-  getAddPokedexSlotConfirmationEmbed,
   getEditPokedexSlotEmbeds,
 } from './pokedex.embeds';
-import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
+import { handleAddPokemonToSlot } from './pokedexHelperFunctions';
 
 const COMMAND_NAME = 'edit-pokedex-slot';
 export const EDIT_POKEDEX_SLOT_COMMAND_NAME = COMMAND_NAME;
 
-type EditPokedexSlotCommandOptions = {
+export type EditPokedexSlotCommandOptions = {
   region_id: string;
   pokedex_no: string;
-  pokemon_name: string;
 };
 type EditPokedexSlotCommand = ISlashCommand<
   AdminMenu<EditPokedexSlotCommandOptions>,
@@ -71,7 +68,7 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     options: EditPokedexSlotCommandOptions | undefined
   ) => {
     assertOptions(options);
-    const { region_id, pokedex_no, pokemon_name } = options;
+    const { region_id, pokedex_no } = options;
     const region = await getAssertedCachedRegion(region_id);
 
     const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
@@ -79,18 +76,7 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
       .setReturnable()
       .setTrackedInHistory();
 
-      if (!region.pokedex[+pokedex_no - 1] && pokemon_name) {
-      builder
-        .setEmbeds((menu) => 
-          getAddPokedexSlotConfirmationEmbed(menu, region_id, pokedex_no, pokemon_name))
-        .setButtons((menu) => 
-          getAddPokemonSlotButtons(menu, region_id, pokedex_no, pokemon_name)
-        )
-        .setMessageHandler((menu) =>
-          handleAddPokemonToSlot(menu, region_id, pokedex_no, pokemon_name)
-        )
-        .build();
-      } else if (!region.pokedex[+pokedex_no - 1]) {
+    if (!region.pokedex[+pokedex_no - 1]) {
       // handle add pokedex slot
       builder
         .setEmbeds((menu) =>
@@ -162,95 +148,3 @@ const removeNullsFromEndOfPokedex = (region: Region): void => {
     region.pokedex.pop();
   }
 };
-
-const handleAddPokemonToSlot = async (
-  menu: AdminMenu<EditPokedexSlotCommandOptions>,
-  regionId: string,
-  pokedexNo: string,
-  pokemonName: string
-) => {
-  const server = await menu.getServer();
-  const region = await menu.getRegion(regionId);
-
-  const { exactMatch, potentialMatches } = await searchPokemon(
-    server._id.toString(),
-    pokemonName
-  );
-
-  if (exactMatch) {
-    await handlePokemonSelected(menu, exactMatch, region, pokedexNo);
-    return;
-  }
-
-  if (potentialMatches.length) {
-    return MenuWorkflow.openSubMenuWithContinuation(
-      menu,
-      SELECT_MATCHED_POKEMON_COMMAND_NAME,
-      async (_session, selectedPokemonId: string) => {
-        const selectedPokemon = potentialMatches.find(
-          (match) => match._id.toString() === selectedPokemonId
-        );
-
-        if (!selectedPokemon) {
-          menu.prompt = `Selected Pokémon not found. Please try again.`;
-          return menu.refresh();
-        }
-
-        await handlePokemonSelected(menu, selectedPokemon, region, pokedexNo);
-      },
-      {
-        regionId: region._id.toString(),
-        matchedDexEntryIds: potentialMatches.map((match) =>
-          match._id.toString()
-        ),
-      }
-    );
-  }
-
-  menu.prompt = `No Pokémon found with the name "${pokemonName}". Please try again.`;
-  return menu.refresh();
-};
-
-const handlePokemonSelected = async (
-  menu: AdminMenu<EditPokedexSlotCommandOptions>,
-  selectedPokemon: DexEntry,
-  region: Region,
-  pokedexNo: string
-) => {
-  if (region.pokedex.some((pkmn) => pkmn?.id.equals(selectedPokemon._id))) {
-    menu.prompt = `The Pokémon "${selectedPokemon.name}" is already in the Pokédex. Please choose a different Pokémon.`;
-    return menu.refresh();
-  } else {
-    region.pokedex[+pokedexNo - 1] = {
-      id: selectedPokemon._id,
-      name: selectedPokemon.name,
-    };
-    await saveRegion(region);
-    return menu.hardRefresh();
-  }
-};
-const getAddPokemonSlotButtons = async (
-  _menu: AdminMenu<EditPokedexSlotCommandOptions>,
-  regionId: string,
-  pokedexNo: string,
-  pokemonName: string
-): Promise<MenuButtonConfig<AdminMenu<EditPokedexSlotCommandOptions>>[]> => {
-  return [
-    {
-      label: 'Confirm',
-      style: ButtonStyle.Success,
-      onClick: async (menu) => {
-        await handleAddPokemonToSlot(menu, regionId, pokedexNo, pokemonName);
-      },
-    },
-    {
-      label: 'Search Again',
-      style: ButtonStyle.Primary,
-      onClick: async (menu) => {
-        menu.prompt = 'Enter a Pokémon name to search:';
-        return menu.refresh();
-      },
-    },
-  ];
-};
-

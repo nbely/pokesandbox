@@ -14,11 +14,12 @@ import {
 
 import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
+import { handleAddPokemonToSlot } from './pokedexHelperFunctions';
 
 const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 
-type ManagePokedexCommandOptions = {
+export type ManagePokedexCommandOptions = {
   region_id: string;
 };
 type ManagePokedexCommand = ISlashCommand<
@@ -80,10 +81,11 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
+          await handleAddPokemonToSlot(menu, region_id, messageArgs[0], pokemonName);
+
           await MenuWorkflow.openMenu(menu, 'edit-pokedex-slot', {
             region_id,
-            pokemon_name: pokemonName,
-            pokedex_no: pokedexNumber,
+            pokedex_no: messageArgs[0],
           });
         }
       })
