@@ -58,7 +58,6 @@ erDiagram
         ObjectId regionId
         object requirements
         Map requirements_progressions
-        Mixed requirements_progressions.$*
         object[] requirements_items
         ObjectId requirements_items_itemId
         number requirements_items_minQuantity
@@ -70,7 +69,6 @@ erDiagram
         ObjectId connections_toLocationId
         object connections_requirements
         Map connections_requirements_progressions
-        Mixed connections_requirements_progressions.$*
         object[] connections_requirements_items
         ObjectId connections_requirements_items_itemId
         number connections_requirements_items_minQuantity
@@ -192,7 +190,6 @@ erDiagram
 | `regionId` | ObjectId | ✓ | References: Region |
 | `requirements` | object |  |  |
 | `↳ progressions` | Map |  |  |
-| `↳ progressions.$*` | Mixed |  |  |
 | `↳ items` | object[] |  |  |
 | `↳ ↳ itemId` | ObjectId | ✓ | References: Item |
 | `↳ ↳ minQuantity` | number |  |  |
@@ -204,7 +201,6 @@ erDiagram
 | `↳ toLocationId` | ObjectId | ✓ | References: Location |
 | `↳ requirements` | object |  |  |
 | `↳ ↳ progressions` | Map |  |  |
-| `↳ ↳ progressions.$*` | Mixed |  |  |
 | `↳ ↳ items` | object[] |  |  |
 | `↳ ↳ ↳ itemId` | ObjectId | ✓ | References: Item |
 | `↳ ↳ ↳ minQuantity` | number |  |  |
@@ -222,6 +218,18 @@ erDiagram
 | `↳ ↳ ↳ minLevel` | number | ✓ |  |
 | `↳ ↳ ↳ maxLevel` | number | ✓ |  |
 | `↳ ↳ ↳ weight` | number | ✓ |  |
+
+#### Map: `requirements_progressions`
+
+**Value Type:** `Mixed`
+
+_No structured fields (primitive values or complex schema)._
+
+#### Map: `connections_requirements_progressions`
+
+**Value Type:** `Mixed`
+
+_No structured fields (primitive values or complex schema)._
 
 ## Relationships
 
