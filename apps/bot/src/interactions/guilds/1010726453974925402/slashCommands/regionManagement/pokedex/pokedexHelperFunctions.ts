@@ -7,7 +7,8 @@ import { DexEntry, Region } from "@shared/models";
 import { saveRegion } from "@bot/cache";
 
 export const handleAddPokemonToSlot = async (
-  menu: AdminMenu<EditPokedexSlotCommandOptions> | AdminMenu<ManagePokedexCommandOptions>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  menu: AdminMenu<any>,
   regionId: string,
   pokedexNo: string,
   pokemonName: string
