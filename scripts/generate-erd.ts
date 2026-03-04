@@ -104,6 +104,7 @@ function getTypeName(schemaPath: any): string {
  * Walk a schema path and collect fields + relationships. Recurses into
  * embedded subdocuments and document arrays so that nested refs
  * (e.g. quests.active → Quest, pokedex.id → DexEntry) are captured.
+ * Also extracts nested Maps to mapSchemas.
  */
 function walkSchemaPath(
   normalizedName: string,
@@ -111,10 +112,34 @@ function walkSchemaPath(
   depth: number,
   schemaPath: any,
   fields: EntityField[],
-  relationships: Map<string, string>
+  relationships: Map<string, string>,
+  mapSchemas: MapValueSchema[]
 ): void {
   const instance: string | undefined = schemaPath.instance;
   if (!instance) return;
+
+  // Skip Map sub-paths like "progressionDefinitions.$*" or "requirements_progressions.$*"
+  if (/[$*]/.test(normalizedName)) return;
+
+  // Handle Maps specially - extract value schema
+  if (schemaPath.instance === 'Map' && schemaPath.options?.of) {
+    const valueSchema = schemaPath.options.of;
+    mapSchemas.push(
+      extractMapValueSchema(normalizedName, valueSchema, relationships)
+    );
+
+    // Still add the Map field itself
+    fields.push({
+      name: normalizedName,
+      displayName,
+      type: 'Map',
+      isRequired: !!schemaPath.isRequired,
+      isArray: false,
+      depth,
+      isParent: false,
+    });
+    return;
+  }
 
   const isEmbedded = instance === 'Embedded' || instance === 'SubDocument';
   const isArray = instance === 'Array';
@@ -134,13 +159,15 @@ function walkSchemaPath(
 
     schemaPath.schema.eachPath((childName: string, childPath: any) => {
       if (childName === '_id' || childName === '__v') return;
+      if (/[$*]/.test(childName)) return; // Skip Map sub-paths
       walkSchemaPath(
         `${normalizedName}_${childName}`,
         childName,
         depth + 1,
         childPath,
         fields,
-        relationships
+        relationships,
+        mapSchemas
       );
     });
     return;
@@ -162,13 +189,15 @@ function walkSchemaPath(
     schemaPath.embeddedSchemaType.schema.eachPath(
       (childName: string, childPath: any) => {
         if (childName === '_id' || childName === '__v') return;
+        if (/[$*]/.test(childName)) return; // Skip Map sub-paths
         walkSchemaPath(
           `${normalizedName}_${childName}`,
           childName,
           depth + 1,
           childPath,
           fields,
-          relationships
+          relationships,
+          mapSchemas
         );
       }
     );
@@ -193,6 +222,25 @@ function walkSchemaPath(
   if (ref && typeof ref === 'string') {
     relationships.set(normalizedName, ref);
   }
+}
+
+/**
+ * Determine the display name for a Map value schema
+ */
+function getMapValueTypeName(valueSchema: any): string {
+  if (!valueSchema) return 'unknown';
+  
+  // Check if it's a Mixed type
+  if (valueSchema === Schema.Types.Mixed) {
+    return 'Mixed';
+  }
+  
+  const constructorName = valueSchema.constructor?.name;
+  if (constructorName === 'Function' || constructorName === 'SchemaType') {
+    return 'Mixed';
+  }
+  
+  return constructorName || 'object';
 }
 
 /**
@@ -275,7 +323,7 @@ function extractMapValueSchema(
 
   return {
     mapFieldPath,
-    valueType: valueSchema?.constructor?.name || 'object',
+    valueType: getMapValueTypeName(valueSchema),
     fields,
   };
 }
@@ -320,7 +368,7 @@ function extractEntityDefinition(
       return;
     }
 
-    walkSchemaPath(pathName, pathName, 0, schemaPath, fields, relationships);
+    walkSchemaPath(pathName, pathName, 0, schemaPath, fields, relationships, mapSchemas);
   });
 
   return {
@@ -477,11 +525,15 @@ async function generateERD() {
     const { regionSchema } = await import(
       '../shared/src/models/region/region.model'
     );
+    const { locationSchema } = await import(
+      '../shared/src/models/location/location.model'
+    );
 
     const entities: EntityDefinition[] = [
       extractEntityDefinition('User', userSchema),
       extractEntityDefinition('Server', serverSchema),
       extractEntityDefinition('Region', regionSchema),
+      extractEntityDefinition('Location', locationSchema),
     ];
 
     // Generate Mermaid diagram
