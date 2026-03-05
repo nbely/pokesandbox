@@ -16,6 +16,7 @@ import { handleRegionAutocomplete, onlyAdminRoles } from '@bot/utils';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';
+import { LOCATIONS_COMMAND_NAME } from '../locations/locations';
 import { getRegionMenuEmbeds } from './region.embeds';
 import { RegionCommandOptions } from './types';
 
@@ -65,7 +66,7 @@ const getRegionButtons = async (
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
     { id: 'Moves', command: 'moves' },
     { id: 'Progression', command: PROGRESSIONS_COMMAND_NAME },
-    { id: 'Locations', command: 'locations' },
+    { id: 'Locations', command: LOCATIONS_COMMAND_NAME },
     { id: 'Transportation', command: 'transportation' },
     { id: 'Quests', command: 'quests' },
     { id: 'Shops', command: 'shops' },

@@ -9,6 +9,7 @@ export const CachePrefix = {
   SERVER: 'server:',
   REGION: 'region:',
   DEX_ENTRY: 'dex_entry:',
+  LOCATION: 'location:',
 } as const;
 
 /**
@@ -21,4 +22,6 @@ export const CacheTTL = {
   REGION: 300,
   /** Dex entries are essentially static *for now* — 30 minutes. */
   DEX_ENTRY: 1800,
+  /** Locations are edited during admin sessions — 5 minutes. */
+  LOCATION: 300,
 } as const;

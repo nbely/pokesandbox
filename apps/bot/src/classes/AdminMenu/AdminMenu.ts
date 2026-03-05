@@ -1,8 +1,13 @@
 import { Role } from 'discord.js';
 
-import { getCachedRegion, getCachedRegions, getCachedServer } from '@bot/cache';
+import {
+  getCachedLocations,
+  getCachedRegion,
+  getCachedRegions,
+  getCachedServer,
+} from '@bot/cache';
 import { Server } from '@shared/models';
-import type { Region } from '@shared/models';
+import type { Location, Region } from '@shared/models';
 
 import { Menu } from '../Menu/Menu';
 import { Session } from '../Session/Session';
@@ -114,6 +119,11 @@ export class AdminMenu<
   public async getRegions(): Promise<Region[]> {
     const server = await this.getServer();
     return getCachedRegions(server.regions);
+  }
+
+  public async getLocations(regionId: string): Promise<Location[]> {
+    const region = await this.getRegion(regionId);
+    return getCachedLocations(region.locations);
   }
 
   public async getGuildRole(roleId: string): Promise<string | Role> {
