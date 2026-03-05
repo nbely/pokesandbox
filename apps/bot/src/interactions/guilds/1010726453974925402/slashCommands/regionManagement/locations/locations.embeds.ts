@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 
 import type { AdminMenu } from '@bot/classes';
+import { createNumericListFields } from '@bot/embeds/utils/createNumericListFields';
 
 import type { LocationsCommandOptions } from './types';
 
@@ -13,10 +14,15 @@ export const getLocationsMenuEmbeds = async (
   const locations = await menu.getLocations(regionId);
   const prompt = menu.prompt || defaultPrompt;
 
-  const locationList =
-    locations.length > 0
-      ? locations.map((loc, i) => `${i + 1}. ${loc.name}`).join('\n')
-      : 'No locations found.';
+  const locationNames = locations.map((location) => location.name);
+  const locationFields = createNumericListFields(
+    locationNames,
+    [
+      { threshold: 11, columns: 2 },
+      { threshold: 21, columns: 3 },
+    ],
+    'No locations found.'
+  );
 
   return [
     new EmbedBuilder()
@@ -25,7 +31,8 @@ export const getLocationsMenuEmbeds = async (
         name: `${region.name} Location Manager`,
         iconURL: menu.interaction.guild?.iconURL() || undefined,
       })
-      .setDescription(`**${prompt}**\n\n${locationList}`)
+      .setDescription(prompt)
+      .setFields(locationFields)
       .setTimestamp(),
   ];
 };

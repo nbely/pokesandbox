@@ -17,22 +17,22 @@ export const getRegionMenuEmbeds = async (
   const movesOptionText = 'Modify TM/HM/TR Lists';
   const progressionsOptionText =
     region.progressionDefinitions.size === 0
-      ? '***Create Progression Type***'
-      : `Modify Progression Types`;
+      ? '***Create Progressions***'
+      : `Modify Progressions`;
   const locationsOptionText =
     region.locations.length === 0
-      ? '***Create Starting Location***'
+      ? '***Create Locations***'
       : `Modify Locations`;
   const transportationOptionText =
     region.transportationTypes.length === 0
-      ? '***Setup Transportation Types***'
+      ? '***Create Transportation Types***'
       : `Modify Transportation Types`;
   const questsOptionText =
     region.quests.active.length === 0 && region.quests.passive.length === 0
       ? '***Create Quests***'
       : `Modify Quests`;
   const shopsOptionText =
-    region.shops.length === 0 ? '***Create Shop***' : `Modify Shops`;
+    region.shops.length === 0 ? '***Create Shops***' : `Modify Shops`;
   const mechanicsOptionText = '***Update Mechanics***';
   const graphicsOptionText = 'Modify Graphics Settings';
 
@@ -69,9 +69,8 @@ export const getRegionMenuEmbeds = async (
       )
       .setFooter({
         text: !region.deployable
-          ? 'Please visit the bolded/italicized options above to fix deployment issues\n'
+          ? 'Please create configurations for the bolded & italicized sub-menus to meet deployment requirements.\n'
           : '',
-      })
-      .setTimestamp(),
+      }),
   ];
 };

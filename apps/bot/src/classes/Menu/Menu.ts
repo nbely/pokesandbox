@@ -86,7 +86,6 @@ export class Menu<
   ) => Promise<ModalConfig<Self>>;
   protected _setSelectMenu?: (menu: Self) => Promise<SelectMenuConfig<Self>>;
   protected _setEmbeds: (menu: Self) => Promise<EmbedBuilder[]>;
-  protected _onComplete?: (menu: Self, result: unknown) => Promise<void>;
 
   /**** Constructor ****/
 
@@ -110,7 +109,6 @@ export class Menu<
     this._setModal = options.setModal;
     this._setSelectMenu = options.setSelectMenu;
     this._setEmbeds = options.setEmbeds;
-    this._onComplete = options.onComplete;
   }
 
   /**** Getters/Setters ****/
@@ -386,10 +384,6 @@ export class Menu<
     // Store the completion result in session state for continuation callbacks
     if (result !== undefined) {
       this._session.setMenuCompletionState(this._name, result);
-    }
-
-    if (this._onComplete) {
-      await this._onComplete(this.self, result);
     }
   }
 
