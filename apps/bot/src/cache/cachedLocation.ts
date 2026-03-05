@@ -34,9 +34,7 @@ export async function getCachedLocations(
 
   // Fetch cache misses from DB
   if (missIds.length > 0) {
-    const fetched = await Location.find({
-      _id: { $in: missIds.map((id) => new Types.ObjectId(id)) },
-    }).exec();
+    const fetched = await Location.find().byIds(missIds).exec();
     for (const location of fetched) {
       cache.set(
         `${CachePrefix.LOCATION}${location.id}`,

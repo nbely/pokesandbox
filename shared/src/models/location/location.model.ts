@@ -11,10 +11,7 @@ import {
 } from 'mongoose';
 import { z } from 'zod';
 
-import {
-  requirementDbSchema,
-  requirementSchema,
-} from '../requirement';
+import { requirementDbSchema, requirementSchema } from '../requirement';
 
 // Zod Validation Schemas
 
@@ -77,6 +74,7 @@ export type Location = HydratedDocument<ILocation>;
 
 // Define interface for query helpers
 interface ILocationQueryHelpers {
+  byIds(ids: string[]): QueryWithHelpers<any, Location, ILocationQueryHelpers>;
   byRegionId(
     regionId: string
   ): QueryWithHelpers<any, Location, ILocationQueryHelpers>;
@@ -170,6 +168,12 @@ export const locationSchema = new Schema<
   },
   {
     query: {
+      byIds(
+        this: QueryWithHelpers<any, Location, ILocationQueryHelpers>,
+        ids: string[]
+      ) {
+        return this.where({ _id: { $in: ids } });
+      },
       byRegionId(
         this: QueryWithHelpers<any, Location, ILocationQueryHelpers>,
         regionId: string

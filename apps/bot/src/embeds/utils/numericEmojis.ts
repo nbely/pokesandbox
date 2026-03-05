@@ -36,7 +36,7 @@ export const getNumericEmojiLabel = (
   const emojiLabel = `${getNumericEmojisForIndex(index)}\u2009`;
   if (!emojiLabel) return '';
 
-  if (shouldPadDoubleDigitEmojiLabels && index >= 10 && index < 100) {
+  if (shouldPadDoubleDigitEmojiLabels && index >= 9 && index < 99) {
     return `${emojiLabel}\u2007\u2007\u2006`;
   }
 

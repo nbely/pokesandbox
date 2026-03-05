@@ -31,7 +31,6 @@ export type MenuBuilderOptions<
     menu: M,
     options?: ModalState['options']
   ) => Promise<ModalConfig<M>>;
-  onComplete?: (menu: M, result: unknown) => Promise<void>;
 };
 
 /** Menu Button Types */
