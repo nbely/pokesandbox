@@ -229,17 +229,17 @@ function walkSchemaPath(
  */
 function getMapValueTypeName(valueSchema: any): string {
   if (!valueSchema) return 'unknown';
-  
+
   // Check if it's a Mixed type
   if (valueSchema === Schema.Types.Mixed) {
     return 'Mixed';
   }
-  
+
   const constructorName = valueSchema.constructor?.name;
   if (constructorName === 'Function' || constructorName === 'SchemaType') {
     return 'Mixed';
   }
-  
+
   return constructorName || 'object';
 }
 
@@ -368,7 +368,15 @@ function extractEntityDefinition(
       return;
     }
 
-    walkSchemaPath(pathName, pathName, 0, schemaPath, fields, relationships, mapSchemas);
+    walkSchemaPath(
+      pathName,
+      pathName,
+      0,
+      schemaPath,
+      fields,
+      relationships,
+      mapSchemas
+    );
   });
 
   return {
