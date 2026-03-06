@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
+import { getAssertedCachedDexEntry, getAssertedCachedRegion, saveRegion } from '@bot/cache';
 import {
   AdminMenu,
   AdminMenuBuilder,
@@ -104,8 +104,15 @@ const getEditPokedexSlotButtons = async (
   regionId: string,
   pokedexNo: string
 ): Promise<MenuButtonConfig<AdminMenu<EditPokedexSlotCommandOptions>>[]> => {
-  return [
-    {
+  const region = await getAssertedCachedRegion(regionId);
+  const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
+  const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
+  const hasOtherFormes = dexEntry.otherFormes && dexEntry.otherFormes.length > 0;
+
+  const buttons: MenuButtonConfig<AdminMenu<EditPokedexSlotCommandOptions>>[] = [];
+
+  if (hasOtherFormes) {
+    buttons.push({
       label: 'Customize',
       style: ButtonStyle.Primary,
       onClick: async (menu) =>
@@ -113,7 +120,10 @@ const getEditPokedexSlotButtons = async (
           regionId,
           pokedexNo,
         }),
-    },
+    });
+  }
+
+  buttons.push(
     {
       label: 'Swap',
       style: ButtonStyle.Primary,
@@ -134,8 +144,10 @@ const getEditPokedexSlotButtons = async (
         await saveRegion(region);
         await menu.hardRefresh();
       },
-    },
-  ];
+    }
+  );
+
+  return buttons;
 };
 
 const removePokedexSlot = (region: Region, pokedexIndex: number): void => {
