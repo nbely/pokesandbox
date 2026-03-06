@@ -24,15 +24,20 @@ export const getLocationsMenuEmbeds = async (
     'No locations found.'
   );
 
-  return [
-    new EmbedBuilder()
-      .setColor('Gold')
-      .setAuthor({
-        name: `${region.name} Location Manager`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
-      })
-      .setDescription(prompt)
-      .setFields(locationFields)
-      .setTimestamp(),
-  ];
+  const embed = new EmbedBuilder()
+    .setColor('Gold')
+    .setAuthor({
+      name: `${region.name} Location Manager`,
+      iconURL: menu.interaction.guild?.iconURL() || undefined,
+    })
+    .setDescription(prompt)
+    .setFields(locationFields)
+    .setTimestamp();
+
+  if (menu.warningMessage) {
+    embed.setFooter({ text: menu.warningMessage });
+    menu.warningMessage = undefined;
+  }
+
+  return [embed];
 };

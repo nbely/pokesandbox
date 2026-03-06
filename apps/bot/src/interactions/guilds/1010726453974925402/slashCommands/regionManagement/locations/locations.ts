@@ -16,6 +16,7 @@ import {
   onlyAdminRoles,
 } from '@bot/utils';
 
+import { getLocationCreateModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
 
@@ -54,6 +55,7 @@ export const LocationsCommand: LocationsCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getLocationsButtons(menu, region_id))
       .setEmbeds((menu) => getLocationsMenuEmbeds(menu, region_id))
+      .setModal((menu) => getLocationCreateModal(menu, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -73,8 +75,7 @@ const getLocationsButtons = async (
       fixedPosition: 'start',
       style: ButtonStyle.Success,
       onClick: async (menu) => {
-        menu.prompt = 'The create location feature is coming soon!';
-        await menu.refresh();
+        await menu.openModal();
       },
     },
     ...locations.map((location, index) => ({
