@@ -36,6 +36,7 @@ export const getLocationsMenuEmbeds = async (
 
   if (menu.warningMessage) {
     embed.setFooter({ text: menu.warningMessage });
+    menu.warningMessage = undefined;
   }
 
   return [embed];
