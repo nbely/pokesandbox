@@ -435,11 +435,14 @@ export class Menu<
       .filter((button) => button.fixedPosition === 'end')
       .map((button) => button.component);
 
+    const hasBackButton =
+      this._reservedButtons.get('Back') && this.session.history.length > 0;
+
     const buttonSlotCount =
       10 -
       fixedStartButtons.length -
       fixedEndButtons.length -
-      (this._reservedButtons.get('Back') ? 1 : 0) -
+      (hasBackButton ? 1 : 0) -
       (this._reservedButtons.get('Cancel') ? 1 : 0);
 
     const components: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -521,7 +524,7 @@ export class Menu<
       currentPageButtons.push(...fixedEndButtons);
     }
 
-    if (this._reservedButtons.get('Back') && this.session.history.length > 0) {
+    if (hasBackButton) {
       currentPageButtons.push(this.createDefaultButton('Back'));
     }
 
