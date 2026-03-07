@@ -14,7 +14,10 @@ export const getLocationsMenuEmbeds = async (
   const locations = await menu.getLocations(regionId);
   const prompt = menu.prompt || defaultPrompt;
 
-  const locationNames = locations.map((location) => location.name);
+  // Sort locations by ordinal
+  const sortedLocations = locations.sort((a, b) => a.ordinal - b.ordinal);
+
+  const locationNames = sortedLocations.map((location) => location.name);
   const locationFields = createNumericListFields(
     locationNames,
     [
@@ -31,8 +34,7 @@ export const getLocationsMenuEmbeds = async (
       iconURL: menu.interaction.guild?.iconURL() || undefined,
     })
     .setDescription(prompt)
-    .setFields(locationFields)
-    .setTimestamp();
+    .setFields(locationFields);
 
   if (menu.warningMessage) {
     embed.setFooter({ text: menu.warningMessage });

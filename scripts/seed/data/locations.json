@@ -9,7 +9,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 1,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2721",
@@ -31,13 +34,26 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 2, "maxLevel": 5, "weight": 50 },
-              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 2, "maxLevel": 4, "weight": 50 }
+              {
+                "speciesId": "6503c389d5ce71f0a74682c3",
+                "minLevel": 2,
+                "maxLevel": 5,
+                "weight": 50
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74683b0",
+                "minLevel": 2,
+                "maxLevel": 4,
+                "weight": 50
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 2,
+    "createdAt": "2024-01-15T11:00:00.000Z",
+    "updatedAt": "2024-01-15T11:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2722",
@@ -55,7 +71,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 3,
+    "createdAt": "2024-01-15T12:00:00.000Z",
+    "updatedAt": "2024-01-15T12:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2723",
@@ -63,7 +82,9 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "requirements": {
       "progressions": {
-        "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 7 }
+        "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
+          "min": 7
+        }
       }
     },
     "connections": [
@@ -72,7 +93,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 4,
+    "createdAt": "2024-01-15T13:00:00.000Z",
+    "updatedAt": "2024-01-15T13:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2724",
@@ -94,15 +118,38 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 2, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 15 },
-              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 15 }
+              {
+                "speciesId": "6503c389d5ce71f0a74682c3",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 35
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74683b0",
+                "minLevel": 2,
+                "maxLevel": 5,
+                "weight": 35
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74680f7",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74681ed",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 15
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 5,
+    "createdAt": "2024-01-15T14:00:00.000Z",
+    "updatedAt": "2024-01-15T14:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2725",
@@ -124,36 +171,114 @@
           {
             "timeOfDay": "morning",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 40 },
-              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 15 },
-              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 30 },
-              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 5 }
+              {
+                "speciesId": "6503c389d5ce71f0a74680f7",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 40
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468125",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74681ed",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468222",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 10
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74685dc",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 5
+              }
             ]
           },
           {
             "timeOfDay": "day",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 35 },
-              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 10 },
-              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 10 }
+              {
+                "speciesId": "6503c389d5ce71f0a74680f7",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 35
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468125",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 10
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74681ed",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 35
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468222",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 10
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74685dc",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 10
+              }
             ]
           },
           {
             "timeOfDay": "night",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74680f7", "minLevel": 3, "maxLevel": 5, "weight": 30 },
-              { "speciesId": "6503c389d5ce71f0a74681ed", "minLevel": 3, "maxLevel": 5, "weight": 30 },
-              { "speciesId": "6503c38ad5ce71f0a74685dc", "minLevel": 3, "maxLevel": 5, "weight": 10 },
-              { "speciesId": "6503c389d5ce71f0a7468125", "minLevel": 4, "maxLevel": 6, "weight": 15 },
-              { "speciesId": "6503c389d5ce71f0a7468222", "minLevel": 4, "maxLevel": 6, "weight": 15 }
+              {
+                "speciesId": "6503c389d5ce71f0a74680f7",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74681ed",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74685dc",
+                "minLevel": 3,
+                "maxLevel": 5,
+                "weight": 10
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468125",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468222",
+                "minLevel": 4,
+                "maxLevel": 6,
+                "weight": 15
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 6,
+    "createdAt": "2024-01-15T15:00:00.000Z",
+    "updatedAt": "2024-01-15T15:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2726",
@@ -171,7 +296,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 7,
+    "createdAt": "2024-01-15T16:00:00.000Z",
+    "updatedAt": "2024-01-15T16:00:00.000Z"
   },
   {
     "_id": "69a6782e642bd6ca270ce7d6",
@@ -183,7 +311,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 8,
+    "createdAt": "2024-01-15T17:00:00.000Z",
+    "updatedAt": "2024-01-15T17:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2727",
@@ -191,7 +322,9 @@
     "regionId": "651f42c3a39ac73fde4cd54c",
     "requirements": {
       "progressions": {
-        "54d8990d-c0b1-49cb-80fa-7e7be792a225": { "min": 1 }
+        "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
+          "min": 1
+        }
       }
     },
     "connections": [
@@ -210,16 +343,44 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74682c3", "minLevel": 6, "maxLevel": 8, "weight": 30 },
-              { "speciesId": "6503c389d5ce71f0a74684bc", "minLevel": 6, "maxLevel": 8, "weight": 30 },
-              { "speciesId": "6503c38ad5ce71f0a7468987", "minLevel": 6, "maxLevel": 8, "weight": 15 },
-              { "speciesId": "6503c38ad5ce71f0a74688b0", "minLevel": 6, "maxLevel": 8, "weight": 15 },
-              { "speciesId": "6503c38bd5ce71f0a7468c03", "minLevel": 5, "maxLevel": 7, "weight": 10 }
+              {
+                "speciesId": "6503c389d5ce71f0a74682c3",
+                "minLevel": 6,
+                "maxLevel": 8,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74684bc",
+                "minLevel": 6,
+                "maxLevel": 8,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a7468987",
+                "minLevel": 6,
+                "maxLevel": 8,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74688b0",
+                "minLevel": 6,
+                "maxLevel": 8,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c38bd5ce71f0a7468c03",
+                "minLevel": 5,
+                "maxLevel": 7,
+                "weight": 10
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 9,
+    "createdAt": "2024-01-15T18:00:00.000Z",
+    "updatedAt": "2024-01-15T18:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2728",
@@ -241,16 +402,44 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "6503c38bd5ce71f0a7468cc1", "minLevel": 7, "maxLevel": 10, "weight": 40 },
-              { "speciesId": "6503c38dd5ce71f0a74697d5", "minLevel": 7, "maxLevel": 10, "weight": 25 },
-              { "speciesId": "6503c38bd5ce71f0a7468e01", "minLevel": 8, "maxLevel": 10, "weight": 15 },
-              { "speciesId": "6503c38ad5ce71f0a7468a4d", "minLevel": 8, "maxLevel": 12, "weight": 10 },
-              { "speciesId": "6503c38ad5ce71f0a74687d2", "minLevel": 8, "maxLevel": 10, "weight": 10 }
+              {
+                "speciesId": "6503c38bd5ce71f0a7468cc1",
+                "minLevel": 7,
+                "maxLevel": 10,
+                "weight": 40
+              },
+              {
+                "speciesId": "6503c38dd5ce71f0a74697d5",
+                "minLevel": 7,
+                "maxLevel": 10,
+                "weight": 25
+              },
+              {
+                "speciesId": "6503c38bd5ce71f0a7468e01",
+                "minLevel": 8,
+                "maxLevel": 10,
+                "weight": 15
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a7468a4d",
+                "minLevel": 8,
+                "maxLevel": 12,
+                "weight": 10
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74687d2",
+                "minLevel": 8,
+                "maxLevel": 10,
+                "weight": 10
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 10,
+    "createdAt": "2024-01-15T19:00:00.000Z",
+    "updatedAt": "2024-01-15T19:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea2729",
@@ -272,15 +461,38 @@
           {
             "timeOfDay": "any",
             "slots": [
-              { "speciesId": "6503c389d5ce71f0a74683b0", "minLevel": 8, "maxLevel": 12, "weight": 30 },
-              { "speciesId": "6503c389d5ce71f0a74684bc", "minLevel": 8, "maxLevel": 12, "weight": 30 },
-              { "speciesId": "6503c389d5ce71f0a7468531", "minLevel": 8, "maxLevel": 12, "weight": 20 },
-              { "speciesId": "6503c38ad5ce71f0a74687d2", "minLevel": 8, "maxLevel": 12, "weight": 20 }
+              {
+                "speciesId": "6503c389d5ce71f0a74683b0",
+                "minLevel": 8,
+                "maxLevel": 12,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a74684bc",
+                "minLevel": 8,
+                "maxLevel": 12,
+                "weight": 30
+              },
+              {
+                "speciesId": "6503c389d5ce71f0a7468531",
+                "minLevel": 8,
+                "maxLevel": 12,
+                "weight": 20
+              },
+              {
+                "speciesId": "6503c38ad5ce71f0a74687d2",
+                "minLevel": 8,
+                "maxLevel": 12,
+                "weight": 20
+              }
             ]
           }
         ]
       }
-    ]
+    ],
+    "ordinal": 11,
+    "createdAt": "2024-01-15T20:00:00.000Z",
+    "updatedAt": "2024-01-15T20:00:00.000Z"
   },
   {
     "_id": "69a66f9c3aa03cbffdea272a",
@@ -295,7 +507,10 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 12,
+    "createdAt": "2024-01-15T21:00:00.000Z",
+    "updatedAt": "2024-01-15T21:00:00.000Z"
   },
   {
     "_id": "69a6782e642bd6ca270ce7d7",
@@ -307,6 +522,9 @@
       }
     ],
     "trainerIds": [],
-    "wildTables": []
+    "wildTables": [],
+    "ordinal": 13,
+    "createdAt": "2024-01-15T22:00:00.000Z",
+    "updatedAt": "2024-01-15T22:00:00.000Z"
   }
 ]

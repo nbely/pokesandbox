@@ -30,6 +30,15 @@ export const getLocationCreateModal = async (
             .setStyle(TextInputStyle.Short)
             .setPlaceholder('Pallet Town')
             .setRequired(true)
+        ),
+      new LabelBuilder()
+        .setLabel('Display Order (Optional)')
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('location-ordinal')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('Auto-assigned if left empty')
+            .setRequired(false)
         )
     );
 
@@ -40,6 +49,7 @@ export const getLocationCreateModal = async (
       const existingLocations = await menu.getLocations(regionId);
 
       const name = getModalTextValue(fields, 'location-name', true);
+      const ordinalText = getModalTextValue(fields, 'location-ordinal');
 
       const isDuplicate = existingLocations.some(
         (location) => location.name.toLowerCase() === name.toLowerCase()
@@ -50,11 +60,33 @@ export const getLocationCreateModal = async (
         return await menu.refresh();
       }
 
+      // Parse and validate ordinal if provided
+      let ordinal: number | undefined;
+      if (ordinalText) {
+        const parsedOrdinal = parseInt(ordinalText, 10);
+        if (isNaN(parsedOrdinal) || parsedOrdinal < 1) {
+          menu.warningMessage = `⚠️ Display order must be a positive number.`;
+          return await menu.refresh();
+        }
+
+        // Check for duplicate ordinal
+        const existingLocation = existingLocations.find(
+          (location) => location.ordinal === parsedOrdinal
+        );
+        if (existingLocation) {
+          menu.warningMessage = `⚠️ Display order ${parsedOrdinal} is already in use by "${existingLocation.name}". Leave empty to auto-assign.`;
+          return await menu.refresh();
+        }
+
+        ordinal = parsedOrdinal;
+      }
+
       const newLocation = await Location.createLocation({
         name,
         regionId: new Types.ObjectId(regionId),
         connections: [],
         trainerIds: [],
+        ordinal,
       });
 
       region.locations.push(newLocation._id);
