@@ -18,7 +18,7 @@ import {
   onlyAdminRoles,
 } from '@bot/utils';
 
-import { getLocationEditModal } from './location.modal';
+import { getLocationModal } from './location.modal';
 import { getLocationMenuEmbeds } from './location.embeds';
 import { LOCATIONS_COMMAND_NAME } from './locations';
 import type { LocationCommandOptions } from './types';
@@ -63,7 +63,7 @@ export const LocationCommand: LocationCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setEmbeds((menu) => getLocationMenuEmbeds(menu, region_id, location_id))
       .setButtons((menu) => getLocationButtons(menu, region_id, location_id))
-      .setModal((menu) => getLocationEditModal(menu, region_id, location_id))
+      .setModal((menu) => getLocationModal(menu, region_id, location_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -101,10 +101,12 @@ const getLocationButtons = async (
         const location = await menu.getLocation(locationId);
         await location.deleteOne();
 
-        // Navigate back to the locations list
-        await MenuWorkflow.openMenu(menu, LOCATIONS_COMMAND_NAME, {
-          region_id: regionId,
-        });
+        // Navigate back, falling back to the locations list if there's no prior history
+        await menu.session.goBack(async () =>
+          MenuWorkflow.openMenu(menu, LOCATIONS_COMMAND_NAME, {
+            region_id: regionId,
+          })
+        );
       },
     },
     {
@@ -116,7 +118,7 @@ const getLocationButtons = async (
       },
     },
     {
-      label: 'Rules',
+      label: 'Entry Rules',
       style: ButtonStyle.Primary,
       onClick: async (menu) => {
         menu.prompt = 'Entry rules management is coming soon!';

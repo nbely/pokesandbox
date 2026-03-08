@@ -19,7 +19,7 @@ import {
 } from '@bot/utils';
 
 import { LOCATION_COMMAND_NAME } from './location';
-import { getLocationCreateModal } from './location.modal';
+import { getLocationModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
 
@@ -58,7 +58,7 @@ export const LocationsCommand: LocationsCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getLocationsButtons(menu, region_id))
       .setEmbeds((menu) => getLocationsMenuEmbeds(menu, region_id))
-      .setModal((menu) => getLocationCreateModal(menu, region_id))
+      .setModal((menu) => getLocationModal(menu, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()

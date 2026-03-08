@@ -9,58 +9,26 @@ import {
 import { Types } from 'mongoose';
 
 import { saveLocation, saveRegion } from '@bot/cache';
-import { AdminMenu, ModalConfig } from '@bot/classes';
+import { AdminMenu, MenuCommandOptions, ModalConfig } from '@bot/classes';
 import { getModalTextValue, setValueOnInputBuilderIfExists } from '@bot/utils';
 import { Location } from '@shared/models';
 
-import type { LocationCommandOptions, LocationsCommandOptions } from './types';
-
-export const getLocationCreateModal = async (
-  menu: AdminMenu<LocationsCommandOptions>,
-  regionId: string
-): Promise<ModalConfig<AdminMenu<LocationsCommandOptions>>> => {
-  const builder = new ModalBuilder()
-    .setCustomId(`location-create-modal-${randomUUID()}`)
-    .setTitle('Create New Location')
-    .addLabelComponents(
-      new LabelBuilder()
-        .setLabel('Location Name')
-        .setTextInputComponent(
-          new TextInputBuilder()
-            .setCustomId('location-name')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('Pallet Town')
-            .setRequired(true)
-        ),
-      new LabelBuilder()
-        .setLabel('Display Order (Optional)')
-        .setTextInputComponent(
-          new TextInputBuilder()
-            .setCustomId('location-ordinal')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('Auto-assigned if left empty')
-            .setRequired(false)
-        )
-    );
-
-  return {
-    builder,
-    onSubmit: async (menu, { fields }) => {
-      await handleCreateLocation(menu, regionId, fields);
-    },
-  };
-};
-
-export const getLocationEditModal = async (
-  menu: AdminMenu<LocationCommandOptions>,
+/**
+ * Returns a single modal config for creating or editing a location.
+ * When `locationId` is provided the modal opens in edit mode with pre-populated
+ * fields and edit-specific behaviour (ordinal unchanged when cleared).
+ */
+export const getLocationModal = async <C extends MenuCommandOptions>(
+  menu: AdminMenu<C>,
   regionId: string,
-  locationId: string
-): Promise<ModalConfig<AdminMenu<LocationCommandOptions>>> => {
-  const location = await menu.getLocation(locationId);
+  locationId?: string
+): Promise<ModalConfig<AdminMenu<C>>> => {
+  const isEdit = !!locationId;
+  const location = isEdit ? await menu.getLocation(locationId) : undefined;
 
   const builder = new ModalBuilder()
-    .setCustomId(`location-edit-modal-${randomUUID()}`)
-    .setTitle('Edit Location')
+    .setCustomId(`location-modal-${randomUUID()}`)
+    .setTitle(isEdit ? 'Edit Location' : 'Create New Location')
     .addLabelComponents(
       new LabelBuilder()
         .setLabel('Location Name')
@@ -71,19 +39,19 @@ export const getLocationEditModal = async (
               .setStyle(TextInputStyle.Short)
               .setPlaceholder('Pallet Town')
               .setRequired(true),
-            location.name
+            location?.name
           )
         ),
       new LabelBuilder()
-        .setLabel('Display Order (Leave blank to keep current)')
+        .setLabel('Display Order (Optional)')
         .setTextInputComponent(
           setValueOnInputBuilderIfExists(
             new TextInputBuilder()
               .setCustomId('location-ordinal')
               .setStyle(TextInputStyle.Short)
-              .setPlaceholder('Unchanged if left empty')
+              .setPlaceholder(isEdit ? 'Unchanged if left empty' : 'Auto-assigned if left empty')
               .setRequired(false),
-            location.ordinal?.toString()
+            location?.ordinal?.toString()
           )
         )
     );
@@ -91,13 +59,19 @@ export const getLocationEditModal = async (
   return {
     builder,
     onSubmit: async (menu, { fields }) => {
-      await handleEditLocation(menu, regionId, locationId, fields);
+      // Cast to base AdminMenu since helpers only need shared API surface
+      const baseMenu = menu as unknown as AdminMenu;
+      if (isEdit && locationId) {
+        await handleEditLocation(baseMenu, regionId, locationId, fields);
+      } else {
+        await handleCreateLocation(baseMenu, regionId, fields);
+      }
     },
   };
 };
 
 async function handleCreateLocation(
-  menu: AdminMenu<LocationsCommandOptions>,
+  menu: AdminMenu,
   regionId: string,
   fields: ModalSubmitFields['fields']
 ): Promise<void> {
@@ -151,7 +125,7 @@ async function handleCreateLocation(
 }
 
 async function handleEditLocation(
-  menu: AdminMenu<LocationCommandOptions>,
+  menu: AdminMenu,
   regionId: string,
   locationId: string,
   fields: ModalSubmitFields['fields']

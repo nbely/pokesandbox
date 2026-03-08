@@ -1,8 +1,29 @@
 import { EmbedBuilder } from 'discord.js';
 
+import { getCachedLocations } from '@bot/cache';
 import type { AdminMenu } from '@bot/classes';
+import type { Location } from '@shared/models';
 
 import type { LocationCommandOptions } from './types';
+
+const getRequirementsValue = (requirements: Location['requirements']): string => {
+  const parts: string[] = [];
+  if (requirements?.progressions && Object.keys(requirements.progressions).length > 0) {
+    parts.push(`Progressions: ${Object.keys(requirements.progressions).length}`);
+  }
+  if (requirements?.items && requirements.items.length > 0) {
+    parts.push(`Items: ${requirements.items.length}`);
+  }
+  if (requirements?.capabilities && requirements.capabilities.length > 0) {
+    parts.push(`Capabilities: ${requirements.capabilities.length}`);
+  }
+  return parts.length > 0 ? parts.join('\n') : 'None';
+};
+
+const getWildTablesValue = (wildTables: Location['wildTables']): string => {
+  if (!wildTables || wildTables.length === 0) return 'None';
+  return wildTables.map((wt) => `• ${wt.encounterType}`).join('\n');
+};
 
 export const getLocationMenuEmbeds = async (
   menu: AdminMenu<LocationCommandOptions>,
@@ -11,50 +32,25 @@ export const getLocationMenuEmbeds = async (
 ): Promise<EmbedBuilder[]> => {
   const region = await menu.getRegion(regionId);
   const location = await menu.getLocation(locationId);
-  const allLocations = await menu.getLocations(regionId);
   const prompt = menu.prompt || 'Manage this location using the buttons below.';
 
-  // Build connected location names
-  const connectedNames = location.connections
-    .map((conn) => {
-      const found = allLocations.find(
-        (loc) => loc._id.toString() === conn.toLocationId.toString()
-      );
-      return found ? found.name : '(Unknown Location)';
-    });
+  // Fetch only the connected location documents to avoid over-fetching
+  const connectedLocationIds = location.connections.map((c) => c.toLocationId);
+  const connectedLocations = await getCachedLocations(connectedLocationIds);
+
+  const connectedNames = location.connections.map((conn) => {
+    const found = connectedLocations.find(
+      (loc) => loc._id.toString() === conn.toLocationId.toString()
+    );
+    return found ? found.name : '(Unknown Location)';
+  });
 
   const connectionsValue =
     connectedNames.length > 0
       ? connectedNames.map((name) => `• ${name}`).join('\n')
       : 'None';
 
-  // Build entry requirements summary
-  const reqs = location.requirements;
-  const reqParts: string[] = [];
-  if (reqs?.progressions && Object.keys(reqs.progressions).length > 0) {
-    reqParts.push(`Progressions: ${Object.keys(reqs.progressions).length}`);
-  }
-  if (reqs?.items && reqs.items.length > 0) {
-    reqParts.push(`Items: ${reqs.items.length}`);
-  }
-  if (reqs?.capabilities && reqs.capabilities.length > 0) {
-    reqParts.push(`Capabilities: ${reqs.capabilities.length}`);
-  }
-  const requirementsValue =
-    reqParts.length > 0 ? reqParts.join('\n') : 'None';
-
-  // Trainer count
   const trainerCount = location.trainerIds?.length ?? 0;
-
-  // Wild encounter types
-  const wildTableTypes =
-    location.wildTables && location.wildTables.length > 0
-      ? location.wildTables.map((wt) => wt.encounterType)
-      : [];
-  const wildTablesValue =
-    wildTableTypes.length > 0
-      ? wildTableTypes.map((t) => `• ${t}`).join('\n')
-      : 'None';
 
   const embed = new EmbedBuilder()
     .setColor('Gold')
@@ -69,9 +65,8 @@ export const getLocationMenuEmbeds = async (
       { name: 'Trainers', value: String(trainerCount), inline: true },
       { name: '\u200b', value: '\u200b', inline: true },
       { name: 'Connections', value: connectionsValue, inline: true },
-      { name: 'Entry Requirements', value: requirementsValue, inline: true },
-      { name: '\u200b', value: '\u200b', inline: true },
-      { name: 'Wild Encounter Types', value: wildTablesValue, inline: false }
+      { name: 'Entry Rules', value: getRequirementsValue(location.requirements), inline: true },
+      { name: 'Wild Tables', value: getWildTablesValue(location.wildTables), inline: true }
     );
 
   if (menu.warningMessage) {
