@@ -8,6 +8,7 @@ import {
   AdminMenu,
   AdminMenuBuilder,
   MenuButtonConfig,
+  MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
@@ -17,6 +18,7 @@ import {
   sortByOrdinal,
 } from '@bot/utils';
 
+import { LOCATION_COMMAND_NAME } from './location';
 import { getLocationCreateModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
@@ -85,9 +87,12 @@ const getLocationsButtons = async (
       id: location._id.toString(),
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<LocationsCommandOptions>) => {
-        menu.prompt = 'The location configuration feature is coming soon!';
-        await menu.refresh();
+        await MenuWorkflow.openMenu(menu, LOCATION_COMMAND_NAME, {
+          region_id: regionId,
+          location_id: location._id.toString(),
+        });
       },
     })),
   ];
 };
+

@@ -1,6 +1,7 @@
 import { Role } from 'discord.js';
 
 import {
+  getCachedLocation,
   getCachedLocations,
   getCachedRegion,
   getCachedRegions,
@@ -119,6 +120,16 @@ export class AdminMenu<
   public async getRegions(): Promise<Region[]> {
     const server = await this.getServer();
     return getCachedRegions(server.regions);
+  }
+
+  public async getLocation(locationId: string): Promise<Location> {
+    const location = await getCachedLocation(locationId);
+    if (!location) {
+      throw new Error(
+        'There was a problem fetching the location. Please try again later.'
+      );
+    }
+    return location;
   }
 
   public async getLocations(regionId: string): Promise<Location[]> {
