@@ -11,6 +11,7 @@ import {
 } from 'mongoose';
 import { z } from 'zod';
 
+import { baseEntitySchema, IModelInput } from '../base';
 import { requirementDbSchema, requirementSchema } from '../requirement';
 import { wildTableDbSchema, wildTableSchema } from './wildTable';
 
@@ -27,7 +28,7 @@ export const connectionSchema = z.object({
 /**
  * Location entity — an explorable area within a Region
  */
-export const locationEntitySchema = z.object({
+export const locationEntitySchema = baseEntitySchema.extend({
   name: z.string(),
   regionId: z.instanceof(Types.ObjectId),
   requirements: requirementSchema.optional(),
@@ -35,12 +36,10 @@ export const locationEntitySchema = z.object({
   trainerIds: z.array(z.instanceof(Types.ObjectId)).default([]),
   wildTables: z.array(wildTableSchema).optional(),
   ordinal: z.number().int().positive(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
 });
 
 export type ILocation = z.infer<typeof locationEntitySchema>;
-export type ILocationInput = Omit<ILocation, 'createdAt' | 'updatedAt' | 'ordinal'> & {
+export type ILocationInput = Omit<IModelInput<ILocation>, 'ordinal'> & {
   ordinal?: number;
 };
 export type ILocationUpdate = Partial<ILocationInput>;

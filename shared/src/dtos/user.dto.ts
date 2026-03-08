@@ -5,15 +5,16 @@ import { User, userEntitySchema } from '../models/user.model';
 import { serverDTOSchema } from './server.dto';
 import { convertToDTO } from './utils';
 
-// For creating users, we use the entity schema directly since it already excludes _id
+// For creating users, timestamps are managed by Mongoose and must not be supplied by the client
 export const userRequestDTOSchema = z.object({
-  ...userEntitySchema.shape,
+  ...userEntitySchema.omit({ createdAt: true, updatedAt: true }).shape,
   servers: z.array(z.string()),
 });
 
 export const userDTOSchema = z.object({
-  ...userRequestDTOSchema.shape,
+  ...userEntitySchema.shape,
   _id: z.string(),
+  servers: z.array(z.string()),
 });
 
 export type UserDTO = z.infer<typeof userDTOSchema>;

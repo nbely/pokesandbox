@@ -12,12 +12,13 @@ import {
 import { z } from 'zod';
 
 import { zMapHydrator } from '../utils';
+import { baseEntitySchema, IModelInput } from '../base';
 import {
   progressionDefinitionDbSchema,
   progressionDefinitionSchema,
 } from './progressionDefinition';
 
-export const regionEntitySchema = z.object({
+export const regionEntitySchema = baseEntitySchema.extend({
   baseGeneration: z.number(),
   charactersPerPlayer: z.number(),
   characterList: z.array(z.instanceof(Types.ObjectId)),
@@ -51,6 +52,8 @@ export const regionEntitySchema = z.object({
 });
 
 export type IRegion = z.infer<typeof regionEntitySchema>;
+export type IRegionInput = IModelInput<IRegion>;
+export type IRegionUpdate = Partial<IRegionInput>;
 export type Region = HydratedDocument<IRegion>;
 
 // Define interface for query helpers
@@ -59,10 +62,10 @@ interface IRegionQueryHelpers {
 }
 
 interface IRegionModel extends Model<IRegion, IRegionQueryHelpers> {
-  createRegion(region: IRegion): Promise<Region>;
+  createRegion(region: IRegionInput): Promise<Region>;
   upsertRegion(
     filter: QueryFilter<IRegion>,
-    update: Partial<IRegion>
+    update: IRegionUpdate
   ): Query<Region | null, IRegion>;
 }
 
@@ -124,6 +127,7 @@ export const regionSchema = new Schema<
     transportationTypes: { type: [String], required: true },
   },
   {
+    timestamps: true,
     query: {
       byIds(
         this: QueryWithHelpers<any, Region, IRegionQueryHelpers>,
@@ -133,11 +137,11 @@ export const regionSchema = new Schema<
       },
     },
     statics: {
-      createRegion(region: IRegion) {
+      createRegion(region: IRegionInput) {
         const newRegion = new this(region);
         return newRegion.save();
       },
-      upsertRegion(filter: QueryFilter<IRegion>, update: Partial<IRegion>) {
+      upsertRegion(filter: QueryFilter<IRegion>, update: IRegionUpdate) {
         return this.findOneAndUpdate(filter, update, { upsert: true });
       },
     },
