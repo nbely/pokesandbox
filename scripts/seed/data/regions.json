@@ -442,7 +442,7 @@
       },
       {
         "id": "6503c38ed5ce71f0a7469bd1",
-        "name": "Farfetch\u2019d",
+        "name": "Farfetch’d",
         "_id": "699fb01361ad064b25f8a4de"
       },
       {
@@ -843,8 +843,8 @@
     },
     "shops": [],
     "transportationTypes": [],
-    "__v": 0,
     "createdAt": "2024-01-15T10:00:00.000Z",
-    "updatedAt": "2024-01-15T10:00:00.000Z"
+    "updatedAt": "2024-01-15T10:00:00.000Z",
+    "__v": 0
   }
 ]

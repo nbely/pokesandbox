@@ -12,7 +12,8 @@
     "wildTables": [],
     "ordinal": 1,
     "createdAt": "2024-01-15T10:00:00.000Z",
-    "updatedAt": "2024-01-15T10:00:00.000Z"
+    "updatedAt": "2024-01-15T10:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2721",
@@ -53,7 +54,8 @@
     ],
     "ordinal": 2,
     "createdAt": "2024-01-15T11:00:00.000Z",
-    "updatedAt": "2024-01-15T11:00:00.000Z"
+    "updatedAt": "2024-01-15T11:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2722",
@@ -74,7 +76,8 @@
     "wildTables": [],
     "ordinal": 3,
     "createdAt": "2024-01-15T12:00:00.000Z",
-    "updatedAt": "2024-01-15T12:00:00.000Z"
+    "updatedAt": "2024-01-15T12:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2723",
@@ -85,7 +88,9 @@
         "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
           "min": 7
         }
-      }
+      },
+      "items": [],
+      "capabilities": []
     },
     "connections": [
       {
@@ -96,7 +101,8 @@
     "wildTables": [],
     "ordinal": 4,
     "createdAt": "2024-01-15T13:00:00.000Z",
-    "updatedAt": "2024-01-15T13:00:00.000Z"
+    "updatedAt": "2024-01-15T13:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2724",
@@ -149,7 +155,8 @@
     ],
     "ordinal": 5,
     "createdAt": "2024-01-15T14:00:00.000Z",
-    "updatedAt": "2024-01-15T14:00:00.000Z"
+    "updatedAt": "2024-01-15T14:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2725",
@@ -278,7 +285,8 @@
     ],
     "ordinal": 6,
     "createdAt": "2024-01-15T15:00:00.000Z",
-    "updatedAt": "2024-01-15T15:00:00.000Z"
+    "updatedAt": "2024-01-15T15:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2726",
@@ -299,7 +307,8 @@
     "wildTables": [],
     "ordinal": 7,
     "createdAt": "2024-01-15T16:00:00.000Z",
-    "updatedAt": "2024-01-15T16:00:00.000Z"
+    "updatedAt": "2024-01-15T16:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a6782e642bd6ca270ce7d6",
@@ -314,7 +323,8 @@
     "wildTables": [],
     "ordinal": 8,
     "createdAt": "2024-01-15T17:00:00.000Z",
-    "updatedAt": "2024-01-15T17:00:00.000Z"
+    "updatedAt": "2024-01-15T17:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2727",
@@ -325,7 +335,9 @@
         "54d8990d-c0b1-49cb-80fa-7e7be792a225": {
           "min": 1
         }
-      }
+      },
+      "items": [],
+      "capabilities": []
     },
     "connections": [
       {
@@ -380,7 +392,8 @@
     ],
     "ordinal": 9,
     "createdAt": "2024-01-15T18:00:00.000Z",
-    "updatedAt": "2024-01-15T18:00:00.000Z"
+    "updatedAt": "2024-01-15T18:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2728",
@@ -439,7 +452,8 @@
     ],
     "ordinal": 10,
     "createdAt": "2024-01-15T19:00:00.000Z",
-    "updatedAt": "2024-01-15T19:00:00.000Z"
+    "updatedAt": "2024-01-15T19:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea2729",
@@ -492,7 +506,8 @@
     ],
     "ordinal": 11,
     "createdAt": "2024-01-15T20:00:00.000Z",
-    "updatedAt": "2024-01-15T20:00:00.000Z"
+    "updatedAt": "2024-01-15T20:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a66f9c3aa03cbffdea272a",
@@ -510,7 +525,8 @@
     "wildTables": [],
     "ordinal": 12,
     "createdAt": "2024-01-15T21:00:00.000Z",
-    "updatedAt": "2024-01-15T21:00:00.000Z"
+    "updatedAt": "2024-01-15T21:00:00.000Z",
+    "__v": 0
   },
   {
     "_id": "69a6782e642bd6ca270ce7d7",
@@ -525,6 +541,7 @@
     "wildTables": [],
     "ordinal": 13,
     "createdAt": "2024-01-15T22:00:00.000Z",
-    "updatedAt": "2024-01-15T22:00:00.000Z"
+    "updatedAt": "2024-01-15T22:00:00.000Z",
+    "__v": 0
   }
 ]
