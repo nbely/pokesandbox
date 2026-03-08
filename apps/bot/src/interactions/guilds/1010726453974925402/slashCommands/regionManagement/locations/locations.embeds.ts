@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 import type { AdminMenu } from '@bot/classes';
 import { createNumericListFields } from '@bot/embeds/utils/createNumericListFields';
+import { sortByOrdinal } from '@bot/utils';
 
 import type { LocationsCommandOptions } from './types';
 
@@ -15,7 +16,7 @@ export const getLocationsMenuEmbeds = async (
   const prompt = menu.prompt || defaultPrompt;
 
   // Sort locations by ordinal
-  const sortedLocations = locations.sort((a, b) => a.ordinal - b.ordinal);
+  const sortedLocations = sortByOrdinal(locations);
 
   const locationNames = sortedLocations.map((location) => location.name);
   const locationFields = createNumericListFields(

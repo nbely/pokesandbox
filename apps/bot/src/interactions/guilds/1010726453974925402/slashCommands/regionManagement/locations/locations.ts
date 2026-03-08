@@ -14,6 +14,7 @@ import {
   assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  sortByOrdinal,
 } from '@bot/utils';
 
 import { getLocationCreateModal } from './location.modal';
@@ -68,6 +69,7 @@ const getLocationsButtons = async (
   regionId: string
 ): Promise<MenuButtonConfig<AdminMenu<LocationsCommandOptions>>[]> => {
   const locations = await menu.getLocations(regionId);
+  const sortedLocations = sortByOrdinal(locations);
 
   return [
     {
@@ -78,7 +80,7 @@ const getLocationsButtons = async (
         await menu.openModal();
       },
     },
-    ...locations.map((location, index) => ({
+    ...sortedLocations.map((location, index) => ({
       label: `${index + 1}`,
       id: location._id.toString(),
       style: ButtonStyle.Primary,

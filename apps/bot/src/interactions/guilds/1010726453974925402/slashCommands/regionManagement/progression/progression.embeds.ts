@@ -1,11 +1,12 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 import capitalize from 'lodash/capitalize';
+import assert from 'node:assert';
 
 import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
+import { sortByOrdinal } from '@bot/utils';
 import { ProgressionDefinition } from '@shared/models';
 
 import { assertProgressionKind } from './utils';
-import assert from 'node:assert';
 
 export const progressionsMenuEmbeds = async <
   C extends MenuCommandOptions = MenuCommandOptions
@@ -232,18 +233,7 @@ export const buildMilestoneListField = (
   return {
     name: 'Milestones',
     value: progression.milestones?.length
-      ? progression.milestones
-          .sort((a, b) => {
-            if (a.ordinal != null && b.ordinal != null) {
-              return a.ordinal - b.ordinal;
-            } else if (a.ordinal != null) {
-              return -1;
-            } else if (b.ordinal != null) {
-              return 1;
-            } else {
-              return 0;
-            }
-          })
+      ? sortByOrdinal(progression.milestones)
           .map((m) => `${m.ordinal ? `${m.ordinal}.` : '•'} ${m.label}`)
           .join('\n')
       : 'None',
