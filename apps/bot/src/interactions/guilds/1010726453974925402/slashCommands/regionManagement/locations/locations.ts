@@ -14,8 +14,10 @@ import {
   assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  sortByOrdinal,
 } from '@bot/utils';
 
+import { getLocationCreateModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
 
@@ -54,6 +56,7 @@ export const LocationsCommand: LocationsCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getLocationsButtons(menu, region_id))
       .setEmbeds((menu) => getLocationsMenuEmbeds(menu, region_id))
+      .setModal((menu) => getLocationCreateModal(menu, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -66,6 +69,7 @@ const getLocationsButtons = async (
   regionId: string
 ): Promise<MenuButtonConfig<AdminMenu<LocationsCommandOptions>>[]> => {
   const locations = await menu.getLocations(regionId);
+  const sortedLocations = sortByOrdinal(locations);
 
   return [
     {
@@ -73,11 +77,10 @@ const getLocationsButtons = async (
       fixedPosition: 'start',
       style: ButtonStyle.Success,
       onClick: async (menu) => {
-        menu.prompt = 'The create location feature is coming soon!';
-        await menu.refresh();
+        await menu.openModal();
       },
     },
-    ...locations.map((location, index) => ({
+    ...sortedLocations.map((location, index) => ({
       label: `${index + 1}`,
       id: location._id.toString(),
       style: ButtonStyle.Primary,

@@ -12,42 +12,9 @@ import {
 import { z } from 'zod';
 
 import { requirementDbSchema, requirementSchema } from '../requirement';
+import { wildTableDbSchema, wildTableSchema } from './wildTable';
 
 // Zod Validation Schemas
-
-/**
- * Encounter slot — a single species entry in a wild encounter table
- */
-export const encounterSlotSchema = z.object({
-  speciesId: z.instanceof(Types.ObjectId),
-  minLevel: z.number().int(),
-  maxLevel: z.number().int(),
-  weight: z.number().int().positive(),
-});
-
-/**
- * Time-of-day encounter block
- */
-export const timeEncounterBlockSchema = z.object({
-  timeOfDay: z.enum(['morning', 'day', 'evening', 'night', 'any']),
-  slots: z.array(encounterSlotSchema),
-});
-
-/**
- * Wild encounter table — grouped by encounter method
- */
-export const wildTableSchema = z.object({
-  encounterType: z.enum([
-    'grass',
-    'surf',
-    'old_rod',
-    'good_rod',
-    'super_rod',
-    'rock_smash',
-    'gift',
-  ]),
-  timeBlocks: z.array(timeEncounterBlockSchema),
-});
 
 /**
  * Directional connection between locations
@@ -67,9 +34,16 @@ export const locationEntitySchema = z.object({
   connections: z.array(connectionSchema),
   trainerIds: z.array(z.instanceof(Types.ObjectId)).default([]),
   wildTables: z.array(wildTableSchema).optional(),
+  ordinal: z.number().int().positive(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export type ILocation = z.infer<typeof locationEntitySchema>;
+export type ILocationInput = Omit<ILocation, 'createdAt' | 'updatedAt' | 'ordinal'> & {
+  ordinal?: number;
+};
+export type ILocationUpdate = Partial<ILocationInput>;
 export type Location = HydratedDocument<ILocation>;
 
 // Define interface for query helpers
@@ -81,56 +55,14 @@ interface ILocationQueryHelpers {
 }
 
 interface ILocationModel extends Model<ILocation, ILocationQueryHelpers> {
-  createLocation(location: ILocation): Promise<Location>;
+  createLocation(location: ILocationInput): Promise<Location>;
   upsertLocation(
     filter: QueryFilter<ILocation>,
-    update: Partial<ILocation>
+    update: ILocationUpdate
   ): Query<Location | null, ILocation>;
 }
 
 // Mongoose Model Schemas
-
-const encounterSlotDbSchema = new Schema(
-  {
-    speciesId: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: true },
-    minLevel: { type: Number, required: true },
-    maxLevel: { type: Number, required: true },
-    weight: { type: Number, required: true },
-  },
-  { _id: false }
-);
-
-const timeEncounterBlockDbSchema = new Schema(
-  {
-    timeOfDay: {
-      type: String,
-      enum: ['morning', 'day', 'evening', 'night', 'any'],
-      required: true,
-    },
-    slots: { type: [encounterSlotDbSchema], required: true },
-  },
-  { _id: false }
-);
-
-const wildTableDbSchema = new Schema(
-  {
-    encounterType: {
-      type: String,
-      enum: [
-        'grass',
-        'surf',
-        'old_rod',
-        'good_rod',
-        'super_rod',
-        'rock_smash',
-        'gift',
-      ],
-      required: true,
-    },
-    timeBlocks: { type: [timeEncounterBlockDbSchema], required: true },
-  },
-  { _id: false }
-);
 
 const connectionDbSchema = new Schema(
   {
@@ -165,8 +97,10 @@ export const locationSchema = new Schema<
       default: [],
     },
     wildTables: { type: [wildTableDbSchema], required: false },
+    ordinal: { type: Number, required: true },
   },
   {
+    timestamps: true,
     query: {
       byIds(
         this: QueryWithHelpers<any, Location, ILocationQueryHelpers>,
@@ -182,14 +116,21 @@ export const locationSchema = new Schema<
       },
     },
     statics: {
-      createLocation(location: ILocation) {
-        const newLocation = new this(location);
+      async createLocation(location: ILocationInput) {
+        // Auto-assign ordinal if not provided
+        let ordinal = location.ordinal;
+        if (ordinal === undefined) {
+          const maxLocation = await this.findOne({ regionId: location.regionId })
+            .sort({ ordinal: -1 })
+            .select('ordinal')
+            .lean();
+          ordinal = (maxLocation?.ordinal ?? 0) + 1;
+        }
+
+        const newLocation = new this({ ...location, ordinal });
         return newLocation.save();
       },
-      upsertLocation(
-        filter: QueryFilter<ILocation>,
-        update: Partial<ILocation>
-      ) {
+      upsertLocation(filter: QueryFilter<ILocation>, update: ILocationUpdate) {
         return this.findOneAndUpdate(filter, update, { upsert: true });
       },
     },

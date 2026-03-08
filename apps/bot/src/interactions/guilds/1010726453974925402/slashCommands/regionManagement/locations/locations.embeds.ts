@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 import type { AdminMenu } from '@bot/classes';
 import { createNumericListFields } from '@bot/embeds/utils/createNumericListFields';
+import { sortByOrdinal } from '@bot/utils';
 
 import type { LocationsCommandOptions } from './types';
 
@@ -14,7 +15,10 @@ export const getLocationsMenuEmbeds = async (
   const locations = await menu.getLocations(regionId);
   const prompt = menu.prompt || defaultPrompt;
 
-  const locationNames = locations.map((location) => location.name);
+  // Sort locations by ordinal
+  const sortedLocations = sortByOrdinal(locations);
+
+  const locationNames = sortedLocations.map((location) => location.name);
   const locationFields = createNumericListFields(
     locationNames,
     [
@@ -24,15 +28,19 @@ export const getLocationsMenuEmbeds = async (
     'No locations found.'
   );
 
-  return [
-    new EmbedBuilder()
-      .setColor('Gold')
-      .setAuthor({
-        name: `${region.name} Location Manager`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
-      })
-      .setDescription(prompt)
-      .setFields(locationFields)
-      .setTimestamp(),
-  ];
+  const embed = new EmbedBuilder()
+    .setColor('Gold')
+    .setAuthor({
+      name: `${region.name} Location Manager`,
+      iconURL: menu.interaction.guild?.iconURL() || undefined,
+    })
+    .setDescription(prompt)
+    .setFields(locationFields);
+
+  if (menu.warningMessage) {
+    embed.setFooter({ text: menu.warningMessage });
+    menu.warningMessage = undefined;
+  }
+
+  return [embed];
 };

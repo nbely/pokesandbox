@@ -1,5 +1,6 @@
 export { assertNumericInput } from './assertNumericInput';
 export { assertOptions } from './assertOptions';
+export { sortByOrdinal } from './sortByOrdinal';
 export {
   filterAndFormatChoices,
   getProgressionKeyChoices,
