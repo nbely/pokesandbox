@@ -33,6 +33,12 @@ const DATA_DIR = path.join(__dirname, 'data');
 function toPlainObject(value: unknown): unknown {
   if (value === null || value === undefined) return value;
 
+  // Dates have no enumerable keys, so object-recursing would turn them into {}.
+  // Serialize them explicitly to stable ISO-8601 strings for seed files.
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
   // BSON ObjectId instances expose toHexString()
   if (
     typeof value === 'object' &&

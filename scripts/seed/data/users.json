@@ -6,6 +6,8 @@
     "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000001",
     "username": "ash_ketchum",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z",
     "__v": 0
   },
   {
@@ -15,6 +17,8 @@
     "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000002",
     "username": "misty_cerulean",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z",
     "__v": 0
   },
   {
@@ -24,6 +28,8 @@
     "servers": ["6473e4885458cbb9b7060155"],
     "userId": "100000000000000003",
     "username": "brock_pewter",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z",
     "__v": 0
   }
 ]

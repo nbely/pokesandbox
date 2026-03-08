@@ -221,6 +221,7 @@ export interface IDexEntry
     name: string;
   }[];
   classification: string;
+  createdAt: Date;
   dexEntries?: string[];
   evYields: StatsTable;
   evoRegion?:
@@ -254,6 +255,7 @@ export interface IDexEntry
   };
   showdownName: string;
   sprites: ISprites;
+  updatedAt: Date;
   weightLb: number;
 }
 
@@ -712,6 +714,7 @@ export const DexEntrySchema = new Schema<
     weightkg: { type: Number, required: true },
   },
   {
+    timestamps: true,
     query: {
       byIds(
         this: QueryWithHelpers<any, DexEntry, IDexEntryQueryHelpers>,

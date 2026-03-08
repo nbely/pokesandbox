@@ -11,10 +11,11 @@ import {
   UpdateQuery,
 } from 'mongoose';
 import { z } from 'zod';
+import { baseEntitySchema, IModelInput } from './base';
 import { Server } from './server.model';
 import type { PopulatedQuery } from './types';
 
-export const userEntitySchema = z.object({
+export const userEntitySchema = baseEntitySchema.extend({
   avatarUrl: z.string().optional(),
   globalName: z.string(),
   servers: z.array(z.instanceof(Types.ObjectId)).default([]),
@@ -23,6 +24,8 @@ export const userEntitySchema = z.object({
 });
 
 export type IUser = z.infer<typeof userEntitySchema>;
+export type IUserInput = IModelInput<IUser>;
+export type IUserUpdate = Partial<IUserInput>;
 export type User = HydratedDocument<IUser>;
 
 // Define interface for query helpers
@@ -31,13 +34,13 @@ interface IUserQueryHelpers {
 }
 
 interface IUserModel extends Model<IUser, IUserQueryHelpers> {
-  createUser(user: IUser): Promise<User>;
+  createUser(user: IUserInput): Promise<User>;
   findUserWithServers(
     filter: QueryFilter<IUser>
   ): PopulatedQuery<User | null, IUser, { servers: Server[] }>;
   upsertUser(
     filter: QueryFilter<IUser>,
-    update: Partial<IUser>
+    update: IUserUpdate
   ): Query<User | null, IUser>;
 }
 
@@ -60,6 +63,7 @@ export const userSchema = new Schema<
     username: { type: String, required: true },
   },
   {
+    timestamps: true,
     query: {
       byUserId(
         this: QueryWithHelpers<any, User, IUserQueryHelpers>,
@@ -69,14 +73,14 @@ export const userSchema = new Schema<
       },
     },
     statics: {
-      createUser(user: IUser) {
+      createUser(user: IUserInput) {
         const newUser = new this(user);
         return newUser.save();
       },
       findUserWithServers(filter: QueryFilter<IUser>) {
         return this.findOne(filter).populate('servers');
       },
-      upsertUser(filter: QueryFilter<IUser>, update: Partial<IUser>) {
+      upsertUser(filter: QueryFilter<IUser>, update: IUserUpdate) {
         const { servers, ...otherUpdates } = update;
 
         const updateOps: UpdateQuery<IUser> = { $set: otherUpdates };

@@ -10,10 +10,11 @@ import {
   Types,
 } from 'mongoose';
 import { z } from 'zod';
+import { baseEntitySchema, IModelInput } from './base';
 import { Region } from './region/region.model';
 import type { PopulatedQuery } from './types';
 
-export const serverEntitySchema = z.object({
+export const serverEntitySchema = baseEntitySchema.extend({
   serverId: z.string(),
   adminRoleIds: z.array(z.string()),
   discovery: z.object({
@@ -30,6 +31,8 @@ export const serverEntitySchema = z.object({
 });
 
 export type IServer = z.infer<typeof serverEntitySchema>;
+export type IServerInput = IModelInput<IServer>;
+export type IServerUpdate = Partial<IServerInput>;
 export type Server = HydratedDocument<IServer>;
 
 // Define interface for query helpers
@@ -40,13 +43,13 @@ interface IServerQueryHelpers {
 }
 
 interface IServerModel extends Model<IServer, IServerQueryHelpers> {
-  createServer(server: IServer): Promise<Server>;
+  createServer(server: IServerInput): Promise<Server>;
   findServerWithRegions(
     filter: QueryFilter<IServer>
   ): PopulatedQuery<Server | null, IServer, { regions: Region[] }>;
   upsertServer(
     filter: QueryFilter<IServer>,
-    update: Partial<IServer>
+    update: IServerUpdate
   ): Query<Server | null, IServer>;
 }
 
@@ -75,6 +78,7 @@ export const serverSchema = new Schema<
     regions: { type: [Schema.Types.ObjectId], ref: 'Region', required: true },
   },
   {
+    timestamps: true,
     query: {
       byServerId(
         this: QueryWithHelpers<any, Server, IServerQueryHelpers>,
@@ -84,14 +88,14 @@ export const serverSchema = new Schema<
       },
     },
     statics: {
-      createServer(server: IServer) {
+      createServer(server: IServerInput) {
         const newServer = new this(server);
         return newServer.save();
       },
       findServerWithRegions(filter: QueryFilter<IServer>) {
         return this.findOne(filter).populate('regions');
       },
-      upsertServer(filter: QueryFilter<IServer>, update: Partial<IServer>) {
+      upsertServer(filter: QueryFilter<IServer>, update: IServerUpdate) {
         return this.findOneAndUpdate(filter, update, { upsert: true });
       },
     },
