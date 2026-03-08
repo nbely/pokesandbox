@@ -12,7 +12,7 @@ export const userRequestDTOSchema = z.object({
 });
 
 export const userDTOSchema = z.object({
-  ...userEntitySchema.shape,
+  ...userEntitySchema.omit({ servers: true }).shape,
   _id: z.string(),
   servers: z.array(z.string()),
 });
