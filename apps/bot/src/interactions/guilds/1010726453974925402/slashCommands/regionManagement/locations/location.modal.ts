@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import {
   LabelBuilder,
   ModalBuilder,
-  ModalSubmitFields,
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
@@ -10,7 +9,11 @@ import { Types } from 'mongoose';
 
 import { saveLocation, saveRegion } from '@bot/cache';
 import { AdminMenu, MenuCommandOptions, ModalConfig } from '@bot/classes';
-import { getModalTextValue, setValueOnInputBuilderIfExists } from '@bot/utils';
+import {
+  findDuplicate,
+  getModalTextValue,
+  setValueOnInputBuilderIfExists,
+} from '@bot/utils';
 import { Location } from '@shared/models';
 
 /**
@@ -59,119 +62,70 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
   return {
     builder,
     onSubmit: async (menu, { fields }) => {
-      // Cast to base AdminMenu since helpers only need shared API surface
+      // Cast to base AdminMenu since only the shared API surface is needed
       const baseMenu = menu as unknown as AdminMenu;
-      if (isEdit && locationId) {
-        await handleEditLocation(baseMenu, regionId, locationId, fields);
-      } else {
-        await handleCreateLocation(baseMenu, regionId, fields);
+      const existingLocations = await baseMenu.getLocations(regionId);
+
+      const name = getModalTextValue(fields, 'location-name', true);
+      const ordinalText = getModalTextValue(fields, 'location-ordinal');
+
+      // Parse ordinal if provided; in edit mode a blank field keeps the current value
+      let ordinal: number | undefined;
+      if (ordinalText) {
+        const parsedOrdinal = parseInt(ordinalText, 10);
+        if (isNaN(parsedOrdinal) || parsedOrdinal < 1) {
+          baseMenu.warningMessage = `⚠️ Display order must be a positive number.`;
+          return await baseMenu.refresh();
+        }
+        ordinal = parsedOrdinal;
       }
+
+      // Single-pass duplicate check for name and ordinal, excluding self when editing
+      const duplicateError = findDuplicate(
+        existingLocations,
+        [
+          {
+            value: name.toLowerCase(),
+            getValue: (loc) => loc.name.toLowerCase(),
+            message: `⚠️ A location named "${name}" already exists in this region. Please choose a unique name.`,
+          },
+          {
+            value: ordinal,
+            getValue: (loc) => loc.ordinal,
+            message: (loc) =>
+              `⚠️ Display order ${ordinal} is already in use by "${loc.name}". ${isEdit ? 'Please choose a different value.' : 'Leave empty to auto-assign.'}`,
+            skip: ordinal === undefined,
+          },
+        ],
+        locationId
+      );
+
+      if (duplicateError) {
+        baseMenu.warningMessage = duplicateError;
+        return await baseMenu.refresh();
+      }
+
+      if (isEdit && locationId) {
+        // Edit: update the existing location, keeping the current ordinal if field was cleared
+        const existing = await baseMenu.getLocation(locationId);
+        existing.name = name;
+        existing.ordinal = ordinal ?? existing.ordinal;
+        await saveLocation(existing);
+      } else {
+        // Create: persist a new location and link it to the region
+        const region = await baseMenu.getRegion(regionId);
+        const newLocation = await Location.createLocation({
+          name,
+          regionId: new Types.ObjectId(regionId),
+          connections: [],
+          trainerIds: [],
+          ordinal,
+        });
+        region.locations.push(newLocation._id);
+        await saveRegion(region);
+      }
+
+      await baseMenu.refresh();
     },
   };
 };
-
-async function handleCreateLocation(
-  menu: AdminMenu,
-  regionId: string,
-  fields: ModalSubmitFields['fields']
-): Promise<void> {
-  const region = await menu.getRegion(regionId);
-  const existingLocations = await menu.getLocations(regionId);
-
-  const name = getModalTextValue(fields, 'location-name', true);
-  const ordinalText = getModalTextValue(fields, 'location-ordinal');
-
-  const isDuplicate = existingLocations.some(
-    (location) => location.name.toLowerCase() === name.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    menu.warningMessage = `⚠️ A location named "${name}" already exists in this region. Please choose a unique name.`;
-    return await menu.refresh();
-  }
-
-  // Parse and validate ordinal if provided
-  let ordinal: number | undefined;
-  if (ordinalText) {
-    const parsedOrdinal = parseInt(ordinalText, 10);
-    if (isNaN(parsedOrdinal) || parsedOrdinal < 1) {
-      menu.warningMessage = `⚠️ Display order must be a positive number.`;
-      return await menu.refresh();
-    }
-
-    // Check for duplicate ordinal
-    const existingLocation = existingLocations.find(
-      (location) => location.ordinal === parsedOrdinal
-    );
-    if (existingLocation) {
-      menu.warningMessage = `⚠️ Display order ${parsedOrdinal} is already in use by "${existingLocation.name}". Leave empty to auto-assign.`;
-      return await menu.refresh();
-    }
-
-    ordinal = parsedOrdinal;
-  }
-
-  const newLocation = await Location.createLocation({
-    name,
-    regionId: new Types.ObjectId(regionId),
-    connections: [],
-    trainerIds: [],
-    ordinal,
-  });
-
-  region.locations.push(newLocation._id);
-  await saveRegion(region);
-  await menu.refresh();
-}
-
-async function handleEditLocation(
-  menu: AdminMenu,
-  regionId: string,
-  locationId: string,
-  fields: ModalSubmitFields['fields']
-): Promise<void> {
-  const location = await menu.getLocation(locationId);
-  const existingLocations = await menu.getLocations(regionId);
-
-  const name = getModalTextValue(fields, 'location-name', true);
-  const ordinalText = getModalTextValue(fields, 'location-ordinal');
-
-  // Validate name uniqueness, excluding the current location
-  const isDuplicate = existingLocations.some(
-    (loc) =>
-      loc._id.toString() !== locationId &&
-      loc.name.toLowerCase() === name.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    menu.warningMessage = `⚠️ A location named "${name}" already exists in this region. Please choose a unique name.`;
-    return await menu.refresh();
-  }
-
-  // Parse and validate ordinal if provided; keep existing if field is cleared
-  let ordinal: number = location.ordinal;
-  if (ordinalText) {
-    const parsedOrdinal = parseInt(ordinalText, 10);
-    if (isNaN(parsedOrdinal) || parsedOrdinal < 1) {
-      menu.warningMessage = `⚠️ Display order must be a positive number.`;
-      return await menu.refresh();
-    }
-
-    // Check for duplicate ordinal excluding the current location
-    const existingLocation = existingLocations.find(
-      (loc) =>
-        loc._id.toString() !== locationId && loc.ordinal === parsedOrdinal
-    );
-    if (existingLocation) {
-      menu.warningMessage = `⚠️ Display order ${parsedOrdinal} is already in use by "${existingLocation.name}". Please choose a different value.`;
-      return await menu.refresh();
-    }
-
-    ordinal = parsedOrdinal;
-  }
-
-  location.name = name;
-  location.ordinal = ordinal;
-  await saveLocation(location);
-  await menu.refresh();
-}
