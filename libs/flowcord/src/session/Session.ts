@@ -1,0 +1,773 @@
+import {
+  ButtonInteraction,
+  ChannelType,
+  ChatInputCommandInteraction,
+  Collection,
+  ComponentType,
+  InteractionCollector,
+  Message,
+  MessageComponentInteraction,
+  ModalSubmitInteraction,
+} from 'discord.js';
+
+import type { FlowCord } from '../FlowCord';
+import type { FlowCordClient } from '../FlowCordClient';
+import { Menu } from '../menu/Menu';
+import {
+  ComponentInteraction,
+  MenuCommandOptions,
+  MenuResponseType,
+  ModalState,
+  SessionHistoryEntry,
+} from '../types';
+
+type MixedInteractionResponse = {
+  type: MenuResponseType.MESSAGE | MenuResponseType.COMPONENT;
+  value?: string;
+};
+
+type ModalInteractionResult =
+  | { outcome: 'modal' }
+  | { outcome: 'component' }
+  | { outcome: 'message'; value: string };
+
+type ResponseRecord = {
+  menuName: string;
+  responseType: MenuResponseType;
+  response: string | string[];
+};
+
+/**
+ * Session manages the interaction loop for a menu workflow.
+ * Handles navigation, state management, and user input collection.
+ */
+export class Session {
+  private _flowcord: FlowCord;
+  private _commandInteraction: ChatInputCommandInteraction;
+  private _componentInteraction: MessageComponentInteraction | null = null;
+  private _modalSubmitInteraction: ModalSubmitInteraction | null = null;
+  private _currentMenu: Menu | null = null;
+  private _history: SessionHistoryEntry[] = [];
+  private _initialCommand: string;
+  private _isCancelled = false;
+  private _isCompleted = false;
+  private _isInitialized = false;
+  private _isReset = false;
+  private _lastInput: string | string[] | null = null;
+  private _lastInteraction:
+    | ChatInputCommandInteraction
+    | MessageComponentInteraction
+    | ModalSubmitInteraction;
+  private _message?: Message;
+  private _responseHistory: ResponseRecord[] = [];
+  private _state: Collection<string, unknown> = new Collection();
+  private _continuationCallbacks: Array<{
+    targetMenuName: string;
+    callback: (session: Session, result: unknown) => Promise<void>;
+  }> = [];
+
+  public constructor(
+    flowcord: FlowCord,
+    interaction: ChatInputCommandInteraction,
+    initialCommand: string
+  ) {
+    this._flowcord = flowcord;
+    this._commandInteraction = interaction;
+    this._initialCommand = initialCommand;
+    this._lastInteraction = interaction;
+  }
+  get flowcord(): FlowCord {
+    return this._flowcord;
+  }
+
+  get client(): FlowCordClient {
+    return this._flowcord.client;
+  }
+
+  get commandInteraction(): ChatInputCommandInteraction {
+    return this._commandInteraction;
+  }
+
+  get componentInteraction(): ComponentInteraction | null {
+    return this._componentInteraction;
+  }
+
+  get modalSubmitInteraction(): ModalSubmitInteraction | null {
+    return this._modalSubmitInteraction;
+  }
+
+  /** Gets the current initialized menu.
+   * Throws an error if the session is not initialized or no menu is available
+   **/
+  get currentMenu(): Menu {
+    if (!this._isInitialized) {
+      throw new Error('Session not initialized yet');
+    }
+    if (!this._currentMenu) {
+      throw new Error('No current menu available');
+    }
+    return this._currentMenu;
+  }
+
+  get history(): SessionHistoryEntry[] {
+    return this._history;
+  }
+
+  get message(): Message | undefined {
+    return this._message;
+  }
+
+  get lastInput(): string | string[] | null {
+    return this._lastInput;
+  }
+
+  get lastInteraction():
+    | ChatInputCommandInteraction
+    | MessageComponentInteraction
+    | ModalSubmitInteraction {
+    return this._lastInteraction;
+  }
+
+  get lastNonModalInteraction():
+    | ChatInputCommandInteraction
+    | MessageComponentInteraction {
+    return this._componentInteraction ?? this._commandInteraction;
+  }
+
+  get lastNonCommandInteraction():
+    | MessageComponentInteraction
+    | ModalSubmitInteraction
+    | null {
+    if (this.lastInteraction instanceof ChatInputCommandInteraction) {
+      return this.componentInteraction ?? this.modalSubmitInteraction;
+    } else {
+      return this.lastInteraction;
+    }
+  }
+
+  // Add a new menu to the session and update the current menu
+  public async next(menu: Menu, options?: MenuCommandOptions) {
+    if (this.currentMenu.isTrackedInHistory) {
+      this._history.push({ menu: this.currentMenu, options });
+    }
+    this._currentMenu = menu;
+    await this.currentMenu.refresh();
+  }
+
+  async cancel(): Promise<void> {
+    await this.componentInteraction?.update({
+      components: [],
+      content: '*Command Cancelled*',
+      embeds: [],
+    });
+    this._isCancelled = true;
+  }
+
+  // Clear the session history
+  public clearHistory(): void {
+    this._history = [];
+  }
+
+  public getLastResponseByMenu(menuName: string): ResponseRecord | undefined {
+    return this._responseHistory
+      ?.reverse()
+      .find((record) => record.menuName === menuName);
+  }
+
+  /**
+   * Set workflow state data that persists across menu transitions
+   */
+  public setState(key: string, value: unknown): void {
+    this._state.set(key, value);
+  }
+
+  /**
+   * Get workflow state data
+   */
+  public getState<T = unknown>(key: string): T | undefined {
+    return this._state.get(key) as T | undefined;
+  }
+
+  public deleteState(key: string): void {
+    this._state.delete(key);
+  }
+
+  /**
+   * Get menu completion state data
+   */
+  public getMenuCompletionState<T = unknown>(menuName?: string): T | undefined {
+    return this.getState(`completion:${menuName}`) as T | undefined;
+  }
+
+  /**
+   * Set menu completion state data that persists across menu transitions
+   */
+  public setMenuCompletionState(menuName: string, data: unknown): void {
+    this.setState(`completion:${menuName}`, data);
+  }
+
+  /**
+   * Clear the menu completion state for a specific menu
+   */
+  public clearMenuCompletionState(menuName: string): void {
+    this.deleteState(`completion:${menuName}`);
+  }
+
+  // Go back to the previous menu, if available
+  public async goBack(fallbackFn?: () => Promise<void>) {
+    // Store completion result from the current menu before going back
+    const returningMenuName = this.currentMenu.name;
+
+    // Check if there's a completion result from the current menu
+    const completionResult = this.getMenuCompletionState(returningMenuName);
+    if (returningMenuName && completionResult) {
+      this.clearMenuCompletionState(returningMenuName);
+    }
+
+    const lastHistoryEntry = this._history.pop();
+
+    // First, restore the previous menu context
+    if (lastHistoryEntry) {
+      this._currentMenu = lastHistoryEntry.menu;
+    } else if (fallbackFn) {
+      return await fallbackFn();
+    } else {
+      this._isCompleted = true;
+      return; // No menu to go back to, exit early
+    }
+
+    if (returningMenuName) {
+      // Now execute continuation callbacks for the submenu that just completed
+      await this.executeContinuations(
+        returningMenuName,
+        completionResult ?? this._lastInput
+      );
+    }
+
+    // If no new menu was set during continuation, refresh the current menu
+    if (this.currentMenu.name === lastHistoryEntry.menu.name) {
+      await this.hardRefresh();
+    }
+  }
+
+  public async handleError(error?: unknown): Promise<void> {
+    if (this._flowcord.config.onError) {
+      await this._flowcord.config.onError(this, error);
+    }
+    this._isCancelled = true;
+  }
+
+  public async initialize(): Promise<void> {
+    await this.commandInteraction.deferReply();
+    const options = this.commandInteraction.options.data.reduce(
+      (acc, option) => {
+        acc[option.name] = option.value;
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
+    const menuFactory = this._flowcord.registry.getMenuFactory(
+      this._initialCommand
+    );
+    const menu = menuFactory ? await menuFactory(this, options) : null;
+    if (!menu) {
+      throw new Error(
+        'Failed to create menu for command: ' + this._initialCommand
+      );
+    }
+    await menu.refresh();
+    this._currentMenu = menu;
+    this._isInitialized = true;
+    await this.processMenus();
+  }
+
+  /**
+   * Register a continuation callback to be executed when a specific menu completes
+   */
+  public registerContinuation(
+    targetMenuName: string,
+    callback: (session: Session, result: unknown) => Promise<void>
+  ): void {
+    this._continuationCallbacks.push({ targetMenuName, callback });
+  }
+
+  /**
+   * Execute and clear any registered continuation callbacks for the specified menu
+   */
+  private async executeContinuations(
+    targetMenuName: string,
+    result?: unknown
+  ): Promise<void> {
+    const continuations = this._continuationCallbacks.filter(
+      (c) => c.targetMenuName === targetMenuName
+    );
+
+    // Clear the executed continuations
+    this._continuationCallbacks = this._continuationCallbacks.filter(
+      (c) => c.targetMenuName !== targetMenuName
+    );
+
+    // Execute all matching continuations
+    for (const continuation of continuations) {
+      await continuation.callback(this, result);
+    }
+  }
+
+  /**
+   * Completely recreate the current menu from scratch using the original command and options
+   */
+  public async hardRefresh(): Promise<void> {
+    const currentMenuName = this.currentMenu.name;
+    const currentOptions = this.currentMenu.commandOptions;
+
+    // Recreate the menu from scratch using the original command
+    const menuFactory = this._flowcord.registry.getMenuFactory(currentMenuName);
+    const newMenu = menuFactory
+      ? await menuFactory(this, currentOptions)
+      : null;
+
+    if (!newMenu) {
+      throw new Error(`Failed to recreate menu: ${currentMenuName}`);
+    }
+
+    // Replace the current menu without affecting history
+    this._currentMenu = newMenu;
+    await this.currentMenu.refresh();
+  }
+
+  /**** Private Methods ****/
+
+  private async handleMessageResponse(message: string): Promise<void> {
+    if (!this.currentMenu.responseType) {
+      throw new Error('Current menu does not accept message responses.');
+    }
+
+    this._responseHistory.push({
+      menuName: this.currentMenu.name,
+      responseType: this.currentMenu.responseType,
+      response: message,
+    });
+
+    await this.currentMenu.handleMessageResponse(message);
+  }
+
+  private async handleComponentInteraction(): Promise<void> {
+    if (this.componentInteraction?.isButton()) {
+      const buttonId = await this.handleButtonInteraction();
+      if (buttonId !== undefined) {
+        await this.currentMenu.handleButtonInteraction(buttonId);
+      }
+    } else if (this.componentInteraction?.isRoleSelectMenu()) {
+      await this.handleRoleMenuInteraction();
+    } else {
+      await this.handleError(new Error('Invalid Component Interaction'));
+    }
+  }
+
+  private async handleButtonInteraction(): Promise<string | undefined> {
+    if (!this.componentInteraction?.isButton()) {
+      throw new Error('There was an error processing your button interaction.');
+    }
+    const buttonId = this.componentInteraction.customId.split('_')[1];
+
+    if (!buttonId) {
+      throw new Error('Invalid Button Menu Interaction');
+    }
+
+    this._responseHistory.push({
+      menuName: this.currentMenu.name,
+      responseType: MenuResponseType.COMPONENT,
+      response: buttonId,
+    });
+
+    if (buttonId === 'Back') {
+      await this.goBack();
+    } else if (buttonId === 'Cancel') {
+      await this.cancel();
+    } else if (buttonId === 'Next') {
+      this.currentMenu.currentPage++;
+      await this.currentMenu.refresh();
+    } else if (buttonId === 'Previous') {
+      this.currentMenu.currentPage--;
+      await this.currentMenu.refresh();
+    } else {
+      this._lastInput = buttonId;
+      return buttonId;
+    }
+  }
+
+  private async handleRoleMenuInteraction(): Promise<void> {
+    if (!this.componentInteraction?.isRoleSelectMenu()) {
+      throw new Error(
+        'There was an error processing your role select menu interaction.'
+      );
+    }
+    const values = this.componentInteraction.values;
+    this._responseHistory.push({
+      menuName: this.currentMenu.name,
+      responseType: MenuResponseType.COMPONENT,
+      response: values,
+    });
+
+    await this.currentMenu.handleSelectMenuInteraction(values);
+    this._lastInput = values;
+  }
+
+  private async handleModalSubmitInteraction(): Promise<void> {
+    if (!this.modalSubmitInteraction) {
+      throw new Error(
+        'There was an error processing your modal submit interaction.'
+      );
+    }
+    const fields = this.modalSubmitInteraction.fields;
+    await this.currentMenu.handleModalSubmit(fields);
+  }
+
+  private async awaitMessageReply(time: number): Promise<string> {
+    const filter = (message: Message): boolean => {
+      return message.author.id === this.commandInteraction.user.id;
+    };
+
+    const channel = this.commandInteraction.channel;
+    // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
+    if (!channel || channel.type === ChannelType.GroupDM) {
+      throw new Error('Cannot collect messages in this type of channel.');
+    }
+
+    const collectedMessage = await channel.awaitMessages({
+      filter,
+      errors: ['time'],
+      max: 1,
+      time,
+    });
+
+    const response: string | undefined = collectedMessage
+      ?.first()
+      ?.content?.trim();
+    if (!response) {
+      throw new Error('Invalid response received.');
+    }
+    this._isReset = true;
+    this._lastInput = response;
+    return response;
+  }
+
+  private async collectMessageOrButtonInteraction(
+    time: number
+  ): Promise<MixedInteractionResponse> {
+    const collectMessageOrButton = async (
+      resolve: (response: MixedInteractionResponse) => void
+    ) => {
+      let compCollector: InteractionCollector<ButtonInteraction> | undefined;
+
+      if (this.currentMenu.components.length > 0) {
+        const compFilter = (
+          componentInteraction: MessageComponentInteraction
+        ): boolean => {
+          return (
+            componentInteraction.user ===
+            (this.componentInteraction?.user ?? this.commandInteraction.user)
+          );
+        };
+        compCollector = this.message?.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+          max: 1,
+          filter: compFilter,
+          time,
+        });
+      }
+
+      const msgFilter = (message: Message): boolean => {
+        return message.author.id === this.commandInteraction.user.id;
+      };
+      const channel = this.commandInteraction.channel;
+      // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
+      if (!channel || channel.type === ChannelType.GroupDM) {
+        throw new Error('Cannot collect messages in this type of channel.');
+      }
+
+      const msgCollector = channel.createMessageCollector({
+        filter: msgFilter,
+        max: 1,
+        time,
+      });
+
+      compCollector?.on('collect', async (componentInteraction) => {
+        msgCollector?.stop();
+        this._componentInteraction = componentInteraction;
+        this._lastInteraction = componentInteraction;
+        resolve({ type: MenuResponseType.COMPONENT });
+      });
+      compCollector?.on('end', async (collected) => {
+        if (collected.size === 0) {
+          if (msgCollector) {
+            if (msgCollector?.ended && msgCollector?.received === 0) {
+              throw new Error('No response received.');
+            }
+          } else {
+            throw new Error('No response received.');
+          }
+        }
+      });
+
+      msgCollector?.on('collect', async (message) => {
+        compCollector?.stop();
+        const response = message.content?.trim();
+        this._isReset = true;
+        this._lastInput = response;
+        resolve({ value: response, type: MenuResponseType.MESSAGE });
+      });
+      msgCollector?.on('end', async (collected) => {
+        if (collected.size === 0) {
+          if (compCollector) {
+            if (compCollector?.ended && compCollector?.total === 0) {
+              throw new Error('No response received.');
+            }
+          } else {
+            throw new Error('No response received.');
+          }
+        }
+      });
+    };
+
+    return new Promise<MixedInteractionResponse>(collectMessageOrButton);
+  }
+
+  async sendEmbedMessage(): Promise<void> {
+    const activeModal = this.getState<ModalState>('activeModal');
+    if (
+      activeModal &&
+      this.currentMenu.modal &&
+      activeModal.id === this.currentMenu.modal.builder.data.custom_id
+    ) {
+      await this.lastNonModalInteraction?.showModal(
+        this.currentMenu.modal.builder
+      );
+    } else if (!this.message) {
+      const responseOptions = this.currentMenu.getResponseOptions();
+      this._message = await this.commandInteraction.followUp(responseOptions);
+      // this.info = '';
+    } else {
+      await this.updateEmbedMessage();
+    }
+  }
+
+  async updateEmbedMessage(): Promise<void> {
+    if (this._isReset) {
+      if (
+        this.lastInteraction?.deferred === false &&
+        this.lastInteraction?.replied === false
+      ) {
+        await this.lastInteraction.deferReply();
+      }
+      this._message = await this.lastInteraction?.followUp(
+        this.currentMenu.getResponseOptions()
+      );
+      this._isReset = false;
+    } else {
+      if (this.lastInteraction instanceof ModalSubmitInteraction) {
+        if (!this.message) {
+          throw new Error('No message available to update after modal submit.');
+        }
+        // await this.lastInteraction.deleteReply();
+        await this.message.edit(this.currentMenu.getResponseOptions());
+      } else {
+        await this.componentInteraction?.update(
+          this.currentMenu.getResponseOptions()
+        );
+      }
+    }
+  }
+
+  private async awaitMenuInteraction(time: number): Promise<void> {
+    const filter = (
+      componentInteraction: MessageComponentInteraction
+    ): boolean => {
+      return (
+        componentInteraction.user ===
+        (this.componentInteraction?.user ?? this.commandInteraction.user)
+      );
+    };
+
+    if (!this.message) {
+      throw new Error(
+        'No message available to collect component interactions.'
+      );
+    }
+
+    const newComponentInteraction = await this.message.awaitMessageComponent({
+      filter,
+      time,
+    });
+    this._componentInteraction = newComponentInteraction;
+    this._lastInteraction = newComponentInteraction;
+  }
+
+  /**
+   * Race the modal submit against the menu's normal interaction listeners.
+   * If the user dismisses the modal and interacts with the underlying menu,
+   * we get the fallback result. If all listeners time out, throws an error.
+   */
+  private async awaitModalInteraction(
+    time: number
+  ): Promise<ModalInteractionResult> {
+    const message = this.message;
+    if (!message) {
+      throw new Error('No message available to collect interactions.');
+    }
+
+    const modalFilter = (interaction: ModalSubmitInteraction): boolean =>
+      interaction.customId === this.currentMenu.modal?.builder.data.custom_id;
+
+    const componentFilter = (
+      interaction: MessageComponentInteraction
+    ): boolean =>
+      interaction.user.id ===
+      (this.componentInteraction?.user.id ?? this.commandInteraction.user.id);
+
+    const menuResponseType = this.currentMenu.responseType;
+    let settled = false;
+
+    // Track how many listeners are active so we know when all have failed
+    let listenerCount = 1; // modal is always active
+    if (
+      menuResponseType === MenuResponseType.COMPONENT ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    if (
+      menuResponseType === MenuResponseType.MESSAGE ||
+      menuResponseType === MenuResponseType.MIXED
+    ) {
+      listenerCount++;
+    }
+    let failedCount = 0;
+
+    return new Promise<ModalInteractionResult>((resolve, reject) => {
+      const settle = (result: ModalInteractionResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+
+      const onListenerFailed = () => {
+        failedCount++;
+        if (failedCount >= listenerCount && !settled) {
+          settled = true;
+          reject(new Error('No response received.'));
+        }
+      };
+
+      // Always listen for modal submit
+      this.lastNonModalInteraction
+        .awaitModalSubmit({ filter: modalFilter, time })
+        .then(async (interaction) => {
+          if (settled) return;
+          await interaction.deferUpdate();
+          this._modalSubmitInteraction = interaction;
+          this._lastInteraction = interaction;
+          settle({ outcome: 'modal' });
+        })
+        .catch(() => {
+          onListenerFailed();
+        });
+
+      // Listen for component interactions if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.COMPONENT ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        message
+          .awaitMessageComponent({ filter: componentFilter, time })
+          .then((interaction) => {
+            this._componentInteraction = interaction;
+            this._lastInteraction = interaction;
+            settle({ outcome: 'component' });
+          })
+          .catch(() => {
+            onListenerFailed();
+          });
+      }
+
+      // Listen for message responses if the menu supports them
+      if (
+        menuResponseType === MenuResponseType.MESSAGE ||
+        menuResponseType === MenuResponseType.MIXED
+      ) {
+        const channel = this.commandInteraction.channel;
+        // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
+        if (channel && channel.type !== ChannelType.GroupDM) {
+          const msgFilter = (msg: Message): boolean =>
+            msg.author.id === this.commandInteraction.user.id;
+
+          channel
+            .awaitMessages({
+              filter: msgFilter,
+              max: 1,
+              time,
+              errors: ['time'],
+            })
+            .then((collected) => {
+              const response = collected.first()?.content?.trim();
+              if (response) {
+                this._isReset = true;
+                this._lastInput = response;
+                settle({ outcome: 'message', value: response });
+              }
+            })
+            .catch(() => {
+              onListenerFailed();
+            });
+        }
+      }
+    });
+  }
+
+  private async processMenus(): Promise<void> {
+    const timeout = this._flowcord.config.timeout || 120000;
+
+    while (!this._isCancelled && !this._isCompleted) {
+      await this.sendEmbedMessage();
+      const menuResponseType = this.currentMenu.responseType;
+
+      const activeModal = this.getState<ModalState>('activeModal');
+      if (activeModal) {
+        const result = await this.awaitModalInteraction(timeout);
+
+        if (result.outcome === 'modal') {
+          await this.handleModalSubmitInteraction();
+        } else if (result.outcome === 'component') {
+          await this.handleComponentInteraction();
+        } else if (result.outcome === 'message') {
+          await this.handleMessageResponse(result.value);
+        }
+        continue;
+      }
+
+      if (menuResponseType === MenuResponseType.MESSAGE) {
+        const message = await this.awaitMessageReply(timeout);
+        await this.handleMessageResponse(message);
+        continue;
+      }
+
+      if (menuResponseType === MenuResponseType.COMPONENT) {
+        await this.awaitMenuInteraction(timeout);
+        await this.handleComponentInteraction();
+        continue;
+      }
+
+      if (menuResponseType === MenuResponseType.MIXED) {
+        const { value, type } = await this.collectMessageOrButtonInteraction(
+          timeout
+        );
+
+        if (!!value && type === MenuResponseType.MESSAGE) {
+          await this.handleMessageResponse(value);
+        } else if (type === MenuResponseType.COMPONENT) {
+          await this.handleComponentInteraction();
+        }
+      }
+    }
+  }
+}
