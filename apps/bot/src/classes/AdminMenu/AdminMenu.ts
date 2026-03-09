@@ -8,12 +8,16 @@ import {
 } from '@bot/cache';
 import { Server } from '@shared/models';
 import type { Location, Region } from '@shared/models';
+import {
+  Menu,
+  Session,
+  type MenuBuilderOptions,
+  type MenuCommandOptions,
+} from '@flowcord';
 
-import { Menu } from '../Menu/Menu';
-import { Session } from '../Session/Session';
-import { MenuBuilderOptions, MenuCommandOptions } from '../types';
 import { getServerInitializedEmbed } from './AdminMenu.embeds';
 
+// PokeSandbox-specific AdminMenu extension with role management
 export interface AdminMenuBuilderOptions<
   C extends MenuCommandOptions = MenuCommandOptions
 > extends MenuBuilderOptions<AdminMenu<C>, C> {

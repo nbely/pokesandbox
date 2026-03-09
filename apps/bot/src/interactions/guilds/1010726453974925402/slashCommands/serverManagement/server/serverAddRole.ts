@@ -7,10 +7,10 @@ import {
 import { saveServer } from '@bot/cache';
 import {
   AdminMenuBuilder,
-  MenuWorkflow,
   SelectMenuConfig,
   type AdminMenu,
 } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { assertOptions, onlyAdminRoles } from '@bot/utils';
 

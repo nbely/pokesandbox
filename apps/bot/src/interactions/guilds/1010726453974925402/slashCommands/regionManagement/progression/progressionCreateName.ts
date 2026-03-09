@@ -5,7 +5,8 @@ import {
 } from 'discord.js';
 
 import { getAssertedCachedRegion } from '@bot/cache';
-import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   assertOptions,

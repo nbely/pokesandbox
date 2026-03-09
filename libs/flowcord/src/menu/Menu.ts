@@ -11,30 +11,31 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 
-import type { ComponentInteraction } from '@bot/structures/interfaces';
-
-import type { BotClient } from '../BotClient/BotClient';
-import {
-  MenuPaginationType,
-  MenuResponseType,
-  RESERVED_BUTTON_LABELS,
-} from '../constants';
-import { Session } from '../Session/Session';
+import type { FlowCordClient } from '../FlowCordClient';
+import { Session } from '../session/Session';
 import {
   AnySelectMenuBuilder,
+  ComponentInteraction,
   MenuBuilderOptions,
   MenuButton,
   MenuButtonConfig,
   MenuCommandOptions,
+  MenuPaginationType,
+  MenuResponseType,
   ModalConfig,
   ModalState,
   PaginationConfig,
   PaginationState,
+  RESERVED_BUTTON_LABELS,
   SelectMenuConfig,
 } from '../types';
 
 type ReservedButtonLabels = 'Back' | 'Cancel' | 'Next' | 'Previous';
 
+/**
+ * Menu represents a single interaction step in a multi-step workflow.
+ * Menus can display embeds, buttons, select menus, and modals.
+ */
 export class Menu<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Self extends Menu<any, any> = any,
@@ -45,7 +46,7 @@ export class Menu<
     { label: string; style: ButtonStyle }
   > = new Collection();
   private _buttons: Collection<string, MenuButton<Self>> = new Collection();
-  private _client: BotClient;
+  private _client: FlowCordClient;
   private _interaction:
     | ChatInputCommandInteraction
     | ComponentInteraction
@@ -118,7 +119,7 @@ export class Menu<
     return this as unknown as Self;
   }
 
-  get client(): BotClient {
+  get client(): FlowCordClient {
     return this._client;
   }
 
@@ -270,7 +271,11 @@ export class Menu<
     this._buttons.clear();
 
     buttons?.forEach((button: MenuButtonConfig<Self>, index: number) => {
-      if (RESERVED_BUTTON_LABELS.includes(button.label)) {
+      if (
+        RESERVED_BUTTON_LABELS.includes(
+          button.label as (typeof RESERVED_BUTTON_LABELS)[number]
+        )
+      ) {
         throw new Error(`Button label '${button.label}' is reserved.`);
       }
 

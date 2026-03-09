@@ -1,0 +1,1 @@
+export { MenuRegistry } from './MenuRegistry';

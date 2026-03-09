@@ -1,35 +1,24 @@
 import {
   ButtonInteraction,
-  ChannelType,
   ChatInputCommandInteraction,
   Collection,
   ComponentType,
-  GuildMember,
   InteractionCollector,
   Message,
   MessageComponentInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
 
-import { buildErrorEmbed } from '@bot/embeds/errorEmbed';
-import { ComponentInteraction } from '@bot/structures/interfaces';
-
-import type { BotClient } from '../BotClient/BotClient';
-import { MenuResponseType } from '../constants';
-import { Menu } from '../Menu/Menu';
-import type {
+import type { FlowCord } from '../FlowCord';
+import type { FlowCordClient } from '../FlowCordClient';
+import { Menu } from '../menu/Menu';
+import {
+  ComponentInteraction,
   MenuCommandOptions,
+  MenuResponseType,
   ModalState,
   SessionHistoryEntry,
 } from '../types';
-
-interface SessionConstructor<T extends Session> {
-  new (
-    client: BotClient,
-    interaction: ChatInputCommandInteraction,
-    initialCommand: string
-  ): T;
-}
 
 type MixedInteractionResponse = {
   type: MenuResponseType.MESSAGE | MenuResponseType.COMPONENT;
@@ -47,22 +36,12 @@ type ResponseRecord = {
   response: string | string[];
 };
 
-export async function createSession<T extends Session>(
-  SessionClass: SessionConstructor<T>,
-  client: BotClient,
-  interaction: ChatInputCommandInteraction,
-  initialCommand: string
-): Promise<void> {
-  const session = new SessionClass(client, interaction, initialCommand);
-  try {
-    await session.initialize();
-  } catch (error) {
-    await session.handleError(error);
-  }
-}
-
+/**
+ * Session manages the interaction loop for a menu workflow.
+ * Handles navigation, state management, and user input collection.
+ */
 export class Session {
-  private _client: BotClient;
+  private _flowcord: FlowCord;
   private _commandInteraction: ChatInputCommandInteraction;
   private _componentInteraction: MessageComponentInteraction | null = null;
   private _modalSubmitInteraction: ModalSubmitInteraction | null = null;
@@ -87,18 +66,21 @@ export class Session {
   }> = [];
 
   public constructor(
-    client: BotClient,
+    flowcord: FlowCord,
     interaction: ChatInputCommandInteraction,
     initialCommand: string
   ) {
-    this._client = client;
+    this._flowcord = flowcord;
     this._commandInteraction = interaction;
     this._initialCommand = initialCommand;
     this._lastInteraction = interaction;
   }
+  get flowcord(): FlowCord {
+    return this._flowcord;
+  }
 
-  get client(): BotClient {
-    return this._client;
+  get client(): FlowCordClient {
+    return this._flowcord.client;
   }
 
   get commandInteraction(): ChatInputCommandInteraction {
@@ -268,47 +250,9 @@ export class Session {
   }
 
   public async handleError(error?: unknown): Promise<void> {
-    let errorMessage = 'An unknown error has occurred!';
-    let addSupportInfo = false;
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else {
-      addSupportInfo = true;
+    if (this._flowcord.config.onError) {
+      await this._flowcord.config.onError(this, error);
     }
-
-    try {
-      if (this.message) {
-        await this.message.edit({
-          embeds: [
-            buildErrorEmbed(
-              this.client,
-              (this.componentInteraction?.member ??
-                this.commandInteraction.member) as GuildMember,
-              errorMessage,
-              addSupportInfo
-            ),
-          ],
-          components: [],
-        });
-      } else {
-        // If no message exists yet, send a new one
-        await this.commandInteraction.editReply({
-          embeds: [
-            buildErrorEmbed(
-              this.client,
-              this.commandInteraction.member as GuildMember,
-              errorMessage,
-              addSupportInfo
-            ),
-          ],
-          components: [],
-        });
-      }
-    } catch (discordError) {
-      // If Discord API call fails, log but don't throw
-      console.error('Failed to send error message to user:', discordError);
-    }
-
     this._isCancelled = true;
   }
 
@@ -321,10 +265,10 @@ export class Session {
       },
       {} as Record<string, unknown>
     );
-    const menu =
-      (await this._client.slashCommands
-        .get(this._initialCommand)
-        ?.createMenu?.(this, options)) ?? null;
+    const menuFactory = this._flowcord.registry.getMenuFactory(
+      this._initialCommand
+    );
+    const menu = menuFactory ? await menuFactory(this, options) : null;
     if (!menu) {
       throw new Error(
         'Failed to create menu for command: ' + this._initialCommand
@@ -376,9 +320,10 @@ export class Session {
     const currentOptions = this.currentMenu.commandOptions;
 
     // Recreate the menu from scratch using the original command
-    const newMenu = await this._client.slashCommands
-      .get(currentMenuName)
-      ?.createMenu?.(this, currentOptions);
+    const menuFactory = this._flowcord.registry.getMenuFactory(currentMenuName);
+    const newMenu = menuFactory
+      ? await menuFactory(this, currentOptions)
+      : null;
 
     if (!newMenu) {
       throw new Error(`Failed to recreate menu: ${currentMenuName}`);
@@ -483,7 +428,7 @@ export class Session {
     };
 
     const channel = this.commandInteraction.channel;
-    if (!channel || channel.type === ChannelType.GroupDM) {
+    if (!channel || !('awaitMessages' in channel)) {
       throw new Error('Cannot collect messages in this type of channel.');
     }
 
@@ -534,7 +479,7 @@ export class Session {
         return message.author.id === this.commandInteraction.user.id;
       };
       const channel = this.commandInteraction.channel;
-      if (!channel || channel.type === ChannelType.GroupDM) {
+      if (!channel || !('createMessageCollector' in channel)) {
         throw new Error('Cannot collect messages in this type of channel.');
       }
 
@@ -748,7 +693,7 @@ export class Session {
         menuResponseType === MenuResponseType.MIXED
       ) {
         const channel = this.commandInteraction.channel;
-        if (channel && channel.type !== ChannelType.GroupDM) {
+        if (channel && 'awaitMessages' in channel) {
           const msgFilter = (msg: Message): boolean =>
             msg.author.id === this.commandInteraction.user.id;
 
@@ -776,13 +721,15 @@ export class Session {
   }
 
   private async processMenus(): Promise<void> {
+    const timeout = this._flowcord.config.timeout || 120000;
+
     while (!this._isCancelled && !this._isCompleted) {
       await this.sendEmbedMessage();
       const menuResponseType = this.currentMenu.responseType;
 
       const activeModal = this.getState<ModalState>('activeModal');
       if (activeModal) {
-        const result = await this.awaitModalInteraction(120_000);
+        const result = await this.awaitModalInteraction(timeout);
 
         if (result.outcome === 'modal') {
           await this.handleModalSubmitInteraction();
@@ -795,20 +742,20 @@ export class Session {
       }
 
       if (menuResponseType === MenuResponseType.MESSAGE) {
-        const message = await this.awaitMessageReply(120_000);
+        const message = await this.awaitMessageReply(timeout);
         await this.handleMessageResponse(message);
         continue;
       }
 
       if (menuResponseType === MenuResponseType.COMPONENT) {
-        await this.awaitMenuInteraction(120_000);
+        await this.awaitMenuInteraction(timeout);
         await this.handleComponentInteraction();
         continue;
       }
 
       if (menuResponseType === MenuResponseType.MIXED) {
         const { value, type } = await this.collectMessageOrButtonInteraction(
-          120_000
+          timeout
         );
 
         if (!!value && type === MenuResponseType.MESSAGE) {

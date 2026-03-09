@@ -1,14 +1,15 @@
 import { ButtonStyle, Collection, type EmbedBuilder } from 'discord.js';
 
-import { MenuPaginationType, MenuResponseType } from '../constants';
 import { Menu } from './Menu';
-import { Session } from '../Session/Session';
+import { Session } from '../session/Session';
 import {
   ListPaginationOptions,
   MenuBuilderOptions,
   MenuButton,
   MenuButtonConfig,
   MenuCommandOptions,
+  MenuPaginationType,
+  MenuResponseType,
   ModalConfig,
   ModalState,
   PaginationOptions,

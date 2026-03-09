@@ -5,12 +5,8 @@ import {
 } from 'discord.js';
 
 import { saveRegion } from '@bot/cache';
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { handleRegionAutocomplete, onlyAdminRoles } from '@bot/utils';
 

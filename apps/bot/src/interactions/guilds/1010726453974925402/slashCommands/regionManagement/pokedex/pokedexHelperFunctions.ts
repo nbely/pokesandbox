@@ -1,10 +1,11 @@
-import { AdminMenu, MenuWorkflow } from "@bot/classes";
-import { EditPokedexSlotCommandOptions } from "./editPokedexSlot";
-import { ManagePokedexCommandOptions } from "./managePokedex";
-import { searchPokemon } from "@bot/utils";
-import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from "./selectMatchedPokemon";
-import { DexEntry, Region } from "@shared/models";
-import { saveRegion } from "@bot/cache";
+import { AdminMenu } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
+import { EditPokedexSlotCommandOptions } from './editPokedexSlot';
+import { ManagePokedexCommandOptions } from './managePokedex';
+import { searchPokemon } from '@bot/utils';
+import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
+import { DexEntry, Region } from '@shared/models';
+import { saveRegion } from '@bot/cache';
 
 export const handleAddPokemonToSlot = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +57,9 @@ export const handleAddPokemonToSlot = async (
 };
 
 export const handlePokemonSelected = async (
-  menu: AdminMenu<EditPokedexSlotCommandOptions> | AdminMenu<ManagePokedexCommandOptions>,
+  menu:
+    | AdminMenu<EditPokedexSlotCommandOptions>
+    | AdminMenu<ManagePokedexCommandOptions>,
   selectedPokemon: DexEntry,
   region: Region,
   pokedexNo: string

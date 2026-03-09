@@ -1,6 +1,7 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
 
 import { connectDb } from '@shared/connectDb';
+import { FlowCord } from '@flowcord';
 
 import { BotClient } from '@bot/classes';
 import {
@@ -36,12 +37,21 @@ connectDb().then(async () => {
   });
 
   await buttonsManager(client);
-  await eventsManager(client);
   await messageCommandsManager(client);
   await modalFormsManager(client);
   await roleSelectMenusManager(client);
   await slashCommandsManager(client);
   await stringSelectMenusManager(client);
   await userSelectMenusManager(client);
+
+  const flowcord = new FlowCord({ client });
+  client.slashCommands.forEach((command, commandName) => {
+    if (command.createMenu) {
+      flowcord.registerMenu(commandName, command.createMenu);
+    }
+  });
+  client.flowcord = flowcord;
+
+  await eventsManager(client);
   client.login(TOKEN);
 });

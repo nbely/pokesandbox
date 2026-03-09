@@ -1,8 +1,6 @@
-import { Session } from '../Session/Session';
+import { MenuBuilder, Session, type MenuCommandOptions } from '@flowcord';
 
-import { MenuBuilder } from '../Menu/MenuBuilder';
 import { AdminMenu } from './AdminMenu';
-import { MenuCommandOptions } from '../types';
 
 export class AdminMenuBuilder<
   O extends MenuCommandOptions = MenuCommandOptions

@@ -1,4 +1,4 @@
-import { Session } from '../Session/Session';
+import { Session } from '../session/Session';
 import { MenuCommandOptions } from '../types';
 import { Menu } from './Menu';
 
@@ -11,9 +11,9 @@ export class MenuWorkflow {
     command: string,
     options?: MenuCommandOptions
   ) {
-    const newMenu = await menu.client.slashCommands
-      .get(command)
-      ?.createMenu?.(menu.session, options);
+    const newMenu = await menu.session.flowcord.registry.getMenuFactory(
+      command
+    )?.(menu.session, options);
     if (!newMenu) {
       return await menu.session.handleError(
         new Error(`Could not open menu: ${command}`)
@@ -48,15 +48,11 @@ export class MenuWorkflow {
 
   /**
    * Complete a menu with a result and return to the previous menu
-   * @param menu The menu to complete
-   * @param result The result to pass to any continuation callbacks
    */
-  public static async completeAndReturn<TResult = unknown>(
+  public static async completeWithResult<TResult = unknown>(
     menu: Menu,
-    result?: TResult
+    result: TResult
   ): Promise<void> {
-    // Mark the menu as completed with the result
     await menu.complete(result);
-    await menu.session.goBack();
   }
 }
