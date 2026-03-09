@@ -19,12 +19,8 @@ import type {
   UserSelectMenuInteraction,
 } from 'discord.js';
 
-import type {
-  BotClient,
-  Menu,
-  MenuCommandOptions,
-  Session,
-} from '@bot/classes';
+import type { BotClient, MenuCommandOptions } from '@bot/classes';
+import type { Menu, Session } from '@flowcord';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];

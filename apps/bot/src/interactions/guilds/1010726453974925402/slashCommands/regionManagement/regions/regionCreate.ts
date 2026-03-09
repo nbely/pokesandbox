@@ -1,7 +1,8 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { type AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
+import { type AdminMenu, AdminMenuBuilder } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';

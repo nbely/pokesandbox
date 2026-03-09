@@ -17,6 +17,7 @@ import {
 
 import { getServerInitializedEmbed } from './AdminMenu.embeds';
 
+// PokeSandbox-specific AdminMenu extension with role management
 export interface AdminMenuBuilderOptions<
   C extends MenuCommandOptions = MenuCommandOptions
 > extends MenuBuilderOptions<AdminMenu<C>, C> {

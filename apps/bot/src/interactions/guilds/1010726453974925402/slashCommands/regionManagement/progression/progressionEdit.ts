@@ -6,12 +6,8 @@ import {
 } from 'discord.js';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   assertOptions,
@@ -223,7 +219,7 @@ const getEditProgressionDefinitionButtons = async (
       const region = await menu.getRegion(regionId);
       region.progressionDefinitions.delete(progressionKey);
       await saveRegion(region);
-      await MenuWorkflow.completeAndReturn(menu);
+      await MenuWorkflow.completeWithResult(menu, undefined);
     },
   });
 

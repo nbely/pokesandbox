@@ -1,6 +1,5 @@
 import {
   ButtonInteraction,
-  ChannelType,
   ChatInputCommandInteraction,
   Collection,
   ComponentType,
@@ -429,8 +428,7 @@ export class Session {
     };
 
     const channel = this.commandInteraction.channel;
-    // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
-    if (!channel || channel.type === ChannelType.GroupDM) {
+    if (!channel || !('awaitMessages' in channel)) {
       throw new Error('Cannot collect messages in this type of channel.');
     }
 
@@ -481,8 +479,7 @@ export class Session {
         return message.author.id === this.commandInteraction.user.id;
       };
       const channel = this.commandInteraction.channel;
-      // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
-      if (!channel || channel.type === ChannelType.GroupDM) {
+      if (!channel || !('createMessageCollector' in channel)) {
         throw new Error('Cannot collect messages in this type of channel.');
       }
 
@@ -696,8 +693,7 @@ export class Session {
         menuResponseType === MenuResponseType.MIXED
       ) {
         const channel = this.commandInteraction.channel;
-        // @ts-expect-error - Defensive check: GroupDM impossible in guild context but kept for safety
-        if (channel && channel.type !== ChannelType.GroupDM) {
+        if (channel && 'awaitMessages' in channel) {
           const msgFilter = (msg: Message): boolean =>
             msg.author.id === this.commandInteraction.user.id;
 

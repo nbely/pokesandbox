@@ -4,12 +4,8 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 
@@ -65,6 +61,6 @@ const getSelectMatchedPokemonButtons = async (
     label: `${idx + 1}`,
     style: ButtonStyle.Primary,
     onClick: async (menu) => {
-      await MenuWorkflow.completeAndReturn(menu, dexEntryId);
+      await MenuWorkflow.completeWithResult(menu, dexEntryId);
     },
   }));

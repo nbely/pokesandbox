@@ -4,7 +4,8 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuWorkflow } from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
+import { MenuWorkflow } from '@flowcord';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   assertOptions,
@@ -81,7 +82,12 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
-          await handleAddPokemonToSlot(menu, region_id, messageArgs[0], pokemonName);
+          await handleAddPokemonToSlot(
+            menu,
+            region_id,
+            messageArgs[0],
+            pokemonName
+          );
 
           await MenuWorkflow.openMenu(menu, 'edit-pokedex-slot', {
             region_id,

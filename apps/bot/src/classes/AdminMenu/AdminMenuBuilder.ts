@@ -1,4 +1,5 @@
 import { MenuBuilder, Session, type MenuCommandOptions } from '@flowcord';
+
 import { AdminMenu } from './AdminMenu';
 
 export class AdminMenuBuilder<
