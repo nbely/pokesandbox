@@ -1,9 +1,6 @@
 // Generic classes for Discord Bot Structure and Session/Menu Management
 export { BotClient } from './BotClient/BotClient';
-export { Menu } from './Menu/Menu';
-export { MenuBuilder } from './Menu/MenuBuilder';
-export { MenuWorkflow } from './Menu/MenuWorkflow';
-export { Session } from './Session/Session';
+export { Menu, MenuBuilder, MenuWorkflow, Session } from '@flowcord';
 
 // PokeSandbox-specific class extensions
 export { AdminMenu } from './AdminMenu/AdminMenu';

@@ -22,8 +22,6 @@ import type {
   IUserSelectMenu,
 } from '@bot/structures/interfaces';
 
-import { createSession, Session } from '../classes/Session/Session';
-
 export const InteractionCreate: IBotEvent = {
   name: 'interactionCreate',
   execute: (name: string, client?: BotClient) => {
@@ -88,7 +86,14 @@ const handleApplicationCommandInteraction = async (
     );
 
     if (authenticatedCMDOptions) {
-      return createSession(Session, client, interaction, slashCommand.name);
+      if (!client.flowcord) {
+        await interaction.reply({
+          content: 'Error: FlowCord not initialized.',
+          ephemeral: true,
+        });
+        return;
+      }
+      return client.flowcord.handleInteraction(interaction);
     }
   }
 
