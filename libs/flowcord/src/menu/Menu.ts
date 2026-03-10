@@ -80,6 +80,7 @@ export class Menu<
   private _warningMessage?: string;
 
   protected _handleMessage?: (menu: Self, response: string) => Promise<void>;
+  protected _onEnter?: (menu: Self) => Promise<void>;
   protected _setButtons?: (menu: Self) => Promise<MenuButtonConfig<Self>[]>;
   protected _setModal?: (
     menu: Self,
@@ -87,6 +88,10 @@ export class Menu<
   ) => Promise<ModalConfig<Self>>;
   protected _setSelectMenu?: (menu: Self) => Promise<SelectMenuConfig<Self>>;
   protected _setEmbeds: (menu: Self) => Promise<EmbedBuilder[]>;
+  protected _transitions: Map<
+    string,
+    (menu: Self) => Promise<void>
+  > = new Map();
 
   /**** Constructor ****/
 
@@ -106,10 +111,14 @@ export class Menu<
     this._reservedButtons = options.reservedButtons;
     this._responseType = options.responseType;
     this._handleMessage = options.handleMessage;
+    this._onEnter = options.onEnter;
     this._setButtons = options.setButtons;
     this._setModal = options.setModal;
     this._setSelectMenu = options.setSelectMenu;
     this._setEmbeds = options.setEmbeds;
+    if (options.transitions) {
+      this._transitions = options.transitions;
+    }
   }
 
   /**** Getters/Setters ****/
@@ -265,6 +274,32 @@ export class Menu<
     };
   }
 
+  /**
+   * Execute the onEnter lifecycle hook if defined.
+   * Called once when the menu is first entered by the session.
+   */
+  public async enter(): Promise<void> {
+    if (this._onEnter) {
+      await this._onEnter(this.self);
+    }
+  }
+
+  /**
+   * Execute a named transition registered via MenuBuilder.addTransition().
+   */
+  public async executeTransition(name: string): Promise<void> {
+    const transition = this._transitions.get(name);
+    if (!transition) {
+      const available = Array.from(this._transitions.keys());
+      const hint =
+        available.length > 0
+          ? ` Available transitions: ${available.join(', ')}.`
+          : ' No transitions have been registered.';
+      throw new Error(`No transition registered with name '${name}'.${hint}`);
+    }
+    await transition(this.self);
+  }
+
   public async refreshButtons() {
     const buttons = await this._setButtons?.(this.self);
 
@@ -279,7 +314,17 @@ export class Menu<
         throw new Error(`Button label '${button.label}' is reserved.`);
       }
 
+      if (
+        button.id !== undefined &&
+        RESERVED_BUTTON_LABELS.includes(
+          button.id.toString() as (typeof RESERVED_BUTTON_LABELS)[number]
+        )
+      ) {
+        throw new Error(`Button id '${button.id}' is reserved.`);
+      }
+
       const buttonId = button.id?.toString() ?? button.label;
+
       this._buttons.set(buttonId, {
         component: new ButtonBuilder()
           .setCustomId(`${this._name}_${buttonId}`)
@@ -442,36 +487,33 @@ export class Menu<
 
     const hasBackButton =
       this._reservedButtons.get('Back') && this.session.history.length > 0;
+    const hasCancelButton = !!this._reservedButtons.get('Cancel');
 
-    const buttonSlotCount =
+    // Single-page slot count: max 10 buttons total across 2 rows
+    const singlePageSlotCount =
       10 -
       fixedStartButtons.length -
       fixedEndButtons.length -
       (hasBackButton ? 1 : 0) -
-      (this._reservedButtons.get('Cancel') ? 1 : 0);
+      (hasCancelButton ? 1 : 0);
+
+    // Paginated slot count: row 1 is reserved for content only (max 5 per row)
+    const paginatedContentSlotCount =
+      5 - fixedStartButtons.length - fixedEndButtons.length;
 
     const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-    let pageCount = 1,
-      isFirstPage: boolean,
-      isLastPage: boolean;
-    if (this._buttons.size <= buttonSlotCount) {
-      pageCount = 1;
-      isFirstPage = true;
-      isLastPage = true;
-    } else if (this._buttons.size <= 2 * buttonSlotCount - 2) {
-      pageCount = 2;
-      isFirstPage = page === 1 ? true : false;
-      isLastPage = !isFirstPage;
-    } else {
-      pageCount =
-        Math.ceil(
-          (this._buttons.size - 2 * (buttonSlotCount - 1)) /
-            (buttonSlotCount - 2)
-        ) + 2;
-      isFirstPage = page === 1 ? true : false;
-      isLastPage = page === pageCount ? true : false;
-    }
+    // Determine whether pagination is needed
+    const needsPagination = buttonList.length > singlePageSlotCount;
+    const contentPerPage = needsPagination
+      ? paginatedContentSlotCount
+      : singlePageSlotCount;
+
+    const pageCount = needsPagination
+      ? Math.ceil(buttonList.length / contentPerPage)
+      : 1;
+    const isFirstPage = page === 1;
+    const isLastPage = page === pageCount;
 
     if (page > pageCount) {
       throw new Error(
@@ -479,29 +521,13 @@ export class Menu<
       );
     }
 
-    const currentPageButtons = [...fixedStartButtons];
-
-    const filteredButtons: ButtonBuilder[] = [];
-    let startIndex = 0,
-      endIndex = 0;
-    buttonList.forEach((button, index) => {
-      if (
-        (isFirstPage && isLastPage) ||
-        (isFirstPage && index + 1 <= buttonSlotCount - 1) ||
-        (isLastPage &&
-          index + 1 >
-            buttonSlotCount - 1 + (pageCount - 2) * (buttonSlotCount - 2)) ||
-        (index + 1 > buttonSlotCount - 1 + (page - 2) * (buttonSlotCount - 2) &&
-          index + 1 <= buttonSlotCount - 1 + (page - 1) * (buttonSlotCount - 2))
-      ) {
-        if (filteredButtons.length === 0) {
-          startIndex = index;
-        }
-        filteredButtons.push(button);
-        endIndex = index;
-      }
-    });
-    currentPageButtons.push(...filteredButtons);
+    const startIndex = needsPagination
+      ? (page - 1) * contentPerPage
+      : 0;
+    const endIndex = needsPagination
+      ? Math.min(page * contentPerPage - 1, buttonList.length - 1)
+      : buttonList.length - 1;
+    const filteredButtons = buttonList.slice(startIndex, endIndex + 1);
 
     this._paginationState = {
       ...this._paginationState,
@@ -515,44 +541,61 @@ export class Menu<
       total: buttonList.length,
     };
 
+    // Build content buttons (row 1 when paginating)
+    const contentButtons = [
+      ...fixedStartButtons,
+      ...filteredButtons,
+      ...fixedEndButtons,
+    ];
+
+    // Build navigation buttons (always row 2 when paginating)
+    const navButtons: ButtonBuilder[] = [];
     if (pageCount > 1 && !isFirstPage) {
-      const prevBtn = this.createDefaultButton('Previous');
-      currentPageButtons.push(prevBtn);
+      navButtons.push(this.createDefaultButton('Previous'));
     }
-
     if (pageCount > 1 && !isLastPage) {
-      const nextBtn = this.createDefaultButton('Next');
-      currentPageButtons.push(nextBtn);
+      navButtons.push(this.createDefaultButton('Next'));
     }
-
-    if (fixedEndButtons) {
-      currentPageButtons.push(...fixedEndButtons);
-    }
-
     if (hasBackButton) {
-      currentPageButtons.push(this.createDefaultButton('Back'));
+      navButtons.push(this.createDefaultButton('Back'));
+    }
+    if (hasCancelButton) {
+      navButtons.push(this.createDefaultButton('Cancel'));
     }
 
-    if (this._reservedButtons.get('Cancel')) {
-      currentPageButtons.push(this.createDefaultButton('Cancel'));
-    }
-
-    const hasSecondRow = currentPageButtons.length > 5 ? true : false;
-    if (!hasSecondRow) {
-      const actionRow = new ActionRowBuilder<ButtonBuilder>();
-      currentPageButtons.forEach((button) => actionRow.addComponents(button));
-      components.push(actionRow);
+    if (needsPagination) {
+      // Predictable two-row layout: content in row 1, navigation in row 2.
+      // This ensures Back/Cancel and pagination controls are always in the
+      // same predictable location regardless of content count.
+      if (contentButtons.length > 0) {
+        const contentRow = new ActionRowBuilder<ButtonBuilder>();
+        contentButtons.forEach((btn) => contentRow.addComponents(btn));
+        components.push(contentRow);
+      }
+      if (navButtons.length > 0) {
+        const navRow = new ActionRowBuilder<ButtonBuilder>();
+        navButtons.forEach((btn) => navRow.addComponents(btn));
+        components.push(navRow);
+      }
     } else {
-      const firstActionRow = new ActionRowBuilder<ButtonBuilder>();
-      const secondActionRow = new ActionRowBuilder<ButtonBuilder>();
-      currentPageButtons.forEach((button, index) => {
-        if (index < 5) {
-          firstActionRow.addComponents(button);
-        } else {
-          secondActionRow.addComponents(button);
-        }
-      });
-      components.push(firstActionRow, secondActionRow);
+      // Single-page layout: flat button list split at 5 across up to 2 rows
+      const allButtons = [...contentButtons, ...navButtons];
+      if (allButtons.length <= 5) {
+        const actionRow = new ActionRowBuilder<ButtonBuilder>();
+        allButtons.forEach((btn) => actionRow.addComponents(btn));
+        components.push(actionRow);
+      } else {
+        const firstActionRow = new ActionRowBuilder<ButtonBuilder>();
+        const secondActionRow = new ActionRowBuilder<ButtonBuilder>();
+        allButtons.forEach((btn, index) => {
+          if (index < 5) {
+            firstActionRow.addComponents(btn);
+          } else {
+            secondActionRow.addComponents(btn);
+          }
+        });
+        components.push(firstActionRow, secondActionRow);
+      }
     }
 
     this.components = components;
@@ -648,9 +691,12 @@ export class Menu<
     const fixedButtonCount = this._buttons.filter(
       (button) => button.fixedPosition !== undefined
     ).size;
-    const availableButtonSlotsPerPage =
-      this.paginationConfig.itemsPerPage -
-      (reservedButtonCount + fixedButtonCount);
+    const fixedStartCount = this._buttons.filter(
+      (button) => button.fixedPosition === 'start'
+    ).size;
+    const fixedEndCount = this._buttons.filter(
+      (button) => button.fixedPosition === 'end'
+    ).size;
 
     if (reservedButtonCount + fixedButtonCount > 10) {
       throw new Error(
@@ -658,11 +704,11 @@ export class Menu<
       );
     }
 
-    if (availableButtonSlotsPerPage < 1) {
+    // For paginated layout, content buttons share row 1 with fixedStart/End buttons
+    const paginatedContentSlots = 5 - fixedStartCount - fixedEndCount;
+    if (paginatedContentSlots < 1) {
       throw new Error(
-        `With current default and fixed buttons, cannot set less than ${
-          reservedButtonCount + fixedButtonCount + 1
-        } buttons per page to paginate`
+        `Fixed start/end buttons occupy all 5 slots in row 1, leaving no space for paginated content buttons.`
       );
     }
   }

@@ -32,6 +32,7 @@ export class MenuBuilder<
   > = new Collection();
   private _getListPaginationTotalQuantityItems?: (menu: M) => Promise<number>;
   private _handleMessageCallback?: (menu: M, response: string) => Promise<void>;
+  private _onEnterCallback?: (menu: M) => Promise<void>;
   private _setButtonsCallback?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   private _setEmbedsCallback?: (menu: M) => Promise<EmbedBuilder[]>;
   private _setModalCallback?: (
@@ -39,6 +40,7 @@ export class MenuBuilder<
     options?: ModalState['options']
   ) => Promise<ModalConfig<M>>;
   private _setSelectMenuCallback?: (menu: M) => Promise<SelectMenuConfig<M>>;
+  private _transitions: Map<string, (menu: M) => Promise<void>> = new Map();
 
   protected _name: string;
   protected _session: Session;
@@ -115,6 +117,54 @@ export class MenuBuilder<
     callback: (menu: M, response: string) => Promise<void>
   ) {
     this._handleMessageCallback = callback;
+    return this;
+  }
+
+  /**
+   * Register a lifecycle hook that is called once when the menu is first entered.
+   * This is useful for performing one-time initialization such as pre-loading data
+   * into session state before the menu is displayed to the user.
+   *
+   * @example
+   * ```typescript
+   * builder.onEnter(async (menu) => {
+   *   const data = await fetchExpensiveData();
+   *   menu.session.setState('data', data);
+   * });
+   * ```
+   */
+  public onEnter(callback: (menu: M) => Promise<void>) {
+    this._onEnterCallback = callback;
+    return this;
+  }
+
+  /**
+   * Register a named transition that can be triggered from button onClick handlers
+   * via `menu.executeTransition(name)`. This decouples navigation logic from button
+   * definitions and makes transitions reusable across multiple buttons.
+   *
+   * Throws if a transition with the same name has already been registered.
+   *
+   * @param name - Unique name for the transition
+   * @param callback - Async function executed when the transition is triggered
+   *
+   * @example
+   * ```typescript
+   * builder.addTransition('edit', async (menu) => {
+   *   await MenuWorkflow.openMenu(menu, EDIT_COMMAND, { region_id });
+   * });
+   * // Then in a button:
+   * { label: 'Edit', style: ButtonStyle.Primary,
+   *   onClick: (menu) => menu.executeTransition('edit') }
+   * ```
+   */
+  public addTransition(name: string, callback: (menu: M) => Promise<void>) {
+    if (this._transitions.has(name)) {
+      throw new Error(
+        `A transition with name '${name}' has already been registered.`
+      );
+    }
+    this._transitions.set(name, callback);
     return this;
   }
 
@@ -209,10 +259,12 @@ export class MenuBuilder<
       reservedButtons: this._reservedButtons,
       responseType,
       handleMessage: this._handleMessageCallback,
+      onEnter: this._onEnterCallback,
       setButtons: this._setButtonsCallback,
       setEmbeds: this._setEmbedsCallback,
       setModal: this._setModalCallback,
       setSelectMenu: this._setSelectMenuCallback,
+      transitions: this._transitions,
     };
   }
 

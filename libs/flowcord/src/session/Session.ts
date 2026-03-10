@@ -150,6 +150,7 @@ export class Session {
       this._history.push({ menu: this.currentMenu, options });
     }
     this._currentMenu = menu;
+    await this.currentMenu.enter();
     await this.currentMenu.refresh();
   }
 
@@ -274,6 +275,7 @@ export class Session {
         'Failed to create menu for command: ' + this._initialCommand
       );
     }
+    await menu.enter();
     await menu.refresh();
     this._currentMenu = menu;
     this._isInitialized = true;
@@ -367,7 +369,10 @@ export class Session {
     if (!this.componentInteraction?.isButton()) {
       throw new Error('There was an error processing your button interaction.');
     }
-    const buttonId = this.componentInteraction.customId.split('_')[1];
+    const customId = this.componentInteraction.customId;
+    const separatorIndex = customId.indexOf('_');
+    const buttonId =
+      separatorIndex !== -1 ? customId.slice(separatorIndex + 1) : customId;
 
     if (!buttonId) {
       throw new Error('Invalid Button Menu Interaction');
@@ -614,7 +619,8 @@ export class Session {
     }
 
     const modalFilter = (interaction: ModalSubmitInteraction): boolean =>
-      interaction.customId === this.currentMenu.modal?.builder.data.custom_id;
+      interaction.customId === this.currentMenu.modal?.builder.data.custom_id &&
+      interaction.user.id === this.commandInteraction.user.id;
 
     const componentFilter = (
       interaction: MessageComponentInteraction

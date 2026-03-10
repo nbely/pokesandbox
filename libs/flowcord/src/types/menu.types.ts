@@ -24,6 +24,7 @@ export type MenuBuilderOptions<
   reservedButtons: Collection<ReservedButtonLabels, ReservedButtonOptions>;
   responseType?: MenuResponseType;
   handleMessage?: (menu: M, response: string) => Promise<void>;
+  onEnter?: (menu: M) => Promise<void>;
   setButtons?: (menu: M) => Promise<MenuButtonConfig<M>[]>;
   setEmbeds: (menu: M) => Promise<EmbedBuilder[]>;
   setSelectMenu?: (menu: M) => Promise<SelectMenuConfig<M>>;
@@ -31,6 +32,7 @@ export type MenuBuilderOptions<
     menu: M,
     options?: ModalState['options']
   ) => Promise<ModalConfig<M>>;
+  transitions?: Map<string, (menu: M) => Promise<void>>;
 };
 
 /**
