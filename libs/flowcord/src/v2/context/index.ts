@@ -4,4 +4,5 @@ export type {
   MenuInstanceLike,
   SubMenuOptions,
   ContextExtension,
+  ResponseType,
 } from './MenuContext';

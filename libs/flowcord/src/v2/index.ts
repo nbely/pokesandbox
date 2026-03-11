@@ -22,6 +22,7 @@ export type {
   MenuInstanceLike,
   SubMenuOptions,
   ContextExtension,
+  ResponseType,
 } from './context';
 
 // Actions

@@ -52,6 +52,9 @@ export interface MenuContext<
   /** Navigate to another registered menu */
   goTo(menuId: string, options?: Record<string, unknown>): Promise<void>;
 
+  /** Alias for goTo — more descriptive in inline callbacks */
+  navigateTo(menuId: string, options?: Record<string, unknown>): Promise<void>;
+
   /** Pop the navigation stack, returning to the previous menu */
   goBack(result?: unknown): Promise<void>;
 
@@ -86,6 +89,8 @@ export interface SubMenuOptions {
 export interface MenuSessionLike {
   readonly id: string;
   readonly sessionState: StateStore;
+  readonly isCancelled: boolean;
+  readonly isCompleted: boolean;
 }
 
 /**
@@ -96,6 +101,11 @@ export interface MenuInstanceLike {
   readonly name: string;
   readonly mode: 'embeds' | 'layout';
 }
+
+/**
+ * Response type that determines which interaction collectors the session uses.
+ */
+export type ResponseType = 'component' | 'message' | 'mixed';
 
 /**
  * A function that extends the context with additional properties.

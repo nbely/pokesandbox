@@ -5,17 +5,35 @@
  * and delegates rendering/lifecycle to appropriate managers.
  *
  * This is the v2 evolution of v1's Session class.
- * Stub implementation — will be fleshed out in Phase 5.
  */
 import { randomUUID } from 'crypto';
-import type { ChatInputCommandInteraction, Client } from 'discord.js';
-import type { MenuContext, MenuSessionLike } from '../context/MenuContext';
+import type {
+  ChatInputCommandInteraction,
+  Client,
+  Message,
+  MessageComponentInteraction,
+  ModalSubmitInteraction,
+} from 'discord.js';
+import type {
+  MenuContext,
+  MenuSessionLike,
+  SubMenuOptions,
+} from '../context/MenuContext';
+import type { Action } from '../types/common';
+import { GuardFailedError } from '../action/pipeline';
 import { StateStore } from '../state/StateStore';
 import { MenuStack } from '../state/MenuStack';
 import { MenuInstance } from '../menu/MenuInstance';
 import { MenuRenderer } from '../menu/MenuRenderer';
 import { LifecycleManager } from '../lifecycle/LifecycleManager';
+import { ComponentIdManager } from '../components/ComponentIdManager';
 import type { MenuEngine } from './MenuEngine';
+
+/** Continuation registered by openSubMenu — fired when the sub-menu calls goBack. */
+interface Continuation {
+  menuName: string;
+  onComplete: (ctx: MenuContext, result?: unknown) => Promise<void>;
+}
 
 export class MenuSession implements MenuSessionLike {
   readonly id: string;
@@ -31,8 +49,30 @@ export class MenuSession implements MenuSessionLike {
   private _isCancelled = false;
   private _isCompleted = false;
 
+  /**
+   * Tracks whether navigation happened during the current action.
+   * When true the main loop skips auto-refresh and jumps straight
+   * to the new menu's enter → render cycle.
+   */
+  private _didNavigate = false;
+
+  /**
+   * Tracks whether the current action requested a hard refresh.
+   * When true the main loop re-runs the menu factory before rendering.
+   */
+  private _didHardRefresh = false;
+
+  /** Pending continuations for sub-menu completion. */
+  private readonly _continuations: Continuation[] = [];
+
+  /** Result stored by ctx.complete() for sub-menu return. */
+  private _completionResult: unknown = undefined;
+
+  /** Options that were used to create the current menu (kept for hardRefresh). */
+  private _currentOptions: Record<string, unknown> | undefined;
+
   constructor(engine: MenuEngine, interaction: ChatInputCommandInteraction) {
-    this.id = randomUUID().slice(0, 12); // Short session ID for customId prefixing
+    this.id = randomUUID().slice(0, 12);
     this.sessionState = new StateStore();
     this._engine = engine;
     this._commandInteraction = interaction;
@@ -60,23 +100,23 @@ export class MenuSession implements MenuSessionLike {
     return this._isCompleted;
   }
 
+  // -----------------------------------------------------------------------
+  // Public lifecycle API
+  // -----------------------------------------------------------------------
+
   /**
    * Initialize the session: defer reply, create initial menu, enter main loop.
-   * @param menuName - The registered menu to start with
-   * @param options - Command options passed to the menu factory
    */
   async initialize(
     menuName: string,
     options?: Record<string, unknown>
   ): Promise<void> {
-    // Defer reply to buy time
     await this._commandInteraction.deferReply();
-
-    // Create the initial menu
     await this.navigateTo(menuName, options);
-
-    // Enter main interaction loop
     await this.processMenus();
+
+    // Clean up after loop exits
+    this._engine.removeSession(this.id);
   }
 
   /**
@@ -95,7 +135,7 @@ export class MenuSession implements MenuSessionLike {
     if (this._currentMenu?.definition.isTrackedInHistory) {
       this._stack.push({
         menuId: this._currentMenu.name,
-        options, // store the options we navigated with
+        options: this._currentOptions,
       });
     }
 
@@ -109,26 +149,47 @@ export class MenuSession implements MenuSessionLike {
       );
     }
 
-    // Create new menu definition from factory
+    // Trace navigation
+    if (this._engine.tracer && this._currentMenu) {
+      this._engine.tracer.record({
+        from: this._currentMenu.name,
+        to: menuId,
+        sessionId: this.id,
+        userId: this._commandInteraction.user.id,
+        timestamp: Date.now(),
+      });
+    }
+
+    // Create new menu
+    this._currentOptions = options;
     const definition = await factory(this, options);
     const instance = new MenuInstance(definition, this.id);
     this._currentMenu = instance;
 
+    // Run setup if defined
+    if (definition.setup) {
+      const ctx = this.buildContext(instance);
+      await definition.setup(ctx);
+    }
+
     // Fire onEnter
     const ctx = this.buildContext(instance);
     await this._lifecycleManager.emit('onEnter', ctx, definition.hooks);
+
+    this._didNavigate = true;
   }
 
   /**
    * Go back to the previous menu on the stack.
    */
   async goBack(result?: unknown): Promise<void> {
-    void result;
     const entry = this._stack.pop();
     if (!entry) {
       await this.close();
       return;
     }
+
+    const completedMenuName = this._currentMenu?.name;
 
     // Fire onLeave on current
     if (this._currentMenu) {
@@ -148,12 +209,27 @@ export class MenuSession implements MenuSessionLike {
       );
     }
 
+    this._currentOptions = entry.options;
     const definition = await factory(this, entry.options);
     const instance = new MenuInstance(definition, this.id);
     this._currentMenu = instance;
 
+    // Run setup
+    if (definition.setup) {
+      const ctx = this.buildContext(instance);
+      await definition.setup(ctx);
+    }
+
+    // Fire onEnter
     const ctx = this.buildContext(instance);
     await this._lifecycleManager.emit('onEnter', ctx, definition.hooks);
+
+    // Execute continuations from sub-menu completion
+    if (completedMenuName) {
+      await this.executeContinuations(completedMenuName, result, ctx);
+    }
+
+    this._didNavigate = true;
   }
 
   /**
@@ -168,6 +244,7 @@ export class MenuSession implements MenuSessionLike {
         this._currentMenu.definition.hooks
       );
     }
+    await this._renderer.renderClosed(this._commandInteraction);
     this._isCompleted = true;
   }
 
@@ -188,6 +265,7 @@ export class MenuSession implements MenuSessionLike {
         this._currentMenu.definition.hooks
       );
     }
+    await this._renderer.renderCancelled(this._commandInteraction);
     this._isCancelled = true;
   }
 
@@ -200,30 +278,131 @@ export class MenuSession implements MenuSessionLike {
     const factory = this._engine.menuRegistry.getFactory(menuId);
     if (!factory) return;
 
-    const definition = await factory(this);
+    const definition = await factory(this, this._currentOptions);
     const instance = new MenuInstance(definition, this.id);
     this._currentMenu = instance;
+
+    // Run setup
+    if (definition.setup) {
+      const ctx = this.buildContext(instance);
+      await definition.setup(ctx);
+    }
+
+    this._didHardRefresh = true;
+  }
+
+  /**
+   * Open a sub-menu with an onComplete continuation.
+   */
+  async openSubMenu(menuId: string, opts: SubMenuOptions): Promise<void> {
+    // Extract options (everything except onComplete)
+    // Register continuation before navigating
+
+    const { onComplete, ...navOptions } = opts;
+    this._continuations.push({
+      menuName: menuId,
+      onComplete: onComplete as (
+        ctx: MenuContext,
+        result?: unknown
+      ) => Promise<void>,
+    });
+
+    await this.navigateTo(menuId, navOptions as Record<string, unknown>);
+  }
+
+  /**
+   * Mark the current sub-menu as complete with a result.
+   * The result will be passed to the parent's onComplete when goBack fires.
+   */
+  complete(result?: unknown): void {
+    this._completionResult = result;
+  }
+
+  /**
+   * Route an externally-received component interaction to this session.
+   * Called by MenuEngine when a component interaction arrives whose
+   * customId parses to this session.
+   */
+  handleExternalInteraction(interaction: MessageComponentInteraction): void {
+    // This is used by the engine for routing — the actual processing
+    // happens in the main loop via awaitMessageComponent.
+    // For now, external routing defers to the collector pattern.
+    // The engine will call this when it intercepts interactions
+    // that match this session's ID.
+    void interaction;
   }
 
   // -----------------------------------------------------------------------
-  // Main interaction loop (stub — will be fleshed out in Phase 5)
+  // Main interaction loop
   // -----------------------------------------------------------------------
 
   /**
-   * Main event loop. Processes menus until session ends.
+   * The core event loop. Processes menus until the session ends.
+   *
+   * Flow per iteration:
+   * 1. beforeRender hook
+   * 2. Run definition setters (embeds/buttons/layout) + build payload
+   * 3. Send or update the Discord message
+   * 4. afterRender hook
+   * 5. Await interaction (component / message / modal race)
+   * 6. Dispatch: reserved button → session method, custom → action callback
+   * 7. onAction hook (for custom actions)
+   * 8. If navigated → loop continues with new menu's enter+render
+   * 9. If not navigated → auto-refresh (re-run setters, update message)
    */
   private async processMenus(): Promise<void> {
-    // TODO: Phase 5 — full interaction loop
-    // For now, just render once to verify the pipeline works
-    if (this._currentMenu) {
-      await this.render();
+    const timeout = this._engine.timeout;
+
+    while (!this._isCancelled && !this._isCompleted) {
+      if (!this._currentMenu) break;
+
+      // Reset navigation flags
+      this._didNavigate = false;
+      this._didHardRefresh = false;
+
+      // --- Render cycle ---
+      await this.renderCurrentMenu();
+
+      // Check if the session ended during rendering (e.g., onEnter navigated away)
+      if (this._isCancelled || this._isCompleted) break;
+      if (this._didNavigate) continue; // Navigation happened during hooks
+
+      // --- Modal display (if action triggered openModal) ---
+      if (this._currentMenu.isModalActive && this._currentMenu.activeModal) {
+        // Modal display is handled via the last component interaction
+        // that triggered the openModal action. That interaction already
+        // called showModal(). Now we race modal submit vs other interactions.
+        const outcome = await this.awaitModalInteraction(timeout);
+        if (this._isCancelled || this._isCompleted) break;
+        if (this._didNavigate) continue;
+        if (outcome === 'timeout') break;
+        continue; // Re-render after modal outcome
+      }
+
+      // --- Await interaction ---
+      const responseType = this._currentMenu.getResponseType();
+
+      if (responseType === 'message') {
+        await this.awaitMessageReply(timeout);
+      } else if (responseType === 'mixed') {
+        await this.awaitMixedInteraction(timeout);
+      } else {
+        await this.awaitComponentInteraction(timeout);
+      }
+
+      // Check exit conditions after interaction
+      if (this._isCancelled || this._isCompleted) break;
+      if (this._didNavigate) continue;
+
+      // --- Auto-refresh (action stayed on same menu) ---
+      if (this._didHardRefresh) continue; // hardRefresh already replaced the menu, re-render from top
     }
   }
 
   /**
-   * Execute a render cycle for the current menu.
+   * Execute a full render cycle for the current menu.
    */
-  private async render(): Promise<void> {
+  private async renderCurrentMenu(): Promise<void> {
     if (!this._currentMenu) return;
 
     const ctx = this.buildContext(this._currentMenu);
@@ -235,7 +414,13 @@ export class MenuSession implements MenuSessionLike {
       this._currentMenu.definition.hooks
     );
 
-    // Run setters — will be expanded in Phase 5
+    // Delegate to renderer (calls setters, builds payload, sends message)
+    await this._renderer.render(
+      this._currentMenu,
+      ctx,
+      this._commandInteraction
+    );
+
     // afterRender hook
     await this._lifecycleManager.emit(
       'afterRender',
@@ -244,8 +429,442 @@ export class MenuSession implements MenuSessionLike {
     );
   }
 
+  // -----------------------------------------------------------------------
+  // Interaction collection
+  // -----------------------------------------------------------------------
+
+  /**
+   * Await a component interaction (button or select menu click).
+   */
+  private async awaitComponentInteraction(timeout: number): Promise<void> {
+    if (!this._renderer['_activeMessage']) return;
+
+    try {
+      const interaction = await this._renderer[
+        '_activeMessage'
+      ].awaitMessageComponent({
+        filter: (i) => i.user.id === this._commandInteraction.user.id,
+        time: timeout,
+      });
+
+      this._renderer.setLastComponentInteraction(interaction);
+      await this.handleComponentInteraction(interaction);
+    } catch {
+      // Timeout — end session
+      this._isCompleted = true;
+    }
+  }
+
+  /**
+   * Await a text message reply.
+   */
+  private async awaitMessageReply(timeout: number): Promise<void> {
+    const channel = this._commandInteraction.channel;
+    if (!channel || !('awaitMessages' in channel)) return;
+
+    try {
+      const collected = await channel.awaitMessages({
+        filter: (msg) => msg.author.id === this._commandInteraction.user.id,
+        max: 1,
+        time: timeout,
+        errors: ['time'],
+      });
+
+      const message = collected.first();
+      if (!message || !this._currentMenu) return;
+
+      // Delete the user's message for clean UX (best-effort)
+      try {
+        await message.delete();
+      } catch {
+        // May not have permissions
+      }
+
+      this._renderer.setResetFlag();
+
+      const ctx = this.buildContext(this._currentMenu);
+      if (this._currentMenu.definition.handleMessage) {
+        await this._currentMenu.definition.handleMessage(ctx, message.content);
+      }
+    } catch {
+      // Timeout
+      this._isCompleted = true;
+    }
+  }
+
+  /**
+   * Await either a component interaction or a message reply (mixed mode).
+   * Races both collectors — first to resolve wins.
+   */
+  private async awaitMixedInteraction(timeout: number): Promise<void> {
+    const channel = this._commandInteraction.channel;
+    const activeMessage = this._renderer['_activeMessage'] as Message | null;
+    if (!channel || !('awaitMessages' in channel) || !activeMessage) return;
+
+    const userId = this._commandInteraction.user.id;
+
+    const result = await new Promise<{
+      type: 'component' | 'message';
+      value?: string;
+      interaction?: MessageComponentInteraction;
+    }>((resolve, reject) => {
+      let settled = false;
+      let failCount = 0;
+      const totalListeners = 2;
+
+      const onFail = () => {
+        failCount++;
+        if (failCount >= totalListeners) {
+          reject(new Error('timeout'));
+        }
+      };
+
+      // Component listener
+      activeMessage
+        .awaitMessageComponent({
+          filter: (i) => i.user.id === userId,
+          time: timeout,
+        })
+        .then((interaction) => {
+          if (settled) return;
+          settled = true;
+          resolve({ type: 'component', interaction });
+        })
+        .catch(() => {
+          if (!settled) onFail();
+        });
+
+      // Message listener
+      channel
+        .awaitMessages({
+          filter: (msg) => msg.author.id === userId,
+          max: 1,
+          time: timeout,
+          errors: ['time'],
+        })
+        .then((collected) => {
+          if (settled) return;
+          settled = true;
+          const msg = collected.first();
+          resolve({ type: 'message', value: msg?.content });
+        })
+        .catch(() => {
+          if (!settled) onFail();
+        });
+    }).catch(() => null);
+
+    if (!result) {
+      this._isCompleted = true;
+      return;
+    }
+
+    if (result.type === 'component' && result.interaction) {
+      this._renderer.setLastComponentInteraction(result.interaction);
+      await this.handleComponentInteraction(result.interaction);
+    } else if (
+      result.type === 'message' &&
+      result.value !== undefined &&
+      this._currentMenu
+    ) {
+      this._renderer.setResetFlag();
+
+      const ctx = this.buildContext(this._currentMenu);
+      if (this._currentMenu.definition.handleMessage) {
+        await this._currentMenu.definition.handleMessage(ctx, result.value);
+      }
+    }
+  }
+
+  /**
+   * Await a modal interaction — races modal submit against component/message
+   * interactions (user might dismiss the modal and click a button instead).
+   */
+  private async awaitModalInteraction(
+    timeout: number
+  ): Promise<'modal' | 'component' | 'message' | 'timeout'> {
+    if (!this._currentMenu) return 'timeout';
+
+    const userId = this._commandInteraction.user.id;
+    const channel = this._commandInteraction.channel;
+    const activeMessage = this._renderer['_activeMessage'] as Message | null;
+    const responseType = this._currentMenu.getResponseType();
+
+    const result = await new Promise<{
+      type: 'modal' | 'component' | 'message';
+      modalInteraction?: ModalSubmitInteraction;
+      componentInteraction?: MessageComponentInteraction;
+      messageContent?: string;
+    }>((resolve, reject) => {
+      let settled = false;
+      let failCount = 0;
+      let listenerCount = 1; // modal always
+
+      const onFail = () => {
+        failCount++;
+        if (failCount >= listenerCount) {
+          reject(new Error('timeout'));
+        }
+      };
+
+      // Modal submit listener (uses the last component interaction that showed the modal)
+      const lastInteraction = this._renderer['_lastComponentInteraction'];
+      if (lastInteraction) {
+        lastInteraction
+          .awaitModalSubmit({
+            filter: (i: ModalSubmitInteraction) => i.user.id === userId,
+            time: timeout,
+          })
+          .then((modalInteraction: ModalSubmitInteraction) => {
+            if (settled) return;
+            settled = true;
+            resolve({ type: 'modal', modalInteraction });
+          })
+          .catch(() => {
+            if (!settled) onFail();
+          });
+      }
+
+      // Component listener (if menu has components)
+      if (
+        activeMessage &&
+        (responseType === 'component' || responseType === 'mixed')
+      ) {
+        listenerCount++;
+        activeMessage
+          .awaitMessageComponent({
+            filter: (i) => i.user.id === userId,
+            time: timeout,
+          })
+          .then((interaction) => {
+            if (settled) return;
+            settled = true;
+            resolve({ type: 'component', componentInteraction: interaction });
+          })
+          .catch(() => {
+            if (!settled) onFail();
+          });
+      }
+
+      // Message listener (if menu has message handler)
+      if (
+        channel &&
+        'awaitMessages' in channel &&
+        (responseType === 'message' || responseType === 'mixed')
+      ) {
+        listenerCount++;
+        channel
+          .awaitMessages({
+            filter: (msg) => msg.author.id === userId,
+            max: 1,
+            time: timeout,
+            errors: ['time'],
+          })
+          .then((collected) => {
+            if (settled) return;
+            settled = true;
+            const msg = collected.first();
+            resolve({ type: 'message', messageContent: msg?.content });
+          })
+          .catch(() => {
+            if (!settled) onFail();
+          });
+      }
+    }).catch(() => null);
+
+    if (!result) return 'timeout';
+
+    // Clear modal state
+    if (this._currentMenu) {
+      this._currentMenu.isModalActive = false;
+    }
+
+    if (result.type === 'modal' && result.modalInteraction) {
+      // Handle modal submission
+      await this.handleModalSubmit(result.modalInteraction);
+      return 'modal';
+    } else if (result.type === 'component' && result.componentInteraction) {
+      this._renderer.setLastComponentInteraction(result.componentInteraction);
+      await this.handleComponentInteraction(result.componentInteraction);
+      return 'component';
+    } else if (
+      result.type === 'message' &&
+      result.messageContent !== undefined &&
+      this._currentMenu
+    ) {
+      this._renderer.setResetFlag();
+      const ctx = this.buildContext(this._currentMenu);
+      if (this._currentMenu.definition.handleMessage) {
+        await this._currentMenu.definition.handleMessage(
+          ctx,
+          result.messageContent
+        );
+      }
+      return 'message';
+    }
+
+    return 'timeout';
+  }
+
+  // -----------------------------------------------------------------------
+  // Interaction dispatch
+  // -----------------------------------------------------------------------
+
+  /**
+   * Handle a component interaction (button click or select menu).
+   * Parses the namespaced customId, checks for reserved buttons,
+   * then dispatches to the action registered in the menu instance.
+   */
+  private async handleComponentInteraction(
+    interaction: MessageComponentInteraction
+  ): Promise<void> {
+    if (!this._currentMenu) return;
+
+    const parsed = ComponentIdManager.parse(interaction.customId);
+    if (!parsed) return;
+
+    const componentId = parsed.componentId;
+
+    // --- Reserved button handling ---
+    if (componentId === '__reserved_back') {
+      await this.goBack(this._completionResult);
+      this._completionResult = undefined;
+      return;
+    }
+
+    if (componentId === '__reserved_cancel') {
+      await this.cancel();
+      return;
+    }
+
+    if (componentId === '__reserved_next') {
+      await this.handlePaginationNext();
+      return;
+    }
+
+    if (componentId === '__reserved_previous') {
+      await this.handlePaginationPrevious();
+      return;
+    }
+
+    // --- Custom action dispatch ---
+    const action = this._currentMenu.resolveAction(componentId);
+    if (!action) return;
+
+    const ctx = this.buildContext(this._currentMenu);
+
+    // onAction hook fires before the action itself
+    await this._lifecycleManager.emit(
+      'onAction',
+      ctx,
+      this._currentMenu.definition.hooks
+    );
+
+    await this.executeAction(action, ctx);
+  }
+
+  /**
+   * Handle a modal submission.
+   */
+  private async handleModalSubmit(
+    interaction: ModalSubmitInteraction
+  ): Promise<void> {
+    if (!this._currentMenu) return;
+
+    // Defer the modal's reply so it doesn't timeout
+    await interaction.deferUpdate();
+
+    const modalConfig = this._currentMenu.activeModal;
+    if (!modalConfig?.onSubmit) return;
+
+    const ctx = this.buildContext(this._currentMenu);
+    await modalConfig.onSubmit(ctx, interaction.fields);
+  }
+
+  /**
+   * Execute an action with guard error handling and auto-refresh.
+   */
+  private async executeAction(action: Action, ctx: MenuContext): Promise<void> {
+    try {
+      await action(ctx);
+    } catch (error) {
+      if (error instanceof GuardFailedError) {
+        // Show the guard's message as a prompt on the current menu state
+        ctx.state.set('__guardMessage' as never, error.message as never);
+        return; // Auto-refresh will show the updated state
+      }
+      throw error;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Pagination
+  // -----------------------------------------------------------------------
+
+  private async handlePaginationNext(): Promise<void> {
+    if (!this._currentMenu?.paginationState) return;
+    const ps = this._currentMenu.paginationState;
+    if (ps.currentPage < ps.totalPages - 1) {
+      this._currentMenu.paginationState = {
+        ...ps,
+        currentPage: ps.currentPage + 1,
+      };
+    }
+
+    const ctx = this.buildContext(this._currentMenu);
+    await this._lifecycleManager.emit(
+      'onNext',
+      ctx,
+      this._currentMenu.definition.hooks
+    );
+  }
+
+  private async handlePaginationPrevious(): Promise<void> {
+    if (!this._currentMenu?.paginationState) return;
+    const ps = this._currentMenu.paginationState;
+    if (ps.currentPage > 0) {
+      this._currentMenu.paginationState = {
+        ...ps,
+        currentPage: ps.currentPage - 1,
+      };
+    }
+
+    const ctx = this.buildContext(this._currentMenu);
+    await this._lifecycleManager.emit(
+      'onPrevious',
+      ctx,
+      this._currentMenu.definition.hooks
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Sub-menu continuations
+  // -----------------------------------------------------------------------
+
+  /**
+   * Execute registered continuations when returning from a sub-menu.
+   */
+  private async executeContinuations(
+    completedMenuName: string,
+    result: unknown,
+    ctx: MenuContext
+  ): Promise<void> {
+    const idx = this._continuations.findIndex(
+      (c) => c.menuName === completedMenuName
+    );
+    if (idx === -1) return;
+
+    const continuation = this._continuations.splice(idx, 1)[0];
+    await continuation.onComplete(ctx, result ?? this._completionResult);
+    this._completionResult = undefined;
+  }
+
+  // -----------------------------------------------------------------------
+  // Context building
+  // -----------------------------------------------------------------------
+
   /**
    * Build a MenuContext for the current menu instance.
+   * All navigation methods are arrow functions to avoid `this` aliasing.
    */
   private buildContext(menuInstance: MenuInstance): MenuContext {
     const baseCtx: MenuContext = {
@@ -255,11 +874,14 @@ export class MenuSession implements MenuSessionLike {
       sessionState: this.sessionState,
       client: this.client,
       interaction: this._commandInteraction,
-      options: {} as Record<string, unknown>,
+      options: (this._currentOptions ?? {}) as Record<string, unknown>,
       pagination: menuInstance.paginationState,
       env: 'discord',
 
       goTo: async (menuId: string, options?: Record<string, unknown>) => {
+        await this.navigateTo(menuId, options);
+      },
+      navigateTo: async (menuId: string, options?: Record<string, unknown>) => {
         await this.navigateTo(menuId, options);
       },
       goBack: async (result?: unknown) => {
@@ -271,17 +893,15 @@ export class MenuSession implements MenuSessionLike {
       hardRefresh: async () => {
         await this.hardRefresh();
       },
-      openSubMenu: async (menuId: string, opts) => {
-        // TODO: Phase 5 — sub-menu with onComplete
-        await this.navigateTo(menuId, opts);
+      openSubMenu: async (menuId: string, opts: SubMenuOptions) => {
+        await this.openSubMenu(menuId, opts);
       },
       complete: async (result?: unknown) => {
-        // TODO: Phase 5 — store result for continuation
-        void result;
+        this.complete(result);
       },
     };
 
-    // Apply context extensions
+    // Apply context extensions (e.g., AdminMenuBuilder adds ctx.admin)
     let extendedCtx = baseCtx;
     for (const extension of menuInstance.definition.contextExtensions) {
       const extra = extension(baseCtx);

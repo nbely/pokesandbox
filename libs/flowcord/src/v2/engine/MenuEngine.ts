@@ -2,17 +2,21 @@
  * MenuEngine — Entry point for FlowCord v2.
  *
  * Replaces FlowCord for v2 menus. Holds registries, creates sessions,
- * and handles interaction entry.
+ * handles interaction entry, and tracks active sessions for routing.
  *
  * Both v1 FlowCord and v2 MenuEngine can coexist in the same bot.
  */
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type {
+  ChatInputCommandInteraction,
+  MessageComponentInteraction,
+} from 'discord.js';
 import type { FlowCordClient } from '../../FlowCordClient';
 import type { CreateMenuDefinitionFn } from '../registry/MenuRegistry';
 import { MenuRegistry } from '../registry/MenuRegistry';
 import { ActionRegistry } from '../registry/ActionRegistry';
 import { HookRegistry } from '../registry/HookRegistry';
 import { NavigationTracer } from '../tracing/NavigationTracer';
+import { ComponentIdManager } from '../components/ComponentIdManager';
 import { MenuSession } from './MenuSession';
 
 export interface MenuEngineConfig {
@@ -34,6 +38,9 @@ export class MenuEngine {
 
   private readonly _config: MenuEngineConfig;
 
+  /** Active sessions indexed by session ID. */
+  private readonly _sessions = new Map<string, MenuSession>();
+
   constructor(config: MenuEngineConfig) {
     this._config = config;
     this.menuRegistry = new MenuRegistry();
@@ -52,6 +59,11 @@ export class MenuEngine {
 
   get timeout(): number {
     return this._config.timeout ?? 120_000;
+  }
+
+  /** Number of currently active sessions. */
+  get activeSessionCount(): number {
+    return this._sessions.size;
   }
 
   /**
@@ -77,6 +89,7 @@ export class MenuEngine {
     try {
       await session.initialize(menuName, options);
     } catch (error) {
+      this.removeSession(session.id);
       if (this._config.onError) {
         await this._config.onError(session, error);
       } else {
@@ -86,10 +99,55 @@ export class MenuEngine {
   }
 
   /**
-   * Create a new MenuSession without starting it.
-   * Useful for advanced use cases or testing.
+   * Create a new MenuSession and register it for interaction routing.
    */
   createSession(interaction: ChatInputCommandInteraction): MenuSession {
-    return new MenuSession(this, interaction);
+    const session = new MenuSession(this, interaction);
+    this._sessions.set(session.id, session);
+    return session;
+  }
+
+  /**
+   * Remove a session from the active sessions map.
+   * Called by MenuSession when its loop exits.
+   */
+  removeSession(sessionId: string): void {
+    this._sessions.delete(sessionId);
+  }
+
+  /**
+   * Route an incoming component interaction to the correct active session.
+   *
+   * This should be called from the bot's `interactionCreate` event handler
+   * for interactions whose customId contains a v2 session prefix.
+   *
+   * @returns true if the interaction was routed to a session, false otherwise
+   */
+  routeComponentInteraction(interaction: MessageComponentInteraction): boolean {
+    const parsed = ComponentIdManager.parse(interaction.customId);
+    if (!parsed) return false;
+
+    const session = this._sessions.get(parsed.sessionId);
+    if (!session) return false;
+
+    session.handleExternalInteraction(interaction);
+    return true;
+  }
+
+  /**
+   * Check if a customId belongs to a v2 session.
+   * Useful in the interactionCreate handler to decide routing.
+   */
+  isV2Interaction(customId: string): boolean {
+    const parsed = ComponentIdManager.parse(customId);
+    if (!parsed) return false;
+    return this._sessions.has(parsed.sessionId);
+  }
+
+  /**
+   * Get an active session by ID (for debugging/testing).
+   */
+  getSession(sessionId: string): MenuSession | undefined {
+    return this._sessions.get(sessionId);
   }
 }
