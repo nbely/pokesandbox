@@ -1,5 +1,5 @@
 import { Client, Collection } from 'discord.js';
-import type { FlowCord } from '@flowcord';
+import type { MenuEngine } from '@flowcord/v2';
 
 import type {
   IBotEvent,
@@ -15,7 +15,7 @@ import type {
 } from '@bot/structures/interfaces';
 
 export class BotClient extends Client {
-  flowcord?: FlowCord;
+  flowcord?: MenuEngine;
   buttons = new Collection<string, IButtonCommand>();
   events = new Collection<string, IBotEvent>();
   messageCommands = new Collection<string, IMessageCommand>();
