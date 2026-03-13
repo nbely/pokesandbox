@@ -8,6 +8,7 @@ import {
   AdminMenu,
   AdminMenuBuilder,
   MenuButtonConfig,
+  MenuWorkflow,
 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
@@ -17,7 +18,8 @@ import {
   sortByOrdinal,
 } from '@bot/utils';
 
-import { getLocationCreateModal } from './location.modal';
+import { LOCATION_COMMAND_NAME } from './location';
+import { getLocationModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
 
@@ -37,9 +39,7 @@ export const LocationsCommand: LocationsCommand = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription(
-      'Manage locations for one of your PokéSandbox Regions'
-    )
+    .setDescription('Manage locations for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild)
     .addStringOption((option) => {
       return option
@@ -56,7 +56,7 @@ export const LocationsCommand: LocationsCommand = {
     return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((menu) => getLocationsButtons(menu, region_id))
       .setEmbeds((menu) => getLocationsMenuEmbeds(menu, region_id))
-      .setModal((menu) => getLocationCreateModal(menu, region_id))
+      .setModal((menu) => getLocationModal(menu, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -80,13 +80,15 @@ const getLocationsButtons = async (
         await menu.openModal();
       },
     },
-    ...sortedLocations.map((location, index) => ({
-      label: `${index + 1}`,
+    ...sortedLocations.map((location) => ({
+      label: `${location.ordinal}`,
       id: location._id.toString(),
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<LocationsCommandOptions>) => {
-        menu.prompt = 'The location configuration feature is coming soon!';
-        await menu.refresh();
+        await MenuWorkflow.openMenu(menu, LOCATION_COMMAND_NAME, {
+          region_id: regionId,
+          location_id: location._id.toString(),
+        });
       },
     })),
   ];

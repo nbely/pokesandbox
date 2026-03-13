@@ -18,9 +18,12 @@ export const getLocationsMenuEmbeds = async (
   // Sort locations by ordinal
   const sortedLocations = sortByOrdinal(locations);
 
-  const locationNames = sortedLocations.map((location) => location.name);
+  const locationItems = sortedLocations.map((location) => ({
+    name: location.name,
+    index: location.ordinal,
+  }));
   const locationFields = createNumericListFields(
-    locationNames,
+    locationItems,
     [
       { threshold: 11, columns: 2 },
       { threshold: 21, columns: 3 },

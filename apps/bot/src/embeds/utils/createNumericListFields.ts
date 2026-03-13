@@ -12,7 +12,7 @@ import { splitColumnItemsEvenly } from './splitColumnItemsEvenly';
  * @returns Array of embed fields with numeric emoji labels and values split across columns
  */
 export function createNumericListFields(
-  items: string[],
+  items: { name: string; index?: number }[],
   columnCountRules: { threshold: number; columns: number }[],
   noItemsMessage = 'No items found.'
 ): { name: string; value: string; inline: boolean }[] {
@@ -25,7 +25,10 @@ export function createNumericListFields(
     }
   }
 
-  const indexedItems = items.map((name, index) => ({ name, index }));
+  const indexedItems = items.map((item, index) => ({
+    name: item.name,
+    index: item.index ?? index + 1,
+  }));
   const itemColumns = splitColumnItemsEvenly(indexedItems, columnsCount);
 
   return items.length > 0

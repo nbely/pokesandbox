@@ -7,6 +7,28 @@ import { CachePrefix, CacheTTL } from './constants';
 import { toIdStrings } from './utils';
 
 /**
+ * Fetch a single location by its ID, hitting the cache first.
+ */
+export async function getCachedLocation(
+  locationId: string | Types.ObjectId | undefined
+): Promise<Location | null> {
+  if (!locationId) return null;
+
+  const cache = getCacheService();
+  const id = locationId.toString();
+  const key = `${CachePrefix.LOCATION}${id}`;
+
+  const cached = cache.get<Location>(key);
+  if (cached) return cached;
+
+  const location = await Location.findById(id).exec();
+  if (location) {
+    cache.set(key, location, CacheTTL.LOCATION);
+  }
+  return location;
+}
+
+/**
  * Fetch multiple locations by ObjectId or string IDs, hitting the cache first.
  * Only queries the DB for IDs not already cached, then backfills those into
  * the cache so subsequent reads are instant.
