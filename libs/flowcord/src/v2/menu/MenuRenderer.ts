@@ -180,6 +180,29 @@ export class MenuRenderer {
     let buttons: ButtonConfig[] = [];
     let selectConfig: SelectConfig | null = null;
 
+    // Pre-compute list pagination state so setters can use ctx.pagination
+    if (definition.listPagination) {
+      const totalItems = await definition.listPagination.getTotalQuantityItems(
+        ctx
+      );
+      const itemsPerPage = definition.listPagination.itemsPerPage ?? 50;
+      const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+      const currentPage = menuInstance.paginationState?.currentPage ?? 0;
+
+      menuInstance.paginationState = {
+        currentPage,
+        totalPages,
+        itemsPerPage,
+        totalItems,
+        startIndex: currentPage * itemsPerPage,
+        endIndex: Math.min((currentPage + 1) * itemsPerPage, totalItems),
+      };
+
+      // Update context so setters see the current pagination state
+      (ctx as { pagination: PaginationState | null }).pagination =
+        menuInstance.paginationState;
+    }
+
     // Run setter callbacks
     if (definition.setEmbeds) {
       embeds = await definition.setEmbeds(ctx);
@@ -217,28 +240,8 @@ export class MenuRenderer {
         menuInstance.paginationState.startIndex,
         menuInstance.paginationState.endIndex
       );
-    } else if (definition.listPagination) {
-      // List pagination — compute page state from total items
-      const totalItems = await definition.listPagination.getTotalQuantityItems(
-        ctx
-      );
-      const itemsPerPage = definition.listPagination.itemsPerPage ?? 50;
-      const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-      const currentPage = menuInstance.paginationState?.currentPage ?? 0;
-
-      menuInstance.paginationState = {
-        currentPage,
-        totalPages,
-        itemsPerPage,
-        totalItems,
-        startIndex: currentPage * itemsPerPage,
-        endIndex: Math.min((currentPage + 1) * itemsPerPage, totalItems),
-      };
-
-      // Register button actions for current page only
-      menuInstance.registerButtonActions(buttons);
     } else {
-      // No pagination — register all button actions
+      // No button pagination (or list pagination already computed) — register button actions
       menuInstance.registerButtonActions(buttons);
     }
 
@@ -303,11 +306,7 @@ export class MenuRenderer {
     const definition = menuInstance.definition;
     let components: ComponentConfig[] = [];
 
-    if (definition.setLayout) {
-      components = await definition.setLayout(ctx);
-    }
-
-    // Handle list pagination state (layout mode)
+    // Pre-compute list pagination state so setLayout can use ctx.pagination
     if (definition.listPagination) {
       const totalItems = await definition.listPagination.getTotalQuantityItems(
         ctx
@@ -324,6 +323,14 @@ export class MenuRenderer {
         startIndex: currentPage * itemsPerPage,
         endIndex: Math.min((currentPage + 1) * itemsPerPage, totalItems),
       };
+
+      // Update context so setLayout sees the current pagination state
+      (ctx as { pagination: PaginationState | null }).pagination =
+        menuInstance.paginationState;
+    }
+
+    if (definition.setLayout) {
+      components = await definition.setLayout(ctx);
     }
 
     // Expand paginatedGroup markers

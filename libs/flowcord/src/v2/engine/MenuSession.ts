@@ -62,6 +62,12 @@ export class MenuSession implements MenuSessionLike {
    */
   private _didHardRefresh = false;
 
+  /**
+   * The component interaction that showed a modal via showModal().
+   * Kept so awaitModalInteraction can call awaitModalSubmit on it.
+   */
+  private _modalShowInteraction: MessageComponentInteraction | null = null;
+
   /** Pending continuations for sub-menu completion. */
   private readonly _continuations: Continuation[] = [];
 
@@ -360,24 +366,23 @@ export class MenuSession implements MenuSessionLike {
       this._didNavigate = false;
       this._didHardRefresh = false;
 
-      // --- Render cycle ---
-      await this.renderCurrentMenu();
-
-      // Check if the session ended during rendering (e.g., onEnter navigated away)
-      if (this._isCancelled || this._isCompleted) break;
-      if (this._didNavigate) continue; // Navigation happened during hooks
-
-      // --- Modal display (if action triggered openModal) ---
+      // --- Pending modal (action triggered openModal in previous iteration) ---
+      // The interaction that triggered the modal already called showModal(),
+      // so we skip rendering and go straight to awaiting the modal submit.
       if (this._currentMenu.isModalActive && this._currentMenu.activeModal) {
-        // Modal display is handled via the last component interaction
-        // that triggered the openModal action. That interaction already
-        // called showModal(). Now we race modal submit vs other interactions.
         const outcome = await this.awaitModalInteraction(timeout);
         if (this._isCancelled || this._isCompleted) break;
         if (this._didNavigate) continue;
         if (outcome === 'timeout') break;
         continue; // Re-render after modal outcome
       }
+
+      // --- Render cycle ---
+      await this.renderCurrentMenu();
+
+      // Check if the session ended during rendering (e.g., onEnter navigated away)
+      if (this._isCancelled || this._isCompleted) break;
+      if (this._didNavigate) continue; // Navigation happened during hooks
 
       // --- Await interaction ---
       const responseType = this._currentMenu.getResponseType();
@@ -606,10 +611,10 @@ export class MenuSession implements MenuSessionLike {
         }
       };
 
-      // Modal submit listener (uses the last component interaction that showed the modal)
-      const lastInteraction = this._renderer['_lastComponentInteraction'];
-      if (lastInteraction) {
-        lastInteraction
+      // Modal submit listener (uses the interaction that called showModal)
+      const modalInteractionRef = this._modalShowInteraction;
+      if (modalInteractionRef) {
+        modalInteractionRef
           .awaitModalSubmit({
             filter: (i: ModalSubmitInteraction) => i.user.id === userId,
             time: timeout,
@@ -674,6 +679,7 @@ export class MenuSession implements MenuSessionLike {
     if (!result) return 'timeout';
 
     // Clear modal state
+    this._modalShowInteraction = null;
     if (this._currentMenu) {
       this._currentMenu.isModalActive = false;
     }
@@ -760,6 +766,15 @@ export class MenuSession implements MenuSessionLike {
     );
 
     await this.executeAction(action, ctx);
+
+    // --- Modal display: if the action triggered openModal, show it now ---
+    if (this._currentMenu.isModalActive && this._currentMenu.activeModal) {
+      await interaction.showModal(this._currentMenu.activeModal.builder);
+      // Save the interaction for awaitModalSubmit — clear from renderer
+      // since it was consumed by showModal (can't also call .update())
+      this._modalShowInteraction = interaction;
+      this._renderer['_lastComponentInteraction'] = null;
+    }
   }
 
   /**

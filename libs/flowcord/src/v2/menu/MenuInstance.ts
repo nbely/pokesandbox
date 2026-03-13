@@ -4,11 +4,7 @@
  * Created by the MenuSession for each active menu. Holds the definition,
  * context, state, and delegates rendering/action handling.
  */
-import type {
-  MenuContext,
-  MenuInstanceLike,
-  ResponseType,
-} from '../context/MenuContext';
+import type { MenuInstanceLike, ResponseType } from '../context/MenuContext';
 import type { MenuDefinition } from '../registry/MenuRegistry';
 import type {
   Action,
@@ -131,11 +127,12 @@ export class MenuInstance<
     return this._actionMap.get(componentId);
   }
 
-  /** Register actions from a list of button configs. */
+  /** Register actions from a list of button configs. Mutates btn.id for stable serialization. */
   registerButtonActions(buttons: ButtonConfig[]): void {
     for (let i = 0; i < buttons.length; i++) {
       const btn = buttons[i];
       const id = btn.id ?? `__btn_${i}`;
+      btn.id = id; // Assign stable ID so serialization matches registration
       if (btn.action) {
         this.registerAction(id, btn.action);
       }
@@ -176,6 +173,7 @@ export class MenuInstance<
       if (component.type === 'button') {
         const btn = component as ButtonConfig;
         const id = btn.id ?? `__btn_${this._actionMap.size}`;
+        btn.id = id; // Assign stable ID so serialization matches registration
         if (btn.action) {
           this.registerAction(id, btn.action);
         }
@@ -200,6 +198,7 @@ export class MenuInstance<
         const section = component as { type: string; accessory?: ButtonConfig };
         if (section.accessory?.type === 'button' && section.accessory.action) {
           const id = section.accessory.id ?? `__btn_${this._actionMap.size}`;
+          section.accessory.id = id; // Assign stable ID so serialization matches registration
           this.registerAction(id, section.accessory.action);
         }
       } else if (component.type === 'paginated_group') {
