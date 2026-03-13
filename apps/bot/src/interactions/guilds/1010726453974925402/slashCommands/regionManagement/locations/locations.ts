@@ -39,9 +39,7 @@ export const LocationsCommand: LocationsCommand = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription(
-      'Manage locations for one of your PokéSandbox Regions'
-    )
+    .setDescription('Manage locations for one of your PokéSandbox Regions')
     .setContexts(InteractionContextType.Guild)
     .addStringOption((option) => {
       return option
@@ -82,8 +80,8 @@ const getLocationsButtons = async (
         await menu.openModal();
       },
     },
-    ...sortedLocations.map((location, index) => ({
-      label: `${index + 1}`,
+    ...sortedLocations.map((location) => ({
+      label: `${location.ordinal}`,
       id: location._id.toString(),
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<LocationsCommandOptions>) => {
@@ -95,4 +93,3 @@ const getLocationsButtons = async (
     })),
   ];
 };
-

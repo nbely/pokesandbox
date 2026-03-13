@@ -52,7 +52,11 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
             new TextInputBuilder()
               .setCustomId('location-ordinal')
               .setStyle(TextInputStyle.Short)
-              .setPlaceholder(isEdit ? 'Unchanged if left empty' : 'Auto-assigned if left empty')
+              .setPlaceholder(
+                isEdit
+                  ? 'Unchanged if left empty'
+                  : 'Auto-assigned if left empty'
+              )
               .setRequired(false),
             location?.ordinal?.toString()
           )
@@ -63,8 +67,7 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
     builder,
     onSubmit: async (menu, { fields }) => {
       // Cast to base AdminMenu since only the shared API surface is needed
-      const baseMenu = menu as unknown as AdminMenu;
-      const existingLocations = await baseMenu.getLocations(regionId);
+      const existingLocations = await menu.getLocations(regionId);
 
       const name = getModalTextValue(fields, 'location-name', true);
       const ordinalText = getModalTextValue(fields, 'location-ordinal');
@@ -74,8 +77,8 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
       if (ordinalText) {
         const parsedOrdinal = parseInt(ordinalText, 10);
         if (isNaN(parsedOrdinal) || parsedOrdinal < 1) {
-          baseMenu.warningMessage = `⚠️ Display order must be a positive number.`;
-          return await baseMenu.refresh();
+          menu.warningMessage = `⚠️ Display order must be a positive number.`;
+          return await menu.refresh();
         }
         ordinal = parsedOrdinal;
       }
@@ -93,7 +96,13 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
             value: ordinal,
             getValue: (loc) => loc.ordinal,
             message: (loc) =>
-              `⚠️ Display order ${ordinal} is already in use by "${loc.name}". ${isEdit ? 'Please choose a different value.' : 'Leave empty to auto-assign.'}`,
+              `⚠️ Display order ${ordinal} is already in use by "${
+                loc.name
+              }". ${
+                isEdit
+                  ? 'Please choose a different value.'
+                  : 'Leave empty to auto-assign.'
+              }`,
             skip: ordinal === undefined,
           },
         ],
@@ -101,19 +110,19 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
       );
 
       if (duplicateError) {
-        baseMenu.warningMessage = duplicateError;
-        return await baseMenu.refresh();
+        menu.warningMessage = duplicateError;
+        return await menu.refresh();
       }
 
       if (isEdit && locationId) {
         // Edit: update the existing location, keeping the current ordinal if field was cleared
-        const existing = await baseMenu.getLocation(locationId);
+        const existing = await menu.getLocation(locationId);
         existing.name = name;
         existing.ordinal = ordinal ?? existing.ordinal;
         await saveLocation(existing);
       } else {
         // Create: persist a new location and link it to the region
-        const region = await baseMenu.getRegion(regionId);
+        const region = await menu.getRegion(regionId);
         const newLocation = await Location.createLocation({
           name,
           regionId: new Types.ObjectId(regionId),
@@ -125,7 +134,7 @@ export const getLocationModal = async <C extends MenuCommandOptions>(
         await saveRegion(region);
       }
 
-      await baseMenu.refresh();
+      await menu.refresh();
     },
   };
 };

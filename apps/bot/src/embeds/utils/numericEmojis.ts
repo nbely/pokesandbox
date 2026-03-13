@@ -1,4 +1,4 @@
-const getNumericEmojisForIndex = (index: number): string => {
+const getNumericEmojisForIndex = (value: number): string => {
   const digitToEmojiMap = [
     '0️⃣',
     '1️⃣',
@@ -12,9 +12,9 @@ const getNumericEmojisForIndex = (index: number): string => {
     '9️⃣',
   ];
 
-  if (index < 0) return '';
+  if (value < 0) return '';
 
-  const numAsString = (index + 1).toString();
+  const numAsString = value.toString();
 
   return Array.from(numAsString)
     .map((char) => digitToEmojiMap[parseInt(char, 10)] ?? '')
