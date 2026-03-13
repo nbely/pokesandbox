@@ -21,6 +21,7 @@ import type {
 
 import type { BotClient, MenuCommandOptions } from '@bot/classes';
 import type { Menu, Session } from '@flowcord';
+import type { CreateMenuDefinitionFn } from '@flowcord/v2';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];
@@ -86,7 +87,7 @@ export interface IRoleSelectMenu extends IBaseCommand {
   execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }
 
-type CreateMenuFunction<
+type LegacyCreateMenuFunction<
   T extends Menu = Menu,
   TOptions extends MenuCommandOptions = MenuCommandOptions
 > = (session: Session, options?: TOptions) => Promise<T>;
@@ -103,8 +104,10 @@ export interface ISlashCommand<
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
     | SlashCommandSubcommandsOnlyBuilder;
-  createMenu?: CreateMenuFunction<T, TOptions>;
-  execute?: (session: Session) => void;
+  /** Legacy v1 menu factory (kept temporarily for migration compatibility) */
+  createMenu?: LegacyCreateMenuFunction<T, TOptions>;
+  /** v2 menu factory (MenuEngine) */
+  createMenuV2?: CreateMenuDefinitionFn;
 }
 
 export interface IStringSelectMenu extends IBaseCommand {

@@ -93,7 +93,20 @@ const handleApplicationCommandInteraction = async (
         });
         return;
       }
-      return client.flowcord.handleInteraction(interaction);
+
+      if (!slashCommand.createMenuV2) {
+        await interaction.reply({
+          content:
+            'This command is still on the legacy menu system and is not migrated to v2 yet.',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      return client.flowcord.handleInteraction(
+        interaction,
+        interaction.commandName
+      );
     }
   }
 
@@ -152,6 +165,12 @@ const handleMessageComponentInteraction = async (
   client: BotClient,
   interaction: MessageComponentInteraction
 ): Promise<void> => {
+  // v2 interactions are routed by session ID embedded in the customId
+  if (client.flowcord?.isV2Interaction(interaction.customId)) {
+    client.flowcord.routeComponentInteraction(interaction);
+    return;
+  }
+
   if (interaction.isButton()) {
     const button: IButtonCommand | undefined =
       client.buttons.get(interaction.customId) ||
