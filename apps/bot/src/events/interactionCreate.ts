@@ -1,5 +1,6 @@
 import {
   ApplicationCommandType,
+  type ChatInputCommandInteraction,
   type AutocompleteInteraction,
   type CommandInteraction,
   type Interaction,
@@ -103,9 +104,12 @@ const handleApplicationCommandInteraction = async (
         return;
       }
 
+      const menuOptions = parseChatInputOptions(interaction);
+
       return client.flowcord.handleInteraction(
         interaction,
-        interaction.commandName
+        interaction.commandName,
+        Object.keys(menuOptions).length ? menuOptions : undefined
       );
     }
   }
@@ -264,4 +268,34 @@ const handleModalSubmitInteraction = async (
     'ModalForm'
   );
   if (authenticatedCMDOptions) return modalForm.execute(client, interaction);
+};
+
+type OptionNode = {
+  name: string;
+  value?: unknown;
+  options?: OptionNode[];
+};
+
+const parseChatInputOptions = (
+  interaction: ChatInputCommandInteraction
+): Record<string, unknown> => {
+  const parsed: Record<string, unknown> = {};
+
+  const walk = (nodes: OptionNode[] | undefined): void => {
+    if (!nodes?.length) return;
+
+    for (const node of nodes) {
+      if (node.value !== undefined) {
+        parsed[node.name] = node.value;
+      }
+
+      if (node.options?.length) {
+        walk(node.options);
+      }
+    }
+  };
+
+  walk(interaction.options.data as unknown as OptionNode[]);
+
+  return parsed;
 };

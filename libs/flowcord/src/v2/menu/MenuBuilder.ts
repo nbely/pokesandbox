@@ -53,11 +53,13 @@ export class MenuBuilder<
   // Callbacks
   protected _setup?: (ctx: TCtx) => Awaitable<void>;
   protected _setEmbeds?: (ctx: TCtx) => Awaitable<EmbedBuilder[]>;
-  protected _setButtons?: (ctx: TCtx) => Awaitable<ButtonConfig[]>;
+  protected _setButtons?: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>;
   protected _setButtonsOptions?: SetButtonsOptions;
-  protected _setSelectMenu?: (ctx: TCtx) => Awaitable<SelectConfig>;
-  protected _setModal?: (ctx: TCtx) => Awaitable<ModalConfig>;
-  protected _setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig[]>;
+  protected _setSelectMenu?: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>;
+  protected _setModal?: (
+    ctx: TCtx
+  ) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>;
+  protected _setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>;
   protected _handleMessage?: (ctx: TCtx, response: string) => Awaitable<void>;
 
   // Lifecycle hooks
@@ -70,6 +72,8 @@ export class MenuBuilder<
   protected _isTrackedInHistory = false;
   protected _isCancellable = false;
   protected _isReturnable = false;
+  protected _fallbackMenu?: string;
+  protected _fallbackMenuOptions?: Record<string, unknown>;
 
   // Context extensions
   protected readonly _contextExtensions: Array<
@@ -125,7 +129,7 @@ export class MenuBuilder<
    */
   setButtons(
     this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
-    fn: (ctx: TCtx) => Awaitable<ButtonConfig[]>,
+    fn: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>,
     options?: SetButtonsOptions
   ): MenuBuilder<TState, TCtx, 'embeds'> {
     this._setButtons = fn;
@@ -139,7 +143,7 @@ export class MenuBuilder<
    */
   setSelectMenu(
     this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
-    fn: (ctx: TCtx) => Awaitable<SelectConfig>
+    fn: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>
   ): MenuBuilder<TState, TCtx, 'embeds'> {
     this._setSelectMenu = fn;
     this._mode = 'embeds';
@@ -157,7 +161,7 @@ export class MenuBuilder<
    */
   setLayout(
     this: MenuBuilder<TState, TCtx, 'unset' | 'layout'>,
-    fn: (ctx: TCtx) => Awaitable<ComponentConfig[]>
+    fn: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>
   ): MenuBuilder<TState, TCtx, 'layout'> {
     this._setLayout = fn;
     this._mode = 'layout';
@@ -168,8 +172,14 @@ export class MenuBuilder<
   // Mode-agnostic methods
   // -----------------------------------------------------------------------
 
-  /** Set the modal rendering callback. Works in both modes. */
-  setModal(fn: (ctx: TCtx) => Awaitable<ModalConfig>): this {
+  /**
+   * Set the modal rendering callback. Works in both modes.
+   * Return a single ModalConfig for one modal, or an array for multiple
+   * (each with a unique `id` field).
+   */
+  setModal(
+    fn: (ctx: TCtx) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>
+  ): this {
     this._setModal = fn;
     return this;
   }
@@ -197,6 +207,17 @@ export class MenuBuilder<
   /** Track this menu in the navigation history stack. */
   setTrackedInHistory(): this {
     this._isTrackedInHistory = true;
+    return this;
+  }
+
+  /**
+   * Set a fallback menu for goBack() when the navigation stack is empty.
+   * Instead of closing the session, navigates to this menu.
+   * Useful for menus that can be opened directly but should return to a parent.
+   */
+  setFallbackMenu(menuId: string, options?: Record<string, unknown>): this {
+    this._fallbackMenu = menuId;
+    this._fallbackMenuOptions = options;
     return this;
   }
 
@@ -305,8 +326,10 @@ export class MenuBuilder<
 
   /**
    * Validate the builder configuration and produce a MenuDefinition.
+   * Returns MenuDefinition (base MenuContext) since all callbacks are cast
+   * to MenuContext internally — TCtx provides type safety at builder time only.
    */
-  build(): MenuDefinition<TCtx> {
+  build(): MenuDefinition {
     // Validate: at least one rendering method must be set
     if (!this._setEmbeds && !this._setLayout) {
       throw new Error(
@@ -347,7 +370,7 @@ export class MenuBuilder<
         | ((ctx: MenuContext) => Awaitable<SelectConfig>)
         | undefined,
       setModal: this._setModal as
-        | ((ctx: MenuContext) => Awaitable<ModalConfig>)
+        | ((ctx: MenuContext) => Awaitable<ModalConfig | ModalConfig[]>)
         | undefined,
       setLayout: this._setLayout as
         | ((ctx: MenuContext) => Awaitable<ComponentConfig[]>)
@@ -359,6 +382,8 @@ export class MenuBuilder<
       isTrackedInHistory: this._isTrackedInHistory,
       isCancellable: this._isCancellable,
       isReturnable: this._isReturnable,
+      fallbackMenu: this._fallbackMenu,
+      fallbackMenuOptions: this._fallbackMenuOptions,
       contextExtensions: [...this._contextExtensions],
     };
   }
@@ -370,10 +395,10 @@ export class MenuBuilder<
 
 export interface MenuDefinitionLiteral<TCtx = MenuContext> {
   embeds?: (ctx: TCtx) => Awaitable<EmbedBuilder[]>;
-  buttons?: (ctx: TCtx) => Awaitable<ButtonConfig[]>;
-  layout?: (ctx: TCtx) => Awaitable<ComponentConfig[]>;
-  selectMenu?: (ctx: TCtx) => Awaitable<SelectConfig>;
-  modal?: (ctx: TCtx) => Awaitable<ModalConfig>;
+  buttons?: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>;
+  layout?: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>;
+  selectMenu?: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>;
+  modal?: (ctx: TCtx) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>;
   messageHandler?: (ctx: TCtx, response: string) => Awaitable<void>;
   setup?: (ctx: TCtx) => Awaitable<void>;
   hooks?: MenuHooks<TCtx>;

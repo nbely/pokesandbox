@@ -91,6 +91,7 @@ export interface MenuSessionLike {
   readonly sessionState: StateStore;
   readonly isCancelled: boolean;
   readonly isCompleted: boolean;
+  readonly canGoBack: boolean;
 }
 
 /**

@@ -106,6 +106,7 @@ export type {
   ActionRowConfig,
   ButtonConfig,
   SelectConfig,
+  SelectAction,
   ModalConfig,
   PaginatedGroupConfig,
   ReservedButtonsPlaceholderConfig,

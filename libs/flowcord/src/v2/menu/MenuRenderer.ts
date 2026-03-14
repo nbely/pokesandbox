@@ -251,17 +251,18 @@ export class MenuRenderer {
     }
 
     if (definition.setModal) {
-      const modalConfig = await definition.setModal(ctx);
-      menuInstance.registerModalConfig(modalConfig);
+      const modalConfigs = await definition.setModal(ctx);
+      menuInstance.registerModalConfigs(modalConfigs);
     }
 
     // Register reserved button actions
-    this.registerReservedActions(menuInstance);
+    this.registerReservedActions(menuInstance, ctx);
 
     // Build reserved button row
     const reservedOpts = this.buildReservedButtonsOptions(
       menuInstance,
-      'embeds'
+      'embeds',
+      ctx
     );
     const reservedRow = buildReservedButtonRow(reservedOpts);
 
@@ -341,17 +342,18 @@ export class MenuRenderer {
 
     // Register modal if defined
     if (definition.setModal) {
-      const modalConfig = await definition.setModal(ctx);
-      menuInstance.registerModalConfig(modalConfig);
+      const modalConfigs = await definition.setModal(ctx);
+      menuInstance.registerModalConfigs(modalConfigs);
     }
 
     // Register reserved button actions
-    this.registerReservedActions(menuInstance);
+    this.registerReservedActions(menuInstance, ctx);
 
     // Build and inject reserved button row
     const reservedOpts = this.buildReservedButtonsOptions(
       menuInstance,
-      'layout'
+      'layout',
+      ctx
     );
     const reservedRow = buildReservedButtonRow(reservedOpts);
     if (reservedRow) {
@@ -482,15 +484,7 @@ export class MenuRenderer {
       const row = new ActionRowBuilder<MessageActionRowComponentBuilder>();
       for (let j = 0; j < chunk.length; j++) {
         const btn = chunk[j];
-        const id = btn.id ?? `__btn_${i + j}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const builder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(btn.label)
-          .setStyle(btn.style)
-          .setDisabled(btn.disabled ?? false);
-        if (btn.emoji) builder.setEmoji(btn.emoji);
-        row.addComponents(builder);
+        row.addComponents(this.buildButtonBuilder(btn, menuInstance));
       }
       rows.push(row);
     }
@@ -594,15 +588,10 @@ export class MenuRenderer {
           new ThumbnailBuilder().setURL(config.accessory.url)
         );
       } else if (config.accessory.type === 'button') {
-        const btn = config.accessory;
-        const id = btn.id ?? `__btn_${menuInstance['_actionMap'].size}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const buttonBuilder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(btn.label)
-          .setStyle(btn.style)
-          .setDisabled(btn.disabled ?? false);
-        if (btn.emoji) buttonBuilder.setEmoji(btn.emoji);
+        const buttonBuilder = this.buildButtonBuilder(
+          config.accessory,
+          menuInstance
+        );
         builder.setButtonAccessory(buttonBuilder);
       }
     }
@@ -716,15 +705,7 @@ export class MenuRenderer {
 
     for (const child of config.children) {
       if (child.type === 'button') {
-        const id = child.id ?? `__btn_${menuInstance['_actionMap'].size}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const builder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(child.label)
-          .setStyle(child.style)
-          .setDisabled(child.disabled ?? false);
-        if (child.emoji) builder.setEmoji(child.emoji);
-        row.addComponents(builder);
+        row.addComponents(this.buildButtonBuilder(child, menuInstance));
       } else if (child.type === 'select') {
         const selectId = child.id ?? '__select';
         const namespacedId = menuInstance.idManager.namespace(selectId);
@@ -734,6 +715,35 @@ export class MenuRenderer {
     }
 
     return row;
+  }
+
+  // -----------------------------------------------------------------------
+  // Button builder helper
+  // -----------------------------------------------------------------------
+
+  /**
+   * Build a Discord.js ButtonBuilder from a ButtonConfig.
+   * Link buttons use setURL(), all others use setCustomId().
+   */
+  private buildButtonBuilder(
+    btn: ButtonConfig,
+    menuInstance: MenuInstance
+  ): ButtonBuilder {
+    const builder = new ButtonBuilder()
+      .setLabel(btn.label)
+      .setStyle(btn.style)
+      .setDisabled(btn.disabled ?? false);
+
+    if (btn.style === ButtonStyle.Link && btn.url) {
+      builder.setURL(btn.url);
+    } else {
+      const id = btn.id ?? `__btn_${menuInstance['_actionMap'].size}`;
+      const namespacedId = menuInstance.idManager.namespace(id);
+      builder.setCustomId(namespacedId);
+    }
+
+    if (btn.emoji) builder.setEmoji(btn.emoji);
+    return builder;
   }
 
   // -----------------------------------------------------------------------
@@ -811,14 +821,18 @@ export class MenuRenderer {
 
   buildReservedButtonsOptions(
     menuInstance: MenuInstance,
-    mode: RenderMode
+    mode: RenderMode,
+    ctx?: MenuContext
   ): ReservedButtonsOptions {
     const paginationConfig =
       menuInstance.definition.listPagination ??
       menuInstance.definition.setButtonsOptions?.pagination;
 
+    // Only show Back if the definition allows it AND there's somewhere to go
+    const canGoBack = ctx?.session.canGoBack ?? true;
+
     return {
-      showBack: menuInstance.definition.isReturnable,
+      showBack: menuInstance.definition.isReturnable && canGoBack,
       showCancel: menuInstance.definition.isCancellable,
       pagination: menuInstance.paginationState,
       stableButtons: paginationConfig?.stableButtons ?? true,
@@ -837,11 +851,15 @@ export class MenuRenderer {
    * These are handled by the session, but we need them in the action map
    * so the routing logic picks them up via the standard path.
    */
-  private registerReservedActions(menuInstance: MenuInstance): void {
+  private registerReservedActions(
+    menuInstance: MenuInstance,
+    ctx?: MenuContext
+  ): void {
     // Reserved buttons are handled directly by the session via their IDs.
     // We register placeholder actions so resolveAction returns non-undefined
     // for them (the session checks reserved IDs before calling the action).
-    if (menuInstance.definition.isReturnable) {
+    const canGoBack = ctx?.session.canGoBack ?? true;
+    if (menuInstance.definition.isReturnable && canGoBack) {
       menuInstance.registerAction('__reserved_back', async () => {
         /* handled by session */
       });

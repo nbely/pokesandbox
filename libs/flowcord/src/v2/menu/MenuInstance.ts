@@ -4,6 +4,7 @@
  * Created by the MenuSession for each active menu. Holds the definition,
  * context, state, and delegates rendering/action handling.
  */
+import { ButtonStyle } from 'discord.js';
 import type { MenuInstanceLike, ResponseType } from '../context/MenuContext';
 import type { MenuDefinition } from '../registry/MenuRegistry';
 import type {
@@ -27,13 +28,19 @@ export class MenuInstance<
   /** Map of component ID → action for routing interactions */
   private readonly _actionMap = new Map<string, Action>();
 
+  /** Component IDs that trigger a modal, mapped to their target modal ID */
+  private readonly _modalButtonMap = new Map<string, string>();
+
   /** Current pagination state */
   private _paginationState: PaginationState | null = null;
 
   /** Active select menu config (set during render) */
   private _activeSelect: SelectConfig | null = null;
 
-  /** Active modal config (set during render or via openModal action) */
+  /** Registered modals keyed by ID ('__default' for unnamed) */
+  private readonly _modalMap = new Map<string, ModalConfig>();
+
+  /** The currently-triggered modal (set when a modal button is clicked) */
   private _activeModal: ModalConfig | null = null;
 
   /** Whether a modal is currently displayed */
@@ -117,6 +124,8 @@ export class MenuInstance<
   /** Clear all registered actions (called before each render cycle). */
   clearActions(): void {
     this._actionMap.clear();
+    this._modalButtonMap.clear();
+    this._modalMap.clear();
     this._activeSelect = null;
     this._activeModal = null;
     this._isModalActive = false;
@@ -133,32 +142,73 @@ export class MenuInstance<
       const btn = buttons[i];
       const id = btn.id ?? `__btn_${i}`;
       btn.id = id; // Assign stable ID so serialization matches registration
-      if (btn.action) {
+
+      // Link buttons are handled natively by Discord — skip registration entirely.
+      if (this.isLinkButton(btn)) {
+        this.validateButton(btn);
+        continue;
+      }
+
+      this.validateButton(btn);
+
+      if (btn.opensModal) {
+        const modalId =
+          typeof btn.opensModal === 'string' ? btn.opensModal : '__default';
+        this._modalButtonMap.set(id, modalId);
+        // Register a placeholder action so the routing picks it up;
+        // the session handles the actual showModal() call.
+        this.registerAction(id, async () => {
+          /* modal trigger */
+        });
+      } else if (btn.action) {
         this.registerAction(id, btn.action);
       }
     }
   }
 
-  /** Register a select menu config and its onSelect action. */
+  /** Register a select menu config. Action dispatched separately via activeSelect. */
   registerSelectAction(selectConfig: SelectConfig): void {
     this._activeSelect = selectConfig;
-    const id = selectConfig.id ?? '__select';
-    if (selectConfig.onSelect) {
-      this.registerAction(id, selectConfig.onSelect);
+  }
+
+  /**
+   * Register one or more modal configs.
+   * Each config's `id` is used as the key; unnamed modals use '__default'.
+   */
+  registerModalConfigs(configs: ModalConfig | ModalConfig[]): void {
+    const arr = Array.isArray(configs) ? configs : [configs];
+    for (const config of arr) {
+      const key = config.id ?? '__default';
+      this._modalMap.set(key, config);
     }
   }
 
-  /** Register a modal config and its onSubmit action. */
-  registerModalConfig(modalConfig: ModalConfig): void {
-    this._activeModal = modalConfig;
+  /** Look up a registered modal by ID. */
+  getModal(modalId: string): ModalConfig | undefined {
+    return this._modalMap.get(modalId);
   }
 
   /**
    * Called by the openModal action to mark a modal as ready to show.
    * The session checks this flag before the render/interaction cycle.
    */
-  async openModal(): Promise<void> {
-    this._isModalActive = true;
+  async openModal(modalId?: string): Promise<void> {
+    const key = modalId ?? '__default';
+    const modal = this._modalMap.get(key);
+    if (modal) {
+      this._activeModal = modal;
+      this._isModalActive = true;
+    }
+  }
+
+  /** Check if a component ID is registered as a modal trigger. */
+  isModalButton(componentId: string): boolean {
+    return this._modalButtonMap.has(componentId);
+  }
+
+  /** Get the modal ID a button is configured to open. */
+  getModalIdForButton(componentId: string): string | undefined {
+    return this._modalButtonMap.get(componentId);
   }
 
   /** Register actions from layout component tree (recursive). */
@@ -174,7 +224,22 @@ export class MenuInstance<
         const btn = component as ButtonConfig;
         const id = btn.id ?? `__btn_${this._actionMap.size}`;
         btn.id = id; // Assign stable ID so serialization matches registration
-        if (btn.action) {
+
+        if (this.isLinkButton(btn)) {
+          this.validateButton(btn);
+          continue;
+        }
+
+        this.validateButton(btn);
+
+        if (btn.opensModal) {
+          const modalId =
+            typeof btn.opensModal === 'string' ? btn.opensModal : '__default';
+          this._modalButtonMap.set(id, modalId);
+          this.registerAction(id, async () => {
+            /* modal trigger */
+          });
+        } else if (btn.action) {
           this.registerAction(id, btn.action);
         }
       } else if (component.type === 'select') {
@@ -196,15 +261,90 @@ export class MenuInstance<
         );
       } else if (component.type === 'section') {
         const section = component as { type: string; accessory?: ButtonConfig };
-        if (section.accessory?.type === 'button' && section.accessory.action) {
-          const id = section.accessory.id ?? `__btn_${this._actionMap.size}`;
-          section.accessory.id = id; // Assign stable ID so serialization matches registration
-          this.registerAction(id, section.accessory.action);
+        if (section.accessory?.type === 'button') {
+          const acc = section.accessory;
+          const id = acc.id ?? `__btn_${this._actionMap.size}`;
+          acc.id = id;
+
+          if (this.isLinkButton(acc)) {
+            this.validateButton(acc);
+            continue;
+          }
+
+          this.validateButton(acc);
+
+          if (acc.opensModal) {
+            const modalId =
+              typeof acc.opensModal === 'string' ? acc.opensModal : '__default';
+            this._modalButtonMap.set(id, modalId);
+            this.registerAction(id, async () => {
+              /* modal trigger */
+            });
+          } else if (acc.action) {
+            this.registerAction(id, acc.action);
+          }
         }
       } else if (component.type === 'paginated_group') {
         const group = component as { type: string; buttons: ButtonConfig[] };
         this.registerButtonActions(group.buttons);
       }
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Button validation
+  // -----------------------------------------------------------------------
+
+  /** Check if a button config represents a Discord link button. */
+  private isLinkButton(btn: ButtonConfig): boolean {
+    return btn.style === ButtonStyle.Link;
+  }
+
+  /**
+   * Validate a ButtonConfig and log warnings for misconfigured combinations.
+   * Called during action registration for every button.
+   */
+  private validateButton(btn: ButtonConfig): void {
+    const label = btn.label ?? btn.id ?? 'unknown';
+    const menuName = this.definition.name;
+
+    if (this.isLinkButton(btn)) {
+      // Link buttons: must have url, action/opensModal are ignored
+      if (!btn.url) {
+        console.warn(
+          `[FlowCord] Menu "${menuName}": Link button "${label}" is missing a \`url\`. ` +
+            `Link buttons require a URL.`
+        );
+      }
+      if (btn.action) {
+        console.warn(
+          `[FlowCord] Menu "${menuName}": Link button "${label}" has an \`action\` which will be ignored. ` +
+            `Link buttons are handled by Discord and don't generate interactions.`
+        );
+      }
+      if (btn.opensModal) {
+        console.warn(
+          `[FlowCord] Menu "${menuName}": Link button "${label}" has \`opensModal\` which will be ignored. ` +
+            `Link buttons are handled by Discord and don't generate interactions.`
+        );
+      }
+      return;
+    }
+
+    // Non-link buttons: check for action/opensModal conflicts
+    if (btn.action && btn.opensModal) {
+      console.warn(
+        `[FlowCord] Menu "${menuName}": Button "${label}" has both \`action\` and \`opensModal\`. ` +
+          `\`opensModal\` takes precedence — the action will be ignored.`
+      );
+    }
+
+    // Non-link, non-disabled buttons should have at least action or opensModal
+    if (!btn.disabled && !btn.action && !btn.opensModal) {
+      console.warn(
+        `[FlowCord] Menu "${menuName}": Button "${label}" has no \`action\`, \`opensModal\`, or \`url\`. ` +
+          `It will render but do nothing when clicked. If intentional, set \`disabled: true\`.`
+      );
     }
   }
 }

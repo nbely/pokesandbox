@@ -54,18 +54,18 @@ export interface LayoutRenderOutput {
 // ---------------------------------------------------------------------------
 
 /** Discriminated union of all component configs */
-export type ComponentConfig =
+export type ComponentConfig<TCtx = MenuContextLike> =
   | TextDisplayConfig
-  | SectionConfig
-  | ContainerConfig
+  | SectionConfig<TCtx>
+  | ContainerConfig<TCtx>
   | SeparatorConfig
   | ThumbnailConfig
   | MediaGalleryConfig
   | FileConfig
-  | ActionRowConfig
-  | ButtonConfig
-  | SelectConfig
-  | PaginatedGroupConfig
+  | ActionRowConfig<TCtx>
+  | ButtonConfig<TCtx>
+  | SelectConfig<TCtx>
+  | PaginatedGroupConfig<TCtx>
   | ReservedButtonsPlaceholderConfig;
 
 // --- Display Components (Layout mode) ---
@@ -75,17 +75,17 @@ export interface TextDisplayConfig {
   content: string;
 }
 
-export interface SectionConfig {
+export interface SectionConfig<TCtx = MenuContextLike> {
   type: 'section';
   text: (string | TextDisplayConfig)[];
-  accessory?: ButtonConfig | ThumbnailConfig;
+  accessory?: ButtonConfig<TCtx> | ThumbnailConfig;
 }
 
-export interface ContainerConfig {
+export interface ContainerConfig<TCtx = MenuContextLike> {
   type: 'container';
   accentColor?: number;
   spoiler?: boolean;
-  children: ComponentConfig[];
+  children: ComponentConfig<TCtx>[];
 }
 
 export interface SeparatorConfig {
@@ -120,35 +120,51 @@ export interface FileConfig {
 
 // --- Interactive Components (shared across modes) ---
 
-export interface ActionRowConfig {
+export interface ActionRowConfig<TCtx = MenuContextLike> {
   type: 'action_row';
-  children: (ButtonConfig | SelectConfig)[];
+  children: (ButtonConfig<TCtx> | SelectConfig<TCtx>)[];
 }
 
-export interface ButtonConfig {
+export interface ButtonConfig<TCtx = MenuContextLike> {
   type: 'button';
   label: string;
   style: ButtonStyle;
   id?: string;
   disabled?: boolean;
   emoji?: string;
-  action?: Action;
+  action?: Action<TCtx>;
+  /**
+   * Marks this button as a modal trigger. When clicked, the framework will
+   * show the menu's modal instead of deferring the interaction.
+   * Mutually exclusive with `action` — if both are set, `opensModal` takes
+   * precedence and `action` is ignored.
+   *
+   * - `true` opens the default (unnamed) modal
+   * - A string opens the modal with that specific ID
+   */
+  opensModal?: boolean | string;
+  /**
+   * URL for link buttons. When set, `style` must be `ButtonStyle.Link`.
+   * Link buttons are handled natively by Discord — no interaction is generated,
+   * and `action`/`opensModal` are ignored.
+   */
+  url?: string;
   /** Used by embed-mode pagination: pin button to start/end across pages */
   fixedPosition?: 'start' | 'end';
 }
 
-export interface SelectConfig {
+export interface SelectConfig<TCtx = MenuContextLike> {
   type: 'select';
   builder: AnySelectMenuBuilder;
   id?: string;
-  onSelect?: Action;
+  onSelect?: SelectAction<TCtx>;
 }
 
 // --- Pagination marker ---
 
-export interface PaginatedGroupConfig {
+export interface PaginatedGroupConfig<TCtx = MenuContextLike> {
   type: 'paginated_group';
-  buttons: ButtonConfig[];
+  buttons: ButtonConfig<TCtx>[];
   options?: ButtonPaginationOptions;
 }
 
@@ -165,8 +181,20 @@ export interface ReservedButtonsPlaceholderConfig {
 /**
  * An action is either an inline async callback or a built-in factory result.
  * All interactive components (buttons, selects, modals) use this same type.
+ *
+ * Generic over TCtx so that builder subclasses (e.g. AdminMenuBuilder)
+ * can provide a richer context type to inline callbacks.
  */
-export type Action = (ctx: MenuContextLike) => Awaitable<void>;
+export type Action<TCtx = MenuContextLike> = (ctx: TCtx) => Awaitable<void>;
+
+/**
+ * A select menu action receives the context and the selected values.
+ * Mirrors the handleMessage(ctx, response) pattern.
+ */
+export type SelectAction<TCtx = MenuContextLike> = (
+  ctx: TCtx,
+  values: string[]
+) => Awaitable<void>;
 
 /**
  * Minimal context shape that Action callbacks accept.
@@ -196,9 +224,11 @@ export interface MenuContextLike {
  * The modal builder is a standard Discord.js ModalBuilder,
  * but the onSubmit handler uses the v2 action pattern.
  */
-export interface ModalConfig {
+export interface ModalConfig<TCtx = MenuContextLike> {
+  /** Optional identifier for multi-modal menus. Omit for single-modal menus. */
+  id?: string;
   builder: ModalBuilder;
-  onSubmit?: (ctx: MenuContextLike, fields: ModalSubmitFields) => Promise<void>;
+  onSubmit?: (ctx: TCtx, fields: ModalSubmitFields) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------

@@ -29,13 +29,15 @@ export interface MenuDefinition<TCtx = MenuContext> {
   setButtons?: (ctx: TCtx) => Awaitable<ButtonConfig[]>;
   setButtonsOptions?: SetButtonsOptions;
   setSelectMenu?: (ctx: TCtx) => Awaitable<SelectConfig>;
-  setModal?: (ctx: TCtx) => Awaitable<ModalConfig>;
+  setModal?: (ctx: TCtx) => Awaitable<ModalConfig | ModalConfig[]>;
   setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig[]>;
   handleMessage?: (ctx: TCtx, response: string) => Awaitable<void>;
   listPagination?: ListPaginationOptions;
   isTrackedInHistory: boolean;
   isCancellable: boolean;
   isReturnable: boolean;
+  fallbackMenu?: string;
+  fallbackMenuOptions?: Record<string, unknown>;
   contextExtensions: Array<(baseCtx: MenuContext) => Record<string, unknown>>;
 }
 

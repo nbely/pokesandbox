@@ -10,6 +10,7 @@ import { randomUUID } from 'crypto';
 import type {
   ChatInputCommandInteraction,
   Client,
+  Interaction,
   Message,
   MessageComponentInteraction,
   ModalSubmitInteraction,
@@ -77,6 +78,9 @@ export class MenuSession implements MenuSessionLike {
   /** Options that were used to create the current menu (kept for hardRefresh). */
   private _currentOptions: Record<string, unknown> | undefined;
 
+  /** The most recent interaction (updated on every component/modal interaction). */
+  private _latestInteraction: Interaction;
+
   constructor(engine: MenuEngine, interaction: ChatInputCommandInteraction) {
     this.id = randomUUID().slice(0, 12);
     this.sessionState = new StateStore();
@@ -85,6 +89,7 @@ export class MenuSession implements MenuSessionLike {
     this._stack = new MenuStack();
     this._renderer = new MenuRenderer();
     this._lifecycleManager = new LifecycleManager();
+    this._latestInteraction = interaction;
 
     // Apply global hooks from the engine's HookRegistry
     engine.hookRegistry.applyTo(this._lifecycleManager);
@@ -104,6 +109,11 @@ export class MenuSession implements MenuSessionLike {
 
   get isCompleted(): boolean {
     return this._isCompleted;
+  }
+
+  /** Whether goBack() has somewhere to go (stack or fallback menu). */
+  get canGoBack(): boolean {
+    return !this._stack.isEmpty || !!this._currentMenu?.definition.fallbackMenu;
   }
 
   // -----------------------------------------------------------------------
@@ -191,6 +201,43 @@ export class MenuSession implements MenuSessionLike {
   async goBack(result?: unknown): Promise<void> {
     const entry = this._stack.pop();
     if (!entry) {
+      // Check for a fallback menu before closing
+      const fallbackMenu = this._currentMenu?.definition.fallbackMenu;
+      const fallbackMenuOptions =
+        this._currentMenu?.definition.fallbackMenuOptions;
+      if (fallbackMenu) {
+        // Navigate to fallback WITHOUT pushing current menu to stack
+        // (prevents circular navigation when the menu was opened directly)
+        const factory = this._engine.menuRegistry.getFactory(fallbackMenu);
+        if (!factory) {
+          throw new Error(`Fallback menu "${fallbackMenu}" is not registered.`);
+        }
+
+        if (this._currentMenu) {
+          const ctx = this.buildContext(this._currentMenu);
+          await this._lifecycleManager.emit(
+            'onLeave',
+            ctx,
+            this._currentMenu.definition.hooks
+          );
+        }
+
+        this._currentOptions = fallbackMenuOptions;
+        const definition = await factory(this, fallbackMenuOptions);
+        const instance = new MenuInstance(definition, this.id);
+        this._currentMenu = instance;
+
+        if (definition.setup) {
+          const ctx = this.buildContext(instance);
+          await definition.setup(ctx);
+        }
+
+        const ctx = this.buildContext(instance);
+        await this._lifecycleManager.emit('onEnter', ctx, definition.hooks);
+        this._didNavigate = true;
+        return;
+      }
+
       await this.close();
       return;
     }
@@ -454,9 +501,17 @@ export class MenuSession implements MenuSessionLike {
 
       this._renderer.setLastComponentInteraction(interaction);
       await this.handleComponentInteraction(interaction);
-    } catch {
-      // Timeout — end session
-      this._isCompleted = true;
+    } catch (error) {
+      // awaitMessageComponent rejects on timeout with a specific collector error.
+      // Re-throw real errors so they aren't silently swallowed.
+      const isTimeout =
+        error instanceof Error &&
+        (error.message.includes('time') || error.message.includes('Collector'));
+      if (isTimeout) {
+        this._isCompleted = true;
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -725,10 +780,24 @@ export class MenuSession implements MenuSessionLike {
   ): Promise<void> {
     if (!this._currentMenu) return;
 
+    // Track the latest interaction so ctx.interaction stays current
+    this._latestInteraction = interaction as Interaction;
+
     const parsed = ComponentIdManager.parse(interaction.customId);
     if (!parsed) return;
 
     const componentId = parsed.componentId;
+
+    // Determine if this button is a declarative modal trigger (opensModal).
+    // Modal triggers must NOT be deferred — showModal() requires a raw interaction.
+    // All other component interactions are auto-deferred so consumer actions
+    // never need to worry about Discord's 3-second acknowledgement deadline.
+    const isModalButton = this._currentMenu.isModalButton(componentId);
+
+    if (!isModalButton && !interaction.deferred && !interaction.replied) {
+      await interaction.deferUpdate();
+      this._renderer['_lastComponentInteraction'] = null;
+    }
 
     // --- Reserved button handling ---
     if (componentId === '__reserved_back') {
@@ -752,7 +821,32 @@ export class MenuSession implements MenuSessionLike {
       return;
     }
 
-    // --- Custom action dispatch ---
+    // --- Select menu handling (pass selected values to onSelect) ---
+    if (interaction.isAnySelectMenu()) {
+      const onSelect = this._currentMenu.activeSelect?.onSelect;
+      if (!onSelect) return;
+
+      const ctx = this.buildContext(this._currentMenu);
+
+      await this._lifecycleManager.emit(
+        'onAction',
+        ctx,
+        this._currentMenu.definition.hooks
+      );
+
+      try {
+        await onSelect(ctx, interaction.values);
+      } catch (error) {
+        if (error instanceof GuardFailedError) {
+          ctx.state.set('__guardMessage', error.message);
+          return;
+        }
+        throw error;
+      }
+      return;
+    }
+
+    // --- Custom action dispatch (buttons) ---
     const action = this._currentMenu.resolveAction(componentId);
     if (!action) return;
 
@@ -765,15 +859,40 @@ export class MenuSession implements MenuSessionLike {
       this._currentMenu.definition.hooks
     );
 
+    // Modal trigger buttons: look up the target modal and show it
+    // on the raw (non-deferred) interaction.
+    if (isModalButton) {
+      const modalId = this._currentMenu.getModalIdForButton(componentId);
+      if (modalId) {
+        // Sets _activeModal and _isModalActive on the instance
+        await this._currentMenu.openModal(modalId);
+        const modal = this._currentMenu.activeModal;
+        if (modal) {
+          await interaction.showModal(modal.builder);
+          this._modalShowInteraction = interaction;
+          this._renderer['_lastComponentInteraction'] = null;
+          return;
+        }
+      }
+    }
+
     await this.executeAction(action, ctx);
 
-    // --- Modal display: if the action triggered openModal, show it now ---
+    // Legacy openModal() action support: if the action set isModalActive,
+    // show the modal. The openModal() builtin knows how to look up the
+    // correct modal from the map and set _activeModal.
     if (this._currentMenu.isModalActive && this._currentMenu.activeModal) {
-      await interaction.showModal(this._currentMenu.activeModal.builder);
-      // Save the interaction for awaitModalSubmit — clear from renderer
-      // since it was consumed by showModal (can't also call .update())
-      this._modalShowInteraction = interaction;
-      this._renderer['_lastComponentInteraction'] = null;
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.showModal(this._currentMenu.activeModal.builder);
+        this._modalShowInteraction = interaction;
+        this._renderer['_lastComponentInteraction'] = null;
+      } else {
+        console.warn(
+          `[FlowCord] Button "${componentId}" used openModal() action but was auto-deferred. ` +
+            `Use opensModal: true on the ButtonConfig instead.`
+        );
+        this._currentMenu.isModalActive = false;
+      }
     }
   }
 
@@ -784,6 +903,9 @@ export class MenuSession implements MenuSessionLike {
     interaction: ModalSubmitInteraction
   ): Promise<void> {
     if (!this._currentMenu) return;
+
+    // Track the latest interaction so ctx.interaction stays current
+    this._latestInteraction = interaction as Interaction;
 
     // Defer the modal's reply so it doesn't timeout
     await interaction.deferUpdate();
@@ -804,7 +926,7 @@ export class MenuSession implements MenuSessionLike {
     } catch (error) {
       if (error instanceof GuardFailedError) {
         // Show the guard's message as a prompt on the current menu state
-        ctx.state.set('__guardMessage' as never, error.message as never);
+        ctx.state.set('__guardMessage', error.message);
         return; // Auto-refresh will show the updated state
       }
       throw error;
@@ -888,7 +1010,7 @@ export class MenuSession implements MenuSessionLike {
       state: menuInstance.stateAccessor,
       sessionState: this.sessionState,
       client: this.client,
-      interaction: this._commandInteraction,
+      interaction: this._latestInteraction,
       options: (this._currentOptions ?? {}) as Record<string, unknown>,
       pagination: menuInstance.paginationState,
       env: 'discord',
