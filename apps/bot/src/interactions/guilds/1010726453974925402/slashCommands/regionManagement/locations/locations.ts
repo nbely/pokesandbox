@@ -4,12 +4,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   assertOptions,
@@ -18,7 +13,6 @@ import {
   sortByOrdinal,
 } from '@bot/utils';
 
-import { LOCATION_COMMAND_NAME } from './location';
 import { getLocationModal } from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
 import type { LocationsCommandOptions } from './types';
@@ -85,10 +79,10 @@ const getLocationsButtons = async (
       id: location._id.toString(),
       style: ButtonStyle.Primary,
       onClick: async (menu: AdminMenu<LocationsCommandOptions>) => {
-        await MenuWorkflow.openMenu(menu, LOCATION_COMMAND_NAME, {
-          region_id: regionId,
-          location_id: location._id.toString(),
-        });
+        // await MenuWorkflow.openMenu(menu, LOCATION_COMMAND_NAME, {
+        //   region_id: regionId,
+        //   location_id: location._id.toString(),
+        // });
       },
     })),
   ];

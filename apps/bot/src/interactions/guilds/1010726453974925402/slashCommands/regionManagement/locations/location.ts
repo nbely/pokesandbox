@@ -5,12 +5,7 @@ import {
 } from 'discord.js';
 
 import { saveRegion } from '@bot/cache';
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   assertOptions,
@@ -20,7 +15,6 @@ import {
 
 import { getLocationModal } from './location.modal';
 import { getLocationMenuEmbeds } from './location.embeds';
-import { LOCATIONS_COMMAND_NAME } from './locations';
 import type { LocationCommandOptions } from './types';
 
 const COMMAND_NAME = 'location';
@@ -39,7 +33,9 @@ export const LocationCommand: LocationCommand = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription('Manage a single location in one of your PokéSandbox Regions')
+    .setDescription(
+      'Manage a single location in one of your PokéSandbox Regions'
+    )
     .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option
@@ -102,11 +98,13 @@ const getLocationButtons = async (
         await location.deleteOne();
 
         // Navigate back, falling back to the locations list if there's no prior history
-        await menu.session.goBack(async () =>
-          MenuWorkflow.openMenu(menu, LOCATIONS_COMMAND_NAME, {
-            region_id: regionId,
-          })
-        );
+        await menu.session
+          .goBack
+          // async () =>
+          // MenuWorkflow.openMenu(menu, LOCATIONS_COMMAND_NAME, {
+          //   region_id: regionId,
+          // })
+          ();
       },
     },
     {
