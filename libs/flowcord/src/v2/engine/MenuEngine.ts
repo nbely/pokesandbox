@@ -6,9 +6,10 @@
  *
  * Both v1 FlowCord and v2 MenuEngine can coexist in the same bot.
  */
-import type {
-  ChatInputCommandInteraction,
-  MessageComponentInteraction,
+import {
+  type ChatInputCommandInteraction,
+  EmbedBuilder,
+  type MessageComponentInteraction,
 } from 'discord.js';
 import type { FlowCordClient } from '../../FlowCordClient';
 import type { CreateMenuDefinitionFn } from '../registry/MenuRegistry';
@@ -29,6 +30,56 @@ export interface MenuEngineConfig {
   /** Enable navigation tracing (default: false) */
   enableTracing?: boolean;
 }
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'An unknown error has occurred.';
+};
+
+const buildDefaultErrorEmbed = (
+  interaction: ChatInputCommandInteraction,
+  error: unknown
+): EmbedBuilder => {
+  const errorMessage = getErrorMessage(error);
+
+  return new EmbedBuilder()
+    .setColor('DarkRed')
+    .setAuthor({
+      name: interaction.user.displayName,
+      iconURL: interaction.user.displayAvatarURL(),
+    })
+    .setTitle('Error')
+    .setDescription(errorMessage)
+    .setTimestamp();
+};
+
+const defaultOnError = async (
+  interaction: ChatInputCommandInteraction,
+  error: unknown
+): Promise<void> => {
+  const errorEmbed = buildDefaultErrorEmbed(interaction, error);
+
+  try {
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({
+        embeds: [errorEmbed],
+        components: [],
+      });
+      return;
+    }
+
+    await interaction.reply({
+      embeds: [errorEmbed],
+      components: [],
+      ephemeral: true,
+    });
+  } catch (discordError) {
+    console.error('[FlowCord v2] Failed to send error response:', discordError);
+  }
+};
 
 export class MenuEngine {
   readonly menuRegistry: MenuRegistry;
@@ -93,7 +144,7 @@ export class MenuEngine {
       if (this._config.onError) {
         await this._config.onError(session, error);
       } else {
-        throw error;
+        await defaultOnError(interaction, error);
       }
     }
   }

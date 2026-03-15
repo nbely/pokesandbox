@@ -64,6 +64,9 @@ type LastUpdateSource =
   | 'messageCollect';
 
 export class MenuRenderer {
+  private static readonly MAX_EMBED_COMPONENT_ROWS = 5;
+  private static readonly MAX_BUTTONS_PER_ROW = 5;
+
   private _activeMessage: Message | null = null;
   private _activeMessageMode: RenderMode | null = null;
   private _lastUpdateSource: LastUpdateSource | null = null;
@@ -203,11 +206,7 @@ export class MenuRenderer {
         menuInstance.paginationState;
     }
 
-    // Run setter callbacks
-    if (definition.setEmbeds) {
-      embeds = await definition.setEmbeds(ctx);
-    }
-
+    // Run button/select setters first so pagination can be computed before embeds.
     if (definition.setButtons) {
       buttons = await definition.setButtons(ctx);
     }
@@ -216,10 +215,36 @@ export class MenuRenderer {
       selectConfig = await definition.setSelectMenu(ctx);
     }
 
-    // Handle button pagination (slice buttons for current page)
-    if (definition.setButtonsOptions?.pagination && buttons.length > 0) {
-      const paginationOpts = definition.setButtonsOptions.pagination;
-      const perPage = paginationOpts.perPage ?? 25;
+    // Handle button pagination (slice buttons for current page).
+    // Auto-enable pagination when needed so embed rows never exceed Discord limits.
+    const configuredButtonPagination = definition.setButtonsOptions?.pagination;
+    const hasConfiguredButtonPagination = !!configuredButtonPagination;
+    const maxButtonsWithoutPagination = this.getMaxEmbedButtonsPerPage(
+      menuInstance,
+      !!selectConfig,
+      ctx,
+      false
+    );
+    const needsAutoButtonPagination =
+      !hasConfiguredButtonPagination &&
+      !definition.listPagination &&
+      buttons.length > maxButtonsWithoutPagination;
+
+    if (
+      (hasConfiguredButtonPagination || needsAutoButtonPagination) &&
+      buttons.length > 0
+    ) {
+      const requestedPerPage = configuredButtonPagination?.perPage ?? 25;
+      const maxButtonsWithReservedRow = this.getMaxEmbedButtonsPerPage(
+        menuInstance,
+        !!selectConfig,
+        ctx,
+        true
+      );
+      const perPage = Math.max(
+        1,
+        Math.min(requestedPerPage, maxButtonsWithReservedRow)
+      );
       const totalPages = Math.ceil(buttons.length / perPage);
       const currentPage = menuInstance.paginationState?.currentPage ?? 0;
 
@@ -231,6 +256,10 @@ export class MenuRenderer {
         startIndex: currentPage * perPage,
         endIndex: Math.min((currentPage + 1) * perPage, buttons.length),
       };
+
+      // Keep embeds in sync with the same page that button rows are using.
+      (ctx as { pagination: PaginationState | null }).pagination =
+        menuInstance.paginationState;
 
       // Register ALL button actions (pre-slice) so pagination page changes work
       menuInstance.registerButtonActions(buttons);
@@ -245,23 +274,29 @@ export class MenuRenderer {
       menuInstance.registerButtonActions(buttons);
     }
 
+    // Run embed setter after final pagination state is known.
+    if (definition.setEmbeds) {
+      embeds = await definition.setEmbeds(ctx);
+    }
+
     // Register select and modal actions
     if (selectConfig) {
       menuInstance.registerSelectAction(selectConfig);
     }
 
     if (definition.setModal) {
-      const modalConfig = await definition.setModal(ctx);
-      menuInstance.registerModalConfig(modalConfig);
+      const modalConfigs = await definition.setModal(ctx);
+      menuInstance.registerModalConfigs(modalConfigs);
     }
 
     // Register reserved button actions
-    this.registerReservedActions(menuInstance);
+    this.registerReservedActions(menuInstance, ctx);
 
     // Build reserved button row
     const reservedOpts = this.buildReservedButtonsOptions(
       menuInstance,
-      'embeds'
+      'embeds',
+      ctx
     );
     const reservedRow = buildReservedButtonRow(reservedOpts);
 
@@ -341,17 +376,18 @@ export class MenuRenderer {
 
     // Register modal if defined
     if (definition.setModal) {
-      const modalConfig = await definition.setModal(ctx);
-      menuInstance.registerModalConfig(modalConfig);
+      const modalConfigs = await definition.setModal(ctx);
+      menuInstance.registerModalConfigs(modalConfigs);
     }
 
     // Register reserved button actions
-    this.registerReservedActions(menuInstance);
+    this.registerReservedActions(menuInstance, ctx);
 
     // Build and inject reserved button row
     const reservedOpts = this.buildReservedButtonsOptions(
       menuInstance,
-      'layout'
+      'layout',
+      ctx
     );
     const reservedRow = buildReservedButtonRow(reservedOpts);
     if (reservedRow) {
@@ -482,15 +518,7 @@ export class MenuRenderer {
       const row = new ActionRowBuilder<MessageActionRowComponentBuilder>();
       for (let j = 0; j < chunk.length; j++) {
         const btn = chunk[j];
-        const id = btn.id ?? `__btn_${i + j}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const builder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(btn.label)
-          .setStyle(btn.style)
-          .setDisabled(btn.disabled ?? false);
-        if (btn.emoji) builder.setEmoji(btn.emoji);
-        row.addComponents(builder);
+        row.addComponents(this.buildButtonBuilder(btn, menuInstance));
       }
       rows.push(row);
     }
@@ -514,6 +542,28 @@ export class MenuRenderer {
     }
 
     return rows;
+  }
+
+  private getMaxEmbedButtonsPerPage(
+    menuInstance: MenuInstance,
+    hasSelectMenu: boolean,
+    ctx: MenuContext,
+    forceReservedRow: boolean
+  ): number {
+    const canGoBack = ctx.session.canGoBack;
+    const hasReservedRow =
+      forceReservedRow ||
+      menuInstance.definition.isCancellable ||
+      (menuInstance.definition.isReturnable && canGoBack);
+
+    const reservedRows = hasReservedRow ? 1 : 0;
+    const selectRows = hasSelectMenu ? 1 : 0;
+    const availableButtonRows = Math.max(
+      1,
+      MenuRenderer.MAX_EMBED_COMPONENT_ROWS - reservedRows - selectRows
+    );
+
+    return availableButtonRows * MenuRenderer.MAX_BUTTONS_PER_ROW;
   }
 
   // -----------------------------------------------------------------------
@@ -594,15 +644,10 @@ export class MenuRenderer {
           new ThumbnailBuilder().setURL(config.accessory.url)
         );
       } else if (config.accessory.type === 'button') {
-        const btn = config.accessory;
-        const id = btn.id ?? `__btn_${menuInstance['_actionMap'].size}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const buttonBuilder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(btn.label)
-          .setStyle(btn.style)
-          .setDisabled(btn.disabled ?? false);
-        if (btn.emoji) buttonBuilder.setEmoji(btn.emoji);
+        const buttonBuilder = this.buildButtonBuilder(
+          config.accessory,
+          menuInstance
+        );
         builder.setButtonAccessory(buttonBuilder);
       }
     }
@@ -716,15 +761,7 @@ export class MenuRenderer {
 
     for (const child of config.children) {
       if (child.type === 'button') {
-        const id = child.id ?? `__btn_${menuInstance['_actionMap'].size}`;
-        const namespacedId = menuInstance.idManager.namespace(id);
-        const builder = new ButtonBuilder()
-          .setCustomId(namespacedId)
-          .setLabel(child.label)
-          .setStyle(child.style)
-          .setDisabled(child.disabled ?? false);
-        if (child.emoji) builder.setEmoji(child.emoji);
-        row.addComponents(builder);
+        row.addComponents(this.buildButtonBuilder(child, menuInstance));
       } else if (child.type === 'select') {
         const selectId = child.id ?? '__select';
         const namespacedId = menuInstance.idManager.namespace(selectId);
@@ -734,6 +771,41 @@ export class MenuRenderer {
     }
 
     return row;
+  }
+
+  // -----------------------------------------------------------------------
+  // Button builder helper
+  // -----------------------------------------------------------------------
+
+  /**
+   * Build a Discord.js ButtonBuilder from a ButtonConfig.
+   * Link buttons use setURL(), all others use setCustomId().
+   */
+  private buildButtonBuilder(
+    btn: ButtonConfig,
+    menuInstance: MenuInstance
+  ): ButtonBuilder {
+    const builder = new ButtonBuilder()
+      .setLabel(btn.label)
+      .setStyle(btn.style)
+      .setDisabled(btn.disabled ?? false);
+
+    if (btn.style === ButtonStyle.Link) {
+      if (!btn.url) {
+        throw new Error(
+          `[FlowCord] Link button is missing required "url" ` +
+            `(id: ${btn.id ?? 'unknown'}, label: ${btn.label ?? 'unknown'})`
+        );
+      }
+      builder.setURL(btn.url);
+    } else {
+      const id = btn.id ?? `__btn_${menuInstance['_actionMap'].size}`;
+      const namespacedId = menuInstance.idManager.namespace(id);
+      builder.setCustomId(namespacedId);
+    }
+
+    if (btn.emoji) builder.setEmoji(btn.emoji);
+    return builder;
   }
 
   // -----------------------------------------------------------------------
@@ -811,14 +883,18 @@ export class MenuRenderer {
 
   buildReservedButtonsOptions(
     menuInstance: MenuInstance,
-    mode: RenderMode
+    mode: RenderMode,
+    ctx?: MenuContext
   ): ReservedButtonsOptions {
     const paginationConfig =
       menuInstance.definition.listPagination ??
       menuInstance.definition.setButtonsOptions?.pagination;
 
+    // Only show Back if the definition allows it AND there's somewhere to go
+    const canGoBack = ctx?.session.canGoBack ?? true;
+
     return {
-      showBack: menuInstance.definition.isReturnable,
+      showBack: menuInstance.definition.isReturnable && canGoBack,
       showCancel: menuInstance.definition.isCancellable,
       pagination: menuInstance.paginationState,
       stableButtons: paginationConfig?.stableButtons ?? true,
@@ -837,11 +913,15 @@ export class MenuRenderer {
    * These are handled by the session, but we need them in the action map
    * so the routing logic picks them up via the standard path.
    */
-  private registerReservedActions(menuInstance: MenuInstance): void {
+  private registerReservedActions(
+    menuInstance: MenuInstance,
+    ctx?: MenuContext
+  ): void {
     // Reserved buttons are handled directly by the session via their IDs.
     // We register placeholder actions so resolveAction returns non-undefined
     // for them (the session checks reserved IDs before calling the action).
-    if (menuInstance.definition.isReturnable) {
+    const canGoBack = ctx?.session.canGoBack ?? true;
+    if (menuInstance.definition.isReturnable && canGoBack) {
       menuInstance.registerAction('__reserved_back', async () => {
         /* handled by session */
       });

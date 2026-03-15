@@ -26,16 +26,18 @@ export interface MenuDefinition<TCtx = MenuContext> {
   hooks: MenuHooks<TCtx>;
   setup?: (ctx: TCtx) => Awaitable<void>;
   setEmbeds?: (ctx: TCtx) => Awaitable<EmbedBuilder[]>;
-  setButtons?: (ctx: TCtx) => Awaitable<ButtonConfig[]>;
+  setButtons?: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>;
   setButtonsOptions?: SetButtonsOptions;
-  setSelectMenu?: (ctx: TCtx) => Awaitable<SelectConfig>;
-  setModal?: (ctx: TCtx) => Awaitable<ModalConfig>;
-  setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig[]>;
+  setSelectMenu?: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>;
+  setModal?: (ctx: TCtx) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>;
+  setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>;
   handleMessage?: (ctx: TCtx, response: string) => Awaitable<void>;
   listPagination?: ListPaginationOptions;
   isTrackedInHistory: boolean;
   isCancellable: boolean;
   isReturnable: boolean;
+  fallbackMenu?: string;
+  fallbackMenuOptions?: Record<string, unknown>;
   contextExtensions: Array<(baseCtx: MenuContext) => Record<string, unknown>>;
 }
 
