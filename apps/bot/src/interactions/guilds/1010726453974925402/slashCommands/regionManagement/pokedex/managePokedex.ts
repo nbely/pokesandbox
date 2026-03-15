@@ -62,18 +62,14 @@ export const ManagePokedexCommand: ISlashCommand = {
       })
       .setMessageHandler(async (ctx, response) => {
         const messageArgs: string[] = response.split(' ');
-        const pokedexNumber: number = +messageArgs[0];
+        const pokedex_no: number = +messageArgs[0];
 
-        if (
-          Number.isNaN(pokedexNumber) ||
-          pokedexNumber < 1 ||
-          pokedexNumber > 1500
-        ) {
+        if (Number.isNaN(pokedex_no) || pokedex_no < 1 || pokedex_no > 1500) {
           ctx.state.set('prompt', 'Please enter a valid Pokédex number');
         } else if (messageArgs.length < 2) {
           await ctx.goTo(EDIT_POKEDEX_SLOT_COMMAND_NAME, {
-            region_id: 0,
-            pokedex_no: 0,
+            region_id,
+            pokedex_no,
           });
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
@@ -81,7 +77,7 @@ export const ManagePokedexCommand: ISlashCommand = {
           await handleAddPokemonToSlot(
             ctx,
             region_id,
-            pokedexNumber.toString(),
+            pokedex_no.toString(),
             pokemonName
           );
 
