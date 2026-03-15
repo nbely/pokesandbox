@@ -827,7 +827,9 @@ export class MenuSession implements MenuSessionLike {
 
     // --- Select menu handling (pass selected values to onSelect) ---
     if (interaction.isAnySelectMenu()) {
-      const onSelect = this._currentMenu.activeSelect?.onSelect;
+      const onSelect =
+        this._currentMenu.resolveSelectAction(componentId) ??
+        this._currentMenu.activeSelect?.onSelect;
       if (!onSelect) return;
 
       const ctx = this.buildContext(this._currentMenu);
@@ -878,6 +880,20 @@ export class MenuSession implements MenuSessionLike {
           return;
         }
       }
+
+      // Modal button pressed but no matching modal was found.
+      // Defer the interaction to prevent Discord's "This interaction failed" timeout,
+      // then throw so the developer sees the configuration error.
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate();
+      }
+      throw new Error(
+        `[FlowCord] Menu "${this._currentMenu.definition.name}": Button "${componentId}" ` +
+          `is configured as a modal trigger but no matching modal was found ` +
+          `(modalId: "${
+            modalId ?? 'unknown'
+          }"). Ensure setModal() registers a modal with the correct ID.`
+      );
     }
 
     await this.executeAction(action, ctx);
@@ -891,11 +907,11 @@ export class MenuSession implements MenuSessionLike {
         this._modalShowInteraction = interaction;
         this._renderer['_lastComponentInteraction'] = null;
       } else {
-        console.warn(
-          `[FlowCord] Button "${componentId}" used openModal() action but was auto-deferred. ` +
-            `Use opensModal: true on the ButtonConfig instead.`
-        );
         this._currentMenu.isModalActive = false;
+        throw new Error(
+          `[FlowCord] Button "${componentId}" used openModal() action after the interaction was deferred. ` +
+            `Use opensModal on the button configuration so the framework can call showModal() on a raw interaction.`
+        );
       }
     }
   }

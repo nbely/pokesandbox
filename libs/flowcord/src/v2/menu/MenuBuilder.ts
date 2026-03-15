@@ -365,17 +365,19 @@ export class MenuBuilder<
         | ((ctx: MenuContext) => Awaitable<EmbedBuilder[]>)
         | undefined,
       setButtons: this._setButtons as
-        | ((ctx: MenuContext) => Awaitable<ButtonConfig[]>)
+        | ((ctx: MenuContext) => Awaitable<ButtonConfig<MenuContext>[]>)
         | undefined,
       setButtonsOptions: this._setButtonsOptions,
       setSelectMenu: this._setSelectMenu as
-        | ((ctx: MenuContext) => Awaitable<SelectConfig>)
+        | ((ctx: MenuContext) => Awaitable<SelectConfig<MenuContext>>)
         | undefined,
       setModal: this._setModal as
-        | ((ctx: MenuContext) => Awaitable<ModalConfig | ModalConfig[]>)
+        | ((
+            ctx: MenuContext
+          ) => Awaitable<ModalConfig<MenuContext> | ModalConfig<MenuContext>[]>)
         | undefined,
       setLayout: this._setLayout as
-        | ((ctx: MenuContext) => Awaitable<ComponentConfig[]>)
+        | ((ctx: MenuContext) => Awaitable<ComponentConfig<MenuContext>[]>)
         | undefined,
       handleMessage: this._handleMessage as
         | ((ctx: MenuContext, response: string) => Awaitable<void>)

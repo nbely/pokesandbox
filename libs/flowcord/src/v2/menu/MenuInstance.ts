@@ -12,6 +12,7 @@ import type {
   ButtonConfig,
   ModalConfig,
   PaginationState,
+  SelectAction,
   SelectConfig,
 } from '../types/common';
 import { StateAccessor } from '../state/StateAccessor';
@@ -36,6 +37,9 @@ export class MenuInstance<
 
   /** Active select menu config (set during render) */
   private _activeSelect: SelectConfig | null = null;
+
+  /** Select actions keyed by component ID for multi-select dispatch */
+  private readonly _selectActionMap = new Map<string, SelectAction>();
 
   /** Registered modals keyed by ID ('__default' for unnamed) */
   private readonly _modalMap = new Map<string, ModalConfig>();
@@ -127,6 +131,7 @@ export class MenuInstance<
     this._modalButtonMap.clear();
     this._modalMap.clear();
     this._activeSelect = null;
+    this._selectActionMap.clear();
     this._activeModal = null;
     this._isModalActive = false;
   }
@@ -166,9 +171,18 @@ export class MenuInstance<
     }
   }
 
-  /** Register a select menu config. Action dispatched separately via activeSelect. */
+  /** Register a select menu config. Stores the action in a keyed map for dispatch. */
   registerSelectAction(selectConfig: SelectConfig): void {
+    const id = selectConfig.id ?? '__select';
+    if (selectConfig.onSelect) {
+      this._selectActionMap.set(id, selectConfig.onSelect);
+    }
     this._activeSelect = selectConfig;
+  }
+
+  /** Look up a select action by component ID. */
+  resolveSelectAction(componentId: string): SelectAction | undefined {
+    return this._selectActionMap.get(componentId);
   }
 
   /**
@@ -301,7 +315,7 @@ export class MenuInstance<
   }
 
   /**
-   * Validate a ButtonConfig and log warnings for misconfigured combinations.
+   * Validate a ButtonConfig and throw for misconfigured combinations.
    * Called during action registration for every button.
    */
   private validateButton(btn: ButtonConfig): void {
@@ -311,21 +325,21 @@ export class MenuInstance<
     if (this.isLinkButton(btn)) {
       // Link buttons: must have url, action/opensModal are ignored
       if (!btn.url) {
-        console.warn(
+        throw new Error(
           `[FlowCord] Menu "${menuName}": Link button "${label}" is missing a \`url\`. ` +
             `Link buttons require a URL.`
         );
       }
       if (btn.action) {
-        console.warn(
-          `[FlowCord] Menu "${menuName}": Link button "${label}" has an \`action\` which will be ignored. ` +
-            `Link buttons are handled by Discord and don't generate interactions.`
+        throw new Error(
+          `[FlowCord] Menu "${menuName}": Link button "${label}" cannot define \`action\`. ` +
+            `Link buttons are handled by Discord and do not generate interactions.`
         );
       }
       if (btn.opensModal) {
-        console.warn(
-          `[FlowCord] Menu "${menuName}": Link button "${label}" has \`opensModal\` which will be ignored. ` +
-            `Link buttons are handled by Discord and don't generate interactions.`
+        throw new Error(
+          `[FlowCord] Menu "${menuName}": Link button "${label}" cannot define \`opensModal\`. ` +
+            `Link buttons are handled by Discord and do not generate interactions.`
         );
       }
       return;
@@ -333,17 +347,17 @@ export class MenuInstance<
 
     // Non-link buttons: check for action/opensModal conflicts
     if (btn.action && btn.opensModal) {
-      console.warn(
-        `[FlowCord] Menu "${menuName}": Button "${label}" has both \`action\` and \`opensModal\`. ` +
-          `\`opensModal\` takes precedence — the action will be ignored.`
+      throw new Error(
+        `[FlowCord] Menu "${menuName}": Button "${label}" cannot define both \`action\` and \`opensModal\`. ` +
+          `Choose exactly one interaction behavior.`
       );
     }
 
     // Non-link, non-disabled buttons should have at least action or opensModal
     if (!btn.disabled && !btn.action && !btn.opensModal) {
-      console.warn(
-        `[FlowCord] Menu "${menuName}": Button "${label}" has no \`action\`, \`opensModal\`, or \`url\`. ` +
-          `It will render but do nothing when clicked. If intentional, set \`disabled: true\`.`
+      throw new Error(
+        `[FlowCord] Menu "${menuName}": Button "${label}" must define either \`action\` or \`opensModal\`, ` +
+          `or be explicitly disabled.`
       );
     }
   }

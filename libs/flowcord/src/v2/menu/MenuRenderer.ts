@@ -790,7 +790,13 @@ export class MenuRenderer {
       .setStyle(btn.style)
       .setDisabled(btn.disabled ?? false);
 
-    if (btn.style === ButtonStyle.Link && btn.url) {
+    if (btn.style === ButtonStyle.Link) {
+      if (!btn.url) {
+        throw new Error(
+          `[FlowCord] Link button is missing required "url" ` +
+            `(id: ${btn.id ?? 'unknown'}, label: ${btn.label ?? 'unknown'})`
+        );
+      }
       builder.setURL(btn.url);
     } else {
       const id = btn.id ?? `__btn_${menuInstance['_actionMap'].size}`;
