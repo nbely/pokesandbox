@@ -365,10 +365,14 @@ export class MenuSession implements MenuSessionLike {
 
   /**
    * Mark the current sub-menu as complete with a result.
-   * The result will be passed to the parent's onComplete when goBack fires.
+   * Immediately returns to the parent menu and passes the result to onComplete.
    */
-  complete(result?: unknown): void {
+  async complete(result?: unknown): Promise<void> {
     this._completionResult = result;
+
+    if (this.canGoBack) {
+      await this.goBack(result);
+    }
   }
 
   /**
@@ -1034,7 +1038,7 @@ export class MenuSession implements MenuSessionLike {
         await this.openSubMenu(menuId, opts);
       },
       complete: async (result?: unknown) => {
-        this.complete(result);
+        await this.complete(result);
       },
     };
 

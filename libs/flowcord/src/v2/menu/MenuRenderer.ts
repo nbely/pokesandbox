@@ -64,6 +64,9 @@ type LastUpdateSource =
   | 'messageCollect';
 
 export class MenuRenderer {
+  private static readonly MAX_EMBED_COMPONENT_ROWS = 5;
+  private static readonly MAX_BUTTONS_PER_ROW = 5;
+
   private _activeMessage: Message | null = null;
   private _activeMessageMode: RenderMode | null = null;
   private _lastUpdateSource: LastUpdateSource | null = null;
@@ -203,11 +206,7 @@ export class MenuRenderer {
         menuInstance.paginationState;
     }
 
-    // Run setter callbacks
-    if (definition.setEmbeds) {
-      embeds = await definition.setEmbeds(ctx);
-    }
-
+    // Run button/select setters first so pagination can be computed before embeds.
     if (definition.setButtons) {
       buttons = await definition.setButtons(ctx);
     }
@@ -216,10 +215,36 @@ export class MenuRenderer {
       selectConfig = await definition.setSelectMenu(ctx);
     }
 
-    // Handle button pagination (slice buttons for current page)
-    if (definition.setButtonsOptions?.pagination && buttons.length > 0) {
-      const paginationOpts = definition.setButtonsOptions.pagination;
-      const perPage = paginationOpts.perPage ?? 25;
+    // Handle button pagination (slice buttons for current page).
+    // Auto-enable pagination when needed so embed rows never exceed Discord limits.
+    const configuredButtonPagination = definition.setButtonsOptions?.pagination;
+    const hasConfiguredButtonPagination = !!configuredButtonPagination;
+    const maxButtonsWithoutPagination = this.getMaxEmbedButtonsPerPage(
+      menuInstance,
+      !!selectConfig,
+      ctx,
+      false
+    );
+    const needsAutoButtonPagination =
+      !hasConfiguredButtonPagination &&
+      !definition.listPagination &&
+      buttons.length > maxButtonsWithoutPagination;
+
+    if (
+      (hasConfiguredButtonPagination || needsAutoButtonPagination) &&
+      buttons.length > 0
+    ) {
+      const requestedPerPage = configuredButtonPagination?.perPage ?? 25;
+      const maxButtonsWithReservedRow = this.getMaxEmbedButtonsPerPage(
+        menuInstance,
+        !!selectConfig,
+        ctx,
+        true
+      );
+      const perPage = Math.max(
+        1,
+        Math.min(requestedPerPage, maxButtonsWithReservedRow)
+      );
       const totalPages = Math.ceil(buttons.length / perPage);
       const currentPage = menuInstance.paginationState?.currentPage ?? 0;
 
@@ -232,6 +257,10 @@ export class MenuRenderer {
         endIndex: Math.min((currentPage + 1) * perPage, buttons.length),
       };
 
+      // Keep embeds in sync with the same page that button rows are using.
+      (ctx as { pagination: PaginationState | null }).pagination =
+        menuInstance.paginationState;
+
       // Register ALL button actions (pre-slice) so pagination page changes work
       menuInstance.registerButtonActions(buttons);
 
@@ -243,6 +272,11 @@ export class MenuRenderer {
     } else {
       // No button pagination (or list pagination already computed) — register button actions
       menuInstance.registerButtonActions(buttons);
+    }
+
+    // Run embed setter after final pagination state is known.
+    if (definition.setEmbeds) {
+      embeds = await definition.setEmbeds(ctx);
     }
 
     // Register select and modal actions
@@ -508,6 +542,28 @@ export class MenuRenderer {
     }
 
     return rows;
+  }
+
+  private getMaxEmbedButtonsPerPage(
+    menuInstance: MenuInstance,
+    hasSelectMenu: boolean,
+    ctx: MenuContext,
+    forceReservedRow: boolean
+  ): number {
+    const canGoBack = ctx.session.canGoBack;
+    const hasReservedRow =
+      forceReservedRow ||
+      menuInstance.definition.isCancellable ||
+      (menuInstance.definition.isReturnable && canGoBack);
+
+    const reservedRows = hasReservedRow ? 1 : 0;
+    const selectRows = hasSelectMenu ? 1 : 0;
+    const availableButtonRows = Math.max(
+      1,
+      MenuRenderer.MAX_EMBED_COMPONENT_ROWS - reservedRows - selectRows
+    );
+
+    return availableButtonRows * MenuRenderer.MAX_BUTTONS_PER_ROW;
   }
 
   // -----------------------------------------------------------------------

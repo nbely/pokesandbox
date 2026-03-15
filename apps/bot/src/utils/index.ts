@@ -17,4 +17,5 @@ export {
   setValueOnInputBuilderIfExists,
 } from './modalValues';
 export { onlyAdminRoles } from './onlyAdminRoles';
+export { parseCommandOptions } from './parseCommandOptions';
 export { searchPokemon } from './searchPokemon';
