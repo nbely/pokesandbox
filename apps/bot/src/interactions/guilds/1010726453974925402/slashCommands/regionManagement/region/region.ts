@@ -27,7 +27,6 @@ export const REGION_COMMAND_NAME = COMMAND_NAME;
 const regionCommandOptionsSchema = z.object({
   region_id: z.string().min(1),
 });
-export type RegionCommandOptions = z.infer<typeof regionCommandOptionsSchema>;
 
 export const RegionCommand: ISlashCommand = {
   name: COMMAND_NAME,

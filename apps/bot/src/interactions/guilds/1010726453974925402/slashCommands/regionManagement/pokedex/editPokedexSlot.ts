@@ -40,9 +40,6 @@ const editPokedexSlotCommandOptionsSchema = z.object({
       );
     }, 'Must be an integer between 1 and 1500'),
 });
-export type EditPokedexSlotCommandOptions = z.infer<
-  typeof editPokedexSlotCommandOptionsSchema
->;
 
 export const EditPokedexSlotCommand: ISlashCommand = {
   name: COMMAND_NAME,

@@ -20,9 +20,6 @@ const selectMatchedPokemonCommandOptionsSchema = z.object({
   regionId: z.string().min(1),
   matchedDexEntryIds: z.array(z.string().min(1)).min(1),
 });
-export type SelectMatchedPokemonCommandOptions = z.infer<
-  typeof selectMatchedPokemonCommandOptionsSchema
->;
 
 export const SelectMatchedPokemonCommand: ISlashCommand = {
   name: COMMAND_NAME,

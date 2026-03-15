@@ -21,9 +21,6 @@ export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 const managePokedexCommandOptionsSchema = z.object({
   region_id: z.string().min(1),
 });
-export type ManagePokedexCommandOptions = z.infer<
-  typeof managePokedexCommandOptionsSchema
->;
 
 export const ManagePokedexCommand: ISlashCommand = {
   name: COMMAND_NAME,
