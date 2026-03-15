@@ -5,28 +5,19 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import {
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  type AdminMenu,
-} from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
-import { ISlashCommand } from '@bot/structures/interfaces';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_ROLE_COMMAND_NAME } from './serverAddRole';
-import { ServerManageRolesCommandOptions } from './types';
+import type { ServerManageRolesCommandOptions } from './types';
 
 const COMMAND_NAME = 'server-manage-roles';
 export const SERVER_MANAGE_ROLES_COMMAND_NAME = COMMAND_NAME;
 
-type ServerManageRolesCommand = ISlashCommand<
-  AdminMenu<ServerManageRolesCommandOptions>,
-  ServerManageRolesCommandOptions
->;
-
-export const ServerManageRolesCommand: ServerManageRolesCommand = {
+export const ServerManageRolesCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -46,17 +37,17 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
           { name: 'Mod', value: 'mod' }
         )
     ),
-  createMenu: async (session, options) => {
-    if (!options?.role_type) {
+  createMenuV2: (session, options) => {
+    const { role_type } = options as unknown as ServerManageRolesCommandOptions;
+    if (!role_type) {
       throw new Error('Role type is required to manage server roles.');
     }
 
-    const { role_type } = options;
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getServerManageRolesButtons(menu, role_type))
-      .setEmbeds((menu) =>
+    return new AdminMenuBuilderV2(session, COMMAND_NAME, options)
+      .setButtons((ctx) => getServerManageRolesButtons(ctx, role_type), {})
+      .setEmbeds((ctx) =>
         getServerMenuEmbeds(
-          menu,
+          ctx,
           `Add or Remove a Role with Bot ${role_type} privileges.`
         )
       )
@@ -68,26 +59,26 @@ export const ServerManageRolesCommand: ServerManageRolesCommand = {
 };
 
 export const getServerManageRolesButtons = async (
-  menu: AdminMenu<ServerManageRolesCommandOptions>,
+  ctx: AdminMenuContext,
   roleType: string
-): Promise<MenuButtonConfig<AdminMenu<ServerManageRolesCommandOptions>>[]> => {
-  const roles = await menu.getRoles(roleType);
+): Promise<ButtonInputConfig<AdminMenuContext>[]> => {
+  const roles = await ctx.admin.getRoles(roleType as 'admin' | 'mod');
 
   return [
     {
       label: 'Add Role',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_ROLE_COMMAND_NAME, {
+      action: async (ctx: AdminMenuContext) =>
+        ctx.goTo(SERVER_ADD_ROLE_COMMAND_NAME, {
           role_type: roleType,
         }),
     },
     ...roles.map((role, idx) => ({
       label: `Remove [${typeof role === 'string' ? role : role.name}]`,
       style: ButtonStyle.Danger,
-      onClick: async () => {
-        const server = await menu.getServer();
+      action: async (ctx: AdminMenuContext) => {
+        const server = await ctx.admin.getServer();
 
         if (roleType === 'admin') {
           server.adminRoleIds.splice(idx, 1);
@@ -96,7 +87,6 @@ export const getServerManageRolesButtons = async (
         }
 
         await saveServer(server);
-        await menu.refresh();
       },
       id: idx.toString(),
     })),

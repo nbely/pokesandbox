@@ -5,14 +5,10 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import {
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  type AdminMenu,
-} from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
-import { ISlashCommand } from '@bot/structures/interfaces';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';
@@ -20,7 +16,7 @@ import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';
 const COMMAND_NAME = 'server-manage-prefixes';
 export const SERVER_MANAGE_PREFIXES_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
+export const ServerManagePrefixesCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -30,12 +26,10 @@ export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session): Promise<AdminMenu> =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenuV2: (session) =>
+    new AdminMenuBuilderV2(session, COMMAND_NAME)
       .setButtons(getServerManagePrefixesButtons)
-      .setEmbeds((menu: AdminMenu) =>
-        getServerMenuEmbeds(menu, 'Add or remove a prefix.')
-      )
+      .setEmbeds((ctx) => getServerMenuEmbeds(ctx, 'Add or remove a prefix.'))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -43,39 +37,32 @@ export const ServerManagePrefixesCommand: ISlashCommand<AdminMenu> = {
 };
 
 export const getServerManagePrefixesButtons = async (
-  menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const server = await menu.getServer();
+  ctx: AdminMenuContext
+): Promise<ButtonInputConfig<AdminMenuContext>[]> => {
+  const server = await ctx.admin.getServer();
 
   return [
     {
       label: 'Add Prefix',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, SERVER_ADD_PREFIX_COMMAND_NAME),
+      action: async (ctx: AdminMenuContext) =>
+        ctx.goTo(SERVER_ADD_PREFIX_COMMAND_NAME),
     },
     ...server.prefixes.map((prefix, idx) => ({
       label: `Remove ${prefix}`,
       style: ButtonStyle.Danger,
-      onClick: (menu: AdminMenu) => handleRemovePrefixButtonClick(menu, idx),
+      action: async (ctx: AdminMenuContext) => {
+        const server = await ctx.admin.getServer();
+
+        const removedPrefix = server.prefixes?.splice(idx, 1)[0];
+        await saveServer(server);
+        ctx.state.set(
+          'prompt',
+          `Successfully removed the prefix: \`${removedPrefix}\``
+        );
+      },
       id: idx.toString(),
     })),
   ];
-};
-
-export const handleRemovePrefixButtonClick = async (
-  menu: AdminMenu,
-  idx: number
-) => {
-  const server = await menu.getServer();
-
-  try {
-    const removedPrefix = server.prefixes?.splice(idx, 1)[0];
-    await saveServer(server);
-    menu.prompt = `Successfully removed the prefix: \`${removedPrefix}\``;
-  } catch (error) {
-    await menu.session.handleError(error);
-  }
-  await menu.refresh();
 };
