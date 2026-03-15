@@ -3,37 +3,48 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
-import { type Region } from '@shared/models';
+import type { Region } from '@shared/models';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import {
   getAddPokedexSlotEmbeds,
   getEditPokedexSlotEmbeds,
 } from './pokedex.embeds';
 import { handleAddPokemonToSlot } from './pokedexHelperFunctions';
+import type { PokedexMenuState } from './types';
 
 const COMMAND_NAME = 'edit-pokedex-slot';
 export const EDIT_POKEDEX_SLOT_COMMAND_NAME = COMMAND_NAME;
 
-export type EditPokedexSlotCommandOptions = {
-  region_id: string;
-  pokedex_no: string;
-};
-type EditPokedexSlotCommand = ISlashCommand<
-  AdminMenu<EditPokedexSlotCommandOptions>,
-  EditPokedexSlotCommandOptions
+const editPokedexSlotCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+  pokedex_no: z
+    .union([z.string(), z.number()])
+    .transform((value) => `${value}`)
+    .refine((value) => {
+      const pokedexNumber = Number(value);
+      return (
+        Number.isInteger(pokedexNumber) &&
+        pokedexNumber >= 1 &&
+        pokedexNumber <= 1500
+      );
+    }, 'Must be an integer between 1 and 1500'),
+});
+export type EditPokedexSlotCommandOptions = z.infer<
+  typeof editPokedexSlotCommandOptionsSchema
 >;
 
-export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
+export const EditPokedexSlotCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -59,15 +70,20 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
         .setMinValue(1)
         .setMaxValue(1500)
     ),
-  createMenu: async (
-    session,
-    options: EditPokedexSlotCommandOptions | undefined
-  ) => {
-    assertOptions(options);
-    const { region_id, pokedex_no } = options;
+  createMenuV2: async (session, options) => {
+    const { region_id, pokedex_no } = parseCommandOptions(
+      editPokedexSlotCommandOptionsSchema,
+      options
+    );
+    // const { region_id, pokedex_no } =
+    //   editPokedexSlotCommandOptionsSchema.parse(options);
     const region = await getAssertedCachedRegion(region_id);
 
-    const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
+    const builder = new AdminMenuBuilderV2<PokedexMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory();
@@ -75,19 +91,17 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
     if (!region.pokedex[+pokedex_no - 1]) {
       // handle add pokedex slot
       builder
-        .setEmbeds((menu) =>
-          getAddPokedexSlotEmbeds(menu, region_id, pokedex_no)
-        )
-        .setMessageHandler((menu, response) =>
-          handleAddPokemonToSlot(menu, region_id, pokedex_no, response)
+        .setEmbeds((ctx) => getAddPokedexSlotEmbeds(ctx, region_id, pokedex_no))
+        .setMessageHandler((ctx, response) =>
+          handleAddPokemonToSlot(ctx, region_id, pokedex_no, response)
         );
     } else {
       builder
-        .setEmbeds((menu) =>
-          getEditPokedexSlotEmbeds(menu, region_id, pokedex_no)
+        .setEmbeds((ctx) =>
+          getEditPokedexSlotEmbeds(ctx, region_id, pokedex_no)
         )
-        .setButtons((menu) =>
-          getEditPokedexSlotButtons(menu, region_id, pokedex_no)
+        .setButtons((ctx) =>
+          getEditPokedexSlotButtons(ctx, region_id, pokedex_no)
         );
     }
 
@@ -96,16 +110,16 @@ export const EditPokedexSlotCommand: EditPokedexSlotCommand = {
 };
 
 const getEditPokedexSlotButtons = async (
-  _menu: AdminMenu<EditPokedexSlotCommandOptions>,
+  _ctx: AdminMenuContext<PokedexMenuState>,
   regionId: string,
   pokedexNo: string
-): Promise<MenuButtonConfig<AdminMenu<EditPokedexSlotCommandOptions>>[]> => {
+): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
   return [
     {
       label: 'Customize',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, 'customize-pokedex-slot', {
+      action: async (ctx) =>
+        ctx.goTo('customize-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -113,8 +127,8 @@ const getEditPokedexSlotButtons = async (
     {
       label: 'Swap',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, 'swap-pokedex-slot', {
+      action: async (ctx) =>
+        ctx.goTo('swap-pokedex-slot', {
           regionId,
           pokedexNo,
         }),
@@ -122,13 +136,13 @@ const getEditPokedexSlotButtons = async (
     {
       label: 'Remove',
       style: ButtonStyle.Danger,
-      onClick: async (menu) => {
-        const region = await menu.getRegion(regionId);
+      action: async (ctx) => {
+        const region = await ctx.admin.getRegion(regionId);
         const pokedexIndex = +pokedexNo - 1;
 
         removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
-        await menu.hardRefresh();
+        await ctx.hardRefresh();
       },
     },
   ];

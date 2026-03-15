@@ -1,21 +1,21 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 
 export const getRegionsMenuEmbeds = async (
-  menu: AdminMenu,
+  ctx: AdminMenuContext,
   defaultPrompt = 'Please select a Region to manage.'
 ): Promise<EmbedBuilder[]> => {
-  const server = await menu.getServer();
-  const regions = await menu.getRegions();
-  const prompt = menu.prompt || defaultPrompt;
+  const server = await ctx.admin.getServer();
+  const regions = await ctx.admin.getRegions();
+  const prompt = ctx.state.get<string>('prompt') || defaultPrompt;
 
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
         name: `${server.name} Region Manager`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `${prompt ? '**' + prompt + '**\n\n' : ''}` +
@@ -26,14 +26,14 @@ export const getRegionsMenuEmbeds = async (
 };
 
 export const getCreateFirstRegionEmbeds = async (
-  menu: AdminMenu
+  ctx: AdminMenuContext
 ): Promise<EmbedBuilder[]> => {
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
         name: `Let's create your first region!`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `Hello! It appears that this is your first region that you are creating on this server. I'll start by asking, what is the name of your new region?` +

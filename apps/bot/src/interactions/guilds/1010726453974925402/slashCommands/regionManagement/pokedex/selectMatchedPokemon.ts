@@ -3,27 +3,28 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
-import { onlyAdminRoles } from '@bot/utils';
+import { onlyAdminRoles, parseCommandOptions } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { getSelectMatchedPokemonEmbeds } from './pokedex.embeds';
+import type { PokedexMenuState } from './types';
 
 const COMMAND_NAME = 'select-matched-pokemon';
 export const SELECT_MATCHED_POKEMON_COMMAND_NAME = COMMAND_NAME;
 
-type SelectMatchedPokemonCommandOptions = {
-  regionId: string;
-  matchedDexEntryIds: string[];
-};
-type SelectMatchedPokemonCommand = ISlashCommand<
-  AdminMenu<SelectMatchedPokemonCommandOptions>,
-  SelectMatchedPokemonCommandOptions
+const selectMatchedPokemonCommandOptionsSchema = z.object({
+  regionId: z.string().min(1),
+  matchedDexEntryIds: z.array(z.string().min(1)).min(1),
+});
+export type SelectMatchedPokemonCommandOptions = z.infer<
+  typeof selectMatchedPokemonCommandOptionsSchema
 >;
 
-export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
+export const SelectMatchedPokemonCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   ignore: true,
@@ -34,33 +35,37 @@ export const SelectMatchedPokemonCommand: SelectMatchedPokemonCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Select a matched Pokémon from a search')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session, options) => {
-    if (!options?.regionId || !options?.matchedDexEntryIds) {
-      throw new Error(
-        'Region ID and matched Dex entry IDs are required to select a matched Pokémon.'
-      );
-    }
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) =>
-        getSelectMatchedPokemonButtons(menu, options.matchedDexEntryIds)
+  createMenuV2: (session, options) => {
+    const { matchedDexEntryIds } = parseCommandOptions(
+      selectMatchedPokemonCommandOptionsSchema,
+      options
+    );
+
+    return new AdminMenuBuilderV2<PokedexMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setButtons((ctx) =>
+        getSelectMatchedPokemonButtons(ctx, matchedDexEntryIds)
       )
       .setCancellable()
-      .setEmbeds((menu) =>
-        getSelectMatchedPokemonEmbeds(menu, options.matchedDexEntryIds)
+      .setEmbeds((ctx) =>
+        getSelectMatchedPokemonEmbeds(ctx, matchedDexEntryIds)
       )
       .build();
   },
 };
 
 const getSelectMatchedPokemonButtons = async (
-  _menu: AdminMenu<SelectMatchedPokemonCommandOptions>,
+  _ctx: AdminMenuContext<PokedexMenuState>,
   matchedDexEntryIds: string[]
-): Promise<MenuButtonConfig<AdminMenu<SelectMatchedPokemonCommandOptions>>[]> =>
+): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> =>
   matchedDexEntryIds.map((dexEntryId, idx) => ({
     id: dexEntryId,
     label: `${idx + 1}`,
     style: ButtonStyle.Primary,
-    onClick: async (menu) => {
-      await MenuWorkflow.completeWithResult(menu, dexEntryId);
+    action: async (ctx) => {
+      await ctx.complete(dexEntryId);
     },
   }));

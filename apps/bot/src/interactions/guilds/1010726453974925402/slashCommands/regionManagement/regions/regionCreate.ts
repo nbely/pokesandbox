@@ -1,9 +1,8 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { type AdminMenu, AdminMenuBuilder } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
-import { ISlashCommand } from '@bot/structures/interfaces';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
 
@@ -16,7 +15,11 @@ import {
 const COMMAND_NAME = 'region-create';
 export const REGION_CREATE_COMMAND_NAME = COMMAND_NAME;
 
-export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
+type RegionCreateMenuState = {
+  prompt?: string;
+};
+
+export const RegionCreateCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -26,21 +29,24 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Create a new Region for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session) =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
-      .setEmbeds(async (menu) => {
-        const regions = await menu.getRegions();
+  createMenuV2: (session) =>
+    new AdminMenuBuilderV2<RegionCreateMenuState>(session, COMMAND_NAME)
+      .setEmbeds(async (ctx) => {
+        const regions = await ctx.admin.getRegions();
 
         return regions.length === 0
-          ? getCreateFirstRegionEmbeds(menu)
+          ? getCreateFirstRegionEmbeds(ctx)
           : getRegionsMenuEmbeds(
-              menu,
+              ctx,
               'Please enter a name for your new Region.'
             );
       })
       .setMessageHandler(
-        async (menu: AdminMenu, response: string): Promise<void> => {
-          const server = await menu.getServer();
+        async (
+          ctx: AdminMenuContext<RegionCreateMenuState>,
+          response: string
+        ): Promise<void> => {
+          const server = await ctx.admin.getServer();
 
           const region: Region = await Region.create({
             baseGeneration: 10,
@@ -69,12 +75,14 @@ export const RegionCreateCommand: ISlashCommand<AdminMenu> = {
           server.regions.push(region._id);
           await saveServer(server);
 
-          menu.prompt = `Successfully created the new region: \`${region.name}\``;
-          await menu.session.goBack(async () =>
-            MenuWorkflow.openMenu(menu, REGIONS_COMMAND_NAME)
+          ctx.state.set(
+            'prompt',
+            `Successfully created the new region: \`${region.name}\``
           );
+          await ctx.goBack();
         }
       )
+      .setFallbackMenu(REGIONS_COMMAND_NAME)
       .setTrackedInHistory()
       .build(),
 };

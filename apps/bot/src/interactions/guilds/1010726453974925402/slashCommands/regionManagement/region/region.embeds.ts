@@ -1,14 +1,14 @@
 import { EmbedBuilder } from 'discord.js';
 
-import { AdminMenu } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 
-import { RegionCommandOptions } from './types';
+import type { RegionMenuState } from './types';
 
 export const getRegionMenuEmbeds = async (
-  menu: AdminMenu<RegionCommandOptions>,
+  ctx: AdminMenuContext<RegionMenuState>,
   regionId: string
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
 
   const pokedexOptionText =
     region.pokedex.length === 0
@@ -41,7 +41,7 @@ export const getRegionMenuEmbeds = async (
       .setColor('Gold')
       .setAuthor({
         name: `${region.name} Manager Options`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `__Status: ${region.deployed ? 'Deployed' : 'Not Deployed'}__`

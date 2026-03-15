@@ -1,34 +1,31 @@
-import {
-  ButtonStyle,
-  InteractionContextType,
-  SlashCommandBuilder,
-} from 'discord.js';
+import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
+import { z } from 'zod';
 
-import { AdminMenu, AdminMenuBuilder } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { getAssertedCachedRegion } from '@bot/cache';
+import { AdminMenuBuilderV2 } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
 
 import { EDIT_POKEDEX_SLOT_COMMAND_NAME } from './editPokedexSlot';
 import { getManagePokedexMenuEmbeds } from './pokedex.embeds';
 import { handleAddPokemonToSlot } from './pokedexHelperFunctions';
+import type { PokedexMenuState } from './types';
 
 const COMMAND_NAME = 'manage-pokedex';
 export const MANAGE_POKEDEX_COMMAND_NAME = COMMAND_NAME;
 
-export type ManagePokedexCommandOptions = {
-  region_id: string;
-};
-type ManagePokedexCommand = ISlashCommand<
-  AdminMenu<ManagePokedexCommandOptions>,
-  ManagePokedexCommandOptions
+const managePokedexCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+});
+export type ManagePokedexCommandOptions = z.infer<
+  typeof managePokedexCommandOptionsSchema
 >;
 
-export const ManagePokedexCommand: ManagePokedexCommand = {
+export const ManagePokedexCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -46,23 +43,27 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
         .setRequired(true)
         .setAutocomplete(true)
     ),
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id } = options;
+  createMenuV2: async (session, options) => {
+    const { region_id } = parseCommandOptions(
+      managePokedexCommandOptionsSchema,
+      options
+    );
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => getManagePokedexMenuEmbeds(menu, region_id))
+    return new AdminMenuBuilderV2<PokedexMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setEmbeds((ctx) => getManagePokedexMenuEmbeds(ctx, region_id))
       .setCancellable()
       .setListPagination({
-        quantityItemsPerPage: 50,
-        nextButton: { style: ButtonStyle.Primary },
-        previousButton: { style: ButtonStyle.Primary },
-        getTotalQuantityItems: async (menu) => {
-          const region = await menu.getRegion(region_id);
+        itemsPerPage: 50,
+        getTotalQuantityItems: async () => {
+          const region = await getAssertedCachedRegion(region_id);
           return region.pokedex.length;
         },
       })
-      .setMessageHandler(async (menu, response) => {
+      .setMessageHandler(async (ctx, response) => {
         const messageArgs: string[] = response.split(' ');
         const pokedexNumber: number = +messageArgs[0];
 
@@ -71,28 +72,26 @@ export const ManagePokedexCommand: ManagePokedexCommand = {
           pokedexNumber < 1 ||
           pokedexNumber > 1500
         ) {
-          menu.session.handleError(
-            new Error('Please enter a valid Pokédex number')
-          );
+          ctx.state.set('prompt', 'Please enter a valid Pokédex number');
         } else if (messageArgs.length < 2) {
-          await MenuWorkflow.openMenu(menu, EDIT_POKEDEX_SLOT_COMMAND_NAME, {
-            region_id,
-            pokedex_no: pokedexNumber,
+          await ctx.goTo(EDIT_POKEDEX_SLOT_COMMAND_NAME, {
+            region_id: 0,
+            pokedex_no: 0,
           });
         } else {
           const pokemonName: string = messageArgs.slice(1).join(' ');
 
           await handleAddPokemonToSlot(
-            menu,
+            ctx,
             region_id,
-            messageArgs[0],
+            pokedexNumber.toString(),
             pokemonName
           );
 
-          await MenuWorkflow.openMenu(menu, 'edit-pokedex-slot', {
-            region_id,
-            pokedex_no: messageArgs[0],
-          });
+          ctx.state.set(
+            'prompt',
+            'Pokémon added to slot! You can enter another Pokédex number to edit another slot, or type "exit" to go back to the main menu.'
+          );
         }
       })
       .setReturnable()
