@@ -75,6 +75,9 @@ export class MenuSession implements MenuSessionLike {
   /** Result stored by ctx.complete() for sub-menu return. */
   private _completionResult: unknown = undefined;
 
+  /** Whether the current sub-menu returned via ctx.complete() vs a plain goBack(). */
+  private _didComplete = false;
+
   /** Options that were used to create the current menu (kept for hardRefresh). */
   private _currentOptions: Record<string, unknown> | undefined;
 
@@ -369,6 +372,7 @@ export class MenuSession implements MenuSessionLike {
    */
   async complete(result?: unknown): Promise<void> {
     this._completionResult = result;
+    this._didComplete = true;
 
     if (this.canGoBack) {
       await this.goBack(result);
@@ -1011,8 +1015,11 @@ export class MenuSession implements MenuSessionLike {
     if (idx === -1) return;
 
     const continuation = this._continuations.splice(idx, 1)[0];
-    await continuation.onComplete(ctx, result ?? this._completionResult);
+    if (this._didComplete) {
+      await continuation.onComplete(ctx, result ?? this._completionResult);
+    }
     this._completionResult = undefined;
+    this._didComplete = false;
   }
 
   // -----------------------------------------------------------------------

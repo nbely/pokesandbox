@@ -3,28 +3,32 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
 import { saveRegion } from '@bot/cache';
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
-import { ISlashCommand } from '@bot/structures/interfaces';
-import { handleRegionAutocomplete, onlyAdminRoles } from '@bot/utils';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
+import {
+  handleRegionAutocomplete,
+  onlyAdminRoles,
+  parseCommandOptions,
+} from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';
 import { LOCATIONS_COMMAND_NAME } from '../locations/locations';
 import { getRegionMenuEmbeds } from './region.embeds';
-import { RegionCommandOptions } from './types';
-
-export type RegionCommand = ISlashCommand<
-  AdminMenu<RegionCommandOptions>,
-  RegionCommandOptions
->;
+import type { RegionMenuState } from './types';
 
 const COMMAND_NAME = 'region';
 export const REGION_COMMAND_NAME = COMMAND_NAME;
 
-export const RegionCommand: RegionCommand = {
+const regionCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+});
+
+export const RegionCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -42,21 +46,31 @@ export const RegionCommand: RegionCommand = {
         .setAutocomplete(true);
     }),
   autocomplete: handleRegionAutocomplete,
-  createMenu: async (session, options = { region_id: '' }) =>
-    new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getRegionButtons(menu, options.region_id))
-      .setEmbeds((menu) => getRegionMenuEmbeds(menu, options.region_id))
+  createMenuV2: (session, options) => {
+    const { region_id } = parseCommandOptions(
+      regionCommandOptionsSchema,
+      options
+    );
+
+    return new AdminMenuBuilderV2<RegionMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setButtons((ctx) => getRegionButtons(ctx, region_id))
+      .setEmbeds((ctx) => getRegionMenuEmbeds(ctx, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
-      .build(),
+      .build();
+  },
 };
 
 const getRegionButtons = async (
-  menu: AdminMenu<RegionCommandOptions>,
+  ctx: AdminMenuContext<RegionMenuState>,
   regionId: string
-): Promise<MenuButtonConfig<AdminMenu<RegionCommandOptions>>[]> => {
-  const region = await menu.getRegion(regionId);
+): Promise<ButtonInputConfig<AdminMenuContext<RegionMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
 
   const subMenuButtons: { id: string; command: string }[] = [
     { id: 'Pokedex', command: MANAGE_POKEDEX_COMMAND_NAME },
@@ -76,21 +90,23 @@ const getRegionButtons = async (
       disabled: !region.deployable,
       fixedPosition: 'start',
       style: region.deployed ? ButtonStyle.Danger : ButtonStyle.Success,
-      onClick: async (menu) => {
-        const region = await menu.getRegion(regionId);
+      action: async (ctx) => {
+        const region = await ctx.admin.getRegion(regionId);
         region.deployed = !region.deployed;
         await saveRegion(region);
-        menu.prompt = `Successfully ${
-          region.deployed ? 'deployed' : 'undeployed'
-        } the ${region.name} Region`;
-        await menu.refresh();
+        ctx.state.set(
+          'prompt',
+          `Successfully ${region.deployed ? 'deployed' : 'undeployed'} the ${
+            region.name
+          } Region`
+        );
       },
     },
     ...subMenuButtons.map(({ id, command }, idx) => ({
       label: `${idx + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu<RegionCommandOptions>) =>
-        MenuWorkflow.openMenu(menu, command, { region_id: regionId }),
+      action: async (ctx: AdminMenuContext<RegionMenuState>) =>
+        ctx.goTo(command, { region_id: regionId }),
       id,
     })),
   ];

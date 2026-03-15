@@ -1,22 +1,32 @@
 import {
+  ActionRowBuilder,
   ButtonStyle,
   InteractionContextType,
+  ModalBuilder,
   SlashCommandBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  type ModalSubmitFields,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { saveServer } from '@bot/cache';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import { Region } from '@shared/models';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { REGION_COMMAND_NAME } from '../region/region';
-import { REGION_CREATE_COMMAND_NAME } from './regionCreate';
 import { getRegionsMenuEmbeds } from './regions.embeds';
+import { RegionsMenuState } from './types';
 
 const COMMAND_NAME = 'regions';
 export const REGIONS_COMMAND_NAME = COMMAND_NAME;
+const REGION_CREATE_MODAL_ID = 'region-create-modal';
+const REGION_NAME_FIELD_ID = 'region-name';
+const REGIONS_PROMPT_SESSION_KEY = 'regions.prompt';
 
-export const RegionsCommand: ISlashCommand<AdminMenu> = {
+export const RegionsCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -26,34 +36,106 @@ export const RegionsCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Manage Regions for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session) =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenuV2: (session) =>
+    new AdminMenuBuilderV2<RegionsMenuState>(session, COMMAND_NAME)
       .setButtons(getRegionsButtons)
+      .setModal(() => ({
+        id: REGION_CREATE_MODAL_ID,
+        builder: getRegionCreateModal(),
+        onSubmit: async (ctx, fields): Promise<void> => {
+          const regionName = getRegionNameFromModal(fields);
+          const existingRegions = await ctx.admin.getRegions();
+          const hasDuplicateRegionName = existingRegions.some(
+            (region) =>
+              region.name.trim().toLowerCase() === regionName.toLowerCase()
+          );
+
+          if (hasDuplicateRegionName) {
+            ctx.state.set(
+              'prompt',
+              `A region named "${regionName}" already exists. Please choose a different name.`
+            );
+            return;
+          }
+
+          const server = await ctx.admin.getServer();
+          const region = await Region.create({
+            baseGeneration: 10,
+            charactersPerPlayer: 1,
+            characterList: [],
+            currencyType: 'P',
+            deployable: false,
+            deployed: false,
+            graphicSettings: {
+              backSpritesEnabled: false,
+              frontSpritesEnabled: false,
+              iconSpritesEnabled: false,
+            },
+            locations: [],
+            name: regionName,
+            pokedex: [],
+            progressionDefinitions: new Map(),
+            quests: {
+              active: [],
+              passive: [],
+            },
+            shops: [],
+            transportationTypes: [],
+          });
+
+          server.regions.push(region._id);
+          await saveServer(server);
+
+          ctx.state.set(
+            'prompt',
+            `Successfully created the new region: \`${region.name}\``
+          );
+        },
+      }))
       .setEmbeds(getRegionsMenuEmbeds)
       .setCancellable()
       .setTrackedInHistory()
       .build(),
 };
 
+const getRegionCreateModal = (): ModalBuilder => {
+  return new ModalBuilder()
+    .setCustomId(REGION_CREATE_MODAL_ID)
+    .setTitle('Create New Region')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId(REGION_NAME_FIELD_ID)
+          .setLabel('Region Name')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMaxLength(80)
+      )
+    );
+};
+
+const getRegionNameFromModal = (fields: ModalSubmitFields): string => {
+  return fields.getTextInputValue(REGION_NAME_FIELD_ID).trim();
+};
+
 const getRegionsButtons = async (
-  menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> => {
-  const regions = await menu.getRegions();
+  ctx: AdminMenuContext<RegionsMenuState>
+): Promise<ButtonInputConfig<AdminMenuContext<RegionsMenuState>>[]> => {
+  const regions = await ctx.admin.getRegions();
 
   return [
     {
       label: 'Create Region',
       fixedPosition: 'start',
       style: ButtonStyle.Success,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, REGION_CREATE_COMMAND_NAME),
+      opensModal: REGION_CREATE_MODAL_ID,
     },
     ...regions.map((region) => ({
       label: region.name,
       id: region._id.toString(),
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu) =>
-        MenuWorkflow.openMenu(menu, REGION_COMMAND_NAME, {
+      action: async (ctx: AdminMenuContext<RegionsMenuState>) =>
+        ctx.goTo(REGION_COMMAND_NAME, {
           region_id: region._id.toString(),
         }),
     })),

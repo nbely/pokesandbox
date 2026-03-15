@@ -1,24 +1,23 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
-import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 import { getAssertedCachedDexEntry, getCachedDexEntries } from '@bot/cache';
 import { Gen5 } from '@shared/models';
 
-export const getManagePokedexMenuEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+import type { PokedexMenuState } from './types';
+
+export const getManagePokedexMenuEmbeds = async (
+  ctx: AdminMenuContext<PokedexMenuState>,
   regionId: string,
   defaultPrompt = 'Enter a space-separated Pokédex number (up to 1500) and Pokémon name to add a Pokémon to a blank Pokédex slot, or enter just a number to modify a Pokédex slot'
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
   const pokedexLines: string[] = [];
 
-  for (
-    let i = menu.paginationState.startIndex;
-    i <= menu.paginationState.endIndex;
-    i++
-  ) {
+  const startIndex = ctx.pagination?.startIndex ?? 0;
+  const endIndex = ctx.pagination?.endIndex ?? region.pokedex.length;
+
+  for (let i = startIndex; i < endIndex; i++) {
     const pokemon = region.pokedex[i];
     pokedexLines.push(`\n${i + 1}. ${pokemon?.name ?? '-'}`);
   }
@@ -27,15 +26,16 @@ export const getManagePokedexMenuEmbeds = async <
   }
 
   const fields: EmbedField[] = [];
+  const quantity = endIndex - startIndex;
 
-  if (menu.paginationState.quantity <= 10) {
+  if (quantity <= 10) {
     fields.push({
       name: '\u200b',
       value: pokedexLines.join(''),
       inline: true,
     });
   } else {
-    const half = Math.ceil(menu.paginationState.quantity / 2);
+    const half = Math.ceil(quantity / 2);
     fields.push({
       name: '\u200b',
       value: pokedexLines.slice(0, half).join(''),
@@ -48,69 +48,68 @@ export const getManagePokedexMenuEmbeds = async <
     });
   }
 
+  const totalItems = ctx.pagination?.totalItems ?? region.pokedex.length;
+
+  const footerText =
+    totalItems === 0
+      ? 'Showing Pokédex entries 0 of 0'
+      : `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${startIndex + 1}-${endIndex} of ${totalItems}`;
+
   const embed = new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({
       name: `${region.name} Pokédex Manager:`,
-      iconURL: menu.interaction.guild?.iconURL() || undefined,
+      iconURL: ctx.interaction.guild?.iconURL() || undefined,
     })
-    .setDescription(menu.prompt || defaultPrompt)
+    .setDescription(ctx.state.get('prompt') || defaultPrompt)
     .addFields(fields)
     .setFooter({
-      text: `Showing Pokédex entr${
-        menu.paginationState.startIndex === menu.paginationState.endIndex
-          ? 'y'
-          : 'ies'
-      } ${menu.paginationState.range} of ${menu.paginationState.total}`,
+      text: footerText,
     })
     .setTimestamp();
 
-  if (menu.thumbnail) {
-    embed.setThumbnail(menu.thumbnail);
+  const thumbnail = ctx.state.get('thumbnail');
+  if (thumbnail) {
+    embed.setThumbnail(thumbnail);
   }
 
   return [embed];
 };
 
-export const getAddPokedexSlotEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const getAddPokedexSlotEmbeds = async (
+  ctx: AdminMenuContext<PokedexMenuState>,
   regionId: string,
   pokedexNo: string,
   defaultPrompt = 'This slot is currently empty. Please enter the name of a Pokémon to add to the Pokédex slot.'
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
 
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
         name: `${region.name} Pokédex Slot #${pokedexNo}`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
-      .setDescription(menu.prompt || defaultPrompt)
+      .setDescription(ctx.state.get('prompt') || defaultPrompt)
       .setTimestamp(),
   ];
 };
 
-export const getEditPokedexSlotEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const getEditPokedexSlotEmbeds = async (
+  ctx: AdminMenuContext<PokedexMenuState>,
   regionId: string,
   pokedexNo: string
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
   const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
   const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
 
-  // TODO: Decide on the final format of the embed
   const embed = new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({
       name: `#${pokedexNo}: ${dexEntry.name} - The ${dexEntry.classification} Pokémon`,
-      iconURL: menu.interaction.guild?.iconURL() || undefined,
+      iconURL: ctx.interaction.guild?.iconURL() || undefined,
     })
     .setDescription(
       `Types: ${dexEntry.types.join(', ')}
@@ -128,10 +127,8 @@ export const getEditPokedexSlotEmbeds = async <
   return [embed];
 };
 
-export const getSelectMatchedPokemonEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const getSelectMatchedPokemonEmbeds = async (
+  ctx: AdminMenuContext<PokedexMenuState>,
   matchedDexEntryIds: string[],
   defaultPrompt = 'Select a Pokémon from the search results by clicking the corresponding button.'
 ): Promise<EmbedBuilder[]> => {
@@ -139,24 +136,24 @@ export const getSelectMatchedPokemonEmbeds = async <
   const matchedPokemon = await getCachedDexEntries(matchedDexEntryIds);
   matchedPokemon.sort((a, b) => a.num - b.num);
 
-  for (
-    let i = menu.paginationState.startIndex;
-    i <= menu.paginationState.endIndex;
-    i++
-  ) {
+  const startIndex = ctx.pagination?.startIndex ?? 0;
+  const endIndex = ctx.pagination?.endIndex ?? matchedPokemon.length;
+
+  for (let i = startIndex; i < endIndex; i++) {
     matchedOptions.push(`\n${i + 1}. ${matchedPokemon[i].name}`);
   }
 
   const fields: EmbedField[] = [];
+  const quantity = endIndex - startIndex;
 
-  if (menu.paginationState.quantity <= 5) {
+  if (quantity <= 5) {
     fields.push({
       name: '\u200b',
       value: matchedOptions.slice().join(''),
       inline: true,
     });
   } else {
-    const half = Math.ceil(menu.paginationState.quantity / 2);
+    const half = Math.ceil(quantity / 2);
     fields.push({
       name: '\u200b',
       value: matchedOptions.slice(0, half).join(''),
@@ -174,16 +171,14 @@ export const getSelectMatchedPokemonEmbeds = async <
       .setColor('Gold')
       .setAuthor({
         name: `Select a search result match:`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
-      .setDescription(menu.prompt || defaultPrompt)
+      .setDescription(ctx.state.get('prompt') || defaultPrompt)
       .addFields(fields)
       .setFooter({
-        text: `Showing match${
-          menu.paginationState.startIndex === menu.paginationState.endIndex
-            ? ''
-            : 'es'
-        } ${menu.paginationState.range} of ${matchedDexEntryIds.length}`,
+        text: `Showing match${startIndex === endIndex - 1 ? '' : 'es'} ${
+          startIndex + 1
+        }-${endIndex} of ${matchedDexEntryIds.length}`,
       })
       .setTimestamp(),
   ];

@@ -39,6 +39,7 @@ import type {
   ContainerConfig,
   FileConfig,
   MediaGalleryConfig,
+  ModalConfig,
   PaginatedGroupConfig,
   PaginationState,
   RenderMode,
@@ -208,11 +209,11 @@ export class MenuRenderer {
 
     // Run button/select setters first so pagination can be computed before embeds.
     if (definition.setButtons) {
-      buttons = await definition.setButtons(ctx);
+      buttons = (await definition.setButtons(ctx)) as ButtonConfig[];
     }
 
     if (definition.setSelectMenu) {
-      selectConfig = await definition.setSelectMenu(ctx);
+      selectConfig = (await definition.setSelectMenu(ctx)) as SelectConfig;
     }
 
     // Handle button pagination (slice buttons for current page).
@@ -286,7 +287,9 @@ export class MenuRenderer {
 
     if (definition.setModal) {
       const modalConfigs = await definition.setModal(ctx);
-      menuInstance.registerModalConfigs(modalConfigs);
+      menuInstance.registerModalConfigs(
+        modalConfigs as ModalConfig | ModalConfig[]
+      );
     }
 
     // Register reserved button actions
@@ -365,7 +368,7 @@ export class MenuRenderer {
     }
 
     if (definition.setLayout) {
-      components = await definition.setLayout(ctx);
+      components = (await definition.setLayout(ctx)) as ComponentConfig[];
     }
 
     // Expand paginatedGroup markers
@@ -377,7 +380,9 @@ export class MenuRenderer {
     // Register modal if defined
     if (definition.setModal) {
       const modalConfigs = await definition.setModal(ctx);
-      menuInstance.registerModalConfigs(modalConfigs);
+      menuInstance.registerModalConfigs(
+        modalConfigs as ModalConfig | ModalConfig[]
+      );
     }
 
     // Register reserved button actions
