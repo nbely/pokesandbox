@@ -4,10 +4,10 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { DISCOVERY_COMMAND_NAME } from '../discovery/discovery';
 import { getServerMenuEmbeds } from './server.embeds';
@@ -17,7 +17,7 @@ import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';
 const COMMAND_NAME = 'server';
 export const SERVER_COMMAND_NAME = COMMAND_NAME;
 
-export const ServerCommand: ISlashCommand<AdminMenu> = {
+export const ServerCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -27,8 +27,8 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Update your PokeSandbox server settings')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session): Promise<AdminMenu> =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenuV2: (session) =>
+    new AdminMenuBuilderV2(session, COMMAND_NAME)
       .setButtons(getServerButtons)
       .setEmbeds(getServerMenuEmbeds)
       .setCancellable()
@@ -36,7 +36,9 @@ export const ServerCommand: ISlashCommand<AdminMenu> = {
       .build(),
 };
 
-const getServerButtons = async (): Promise<MenuButtonConfig[]> => {
+const getServerButtons = async (): Promise<
+  ButtonInputConfig<AdminMenuContext>[]
+> => {
   const subMenuButtons: { id: string; command: string; option?: string }[] = [
     { id: 'Prefix', command: SERVER_MANAGE_PREFIXES_COMMAND_NAME },
     {
@@ -56,7 +58,7 @@ const getServerButtons = async (): Promise<MenuButtonConfig[]> => {
     label: (idx + 1).toString(),
     id,
     style: ButtonStyle.Primary,
-    onClick: async (menu) =>
-      MenuWorkflow.openMenu(menu, command, { role_type: option }),
+    action: async (ctx: AdminMenuContext) =>
+      ctx.goTo(command, { role_type: option }),
   }));
 };

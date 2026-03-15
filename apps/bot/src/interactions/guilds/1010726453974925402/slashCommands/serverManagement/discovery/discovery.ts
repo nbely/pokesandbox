@@ -5,10 +5,10 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import getDiscoveryMenuEmbeds from './discovery.embeds';
 import { DISCOVERY_DESCRIPTION_COMMAND_NAME } from './discoveryDescription';
@@ -16,7 +16,7 @@ import { DISCOVERY_DESCRIPTION_COMMAND_NAME } from './discoveryDescription';
 const COMMAND_NAME = 'discovery';
 export const DISCOVERY_COMMAND_NAME = COMMAND_NAME;
 
-export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
+export const DiscoveryCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -26,8 +26,8 @@ export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
     .setName(COMMAND_NAME)
     .setDescription('Update your server discovery settings')
     .setContexts(InteractionContextType.Guild),
-  createMenu: async (session): Promise<AdminMenu> =>
-    new AdminMenuBuilder(session, COMMAND_NAME)
+  createMenuV2: (session) =>
+    new AdminMenuBuilderV2(session, COMMAND_NAME)
       .setButtons(getDiscoveryButtons)
       .setEmbeds(getDiscoveryMenuEmbeds)
       .setCancellable()
@@ -37,9 +37,9 @@ export const DiscoveryCommand: ISlashCommand<AdminMenu> = {
 };
 
 async function getDiscoveryButtons(
-  menu: AdminMenu
-): Promise<MenuButtonConfig<AdminMenu>[]> {
-  const server = await menu.getServer();
+  ctx: AdminMenuContext
+): Promise<ButtonInputConfig<AdminMenuContext>[]> {
+  const server = await ctx.admin.getServer();
 
   return [
     {
@@ -48,18 +48,17 @@ async function getDiscoveryButtons(
       style: server.discovery.enabled
         ? ButtonStyle.Danger
         : ButtonStyle.Success,
-      onClick: async (menu) => {
-        const server = await menu.getServer();
+      action: async (ctx: AdminMenuContext) => {
+        const server = await ctx.admin.getServer();
         server.discovery.enabled = !server.discovery.enabled;
         await saveServer(server);
-        await menu.refresh();
       },
     },
     {
       label: 'Set Description',
       style: ButtonStyle.Primary,
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, DISCOVERY_DESCRIPTION_COMMAND_NAME),
+      action: async (ctx: AdminMenuContext) =>
+        ctx.goTo(DISCOVERY_DESCRIPTION_COMMAND_NAME),
     },
   ];
 }

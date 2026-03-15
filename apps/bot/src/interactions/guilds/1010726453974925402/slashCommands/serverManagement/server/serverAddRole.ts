@@ -5,14 +5,10 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import {
-  AdminMenuBuilder,
-  SelectMenuConfig,
-  type AdminMenu,
-} from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
-import { ISlashCommand } from '@bot/structures/interfaces';
-import { assertOptions, onlyAdminRoles } from '@bot/utils';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
+import { onlyAdminRoles } from '@bot/utils';
+import type { SelectInputConfig } from '@flowcord/v2';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';
@@ -23,12 +19,8 @@ export const SERVER_ADD_ROLE_COMMAND_NAME = COMMAND_NAME;
 type ServerAddRoleCommandOptions = {
   role_type: string;
 };
-type ServerAddRoleCommand = ISlashCommand<
-  AdminMenu<ServerAddRoleCommandOptions>,
-  ServerAddRoleCommandOptions
->;
 
-export const ServerAddRoleCommand: ServerAddRoleCommand = {
+export const ServerAddRoleCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -48,37 +40,37 @@ export const ServerAddRoleCommand: ServerAddRoleCommand = {
           { name: 'Mod', value: 'mod' }
         )
     ),
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { role_type } = options;
+  createMenuV2: (session, options) => {
+    const { role_type } = options as unknown as ServerAddRoleCommandOptions;
+    if (!role_type) {
+      throw new Error('Role type is required to add a server role.');
+    }
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) =>
+    return new AdminMenuBuilderV2(session, COMMAND_NAME, options)
+      .setEmbeds((ctx) =>
         getServerMenuEmbeds(
-          menu,
+          ctx,
           `Please select a role to grant Bot ${role_type} privileges to.`
         )
       )
-      .setSelectMenu(async (menu) =>
-        getServerAddRoleSelectMenu(menu, role_type)
-      )
+      .setSelectMenu((ctx) => getServerAddRoleSelectMenu(ctx, role_type))
+      .setFallbackMenu(SERVER_MANAGE_ROLES_COMMAND_NAME, {
+        role_type,
+      })
       .build();
   },
 };
 
 export const getServerAddRoleSelectMenu = async (
-  _menu: AdminMenu<ServerAddRoleCommandOptions>,
+  _ctx: AdminMenuContext,
   roleType: string
-): Promise<SelectMenuConfig<AdminMenu<ServerAddRoleCommandOptions>>> => {
+): Promise<SelectInputConfig<AdminMenuContext>> => {
   return {
     builder: new RoleSelectMenuBuilder()
       .setCustomId(`server-add-${roleType}-role`)
       .setPlaceholder('Select a role to add'),
-    onSelect: async (
-      menu: AdminMenu<ServerAddRoleCommandOptions>,
-      selectedRoleIds: string[]
-    ) => {
-      const server = await menu.getServer();
+    onSelect: async (ctx: AdminMenuContext, selectedRoleIds: string[]) => {
+      const server = await ctx.admin.getServer();
       const roleIds =
         roleType === 'admin' ? server.adminRoleIds : server.modRoleIds;
       const newRoleIds = selectedRoleIds.filter(
@@ -86,32 +78,25 @@ export const getServerAddRoleSelectMenu = async (
       );
 
       if (newRoleIds.length > 0) {
-        try {
-          const newRoles = await Promise.all(
-            newRoleIds.map((roleId) => menu.getGuildRole(roleId))
-          );
+        const newRoles = await Promise.all(
+          newRoleIds.map((roleId) => ctx.admin.getGuildRole(roleId))
+        );
 
-          if (roleType === 'admin') {
-            server.adminRoleIds = roleIds.concat(newRoleIds);
-          } else if (roleType === 'mod') {
-            server.modRoleIds = roleIds.concat(newRoleIds);
-          }
-
-          await saveServer(server);
-          menu.prompt = `Successfully added the ${roleType} roles: ${newRoles.join(
-            ', '
-          )}`;
-        } catch (error) {
-          await menu.session.handleError(error);
+        if (roleType === 'admin') {
+          server.adminRoleIds = roleIds.concat(newRoleIds);
+        } else if (roleType === 'mod') {
+          server.modRoleIds = roleIds.concat(newRoleIds);
         }
+
+        await saveServer(server);
+        ctx.state.set(
+          'prompt',
+          `Successfully added the ${roleType} roles: ${newRoles.join(', ')}`
+        );
       } else {
-        menu.prompt = `No new ${roleType} roles were selected.`;
+        ctx.state.set('prompt', `No new ${roleType} roles were selected.`);
       }
-      await menu.session.goBack(() =>
-        MenuWorkflow.openMenu(menu, SERVER_MANAGE_ROLES_COMMAND_NAME, {
-          role_type: roleType,
-        })
-      );
+      await ctx.goBack();
     },
   };
 };

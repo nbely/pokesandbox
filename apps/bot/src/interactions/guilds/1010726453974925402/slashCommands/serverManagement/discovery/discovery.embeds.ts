@@ -1,20 +1,21 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 
 const getDiscoveryMenuEmbeds = async (
-  menu: AdminMenu,
+  ctx: AdminMenuContext,
   defaultPrompt = 'Please enter a new server description to be displayed on the server discovery page.'
 ) => {
-  const prompt = menu.prompt || defaultPrompt;
-  const server = await menu.getServer();
+  const prompt = (ctx.state.get('prompt') as string) || defaultPrompt;
+  const server = await ctx.admin.getServer();
+  const interaction = ctx.interaction as ChatInputCommandInteraction;
 
   return [
     new EmbedBuilder()
       .setColor('Gold')
       .setAuthor({
         name: `${server.name} Discovery Settings`,
-        iconURL: menu.interaction?.guild?.iconURL() ?? undefined,
+        iconURL: interaction.guild?.iconURL() ?? undefined,
       })
       .setDescription(`${prompt ? '' + prompt + '\n\n' : ''}`)
       .addFields(
