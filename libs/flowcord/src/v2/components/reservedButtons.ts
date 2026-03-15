@@ -78,7 +78,7 @@ export function buildReservedButtonRow(
   if (showBack) {
     buttons.push({
       type: 'button',
-      label: labels?.back ?? '◀ Back',
+      label: labels?.back ?? 'Back',
       style: ButtonStyle.Secondary,
       id: '__reserved_back',
     });
@@ -94,7 +94,7 @@ export function buildReservedButtonRow(
     if (showPrevious) {
       buttons.push({
         type: 'button',
-        label: labels?.previous ?? '◀ Previous',
+        label: labels?.previous ?? '◀',
         style: ButtonStyle.Secondary,
         id: '__reserved_previous',
         disabled: isFirstPage,
@@ -115,7 +115,7 @@ export function buildReservedButtonRow(
     if (showNext) {
       buttons.push({
         type: 'button',
-        label: labels?.next ?? 'Next ▶',
+        label: labels?.next ?? '▶',
         style: ButtonStyle.Secondary,
         id: '__reserved_next',
         disabled: isLastPage,
@@ -127,7 +127,7 @@ export function buildReservedButtonRow(
   if (showCancel) {
     buttons.push({
       type: 'button',
-      label: labels?.cancel ?? '✕ Cancel',
+      label: labels?.cancel ?? 'Cancel',
       style: ButtonStyle.Danger,
       id: '__reserved_cancel',
     });

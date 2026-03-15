@@ -27,12 +27,14 @@ import type { HookFn, MenuHooks } from '../lifecycle/hooks';
 import type {
   Awaitable,
   ButtonConfig,
+  ButtonInputConfig,
   ComponentConfig,
   ListPaginationOptions,
   ModalConfig,
+  SelectConfig,
+  SelectInputConfig,
   SetButtonsOptions,
 } from '../types/common';
-import type { SelectConfig } from '../types/common';
 import type { MenuDefinition } from '../registry/MenuRegistry';
 
 // ---------------------------------------------------------------------------
@@ -129,10 +131,10 @@ export class MenuBuilder<
    */
   setButtons(
     this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
-    fn: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>,
+    fn: (ctx: TCtx) => Awaitable<ButtonInputConfig<TCtx>[]>,
     options?: SetButtonsOptions
   ): MenuBuilder<TState, TCtx, 'embeds'> {
-    this._setButtons = fn;
+    this._setButtons = normalizeButtonsFn(fn);
     this._setButtonsOptions = options;
     this._mode = 'embeds';
     return this as unknown as MenuBuilder<TState, TCtx, 'embeds'>;
@@ -143,9 +145,9 @@ export class MenuBuilder<
    */
   setSelectMenu(
     this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
-    fn: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>
+    fn: (ctx: TCtx) => Awaitable<SelectInputConfig<TCtx>>
   ): MenuBuilder<TState, TCtx, 'embeds'> {
-    this._setSelectMenu = fn;
+    this._setSelectMenu = normalizeSelectFn(fn);
     this._mode = 'embeds';
     return this as unknown as MenuBuilder<TState, TCtx, 'embeds'>;
   }
@@ -298,9 +300,9 @@ export class MenuBuilder<
    */
   fromDefinition(def: Partial<MenuDefinitionLiteral<TCtx>>): this {
     if (def.embeds) this._setEmbeds = def.embeds;
-    if (def.buttons) this._setButtons = def.buttons;
+    if (def.buttons) this._setButtons = normalizeButtonsFn(def.buttons);
     if (def.layout) this._setLayout = def.layout;
-    if (def.selectMenu) this._setSelectMenu = def.selectMenu;
+    if (def.selectMenu) this._setSelectMenu = normalizeSelectFn(def.selectMenu);
     if (def.modal) this._setModal = def.modal;
     if (def.messageHandler) this._handleMessage = def.messageHandler;
     if (def.setup) this._setup = def.setup;
@@ -395,9 +397,9 @@ export class MenuBuilder<
 
 export interface MenuDefinitionLiteral<TCtx = MenuContext> {
   embeds?: (ctx: TCtx) => Awaitable<EmbedBuilder[]>;
-  buttons?: (ctx: TCtx) => Awaitable<ButtonConfig<TCtx>[]>;
+  buttons?: (ctx: TCtx) => Awaitable<ButtonInputConfig<TCtx>[]>;
   layout?: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>;
-  selectMenu?: (ctx: TCtx) => Awaitable<SelectConfig<TCtx>>;
+  selectMenu?: (ctx: TCtx) => Awaitable<SelectInputConfig<TCtx>>;
   modal?: (ctx: TCtx) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>;
   messageHandler?: (ctx: TCtx, response: string) => Awaitable<void>;
   setup?: (ctx: TCtx) => Awaitable<void>;
@@ -406,5 +408,36 @@ export interface MenuDefinitionLiteral<TCtx = MenuContext> {
     cancellable?: boolean;
     returnable?: boolean;
     trackInHistory?: boolean;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Input → strict normalization wrappers
+// ---------------------------------------------------------------------------
+
+/**
+ * Wraps a consumer callback returning ButtonInputConfig[] (type optional)
+ * into one returning ButtonConfig[] (type required).
+ * Used by setter methods so the stored callback is already normalized.
+ */
+function normalizeButtonsFn<TCtx>(
+  fn: (ctx: TCtx) => Awaitable<ButtonInputConfig<TCtx>[]>
+): (ctx: TCtx) => Promise<ButtonConfig<TCtx>[]> {
+  return async (ctx) => {
+    const inputs = await fn(ctx);
+    return inputs.map((b) => ({ ...b, type: 'button' as const }));
+  };
+}
+
+/**
+ * Wraps a consumer callback returning SelectInputConfig (type optional)
+ * into one returning SelectConfig (type required).
+ */
+function normalizeSelectFn<TCtx>(
+  fn: (ctx: TCtx) => Awaitable<SelectInputConfig<TCtx>>
+): (ctx: TCtx) => Promise<SelectConfig<TCtx>> {
+  return async (ctx) => {
+    const input = await fn(ctx);
+    return { ...input, type: 'select' as const };
   };
 }

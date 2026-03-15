@@ -153,12 +153,34 @@ export interface ButtonConfig<TCtx = MenuContextLike> {
   fixedPosition?: 'start' | 'end';
 }
 
+/**
+ * Consumer-facing button shape for builder APIs.
+ * `type` is optional because the builder already knows it is normalizing buttons.
+ */
+export type ButtonInputConfig<TCtx = MenuContextLike> = Omit<
+  ButtonConfig<TCtx>,
+  'type'
+> & {
+  type?: 'button';
+};
+
 export interface SelectConfig<TCtx = MenuContextLike> {
   type: 'select';
   builder: AnySelectMenuBuilder;
   id?: string;
   onSelect?: SelectAction<TCtx>;
 }
+
+/**
+ * Consumer-facing select shape for builder APIs.
+ * `type` is optional because the builder already knows it is normalizing a select menu.
+ */
+export type SelectInputConfig<TCtx = MenuContextLike> = Omit<
+  SelectConfig<TCtx>,
+  'type'
+> & {
+  type?: 'select';
+};
 
 // --- Pagination marker ---
 
