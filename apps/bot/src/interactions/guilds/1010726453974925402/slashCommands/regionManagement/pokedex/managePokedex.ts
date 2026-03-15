@@ -80,11 +80,6 @@ export const ManagePokedexCommand: ISlashCommand = {
             pokedex_no.toString(),
             pokemonName
           );
-
-          ctx.state.set(
-            'prompt',
-            'Pokémon added to slot! You can enter another Pokédex number to edit another slot, or type "exit" to go back to the main menu.'
-          );
         }
       })
       .setReturnable()

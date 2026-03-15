@@ -72,8 +72,6 @@ export const EditPokedexSlotCommand: ISlashCommand = {
       editPokedexSlotCommandOptionsSchema,
       options
     );
-    // const { region_id, pokedex_no } =
-    //   editPokedexSlotCommandOptionsSchema.parse(options);
     const region = await getAssertedCachedRegion(region_id);
 
     const builder = new AdminMenuBuilderV2<PokedexMenuState>(
