@@ -50,6 +50,11 @@ export const getManagePokedexMenuEmbeds = async (
 
   const totalItems = ctx.pagination?.totalItems ?? region.pokedex.length;
 
+  const footerText =
+    totalItems === 0
+      ? 'Showing Pokédex entries 0 of 0'
+      : `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${startIndex + 1}-${endIndex} of ${totalItems}`;
+
   const embed = new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({
@@ -59,9 +64,7 @@ export const getManagePokedexMenuEmbeds = async (
     .setDescription(ctx.state.get('prompt') || defaultPrompt)
     .addFields(fields)
     .setFooter({
-      text: `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${
-        startIndex + 1
-      }-${endIndex} of ${totalItems}`,
+      text: footerText,
     })
     .setTimestamp();
 
