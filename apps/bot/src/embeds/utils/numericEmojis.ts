@@ -22,8 +22,8 @@ const getNumericEmojisForIndex = (value: number): string => {
 };
 
 /**
- * Converts a numeric index to an emoji label with optional padding for alignment.
- * @param number - The zero-based index to convert
+ * Converts a numeric value to an emoji label with optional padding for alignment.
+ * @param value - The 1-based numeric value to convert
  * @param shouldPadSingleEmojiLabels - Whether to add spacing for single-digit labels
  * @param shouldPadDoubleDigitEmojiLabels - Whether to add spacing for double-digit labels
  * @returns A string containing the numeric emoji and optional spacing
@@ -36,7 +36,7 @@ export const getNumericEmojiLabel = (
   const emojiLabel = `${getNumericEmojisForIndex(value)}\u2009`;
   if (!emojiLabel) return '';
 
-  if (shouldPadDoubleDigitEmojiLabels && value > 9 && value < 99) {
+  if (shouldPadDoubleDigitEmojiLabels && value > 9 && value <= 99) {
     return `${emojiLabel}\u2007\u2007\u2006`;
   }
 
