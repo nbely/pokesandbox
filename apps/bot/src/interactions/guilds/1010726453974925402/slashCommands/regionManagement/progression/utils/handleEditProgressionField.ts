@@ -23,6 +23,6 @@ export const handleEditProgressionField = async (
   region.progressionDefinitions.set(progressionKey, progression);
   await saveRegion(region);
 
-  ctx.state.set('progressionEditField', undefined);
+  ctx.sessionState.set('progressionEditField', undefined);
   await ctx.hardRefresh();
 };
