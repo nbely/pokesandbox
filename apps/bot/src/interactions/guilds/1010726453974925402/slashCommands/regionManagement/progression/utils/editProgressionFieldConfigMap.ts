@@ -61,9 +61,9 @@ export const editProgressionFieldConfigMap = new Map<
           .map((option) => ({
             label: `Set to ${capitalize(option)}`,
             style: ButtonStyle.Primary,
-            onClick: async (menu) => {
+            action: async (ctx) => {
               await handleEditProgressionField(
-                menu,
+                ctx,
                 config,
                 region.id,
                 progressionKey,

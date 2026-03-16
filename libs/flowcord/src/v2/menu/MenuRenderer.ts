@@ -235,6 +235,12 @@ export class MenuRenderer {
       (hasConfiguredButtonPagination || needsAutoButtonPagination) &&
       buttons.length > 0
     ) {
+      const fixedStartButtons = buttons.filter(
+        (b) => b.fixedPosition === 'start'
+      );
+      const fixedEndButtons = buttons.filter((b) => b.fixedPosition === 'end');
+      const pageableButtons = buttons.filter((b) => !b.fixedPosition);
+
       const requestedPerPage = configuredButtonPagination?.perPage ?? 25;
       const maxButtonsWithReservedRow = this.getMaxEmbedButtonsPerPage(
         menuInstance,
@@ -242,20 +248,29 @@ export class MenuRenderer {
         ctx,
         true
       );
+      const fixedButtonsCount =
+        fixedStartButtons.length + fixedEndButtons.length;
       const perPage = Math.max(
         1,
         Math.min(requestedPerPage, maxButtonsWithReservedRow)
       );
-      const totalPages = Math.ceil(buttons.length / perPage);
+      const pageItemsPerPage = Math.max(1, perPage - fixedButtonsCount);
+      const totalPages = Math.max(
+        1,
+        Math.ceil(pageableButtons.length / pageItemsPerPage)
+      );
       const currentPage = menuInstance.paginationState?.currentPage ?? 0;
 
       menuInstance.paginationState = {
         currentPage,
         totalPages,
-        itemsPerPage: perPage,
-        totalItems: buttons.length,
-        startIndex: currentPage * perPage,
-        endIndex: Math.min((currentPage + 1) * perPage, buttons.length),
+        itemsPerPage: pageItemsPerPage,
+        totalItems: pageableButtons.length,
+        startIndex: currentPage * pageItemsPerPage,
+        endIndex: Math.min(
+          (currentPage + 1) * pageItemsPerPage,
+          pageableButtons.length
+        ),
       };
 
       // Keep embeds in sync with the same page that button rows are using.
@@ -266,10 +281,11 @@ export class MenuRenderer {
       menuInstance.registerButtonActions(buttons);
 
       // Slice for current page
-      buttons = buttons.slice(
+      const pageButtons = pageableButtons.slice(
         menuInstance.paginationState.startIndex,
         menuInstance.paginationState.endIndex
       );
+      buttons = [...fixedStartButtons, ...pageButtons, ...fixedEndButtons];
     } else {
       // No button pagination (or list pagination already computed) — register button actions
       menuInstance.registerButtonActions(buttons);

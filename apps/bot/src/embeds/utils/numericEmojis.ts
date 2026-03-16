@@ -23,24 +23,24 @@ const getNumericEmojisForIndex = (value: number): string => {
 
 /**
  * Converts a numeric index to an emoji label with optional padding for alignment.
- * @param index - The zero-based index to convert
+ * @param number - The zero-based index to convert
  * @param shouldPadSingleEmojiLabels - Whether to add spacing for single-digit labels
  * @param shouldPadDoubleDigitEmojiLabels - Whether to add spacing for double-digit labels
  * @returns A string containing the numeric emoji and optional spacing
  */
 export const getNumericEmojiLabel = (
-  index: number,
+  value: number,
   shouldPadSingleEmojiLabels = false,
   shouldPadDoubleDigitEmojiLabels = false
 ): string => {
-  const emojiLabel = `${getNumericEmojisForIndex(index)}\u2009`;
+  const emojiLabel = `${getNumericEmojisForIndex(value)}\u2009`;
   if (!emojiLabel) return '';
 
-  if (shouldPadDoubleDigitEmojiLabels && index >= 9 && index < 99) {
+  if (shouldPadDoubleDigitEmojiLabels && value > 9 && value < 99) {
     return `${emojiLabel}\u2007\u2007\u2006`;
   }
 
-  if (!shouldPadSingleEmojiLabels || index >= 9) {
+  if (!shouldPadSingleEmojiLabels || value > 9) {
     return emojiLabel;
   }
 
@@ -56,11 +56,9 @@ export const getNumericEmojiLabel = (
 export const getNumericEmojiPaddingRules = (
   column: { index: number }[]
 ): { padSingle: boolean; padDouble: boolean } => {
-  const hasSingle = column.some(({ index }) => index + 1 <= 9);
-  const hasDouble = column.some(
-    ({ index }) => index + 1 >= 10 && index + 1 <= 99
-  );
-  const hasTriple = column.some(({ index }) => index + 1 >= 100);
+  const hasSingle = column.some(({ index }) => index <= 9);
+  const hasDouble = column.some(({ index }) => index >= 10 && index <= 99);
+  const hasTriple = column.some(({ index }) => index >= 100);
 
   return {
     padSingle: hasSingle && (hasDouble || hasTriple),

@@ -1,33 +1,39 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 import { createNumericListFields } from '@bot/embeds/utils/createNumericListFields';
+import { paginateListForButtonPagination } from '@bot/embeds/utils/paginateListForButtonPagination';
 import { sortByOrdinal } from '@bot/utils';
 
-import type { LocationsCommandOptions } from './types';
+import type { LocationsMenuState } from './types';
 
 export const getLocationsMenuEmbeds = async (
-  menu: AdminMenu<LocationsCommandOptions>,
+  ctx: AdminMenuContext<LocationsMenuState>,
   regionId: string,
   defaultPrompt = 'Manage locations for this region. Use the buttons below to add or view a location.'
 ): Promise<EmbedBuilder[]> => {
-  const region = await menu.getRegion(regionId);
-  const locations = await menu.getLocations(regionId);
-  const prompt = menu.prompt || defaultPrompt;
+  const region = await ctx.admin.getRegion(regionId);
+  const locations = await ctx.admin.getLocations(regionId);
+  const prompt = ctx.state.get('prompt') || defaultPrompt;
 
   // Sort locations by ordinal
   const sortedLocations = sortByOrdinal(locations);
+  const {
+    totalItems,
+    footerText,
+    visibleItems: visibleLocations,
+  } = paginateListForButtonPagination(sortedLocations, ctx.pagination, {
+    itemLabel: 'location',
+  });
 
-  const locationItems = sortedLocations.map((location) => ({
+  const locationItems = visibleLocations.map((location) => ({
     name: location.name,
     index: location.ordinal,
   }));
   const locationFields = createNumericListFields(
     locationItems,
-    [
-      { threshold: 11, columns: 2 },
-      { threshold: 21, columns: 3 },
-    ],
+    [{ threshold: 1, columns: 3 }],
+    true,
     'No locations found.'
   );
 
@@ -35,14 +41,20 @@ export const getLocationsMenuEmbeds = async (
     .setColor('Gold')
     .setAuthor({
       name: `${region.name} Location Manager`,
-      iconURL: menu.interaction.guild?.iconURL() || undefined,
+      iconURL: ctx.interaction.guild?.iconURL() || undefined,
     })
     .setDescription(prompt)
     .setFields(locationFields);
 
-  if (menu.warningMessage) {
-    embed.setFooter({ text: menu.warningMessage });
-    menu.warningMessage = undefined;
+  const warningMessage = ctx.state.get('warningMessage');
+  const paginationText = totalItems > 0 ? footerText : undefined;
+
+  if (warningMessage && paginationText) {
+    embed.setFooter({ text: `${warningMessage} • ${paginationText}` });
+  } else if (warningMessage) {
+    embed.setFooter({ text: warningMessage });
+  } else if (paginationText) {
+    embed.setFooter({ text: paginationText });
   }
 
   return [embed];

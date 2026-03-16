@@ -1,21 +1,21 @@
 import assert from 'node:assert';
 
 import { saveRegion } from '@bot/cache';
-import type { AdminMenu } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 
 import type {
   EditProgressionFieldConfig,
-  ProgressionEditCommandOptions,
+  ProgressionEditMenuState,
 } from '../types';
 
 export const handleEditProgressionField = async (
-  menu: AdminMenu<ProgressionEditCommandOptions>,
+  ctx: AdminMenuContext<ProgressionEditMenuState>,
   config: EditProgressionFieldConfig,
   regionId: string,
   progressionKey: string,
   response: string
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assert(progression, 'Progression definition not found');
 
@@ -23,6 +23,6 @@ export const handleEditProgressionField = async (
   region.progressionDefinitions.set(progressionKey, progression);
   await saveRegion(region);
 
-  menu.session.deleteState('progressionEditField');
-  await menu.hardRefresh();
+  ctx.state.set('progressionEditField', undefined);
+  await ctx.hardRefresh();
 };

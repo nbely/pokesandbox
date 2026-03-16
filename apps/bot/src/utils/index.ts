@@ -12,6 +12,7 @@ export {
   handleRegionAutocomplete,
 } from './autocompleteHelpers';
 export {
+  getModalSelectValue,
   getModalSelectValues,
   getModalTextValue,
   setValueOnInputBuilderIfExists,

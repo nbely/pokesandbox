@@ -21,6 +21,28 @@ export function getModalTextValue(
   return field.value;
 }
 
+export function getModalSelectValue(
+  fields: ModalSubmitFields['fields'],
+  customId: string
+): string | undefined;
+
+export function getModalSelectValue(
+  fields: ModalSubmitFields['fields'],
+  customId: string,
+  required: true
+): string;
+
+export function getModalSelectValue(
+  fields: ModalSubmitFields['fields'],
+  customId: string,
+  required?: boolean
+): string | undefined {
+  const field = fields.get(customId);
+  if (!field || !('values' in field) || field.values.length === 0)
+    return undefined;
+  return field.values[0];
+}
+
 export function getModalSelectValues(
   fields: ModalSubmitFields['fields'],
   customId: string

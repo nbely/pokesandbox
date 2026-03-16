@@ -4,22 +4,23 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
   handleRegionAndProgressionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
 import type {
   EditProgressionFieldConfig,
-  ProgressionEditCommandOptions,
+  ProgressionEditMenuState,
 } from './types';
 import {
   editProgressionFieldConfigMap,
@@ -29,12 +30,12 @@ import {
 const COMMAND_NAME = 'progression-edit';
 export const PROGRESSION_EDIT_COMMAND_NAME = COMMAND_NAME;
 
-type ProgressionEditCommand = ISlashCommand<
-  AdminMenu<ProgressionEditCommandOptions>,
-  ProgressionEditCommandOptions
->;
+const progressionEditCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+  progression_key: z.string().min(1),
+});
 
-export const ProgressionEditCommand: ProgressionEditCommand = {
+export const ProgressionEditCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -59,24 +60,30 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
         .setRequired(true)
         .setAutocomplete(true)
     ),
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id, progression_key } = options;
+  createMenuV2: async (session, options) => {
+    const { region_id, progression_key } = parseCommandOptions(
+      progressionEditCommandOptionsSchema,
+      options
+    );
     const region = await getAssertedCachedRegion(region_id);
     const progression = region.progressionDefinitions.get(progression_key);
     assert(progression, 'Progression definition not found');
 
-    const progressionEditField = session.getState<string>(
+    const progressionEditField = session.sessionState.get(
       'progressionEditField'
-    );
+    ) as string | undefined;
     const config = editProgressionFieldConfigMap.get(
       progressionEditField ?? ''
     );
 
-    const builder = new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) =>
+    const builder = new AdminMenuBuilderV2<ProgressionEditMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setEmbeds((ctx) =>
         progressionEditMenuEmbeds(
-          menu,
+          ctx,
           region_id,
           progression_key,
           progressionEditField
@@ -87,14 +94,14 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
       .setTrackedInHistory();
 
     if (!progressionEditField) {
-      builder.setButtons((menu) =>
-        getEditProgressionDefinitionButtons(menu, region_id, progression_key)
+      builder.setButtons((ctx) =>
+        getEditProgressionDefinitionButtons(ctx, region_id, progression_key)
       );
     } else {
       if (config?.getCustomButtons) {
-        builder.setButtons((menu) =>
+        builder.setButtons((ctx) =>
           getProgressionEditFieldButtons(
-            menu,
+            ctx,
             config,
             region_id,
             progression_key
@@ -102,9 +109,9 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
         );
       }
       if (config?.hasMessageHandler) {
-        builder.setMessageHandler(async (menu, response) => {
+        builder.setMessageHandler(async (ctx, response) => {
           await handleEditProgressionField(
-            menu,
+            ctx,
             config,
             region_id,
             progression_key,
@@ -119,44 +126,45 @@ export const ProgressionEditCommand: ProgressionEditCommand = {
 };
 
 const getEditProgressionDefinitionButtons = async (
-  menu: AdminMenu<ProgressionEditCommandOptions>,
+  ctx: AdminMenuContext<ProgressionEditMenuState>,
   regionId: string,
   progressionKey: string
-): Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]> => {
-  const region = await menu.getRegion(regionId);
+): Promise<ButtonInputConfig<AdminMenuContext<ProgressionEditMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assert(progression, 'Progression definition not found');
 
-  const buttons: MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[] =
-    [
-      {
-        id: 'name',
-        label: 'Name',
-        style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          menu.session.setState('progressionEditField', 'name');
-          await menu.hardRefresh();
-        },
+  const buttons: ButtonInputConfig<
+    AdminMenuContext<ProgressionEditMenuState>
+  >[] = [
+    {
+      id: 'name',
+      label: 'Name',
+      style: ButtonStyle.Primary,
+      action: async (ctx) => {
+        ctx.sessionState.set('progressionEditField', 'name');
+        await ctx.hardRefresh();
       },
-      {
-        id: 'description',
-        label: 'Description',
-        style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          menu.session.setState('progressionEditField', 'description');
-          await menu.hardRefresh();
-        },
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      style: ButtonStyle.Primary,
+      action: async (ctx) => {
+        ctx.sessionState.set('progressionEditField', 'description');
+        await ctx.hardRefresh();
       },
-      {
-        id: 'visibility',
-        label: 'Visibility',
-        style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          menu.session.setState('progressionEditField', 'visibility');
-          await menu.hardRefresh();
-        },
+    },
+    {
+      id: 'visibility',
+      label: 'Visibility',
+      style: ButtonStyle.Primary,
+      action: async (ctx) => {
+        ctx.sessionState.set('progressionEditField', 'visibility');
+        await ctx.hardRefresh();
       },
-    ];
+    },
+  ];
 
   // Add kind-specific buttons
   if (progression.kind === 'numeric') {
@@ -165,18 +173,18 @@ const getEditProgressionDefinitionButtons = async (
         id: 'min',
         label: 'Min Value',
         style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          menu.session.setState('progressionEditField', 'min');
-          await menu.hardRefresh();
+        action: async (ctx) => {
+          ctx.sessionState.set('progressionEditField', 'min');
+          await ctx.hardRefresh();
         },
       },
       {
         id: 'max',
         label: 'Max Value',
         style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          menu.session.setState('progressionEditField', 'max');
-          await menu.hardRefresh();
+        action: async (ctx) => {
+          ctx.sessionState.set('progressionEditField', 'max');
+          await ctx.hardRefresh();
         },
       }
     );
@@ -185,8 +193,8 @@ const getEditProgressionDefinitionButtons = async (
       {
         label: 'Milestones',
         style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          await MenuWorkflow.openMenu(menu, MILESTONES_COMMAND_NAME, {
+        action: async (ctx) => {
+          await ctx.goTo(MILESTONES_COMMAND_NAME, {
             region_id: regionId,
             progression_key: progressionKey,
           });
@@ -195,16 +203,18 @@ const getEditProgressionDefinitionButtons = async (
       {
         label: 'Toggle Sequential',
         style: ButtonStyle.Primary,
-        onClick: async (menu) => {
-          const region = await menu.getRegion(regionId);
+        action: async (ctx) => {
+          const region = await ctx.admin.getRegion(regionId);
           if (progression.kind === 'milestone') {
             progression.sequential = !progression.sequential;
             region.progressionDefinitions.set(progressionKey, progression);
             await saveRegion(region);
-            menu.prompt = `Sequential mode ${
-              progression.sequential ? 'enabled' : 'disabled'
-            }`;
-            await menu.refresh();
+            ctx.state.set(
+              'prompt',
+              `Sequential mode ${
+                progression.sequential ? 'enabled' : 'disabled'
+              }`
+            );
           }
         },
       }
@@ -215,11 +225,11 @@ const getEditProgressionDefinitionButtons = async (
   buttons.push({
     label: 'Delete',
     style: ButtonStyle.Danger,
-    onClick: async (menu) => {
-      const region = await menu.getRegion(regionId);
+    action: async (ctx) => {
+      const region = await ctx.admin.getRegion(regionId);
       region.progressionDefinitions.delete(progressionKey);
       await saveRegion(region);
-      await MenuWorkflow.completeWithResult(menu, undefined);
+      await ctx.goBack();
     },
   });
 
@@ -227,25 +237,26 @@ const getEditProgressionDefinitionButtons = async (
 };
 
 const getProgressionEditFieldButtons = async (
-  menu: AdminMenu<ProgressionEditCommandOptions>,
+  ctx: AdminMenuContext<ProgressionEditMenuState>,
   config: EditProgressionFieldConfig,
   regionId: string,
   progressionKey: string
-): Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]> => {
-  const region = await menu.getRegion(regionId);
+): Promise<ButtonInputConfig<AdminMenuContext<ProgressionEditMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assert(progression, 'Progression definition not found');
 
-  const buttons: MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[] =
-    [];
+  const buttons: ButtonInputConfig<
+    AdminMenuContext<ProgressionEditMenuState>
+  >[] = [];
 
   if (config.hasClearButton) {
     buttons.push({
       label: 'Clear',
       style: ButtonStyle.Danger,
-      onClick: async (menu) => {
+      action: async (ctx) => {
         await handleEditProgressionField(
-          menu,
+          ctx,
           config,
           regionId,
           progressionKey,
