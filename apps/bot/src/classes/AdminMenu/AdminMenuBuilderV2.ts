@@ -2,6 +2,7 @@ import { EmbedBuilder, Role } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 import {
+  getCachedLocation,
   getCachedLocations,
   getCachedRegion,
   getCachedRegions,
@@ -20,6 +21,7 @@ export interface AdminHelpers {
   getServer(): Promise<Server>;
   getRegion(regionId: string): Promise<Region>;
   getRegions(): Promise<Region[]>;
+  getLocation(locationId: string): Promise<Location>;
   getLocations(regionId: string): Promise<Location[]>;
   getRoles(type: 'admin' | 'mod'): Promise<(string | Role)[]>;
   getGuildRole(roleId: string): Promise<string | Role>;
@@ -92,6 +94,16 @@ function buildAdminHelpers(
     async getRegions(): Promise<Region[]> {
       const server = await this.getServer();
       return getCachedRegions(server.regions);
+    },
+
+    async getLocation(locationId: string): Promise<Location> {
+      const location = await getCachedLocation(locationId);
+      if (!location) {
+        throw new Error(
+          'There was a problem fetching the location. Please try again later.'
+        );
+      }
+      return location;
     },
 
     async getLocations(regionId: string): Promise<Location[]> {

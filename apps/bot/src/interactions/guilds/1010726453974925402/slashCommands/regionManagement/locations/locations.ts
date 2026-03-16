@@ -3,29 +3,34 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
+import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
   sortByOrdinal,
 } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord/v2';
 
-import { getLocationModal } from './location.modal';
+import { LOCATION_COMMAND_NAME } from './location';
+import {
+  LOCATION_CREATE_MODAL_ID,
+  getLocationCreateModal,
+} from './location.modal';
 import { getLocationsMenuEmbeds } from './locations.embeds';
-import type { LocationsCommandOptions } from './types';
+import type { LocationsMenuState } from './types';
 
 const COMMAND_NAME = 'locations';
 export const LOCATIONS_COMMAND_NAME = COMMAND_NAME;
 
-type LocationsCommand = ISlashCommand<
-  AdminMenu<LocationsCommandOptions>,
-  LocationsCommandOptions
->;
+const locationsCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+});
 
-export const LocationsCommand: LocationsCommand = {
+export const LocationsCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -43,14 +48,20 @@ export const LocationsCommand: LocationsCommand = {
         .setAutocomplete(true);
     }),
   autocomplete: handleRegionAutocomplete,
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id } = options;
+  createMenuV2: (session, options) => {
+    const { region_id } = parseCommandOptions(
+      locationsCommandOptionsSchema,
+      options
+    );
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getLocationsButtons(menu, region_id))
-      .setEmbeds((menu) => getLocationsMenuEmbeds(menu, region_id))
-      .setModal((menu) => getLocationModal(menu, region_id))
+    return new AdminMenuBuilderV2<LocationsMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setButtons((ctx) => getLocationsButtons(ctx, region_id))
+      .setEmbeds((ctx) => getLocationsMenuEmbeds(ctx, region_id))
+      .setModal((ctx) => getLocationCreateModal(ctx, region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -59,31 +70,28 @@ export const LocationsCommand: LocationsCommand = {
 };
 
 const getLocationsButtons = async (
-  menu: AdminMenu<LocationsCommandOptions>,
+  ctx: AdminMenuContext<LocationsMenuState>,
   regionId: string
-): Promise<MenuButtonConfig<AdminMenu<LocationsCommandOptions>>[]> => {
-  const locations = await menu.getLocations(regionId);
+): Promise<ButtonInputConfig<AdminMenuContext<LocationsMenuState>>[]> => {
+  const locations = await ctx.admin.getLocations(regionId);
   const sortedLocations = sortByOrdinal(locations);
 
   return [
     {
-      label: 'Add Location',
+      label: 'Add',
       fixedPosition: 'start',
       style: ButtonStyle.Success,
-      onClick: async (menu) => {
-        await menu.openModal();
-      },
+      opensModal: LOCATION_CREATE_MODAL_ID,
     },
     ...sortedLocations.map((location) => ({
       label: `${location.ordinal}`,
       id: location._id.toString(),
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu<LocationsCommandOptions>) => {
-        // await MenuWorkflow.openMenu(menu, LOCATION_COMMAND_NAME, {
-        //   region_id: regionId,
-        //   location_id: location._id.toString(),
-        // });
-      },
+      action: async (ctx: AdminMenuContext<LocationsMenuState>) =>
+        ctx.goTo(LOCATION_COMMAND_NAME, {
+          region_id: regionId,
+          location_id: location._id.toString(),
+        }),
     })),
   ];
 };

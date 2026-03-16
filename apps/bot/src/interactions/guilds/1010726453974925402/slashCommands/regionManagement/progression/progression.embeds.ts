@@ -2,155 +2,145 @@ import { EmbedBuilder, type EmbedField } from 'discord.js';
 import capitalize from 'lodash/capitalize';
 import assert from 'node:assert';
 
-import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
+import { createNumericListFields } from '@bot/embeds/utils/createNumericListFields';
+import { paginateListForButtonPagination } from '@bot/embeds/utils/paginateListForButtonPagination';
 import { sortByOrdinal } from '@bot/utils';
 import { ProgressionDefinition } from '@shared/models';
 
-import { assertProgressionKind } from './utils';
+import type { ProgressionEditMenuState, ProgressionsMenuState } from './types';
+import { assertProgressionKind, getOrderedProgressionEntries } from './utils';
 
-export const progressionsMenuEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const progressionsMenuEmbeds = async (
+  ctx: AdminMenuContext<ProgressionsMenuState>,
   regionId: string,
   defaultPrompt = 'Manage progression definitions for this region. Use the buttons below to add or edit a progression.'
 ) => {
-  const region = await menu.getRegion(regionId);
-  const progressionLines: string[] = [];
+  const region = await ctx.admin.getRegion(regionId);
+  const orderedProgressions = getOrderedProgressionEntries(
+    region.progressionDefinitions
+  );
 
-  const progressions = Array.from(region.progressionDefinitions.entries());
-  if (progressions.length === 0) {
-    progressionLines.push('\nNo progression definitions found.');
-  } else {
-    for (
-      let i = menu.paginationState.startIndex;
-      i <= menu.paginationState.endIndex;
-      i++
-    ) {
-      if (i >= progressions.length) break;
+  const progressionGlobalIndexByKey = new Map<string, number>(
+    orderedProgressions.map(([key], index) => [key, index + 1])
+  );
 
-      const progression = progressions[i][1];
-      const kindLabel =
-        progression.kind === 'boolean' ? 'Flag' : capitalize(progression.kind);
-      progressionLines.push(`\n**${progression.name}** (${kindLabel})`);
-    }
-  }
+  const pagination = ctx.pagination;
+  const {
+    totalItems: quantity,
+    footerText,
+    visibleItems: visibleProgressions,
+  } = paginateListForButtonPagination(orderedProgressions, pagination, {
+    itemLabel: 'progression',
+  });
+
+  const visibleByKind = {
+    milestone: visibleProgressions.filter(
+      ([, progression]) => progression.kind === 'milestone'
+    ),
+    numeric: visibleProgressions.filter(
+      ([, progression]) => progression.kind === 'numeric'
+    ),
+    boolean: visibleProgressions.filter(
+      ([, progression]) => progression.kind === 'boolean'
+    ),
+  };
 
   const fields: EmbedField[] = [];
 
-  if (menu.paginationState.quantity <= 10) {
+  if (quantity === 0) {
     fields.push({
       name: '\u200b',
-      value: progressionLines.join('') || '\nNo progression definitions found.',
+      value: '\nNo progression definitions found.',
       inline: false,
     });
   } else {
-    const half = Math.ceil(menu.paginationState.quantity / 2);
-    fields.push({
-      name: '\u200b',
-      value: progressionLines.slice(0, half).join(''),
-      inline: true,
-    });
-    fields.push({
-      name: '\u200b',
-      value: progressionLines.slice(half).join(''),
-      inline: true,
-    });
+    const addKindRow = (
+      label: string,
+      kindProgressions: Array<[string, ProgressionDefinition]>
+    ) => {
+      if (kindProgressions.length === 0) return;
+
+      const kindFields = createNumericListFields(
+        kindProgressions.map(([key, progression]) => ({
+          name: progression.name,
+          index: progressionGlobalIndexByKey.get(key),
+        })),
+        [{ threshold: 1, columns: 3 }],
+        true,
+        `No ${label} progressions found.`
+      );
+
+      for (const [index, field] of kindFields.entries()) {
+        fields.push({
+          ...field,
+          name: index === 0 ? label : '\u200b',
+        });
+      }
+
+      const remainder = kindFields.length % 3;
+      if (remainder !== 0) {
+        const fillerCount = 3 - remainder;
+        for (let i = 0; i < fillerCount; i++) {
+          fields.push({
+            name: '\u200b',
+            value: '\u200b',
+            inline: true,
+          });
+        }
+      }
+    };
+
+    addKindRow('Milestones', visibleByKind.milestone);
+    addKindRow('Numerics', visibleByKind.numeric);
+    addKindRow('Flags', visibleByKind.boolean);
   }
 
   const embed = new EmbedBuilder()
     .setColor('Gold')
     .setAuthor({
       name: `${region.name} Progression Manager:`,
-      iconURL: menu.interaction.guild?.iconURL() || undefined,
+      iconURL: ctx.interaction.guild?.iconURL() || undefined,
     })
-    .setDescription(menu.prompt || defaultPrompt)
+    .setDescription(ctx.state.get('prompt') || defaultPrompt)
     .addFields(fields)
     .setFooter({
       text:
-        progressions.length > 0
-          ? `Showing progression${
-              menu.paginationState.startIndex === menu.paginationState.endIndex
-                ? ''
-                : 's'
-            } ${menu.paginationState.range} of ${menu.paginationState.total}`
+        orderedProgressions.length > 0
+          ? footerText ?? `Showing progression 1 of ${quantity}`
           : 'Use the Add button to create your first progression definition',
     });
-
-  if (menu.thumbnail) {
-    embed.setThumbnail(menu.thumbnail);
-  }
 
   return [embed];
 };
 
-export const progressionCreateKindMenuEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
-  regionId: string,
-  defaultPrompt = 'Select a progression type for the new progression definition.'
-) => {
-  const region = await menu.getRegion(regionId);
-
-  return [
-    new EmbedBuilder()
-      .setColor('Gold')
-      .setAuthor({
-        name: `${region.name} - New Progression Definition`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
-      })
-      .setDescription(menu.prompt || defaultPrompt)
-      .addFields([
-        {
-          name: '1️⃣ Milestone',
-          value:
-            'Track achievement of discrete milestones (e.g. Badges for defeating Gyms, Z-Crystals for conquering trials)',
-          inline: false,
-        },
-        {
-          name: '2️⃣ Numeric',
-          value: 'Track a numeric value (e.g. Battle Tower Points)',
-          inline: false,
-        },
-        {
-          name: '3️⃣ Flag',
-          value:
-            'Track a simple on/off binary state (e.g. Unlocked a new location)',
-          inline: false,
-        },
-      ]),
-  ];
-};
-
-export const progressionEditMenuEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const progressionEditMenuEmbeds = async (
+  ctx: AdminMenuContext<ProgressionEditMenuState>,
   regionId: string,
   progressionKey: string,
   editField?: string
 ) => {
-  const region = await menu.getRegion(regionId);
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assert(progression, 'Progression definition not found.');
 
+  let prompt = ctx.state.get('prompt');
   if (editField) {
     switch (editField) {
       case 'name':
-        menu.prompt = 'Enter a new name.';
+        prompt = 'Enter a new name.';
         break;
       case 'description':
-        menu.prompt = 'Enter a new description.';
+        prompt = 'Enter a new description.';
         break;
       case 'visibility':
-        menu.prompt = 'Select a new visibility option.';
+        prompt = 'Select a new visibility option.';
         break;
       case 'min':
-        menu.prompt = 'Enter a new minimum value, or clear the current value';
+        prompt = 'Enter a new minimum value, or clear the current value';
         break;
       case 'max':
-        menu.prompt = 'Enter a new maximum value, or clear the current value';
+        prompt = 'Enter a new maximum value, or clear the current value';
         break;
     }
   }
@@ -205,9 +195,9 @@ export const progressionEditMenuEmbeds = async <
       {
         name: 'Sequential',
         value: progression.sequential ? 'Yes' : 'No',
-        inline: true,
+        inline: false,
       },
-      buildMilestoneListField(progression)
+      ...buildMilestoneListFields(progression)
     );
   }
 
@@ -216,27 +206,33 @@ export const progressionEditMenuEmbeds = async <
       .setColor('Gold')
       .setAuthor({
         name: `${region?.name} - Edit "${progression.name}" Progression`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: ctx.interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
-        menu.prompt ||
+        prompt ||
           'Edit the progression definition. Use the buttons below to modify properties.'
       )
       .addFields(fields),
   ];
 };
 
-export const buildMilestoneListField = (
-  progression: ProgressionDefinition
-): EmbedField => {
+export const buildMilestoneListFields = (
+  progression: ProgressionDefinition,
+  useNumericEmojis = false
+): EmbedField[] => {
   assertProgressionKind('milestone', progression);
-  return {
-    name: 'Milestones',
-    value: progression.milestones?.length
-      ? sortByOrdinal(progression.milestones)
-          .map((m) => `${m.ordinal ? `${m.ordinal}.` : '•'} ${m.label}`)
-          .join('\n')
-      : 'None',
-    inline: false,
-  };
+  const fields = createNumericListFields(
+    sortByOrdinal(progression.milestones).map((milestone) => ({
+      name: milestone.label,
+      index: milestone.ordinal,
+    })),
+    [{ threshold: 1, columns: 3 }],
+    useNumericEmojis,
+    'No milestones found.'
+  );
+
+  return fields.map((field, index) => ({
+    ...field,
+    name: index === 0 ? 'Milestones' : '\u200b',
+  }));
 };

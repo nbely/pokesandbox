@@ -4,6 +4,8 @@ import {
 } from './numericEmojis';
 import { splitColumnItemsEvenly } from './splitColumnItemsEvenly';
 
+type ColumnCountRule = { threshold: number; columns: number };
+
 /**
  * Creates numeric emoji-labeled embed fields from a list of items.
  * @param items - Array of item names to display
@@ -13,7 +15,8 @@ import { splitColumnItemsEvenly } from './splitColumnItemsEvenly';
  */
 export function createNumericListFields(
   items: { name: string; index?: number }[],
-  columnCountRules: { threshold: number; columns: number }[],
+  columnCountRules: ColumnCountRule[],
+  useNumericEmojis = false,
   noItemsMessage = 'No items found.'
 ): { name: string; value: string; inline: boolean }[] {
   let columnsCount = 1;
@@ -33,14 +36,20 @@ export function createNumericListFields(
 
   return items.length > 0
     ? itemColumns.map((column) => {
-        const { padSingle, padDouble } = getNumericEmojiPaddingRules(column);
+        const { padSingle, padDouble } = useNumericEmojis
+          ? getNumericEmojiPaddingRules(column)
+          : { padSingle: false, padDouble: false };
 
         return {
           name: '\u200b',
           value: column
             .map(
               ({ name, index }) =>
-                `${getNumericEmojiLabel(index, padSingle, padDouble)} ${name}`
+                `${
+                  useNumericEmojis
+                    ? getNumericEmojiLabel(index, padSingle, padDouble)
+                    : `${index}.`
+                } ${name}`
             )
             .join('\n'),
           inline: true,
