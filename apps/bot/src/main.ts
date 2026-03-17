@@ -46,9 +46,7 @@ connectDb().then(async () => {
 
   const flowcord = new FlowCord({ client });
   client.slashCommands.forEach((command, commandName) => {
-    if (command.createMenu) {
-      flowcord.registerMenu(commandName, command.createMenu);
-    }
+    flowcord.registerMenu(commandName, command.createMenu);
   });
   client.flowcord = flowcord;
 

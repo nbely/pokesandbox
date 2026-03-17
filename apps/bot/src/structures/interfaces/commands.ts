@@ -19,8 +19,8 @@ import type {
   UserSelectMenuInteraction,
 } from 'discord.js';
 
-import type { BotClient, MenuCommandOptions } from '@bot/classes';
-import type { Menu, Session } from '@flowcord';
+import type { BotClient } from '@bot/classes';
+import type { CreateMenuDefinitionFn } from '@flowcord';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];
@@ -86,15 +86,7 @@ export interface IRoleSelectMenu extends IBaseCommand {
   execute?: (client: BotClient, interaction: RoleSelectMenuInteraction) => void;
 }
 
-type CreateMenuFunction<
-  T extends Menu = Menu,
-  TOptions extends MenuCommandOptions = MenuCommandOptions
-> = (session: Session, options?: TOptions) => Promise<T>;
-
-export interface ISlashCommand<
-  T extends Menu = Menu,
-  TOptions extends MenuCommandOptions = MenuCommandOptions
-> extends IBaseCommand {
+export interface ISlashCommand extends IBaseCommand {
   autocomplete?: (
     client: BotClient,
     interaction: AutocompleteInteraction
@@ -103,8 +95,8 @@ export interface ISlashCommand<
     | SlashCommandBuilder
     | SlashCommandOptionsOnlyBuilder
     | SlashCommandSubcommandsOnlyBuilder;
-  createMenu?: CreateMenuFunction<T, TOptions>;
-  execute?: (session: Session) => void;
+  /** Menu factory for FlowCord MenuEngine */
+  createMenu: CreateMenuDefinitionFn;
 }
 
 export interface IStringSelectMenu extends IBaseCommand {

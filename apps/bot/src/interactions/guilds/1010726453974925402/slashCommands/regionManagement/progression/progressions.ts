@@ -1,34 +1,46 @@
+import { randomUUID } from 'node:crypto';
 import {
   ButtonStyle,
   InteractionContextType,
+  LabelBuilder,
+  ModalBuilder,
   SlashCommandBuilder,
+  StringSelectMenuBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  type ModalSubmitFields,
 } from 'discord.js';
+import { z } from 'zod';
 
-import { AdminMenu, AdminMenuBuilder, MenuButtonConfig } from '@bot/classes';
-import { MenuWorkflow } from '@flowcord';
+import { saveRegion } from '@bot/cache';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
+  getModalSelectValue,
   handleRegionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
+import type { ButtonInputConfig, ModalConfig } from '@flowcord';
+import type { ProgressionDefinition } from '@shared/models';
 
 import { progressionsMenuEmbeds } from './progression.embeds';
-import { PROGRESSION_CREATE_NAME_COMMAND_NAME } from './progressionCreateName';
 import { PROGRESSION_EDIT_COMMAND_NAME } from './progressionEdit';
+import type { ProgressionsMenuState } from './types';
+import { getOrderedProgressionEntries } from './utils';
 
 const COMMAND_NAME = 'progressions';
 export const PROGRESSIONS_COMMAND_NAME = COMMAND_NAME;
 
-type ProgressionsCommandOptions = {
-  region_id: string;
-};
-type ProgressionsCommand = ISlashCommand<
-  AdminMenu<ProgressionsCommandOptions>,
-  ProgressionsCommandOptions
->;
+const PROGRESSION_CREATE_MODAL_ID = 'progression-create-modal';
+const PROGRESSION_NAME_FIELD_ID = 'progression-name';
+const PROGRESSION_KIND_FIELD_ID = 'progression-kind';
 
-export const ProgressionsCommand: ProgressionsCommand = {
+const progressionsCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+});
+
+export const ProgressionsCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -48,13 +60,20 @@ export const ProgressionsCommand: ProgressionsCommand = {
         .setAutocomplete(true);
     }),
   autocomplete: handleRegionAutocomplete,
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id } = options;
+  createMenu: (session, options) => {
+    const { region_id } = parseCommandOptions(
+      progressionsCommandOptionsSchema,
+      options
+    );
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setButtons((menu) => getManageProgressionButtons(menu, region_id))
-      .setEmbeds((menu) => progressionsMenuEmbeds(menu, region_id))
+    return new AdminMenuBuilder<ProgressionsMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setButtons((ctx) => getManageProgressionButtons(ctx, region_id))
+      .setEmbeds((ctx) => progressionsMenuEmbeds(ctx, region_id))
+      .setModal(() => getProgressionCreateModal(region_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -62,13 +81,103 @@ export const ProgressionsCommand: ProgressionsCommand = {
   },
 };
 
-const getManageProgressionButtons = async (
-  menu: AdminMenu<ProgressionsCommandOptions>,
+const getProgressionCreateModal = (
   regionId: string
-): Promise<MenuButtonConfig<AdminMenu<ProgressionsCommandOptions>>[]> => {
-  const region = await menu.getRegion(regionId);
-  const progressionDefinitions = Array.from(
-    region.progressionDefinitions.entries()
+): ModalConfig<AdminMenuContext<ProgressionsMenuState>> => ({
+  id: PROGRESSION_CREATE_MODAL_ID,
+  builder: new ModalBuilder()
+    .setCustomId(PROGRESSION_CREATE_MODAL_ID)
+    .setTitle('Create New Progression')
+    .addLabelComponents(
+      new LabelBuilder()
+        .setLabel('Progression Name')
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId(PROGRESSION_NAME_FIELD_ID)
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('e.g. Badges, Z-Crystals, Battle Points')
+            .setRequired(true)
+            .setMaxLength(80)
+        ),
+      new LabelBuilder()
+        .setLabel('Progression Type')
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId(PROGRESSION_KIND_FIELD_ID)
+            .setPlaceholder('Select a progression type')
+            .addOptions(
+              {
+                label: 'Milestone',
+                value: 'milestone',
+                description:
+                  'Track discrete achievements (e.g. Badges, Z-Crystals)',
+              },
+              {
+                label: 'Numeric',
+                value: 'numeric',
+                description: 'Track a numeric value (e.g. Battle Points)',
+              },
+              {
+                label: 'Flag',
+                value: 'boolean',
+                description: 'Track a simple on/off state',
+              }
+            )
+            .setRequired(true)
+        )
+    ),
+  onSubmit: async (
+    ctx: AdminMenuContext<ProgressionsMenuState>,
+    fields: ModalSubmitFields
+  ) => {
+    const name = fields.getTextInputValue(PROGRESSION_NAME_FIELD_ID).trim();
+    const kind = getModalSelectValue(
+      fields.fields,
+      PROGRESSION_KIND_FIELD_ID,
+      true
+    ) as ProgressionDefinition['kind'];
+
+    const region = await ctx.admin.getRegion(regionId);
+
+    const hasDuplicate = Array.from(
+      region.progressionDefinitions.values()
+    ).some((def) => def.name === name);
+    if (hasDuplicate) {
+      ctx.state.set(
+        'prompt',
+        `A progression named "${name}" already exists. Please choose a different name.`
+      );
+      return;
+    }
+
+    const progressionKey = randomUUID();
+    if (kind === 'numeric' || kind === 'boolean') {
+      region.progressionDefinitions.set(progressionKey, {
+        kind,
+        name,
+        visibility: 'public',
+      });
+    } else {
+      region.progressionDefinitions.set(progressionKey, {
+        kind,
+        name,
+        visibility: 'public',
+        sequential: true,
+        milestones: [],
+      });
+    }
+
+    await saveRegion(region);
+  },
+});
+
+const getManageProgressionButtons = async (
+  ctx: AdminMenuContext<ProgressionsMenuState>,
+  regionId: string
+): Promise<ButtonInputConfig<AdminMenuContext<ProgressionsMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
+  const orderedProgressions = getOrderedProgressionEntries(
+    region.progressionDefinitions
   );
 
   return [
@@ -76,17 +185,14 @@ const getManageProgressionButtons = async (
       label: 'Add',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) =>
-        MenuWorkflow.openMenu(menu, PROGRESSION_CREATE_NAME_COMMAND_NAME, {
-          region_id: regionId,
-        }),
+      opensModal: PROGRESSION_CREATE_MODAL_ID,
     },
-    ...progressionDefinitions.map(([progressionKey, definition]) => ({
+    ...orderedProgressions.map(([progressionKey], index) => ({
       id: progressionKey,
-      label: `${definition.name}`,
+      label: `${index + 1}`,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu<ProgressionsCommandOptions>) =>
-        MenuWorkflow.openMenu(menu, PROGRESSION_EDIT_COMMAND_NAME, {
+      action: async (ctx: AdminMenuContext<ProgressionsMenuState>) =>
+        ctx.goTo(PROGRESSION_EDIT_COMMAND_NAME, {
           region_id: regionId,
           progression_key: progressionKey,
         }),

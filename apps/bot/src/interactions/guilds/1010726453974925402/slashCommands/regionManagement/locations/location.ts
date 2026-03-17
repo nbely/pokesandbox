@@ -3,35 +3,31 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
 import { saveRegion } from '@bot/cache';
-import {
-  AdminMenu,
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  MenuWorkflow,
-} from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  assertOptions,
   handleRegionAndLocationAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord';
 
-import { getLocationModal } from './location.modal';
+import { LOCATION_EDIT_MODAL_ID, getLocationEditModal } from './location.modal';
 import { getLocationMenuEmbeds } from './location.embeds';
-import { LOCATIONS_COMMAND_NAME } from './locations';
-import type { LocationCommandOptions } from './types';
+import type { LocationMenuState } from './types';
 
 const COMMAND_NAME = 'location';
 export const LOCATION_COMMAND_NAME = COMMAND_NAME;
 
-type LocationCommand = ISlashCommand<
-  AdminMenu<LocationCommandOptions>,
-  LocationCommandOptions
->;
+const locationCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+  location_id: z.string().min(1),
+});
 
-export const LocationCommand: LocationCommand = {
+export const LocationCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -39,7 +35,9 @@ export const LocationCommand: LocationCommand = {
   returnOnlyRolesError: false,
   command: new SlashCommandBuilder()
     .setName(COMMAND_NAME)
-    .setDescription('Manage a single location in one of your PokéSandbox Regions')
+    .setDescription(
+      'Manage a single location in one of your PokéSandbox Regions'
+    )
     .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option
@@ -56,14 +54,20 @@ export const LocationCommand: LocationCommand = {
         .setAutocomplete(true)
     ),
   autocomplete: handleRegionAndLocationAutocomplete,
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id, location_id } = options;
+  createMenu: (session, options) => {
+    const { region_id, location_id } = parseCommandOptions(
+      locationCommandOptionsSchema,
+      options
+    );
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) => getLocationMenuEmbeds(menu, region_id, location_id))
-      .setButtons((menu) => getLocationButtons(menu, region_id, location_id))
-      .setModal((menu) => getLocationModal(menu, region_id, location_id))
+    return new AdminMenuBuilder<LocationMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setEmbeds((ctx) => getLocationMenuEmbeds(ctx, region_id, location_id))
+      .setButtons((ctx) => getLocationButtons(ctx, region_id, location_id))
+      .setModal((ctx) => getLocationEditModal(ctx, region_id, location_id))
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory()
@@ -72,24 +76,22 @@ export const LocationCommand: LocationCommand = {
 };
 
 const getLocationButtons = async (
-  menu: AdminMenu<LocationCommandOptions>,
+  ctx: AdminMenuContext<LocationMenuState>,
   regionId: string,
   locationId: string
-): Promise<MenuButtonConfig<AdminMenu<LocationCommandOptions>>[]> => {
+): Promise<ButtonInputConfig<AdminMenuContext<LocationMenuState>>[]> => {
   return [
     {
       label: 'Edit',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu) => {
-        await menu.openModal();
-      },
+      opensModal: LOCATION_EDIT_MODAL_ID,
     },
     {
       label: 'Delete',
       style: ButtonStyle.Danger,
-      onClick: async (menu) => {
-        const region = await menu.getRegion(regionId);
+      action: async (ctx) => {
+        const region = await ctx.admin.getRegion(regionId);
 
         // Remove location from region
         region.locations = region.locations.filter(
@@ -98,47 +100,38 @@ const getLocationButtons = async (
         await saveRegion(region);
 
         // Delete the location document
-        const location = await menu.getLocation(locationId);
+        const location = await ctx.admin.getLocation(locationId);
         await location.deleteOne();
 
-        // Navigate back, falling back to the locations list if there's no prior history
-        await menu.session.goBack(async () =>
-          MenuWorkflow.openMenu(menu, LOCATIONS_COMMAND_NAME, {
-            region_id: regionId,
-          })
-        );
+        ctx.goBack();
       },
     },
     {
       label: 'Connections',
       style: ButtonStyle.Primary,
-      onClick: async (menu) => {
-        menu.prompt = 'Connections management is coming soon!';
-        await menu.refresh();
+      action: async (ctx) => {
+        ctx.state.set('prompt', 'Connections management is coming soon!');
       },
     },
     {
       label: 'Entry Rules',
       style: ButtonStyle.Primary,
-      onClick: async (menu) => {
-        menu.prompt = 'Entry rules management is coming soon!';
-        await menu.refresh();
+      action: async (ctx) => {
+        ctx.state.set('prompt', 'Entry rules management is coming soon!');
       },
     },
     {
       label: 'Trainers',
       style: ButtonStyle.Primary,
-      onClick: async (menu) => {
-        menu.prompt = 'Trainer management is coming soon!';
-        await menu.refresh();
+      action: async (ctx) => {
+        ctx.state.set('prompt', 'Trainer management is coming soon!');
       },
     },
     {
       label: 'Wild Pokémon',
       style: ButtonStyle.Primary,
-      onClick: async (menu) => {
-        menu.prompt = 'Wild Pokémon management is coming soon!';
-        await menu.refresh();
+      action: async (ctx) => {
+        ctx.state.set('prompt', 'Wild Pokémon management is coming soon!');
       },
     },
   ];

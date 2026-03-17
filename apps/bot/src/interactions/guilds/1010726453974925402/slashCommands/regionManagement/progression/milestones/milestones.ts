@@ -3,33 +3,35 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
+import { z } from 'zod';
 
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
+import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
-  AdminMenuBuilder,
-  MenuButtonConfig,
-  type AdminMenu,
-} from '@bot/classes';
-import { ISlashCommand } from '@bot/structures/interfaces';
-import {
-  assertOptions,
   handleRegionAndProgressionAutocomplete,
   onlyAdminRoles,
+  parseCommandOptions,
 } from '@bot/utils';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { assertProgressionKind } from '../utils';
 import { milestonesMenuEmbeds } from './milestone.embeds';
-import { getMilestoneUpsertModal } from './milestone.modal';
-import { MilestonesCommandOptions } from './types';
+import {
+  getMilestoneModals,
+  getMilestoneEditModalId,
+  MILESTONE_ADD_MODAL_ID,
+} from './milestone.modal';
+import type { MilestonesMenuState } from './types';
 
 const COMMAND_NAME = 'milestones';
 export const MILESTONES_COMMAND_NAME = COMMAND_NAME;
 
-type MilestonesCommand = ISlashCommand<
-  AdminMenu<MilestonesCommandOptions>,
-  MilestonesCommandOptions
->;
+const milestonesCommandOptionsSchema = z.object({
+  region_id: z.string().min(1),
+  progression_key: z.string().min(1),
+});
 
-export const MilestonesCommand: MilestonesCommand = {
+export const MilestonesCommand: ISlashCommand = {
   name: COMMAND_NAME,
   anyUserPermissions: ['Administrator'],
   onlyRoles: onlyAdminRoles,
@@ -56,20 +58,22 @@ export const MilestonesCommand: MilestonesCommand = {
         .setRequired(true)
         .setAutocomplete(true)
     ),
-  createMenu: async (session, options) => {
-    assertOptions(options);
-    const { region_id, progression_key } = options;
+  createMenu: (session, options) => {
+    const { region_id, progression_key } = parseCommandOptions(
+      milestonesCommandOptionsSchema,
+      options
+    );
 
-    return new AdminMenuBuilder(session, COMMAND_NAME, options)
-      .setEmbeds((menu) =>
-        milestonesMenuEmbeds(menu, region_id, progression_key)
+    return new AdminMenuBuilder<MilestonesMenuState>(
+      session,
+      COMMAND_NAME,
+      options
+    )
+      .setEmbeds((ctx) => milestonesMenuEmbeds(ctx, region_id, progression_key))
+      .setButtons((ctx) =>
+        getMilestonesButtons(ctx, region_id, progression_key)
       )
-      .setButtons((menu) =>
-        getMilestonesButtons(menu, region_id, progression_key)
-      )
-      .setModal((menu, options) =>
-        getMilestoneUpsertModal(menu, region_id, progression_key, options)
-      )
+      .setModal((ctx) => getMilestoneModals(ctx, region_id, progression_key))
       .setTrackedInHistory()
       .setCancellable()
       .setReturnable()
@@ -77,30 +81,26 @@ export const MilestonesCommand: MilestonesCommand = {
   },
 };
 
-export const getMilestonesButtons = async (
-  menu: AdminMenu<MilestonesCommandOptions>,
+const getMilestonesButtons = async (
+  ctx: AdminMenuContext<MilestonesMenuState>,
   regionId: string,
   progressionKey: string
-): Promise<MenuButtonConfig<AdminMenu<MilestonesCommandOptions>>[]> => {
-  const region = await menu.getRegion(regionId);
+): Promise<ButtonInputConfig<AdminMenuContext<MilestonesMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assertProgressionKind('milestone', progression);
 
   return [
     {
-      label: 'Add Milestone',
+      label: 'Add',
       style: ButtonStyle.Success,
       fixedPosition: 'start',
-      onClick: async (menu: AdminMenu<MilestonesCommandOptions>) => {
-        await menu.openModal();
-      },
+      opensModal: MILESTONE_ADD_MODAL_ID,
     },
     ...progression.milestones.map((milestone) => ({
       label: milestone.label,
       style: ButtonStyle.Primary,
-      onClick: async (menu: AdminMenu<MilestonesCommandOptions>) => {
-        await menu.openModal({ milestoneKey: milestone.key });
-      },
+      opensModal: getMilestoneEditModalId(milestone.key),
     })),
   ];
 };

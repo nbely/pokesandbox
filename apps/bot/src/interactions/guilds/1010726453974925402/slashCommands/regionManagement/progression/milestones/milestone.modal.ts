@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 
 import { saveRegion } from '@bot/cache';
-import { AdminMenu, ModalConfig, ModalState } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 import {
   assertNumericInput,
   getModalSelectValues,
@@ -16,32 +16,56 @@ import {
   setValueOnInputBuilderIfExists,
 } from '@bot/utils';
 import type { ProgressionMilestone } from '@shared/models';
+import type { ModalConfig } from '@flowcord';
 
 import { assertProgressionKind } from '../utils';
-import { MilestonesCommandOptions } from './types';
+import type { MilestonesMenuState } from './types';
 
-export const getMilestoneUpsertModal = async (
-  menu: AdminMenu<MilestonesCommandOptions>,
+const MILESTONE_ADD_MODAL_ID = 'milestone-add-modal';
+const MILESTONE_EDIT_MODAL_PREFIX = 'milestone-edit-';
+
+export const getMilestoneModals = async (
+  ctx: AdminMenuContext<MilestonesMenuState>,
   regionId: string,
-  progressionKey: string,
-  options?: ModalState['options']
-): Promise<ModalConfig<AdminMenu<MilestonesCommandOptions>>> => {
-  const region = await menu.getRegion(regionId);
+  progressionKey: string
+): Promise<ModalConfig<AdminMenuContext<MilestonesMenuState>>[]> => {
+  const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assertProgressionKind('milestone', progression);
 
-  const milestone = progression.milestones.find(
-    (m) => m.key === options?.milestoneKey
-  );
+  const modals: ModalConfig<AdminMenuContext<MilestonesMenuState>>[] = [
+    buildMilestoneModal(ctx, regionId, progressionKey, MILESTONE_ADD_MODAL_ID),
+    ...progression.milestones.map((milestone) =>
+      buildMilestoneModal(
+        ctx,
+        regionId,
+        progressionKey,
+        `${MILESTONE_EDIT_MODAL_PREFIX}${milestone.key}`,
+        milestone
+      )
+    ),
+  ];
+
+  return modals;
+};
+
+export const getMilestoneEditModalId = (milestoneKey: string): string =>
+  `${MILESTONE_EDIT_MODAL_PREFIX}${milestoneKey}`;
+
+export { MILESTONE_ADD_MODAL_ID };
+
+const buildMilestoneModal = (
+  _ctx: AdminMenuContext<MilestonesMenuState>,
+  regionId: string,
+  progressionKey: string,
+  modalId: string,
+  milestone?: ProgressionMilestone
+): ModalConfig<AdminMenuContext<MilestonesMenuState>> => {
   const isNewMilestone = !milestone;
 
   const builder = new ModalBuilder()
-    .setCustomId(`milestone-upsert-modal-${randomUUID()}`)
-    .setTitle(
-      isNewMilestone
-        ? `Create "${progression.name}" Milestone`
-        : `Edit "${progression.name}" Milestone`
-    )
+    .setCustomId(modalId)
+    .setTitle(isNewMilestone ? 'Create Milestone' : 'Edit Milestone')
     .addLabelComponents(
       new LabelBuilder()
         .setLabel('Name')
@@ -110,19 +134,26 @@ export const getMilestoneUpsertModal = async (
   }
 
   return {
+    id: modalId,
     builder,
-    onSubmit: async (menu, { fields }) => {
-      const region = await menu.getRegion(regionId);
+    onSubmit: async (ctx, fields) => {
+      const region = await ctx.admin.getRegion(regionId);
       const progression = region.progressionDefinitions.get(progressionKey);
       assertProgressionKind('milestone', progression);
 
-      const name = getModalTextValue(fields, 'milestone-name', true);
-      const description = getModalTextValue(fields, 'milestone-description');
+      const name = getModalTextValue(fields.fields, 'milestone-name', true);
+      const description = getModalTextValue(
+        fields.fields,
+        'milestone-description'
+      );
       const ordinal = assertNumericInput(
-        getModalTextValue(fields, 'milestone-ordinal'),
+        getModalTextValue(fields.fields, 'milestone-ordinal'),
         'Milestone Position'
       );
-      const deleteOption = getModalSelectValues(fields, 'milestone-delete');
+      const deleteOption = getModalSelectValues(
+        fields.fields,
+        'milestone-delete'
+      );
 
       if (deleteOption?.includes('yes')) {
         progression.milestones = progression.milestones.filter(
@@ -135,8 +166,8 @@ export const getMilestoneUpsertModal = async (
           ordinal
         );
         if (warning) {
-          menu.warningMessage = warning;
-          return await menu.refresh();
+          ctx.state.set('warningMessage', warning);
+          return;
         }
 
         progression.milestones.push({
@@ -146,31 +177,30 @@ export const getMilestoneUpsertModal = async (
           ordinal: ordinal,
         });
       } else {
-        const milestone = progression.milestones.find(
-          (m) => m.key === options?.milestoneKey
+        const existing = progression.milestones.find(
+          (m) => m.key === milestone?.key
         );
-        if (!milestone) {
+        if (!existing) {
           throw new Error(`There was an error updating the milestone.`);
         }
         const warning = validateMilestone(
           progression.milestones,
           name,
           ordinal,
-          milestone.key
+          existing.key
         );
         if (warning) {
-          menu.warningMessage = warning;
-          return await menu.refresh();
+          ctx.state.set('warningMessage', warning);
+          return;
         }
 
-        milestone.label = name;
-        milestone.description = description;
-        milestone.ordinal = ordinal;
+        existing.label = name;
+        existing.description = description;
+        existing.ordinal = ordinal;
       }
 
       region.progressionDefinitions.set(progressionKey, progression);
       await saveRegion(region);
-      await menu.refresh();
     },
   };
 };

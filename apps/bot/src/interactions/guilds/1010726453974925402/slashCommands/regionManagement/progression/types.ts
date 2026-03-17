@@ -1,5 +1,15 @@
-import type { AdminMenu, MenuButtonConfig } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 import type { ProgressionDefinition, Region } from '@shared/models';
+import type { ButtonInputConfig } from '@flowcord';
+
+export type ProgressionsMenuState = {
+  prompt?: string;
+};
+
+export type ProgressionEditMenuState = {
+  prompt?: string;
+  progressionEditField?: string;
+};
 
 export type EditProgressionFieldConfig = {
   handleInput: (
@@ -13,10 +23,5 @@ export type EditProgressionFieldConfig = {
     region: Region,
     progressionKey: string,
     progression: ProgressionDefinition
-  ) => Promise<MenuButtonConfig<AdminMenu<ProgressionEditCommandOptions>>[]>;
-};
-
-export type ProgressionEditCommandOptions = {
-  region_id: string;
-  progression_key: string;
+  ) => Promise<ButtonInputConfig<AdminMenuContext<ProgressionEditMenuState>>[]>;
 };

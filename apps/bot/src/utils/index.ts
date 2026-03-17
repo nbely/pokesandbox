@@ -12,9 +12,11 @@ export {
   handleRegionAutocomplete,
 } from './autocompleteHelpers';
 export {
+  getModalSelectValue,
   getModalSelectValues,
   getModalTextValue,
   setValueOnInputBuilderIfExists,
 } from './modalValues';
 export { onlyAdminRoles } from './onlyAdminRoles';
+export { parseCommandOptions } from './parseCommandOptions';
 export { searchPokemon } from './searchPokemon';

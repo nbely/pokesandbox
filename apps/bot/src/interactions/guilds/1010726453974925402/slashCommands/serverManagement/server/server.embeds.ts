@@ -1,26 +1,25 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
 
-import type { AdminMenu, MenuCommandOptions } from '@bot/classes';
+import type { AdminMenuContext } from '@bot/classes';
 
-export const getServerMenuEmbeds = async <
-  C extends MenuCommandOptions = MenuCommandOptions
->(
-  menu: AdminMenu<C>,
+export const getServerMenuEmbeds = async (
+  ctx: AdminMenuContext,
   defaultPrompt = 'Please select an option to manage your server settings.'
 ) => {
-  const server = await menu.getServer();
-  const prompt = menu.prompt || defaultPrompt;
+  const server = await ctx.admin.getServer();
+  const prompt = (ctx.state.get('prompt') as string) || defaultPrompt;
+  const interaction = ctx.interaction as ChatInputCommandInteraction;
 
   const prefixes: string =
     server.prefixes && server.prefixes.length > 0
       ? server.prefixes.map((prefix) => `\`${prefix}\``).join(', ')
       : '`.` (default)';
 
-  const adminRoles = await menu.getRoles('admin');
+  const adminRoles = await ctx.admin.getRoles('admin');
   const adminRolesList: string = adminRoles.length
     ? adminRoles.join(', ')
     : 'None';
-  const modRoles = await menu.getRoles('mod');
+  const modRoles = await ctx.admin.getRoles('mod');
   const modRolesList: string = modRoles.length ? modRoles.join(', ') : 'None';
 
   return [
@@ -28,7 +27,7 @@ export const getServerMenuEmbeds = async <
       .setColor('Gold')
       .setAuthor({
         name: `${server.name} Server Options`,
-        iconURL: menu.interaction.guild?.iconURL() || undefined,
+        iconURL: interaction.guild?.iconURL() || undefined,
       })
       .setDescription(
         `${prompt ? '**' + prompt + '**\n\n' : ''}` +
