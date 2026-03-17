@@ -24,45 +24,45 @@ This document explains how FlowCord works under the hood. It covers the session 
 ## High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FlowCord                                │
-│  (Facade — delegates everything to MenuEngine)                  │
-├─────────────────────────────────────────────────────────────────┤
-│                        MenuEngine                               │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
-│  │ MenuRegistry │ │ ActionReg.   │ │ HookRegistry (global)    │ │
-│  │ name→factory │ │ (reserved)   │ │ onEnter, onLeave, etc.   │ │
-│  └──────────────┘ └──────────────┘ └──────────────────────────┘ │
+┌──────────────────────────────────────────────────────────────────┐
+│                         FlowCord                                 │
+│  (Facade — delegates everything to MenuEngine)                   │
+├──────────────────────────────────────────────────────────────────┤
+│                        MenuEngine                                │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐  │
+│  │ MenuRegistry │ │ ActionReg.   │ │ HookRegistry (global)    │  │
+│  │ name→factory │ │ (reserved)   │ │ onEnter, onLeave, etc.   │  │
+│  └──────────────┘ └──────────────┘ └──────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────────────┐│
 │  │ Active Sessions Map<sessionId, MenuSession>                  ││
 │  │  ┌─────────────────────────────────────────────────────────┐ ││
 │  │  │ MenuSession (one per slash command invocation)          │ ││
 │  │  │  • MenuStack (navigation history)                       │ ││
-│  │  │  • MenuInstance (current menu + actions + state)         │ ││
+│  │  │  • MenuInstance (current menu + actions + state)        │ ││
 │  │  │  • MenuRenderer (Discord message rendering)             │ ││
 │  │  │  • LifecycleManager (hook emission)                     │ ││
 │  │  │  • StateStore (session-wide state)                      │ ││
 │  │  └─────────────────────────────────────────────────────────┘ ││
 │  └──────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Classes
 
-| Class | Responsibility |
-|-------|---------------|
-| **FlowCord** | Public API facade; delegates to `MenuEngine` |
-| **MenuEngine** | Manages registries, creates/destroys sessions, routes interactions |
-| **MenuSession** | Core interaction loop for a single user session |
-| **MenuInstance** | Runtime wrapper for a single menu definition (actions, modals, state) |
-| **MenuBuilder** | Fluent API for defining menu configurations |
-| **MenuRenderer** | Converts menu definitions into Discord message payloads |
-| **MenuStack** | LIFO stack for navigation history |
-| **StateStore** | Session-wide key-value store |
-| **StateAccessor\<T\>** | Typed per-menu state wrapper |
-| **LifecycleManager** | Emits lifecycle hooks (global + per-menu) |
-| **ComponentIdManager** | Encodes/decodes session + menu info in component custom IDs |
-| **NavigationTracer** | Optional debug logging of menu transitions |
+| Class                  | Responsibility                                                        |
+| ---------------------- | --------------------------------------------------------------------- |
+| **FlowCord**           | Public API facade; delegates to `MenuEngine`                          |
+| **MenuEngine**         | Manages registries, creates/destroys sessions, routes interactions    |
+| **MenuSession**        | Core interaction loop for a single user session                       |
+| **MenuInstance**       | Runtime wrapper for a single menu definition (actions, modals, state) |
+| **MenuBuilder**        | Fluent API for defining menu configurations                           |
+| **MenuRenderer**       | Converts menu definitions into Discord message payloads               |
+| **MenuStack**          | LIFO stack for navigation history                                     |
+| **StateStore**         | Session-wide key-value store                                          |
+| **StateAccessor\<T\>** | Typed per-menu state wrapper                                          |
+| **LifecycleManager**   | Emits lifecycle hooks (global + per-menu)                             |
+| **ComponentIdManager** | Encodes/decodes session + menu info in component custom IDs           |
+| **NavigationTracer**   | Optional debug logging of menu transitions                            |
 
 ---
 
@@ -87,7 +87,7 @@ User runs /command
 │  .initialize()       │
 │      │               │
 │      ▼               │
-│ interaction.          │
+│ interaction.         │
 │   deferReply()       │
 │      │               │
 │      ▼               │
@@ -121,8 +121,8 @@ The heart of FlowCord is the `processMenus()` loop inside `MenuSession`. It runs
 while (session is active) {
     │
     ▼
-┌───────────────────────┐
-│ 1. Check for pending  │
+┌────────────────────────┐
+│ 1. Check for pending   │
 │    modal interaction   │──── If modal is active, await modal submit
 │         │              │     then continue loop
 │         ▼              │
@@ -151,7 +151,7 @@ while (session is active) {
 │ 5. CHECK NAVIGATION    │
 │    Did action call     │──── If yes: loop continues with new menu
 │    goTo/goBack/close?  │──── If no: re-render current menu (auto-refresh)
-└───────────────────────┘
+└────────────────────────┘
 ```
 
 ### Key Behaviors
@@ -181,6 +181,7 @@ Example: `fc:a1b2c3d4:settings:3`
 3. **Routing**: `MenuEngine.routeComponentInteraction()` uses the parsed session ID to find the correct `MenuSession`, which then uses the component index to resolve the action callback.
 
 This encoding scheme:
+
 - Prevents cross-session collisions
 - Allows the engine to route interactions without a central registry
 - Supports multiple concurrent sessions for different users
@@ -195,40 +196,41 @@ The `MenuRenderer` handles conversion from FlowCord's internal representation to
 
 ```
 MenuDefinition                Discord Payload
-┌─────────────────┐           ┌──────────────────────┐
-│ setEmbeds(ctx)   │────▶     │ embeds: [...]         │
-│ → EmbedBuilder[] │           │                      │
+┌──────────────────┐           ┌───────────────────────┐
+│ setEmbeds(ctx)   │────>      │ embeds: [...]         │
+│ → EmbedBuilder[] │           │                       │
 │                  │           │ components: [         │
-│ setButtons(ctx)  │────▶     │   ActionRow(buttons), │
+│ setButtons(ctx)  │────>      │   ActionRow(buttons), │
 │ → ButtonConfig[] │           │   ActionRow(buttons), │
 │                  │           │   ActionRow(select),  │
-│ setSelectMenu()  │────▶     │   ActionRow(reserved) │
-│ → SelectConfig   │           │ ]                    │
-│                  │           │                      │
-│ reserved buttons │────▶     │ (Cancel, Back,        │
-│ (auto-generated) │           │  Next, Previous)     │
-└─────────────────┘           └──────────────────────┘
+│ setSelectMenu()  │────>      │   ActionRow(reserved) │
+│ → SelectConfig   │           │ ]                     │
+│                  │           │                       │
+│ reserved buttons │────>      │ (Cancel, Back,        │
+│ (auto-generated) │           │  Next, Previous)      │
+└──────────────────┘           └───────────────────────┘
 ```
 
 ### Layout Mode
 
 ```
 MenuDefinition                Discord Payload
-┌─────────────────┐           ┌──────────────────────┐
-│ setLayout(ctx)   │────▶     │ components: [         │
+┌──────────────────┐           ┌───────────────────────┐
+│ setLayout(ctx)   │────>      │ components: [         │
 │ → ComponentConfig│           │   Container(...),     │
 │                  │           │   Section(...),       │
 │                  │           │   ActionRow(buttons), │
 │                  │           │   Separator,          │
 │                  │           │   TextDisplay,        │
-│                  │           │ ]                    │
+│                  │           │ ]                     │
 │                  │           │ flags: IsComponentsV2 │
-└─────────────────┘           └──────────────────────┘
+└──────────────────┘           └───────────────────────┘
 ```
 
 ### Button Layout Algorithm
 
 Discord allows max 5 buttons per action row and max 5 action rows total. The renderer:
+
 1. Collects all buttons from `setButtons()`
 2. Applies pagination if configured (split into pages)
 3. Injects reserved buttons (Cancel, Back, Next, Previous)
@@ -262,6 +264,7 @@ Only menus with `.setTrackedInHistory()` are pushed onto the stack. This lets yo
 ### Fallback Menus
 
 When `goBack()` is called on an empty stack:
+
 - **No fallback**: Session closes
 - **With fallback**: Navigates to the fallback menu instead of closing
 
@@ -269,18 +272,21 @@ This is useful for menus accessible both directly (via slash command) and via na
 
 ### Menu Recreation on goBack
 
-When popping a menu from the stack, FlowCord does NOT reuse the old instance. It re-runs the factory function with the saved options to create a fresh `MenuInstance`. This ensures the menu reflects current data.
+When popping a menu from the stack, FlowCord creates a new `MenuInstance` from the saved menu id and options.
+
+- **Default behavior**: state is recreated (`setup()` runs), so the menu reflects current data.
+- **Opt-in restore**: menus configured with `.setPreserveStateOnReturn()` snapshot menu state and pagination before navigation, then restore those snapshots when returning via `goBack()`.
 
 ---
 
 ## State Architecture
 
 ```
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │ MenuSession                                  │
 │                                              │
 │  ┌────────────────────────────────────────┐  │
-│  │ sessionState: StateStore               │  │
+│  │ sessionState: StateStore<TSessionState>│  │
 │  │ (shared across all menus in session)   │  │
 │  │                                        │  │
 │  │  .get('key')  .set('key', value)       │  │
@@ -295,18 +301,19 @@ When popping a menu from the stack, FlowCord does NOT reuse the old instance. It
 │  │  │ (scoped to this menu instance)   │  │  │
 │  │  │                                  │  │  │
 │  │  │  .get('count')  → typed value    │  │  │
-│  │  │  .set('count', 5)               │  │  │
-│  │  │  .merge({ count: 5, name: 'x' })│  │  │
+│  │  │  .set('count', 5)                │  │  │
+│  │  │  .merge({ count: 5, name: 'x' }) │  │  │
 │  │  │  .current → readonly snapshot    │  │  │
 │  │  └──────────────────────────────────┘  │  │
 │  └────────────────────────────────────────┘  │
-└─────────────────────────────────────────────┘
+└──────────────────────────────────────────────┘
 ```
 
 ### State Lifecycle
 
-- **Menu state** is created fresh for each `MenuInstance`. When you navigate away and come back, state is reset (the factory re-runs).
-- **Session state** persists for the entire session lifetime. Use it for cross-menu communication.
+- **Menu state** is created fresh by default when a menu instance is recreated.
+- **Preserved menu state** is available when a menu opts into `.setPreserveStateOnReturn()`, which restores previously snapshotted state and pagination on `goBack()`.
+- **Session state** persists for the entire session lifetime and can be strongly typed via `StateStore<TSessionState>`.
 
 ---
 
@@ -318,7 +325,7 @@ Modals follow a special flow because Discord requires them to be shown in respon
 Button click (opensModal: true)
        │
        ▼
-┌─────────────────────────┐
+┌──────────────────────────┐
 │ Session detects modal    │
 │ trigger button           │
 │       │                  │
@@ -340,7 +347,7 @@ Button click (opensModal: true)
 │       │                  │
 │       ▼                  │
 │ Auto re-render           │──── Menu updates with new state
-└─────────────────────────┘
+└──────────────────────────┘
 ```
 
 ### Key Modal Behaviors
@@ -368,7 +375,7 @@ Menu factory called
     onEnter                  ← Menu entered
        │
        ▼
-┌─── RENDER LOOP ──────────────────────────┐
+┌─── RENDER LOOP ───────────────────────────┐
 │      │                                    │
 │      ▼                                    │
 │   beforeRender             ← Before build │
@@ -406,6 +413,7 @@ Menu factory called
 ### Global vs Menu Hooks
 
 The `LifecycleManager` fires hooks in this order:
+
 1. **Global hooks** (registered via `HookRegistry`) — fire for every menu
 2. **Menu-specific hooks** (defined via `MenuBuilder.onEnter()`, etc.) — fire for this menu only
 
@@ -431,7 +439,7 @@ ctx.openSubMenu('child', {
     ▼
 ┌─────────────────────────────────────┐
 │ Session pushes continuation:        │
-│   { menuName: 'child',             │
+│   { menuName: 'child',              │
 │     onComplete: <callback> }        │
 │                                     │
 │ Session navigates to 'child'        │
@@ -493,12 +501,12 @@ List pagination is controlled by the menu, not the renderer. The `PaginationStat
 
 ```ts
 interface PaginationState {
-  currentPage: number;    // 1-indexed
+  currentPage: number; // 1-indexed
   totalPages: number;
   itemsPerPage: number;
   totalItems: number;
-  startIndex: number;     // For Array.slice() (inclusive)
-  endIndex: number;       // For Array.slice() (exclusive)
+  startIndex: number; // For Array.slice() (inclusive)
+  endIndex: number; // For Array.slice() (exclusive)
 }
 ```
 

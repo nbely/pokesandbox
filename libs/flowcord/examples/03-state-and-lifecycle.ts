@@ -22,7 +22,7 @@ import {
   EmbedBuilder,
   ButtonStyle,
 } from 'discord.js';
-import { FlowCord, MenuBuilder, goTo, goBack, closeMenu } from '@flowcord/core';
+import { FlowCord, MenuBuilder, goTo, closeMenu } from '@flowcord/core';
 
 // --- Types ---
 interface Exercise {
@@ -61,7 +61,12 @@ flowcord.registerMenu('workout', (session) =>
     // setup() runs once when the menu is created
     .setup((ctx) => {
       const hour = new Date().getHours();
-      const greeting = hour < 12 ? '🌅 Good morning' : hour < 18 ? '☀️ Good afternoon' : '🌙 Good evening';
+      const greeting =
+        hour < 12
+          ? '🌅 Good morning'
+          : hour < 18
+          ? '☀️ Good afternoon'
+          : '🌙 Good evening';
       ctx.state.set('greeting', greeting);
       ctx.state.set('viewCount', 0);
 
@@ -86,12 +91,18 @@ flowcord.registerMenu('workout', (session) =>
     // afterRender fires after the Discord message is sent/updated
     .afterRender((ctx) => {
       const log = ctx.sessionState.get<Exercise[]>('workoutLog') ?? [];
-      console.log(`[afterRender] Dashboard rendered. Total exercises logged: ${log.length}`);
+      console.log(
+        `[afterRender] Dashboard rendered. Total exercises logged: ${log.length}`
+      );
     })
 
     // onAction fires after any button action
     .onAction((ctx) => {
       console.log(`[onAction] User performed an action on dashboard`);
+    })
+
+    .onCancel((ctx) => {
+      console.log(`[onCancel] Dashboard cancelled`);
     })
 
     // onLeave fires when navigating away
@@ -110,11 +121,13 @@ flowcord.registerMenu('workout', (session) =>
             log.length === 0
               ? 'No exercises logged yet. Start your workout!'
               : `**Exercises logged:** ${log.length}\n` +
-                `**Total reps:** ${totalReps}\n\n` +
-                log.map((ex) => `• ${ex.name} — ${ex.reps} reps`).join('\n')
+                  `**Total reps:** ${totalReps}\n\n` +
+                  log.map((ex) => `• ${ex.name} — ${ex.reps} reps`).join('\n')
           )
           .setColor(log.length >= 3 ? 0x2ecc71 : 0xe74c3c)
-          .setFooter({ text: `Views this session: ${ctx.state.get('viewCount')}` })
+          .setFooter({
+            text: `Views this session: ${ctx.state.get('viewCount')}`,
+          })
           .setTimestamp(),
       ];
     })

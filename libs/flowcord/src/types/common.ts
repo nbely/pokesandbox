@@ -266,8 +266,8 @@ export interface PaginationOptions {
   };
 }
 
-export interface ListPaginationOptions extends PaginationOptions {
-  getTotalQuantityItems: (ctx: MenuContextLike) => Awaitable<number>;
+export interface ListPaginationOptions<TCtx = MenuContextLike> extends PaginationOptions {
+  getTotalQuantityItems: (ctx: TCtx) => Awaitable<number>;
   itemsPerPage?: number;
 }
 

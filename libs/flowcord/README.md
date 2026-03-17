@@ -46,7 +46,7 @@ FlowCord replaces the boilerplate of managing component collectors, interaction 
 - **Declarative menu definitions** — Use the fluent `MenuBuilder` API to define embeds, buttons, selects, and modals in one place
 - **Automatic interaction loop** — FlowCord manages the render → await → dispatch cycle; no manual collectors needed
 - **Navigation stack** — Built-in `goTo()`, `goBack()`, and `closeMenu()` with automatic history tracking
-- **Typed menu state** — Per-menu `StateAccessor<T>` and session-wide `StateStore` for data management
+- **Typed menu + session state** — Per-menu `StateAccessor<TState>` and strongly-typed `StateStore<TSessionState>` for cross-menu data
 - **Lifecycle hooks** — `onEnter`, `onLeave`, `beforeRender`, `afterRender`, `onAction`, `onCancel`, and pagination hooks
 - **Button & list pagination** — Automatic page splitting with configurable items per page
 - **Sub-menus & continuations** — Parent–child menu patterns with typed result passing via `openSubMenu()` and `complete()`
@@ -72,7 +72,12 @@ npm install @flowcord/core discord.js
 Get a bot with an interactive menu running in under 5 minutes.
 
 ```ts
-import { Client, GatewayIntentBits, EmbedBuilder, ButtonStyle } from 'discord.js';
+import {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  ButtonStyle,
+} from 'discord.js';
 import { FlowCord, MenuBuilder, closeMenu } from '@flowcord/core';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -131,12 +136,12 @@ The `FlowCord` class is the main entry point. It wraps the internal `MenuEngine`
 
 ```ts
 const flowcord = new FlowCord({
-  client,                            // Your Discord.js Client
-  timeout: 120_000,                  // Session timeout in ms (default: 2 minutes)
+  client, // Your Discord.js Client
+  timeout: 120_000, // Session timeout in ms (default: 2 minutes)
   onError: async (session, error) => {
     console.error('FlowCord error:', error);
   },
-  enableTracing: false,              // Enable navigation tracing (default: false)
+  enableTracing: false, // Enable navigation tracing (default: false)
 });
 
 // Register menus
@@ -163,12 +168,14 @@ flowcord.registerMenu('my-menu', (session, options) =>
     .setCancellable()                 // Adds a ✕ Cancel button
     .setReturnable()                  // Adds a ← Back button
     .setTrackedInHistory()            // Enables goBack() to return here
+    .setPreserveStateOnReturn()       // Optional: restore menu state when returning via goBack()
     .onEnter((ctx) => {...})          // Lifecycle hook
     .build()
 );
 ```
 
 > **Render modes**: FlowCord supports two mutually exclusive render modes:
+>
 > - **Embeds mode** (`.setEmbeds()` + `.setButtons()` / `.setSelectMenu()`) — Traditional Discord embeds with action rows
 > - **Layout mode** (`.setLayout()`) — Discord Components v2 display components
 >
@@ -179,10 +186,10 @@ flowcord.registerMenu('my-menu', (session, options) =>
 Every callback receives a `MenuContext` object (`ctx`) providing access to state, navigation, and the current environment:
 
 ```ts
-interface MenuContext<TState> {
+interface MenuContext<TState, TSessionState> {
   // State
-  state: StateAccessor<TState>;    // Typed per-menu state
-  sessionState: StateStore;        // Key-value store shared across all menus
+  state: StateAccessor<TState>; // Typed per-menu state
+  sessionState: StateStore<TSessionState>; // Typed session-wide state
 
   // Navigation
   goTo(menuId: string, options?: Record<string, unknown>): Promise<void>;
@@ -210,27 +217,27 @@ FlowCord maintains a navigation stack. When you call `goTo()`, the current menu 
 // Navigate forward
 action: async (ctx) => {
   await ctx.goTo('settings', { userId: '123' });
-}
+};
 
 // Go back to previous menu
-action: goBack()
+action: goBack();
 
 // Close the entire session
-action: closeMenu()
+action: closeMenu();
 
 // Use built-in action factories for cleaner code
 import { goTo, goBack, closeMenu } from '@flowcord/core';
 
-action: goTo('settings', { userId: '123' })
-action: goBack()
-action: closeMenu()
+action: goTo('settings', { userId: '123' });
+action: goBack();
+action: closeMenu();
 ```
 
 ### State Management
 
 FlowCord provides two levels of state:
 
-**Menu State** (`ctx.state`) — Typed, scoped to the current menu. Resets when navigating away.
+**Menu State** (`ctx.state`) — Typed, scoped to the current menu.
 
 ```ts
 type MyMenuState = { count: number; name: string };
@@ -241,22 +248,42 @@ new MenuBuilder<MyMenuState>(session, 'counter')
     ctx.state.set('name', 'Counter');
   })
   .setEmbeds((ctx) => [
-    new EmbedBuilder().setTitle(`Count: ${ctx.state.get('count')}`)
+    new EmbedBuilder().setTitle(`Count: ${ctx.state.get('count')}`),
   ])
-  .setButtons((ctx) => [{
-    label: '+1',
-    style: ButtonStyle.Primary,
-    action: async (ctx) => {
-      ctx.state.set('count', ctx.state.get('count') + 1);
+  .setButtons((ctx) => [
+    {
+      label: '+1',
+      style: ButtonStyle.Primary,
+      action: async (ctx) => {
+        ctx.state.set('count', ctx.state.get('count') + 1);
+      },
     },
-  }])
+  ]);
 ```
 
-**Session State** (`ctx.sessionState`) — Untyped key-value store, shared across all menus in a session. Use for passing data between menus.
+By default, menu state is recreated when returning via `goBack()`. For workflows that should resume exactly where they left off, opt in:
 
 ```ts
+new MenuBuilder<MyMenuState>(session, 'counter')
+  .setTrackedInHistory()
+  .setPreserveStateOnReturn();
+```
+
+**Session State** (`ctx.sessionState`) — Shared across all menus in a session, and can be strongly typed by passing a session state type as the second `MenuBuilder` generic.
+
+```ts
+type SessionState = { selectedItem: string };
+
 // In menu A
-ctx.sessionState.set('selectedItem', item);
+new MenuBuilder<MyMenuState, SessionState>(session, 'menu-a').setButtons(() => [
+  {
+    label: 'Pick',
+    style: ButtonStyle.Primary,
+    action: async (ctx) => {
+      ctx.sessionState.set('selectedItem', item);
+    },
+  },
+]);
 
 // In menu B (later in the same session)
 const item = ctx.sessionState.get('selectedItem');
@@ -266,17 +293,17 @@ const item = ctx.sessionState.get('selectedItem');
 
 Hooks fire at specific points in the menu lifecycle:
 
-| Hook | When it fires |
-|------|---------------|
-| `setup()` | Once, when the menu factory runs (before `onEnter`) |
-| `onEnter` | Menu entered (first time or via navigation) |
-| `beforeRender` | Before embeds/buttons/layout callbacks run |
-| `afterRender` | After the Discord message is sent/updated |
-| `onAction` | After any custom button/select action executes |
-| `onNext` | After pagination advances to next page |
-| `onPrevious` | After pagination goes back a page |
-| `onLeave` | Menu is being left (goTo, goBack, or close) |
-| `onCancel` | Session cancelled via Cancel button (fires before `onLeave`) |
+| Hook           | When it fires                                                |
+| -------------- | ------------------------------------------------------------ |
+| `setup()`      | Once, when the menu factory runs (before `onEnter`)          |
+| `onEnter`      | Menu entered (first time or via navigation)                  |
+| `beforeRender` | Before embeds/buttons/layout callbacks run                   |
+| `afterRender`  | After the Discord message is sent/updated                    |
+| `onAction`     | After any custom button/select action executes               |
+| `onNext`       | After pagination advances to next page                       |
+| `onPrevious`   | After pagination goes back a page                            |
+| `onLeave`      | Menu is being left (goTo, goBack, or close)                  |
+| `onCancel`     | Session cancelled via Cancel button (fires before `onLeave`) |
 
 ```ts
 new MenuBuilder(session, 'my-menu')
@@ -295,7 +322,7 @@ new MenuBuilder(session, 'my-menu')
   })
   .onLeave(async (ctx) => {
     // Cleanup
-  })
+  });
 ```
 
 ### Buttons
@@ -375,7 +402,12 @@ import { StringSelectMenuBuilder } from 'discord.js';
 Define modals on a menu, then trigger them from buttons:
 
 ```ts
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import {
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder,
+} from 'discord.js';
 
 new MenuBuilder(session, 'profile')
   .setModal(() => ({
@@ -396,7 +428,7 @@ new MenuBuilder(session, 'profile')
             .setLabel('Bio')
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(false)
-        ),
+        )
       ),
     onSubmit: async (ctx, fields) => {
       const nickname = fields.getTextInputValue('nickname');
@@ -406,11 +438,13 @@ new MenuBuilder(session, 'profile')
       // Menu re-renders automatically after modal submit
     },
   }))
-  .setButtons(() => [{
-    label: 'Edit Profile',
-    style: ButtonStyle.Primary,
-    opensModal: true,  // Opens the single modal
-  }])
+  .setButtons(() => [
+    {
+      label: 'Edit Profile',
+      style: ButtonStyle.Primary,
+      opensModal: true, // Opens the single modal
+    },
+  ]);
 ```
 
 **Multiple modals**: Return an array from `.setModal()`, each with a unique `id`:
@@ -531,15 +565,17 @@ const requireUnlocked = guard(
 
 If any guard fails, the pipeline halts and throws a `GuardFailedError` with the failure message. The menu re-renders without executing subsequent actions.
 
+`guard()` and `pipeline()` are generic over the menu context, so they can preserve your custom and typed context end-to-end.
+
 ### Fallback Menus
 
 When a menu can be opened directly (via slash command) or navigated to from a parent, use `setFallbackMenu()` to control where `goBack()` goes when the navigation stack is empty:
 
 ```ts
 new MenuBuilder(session, 'item-detail')
-  .setFallbackMenu('item-list')  // goBack() → item-list when stack is empty
+  .setFallbackMenu('item-list') // goBack() → item-list when stack is empty
   .setReturnable()
-  .build()
+  .build();
 ```
 
 Without a fallback, `goBack()` on an empty stack closes the session.
@@ -562,54 +598,55 @@ const events = flowcord.tracer.events;
 
 ### `FlowCord`
 
-| Method | Description |
-|--------|-------------|
-| `new FlowCord(config)` | Create instance with `{ client, timeout?, onError?, enableTracing? }` |
-| `registerMenu(name, factory)` | Register a menu factory function |
-| `handleInteraction(interaction, menuName, options?)` | Start a new session from a slash command |
-| `routeComponentInteraction(interaction)` | Route a button/select interaction to an active session |
-| `isFlowCordInteraction(customId)` | Check if a `customId` belongs to a FlowCord session |
-| `getSession(sessionId)` | Get an active session by ID |
-| `activeSessionCount` | Number of currently active sessions |
+| Method                                               | Description                                                           |
+| ---------------------------------------------------- | --------------------------------------------------------------------- |
+| `new FlowCord(config)`                               | Create instance with `{ client, timeout?, onError?, enableTracing? }` |
+| `registerMenu(name, factory)`                        | Register a menu factory function                                      |
+| `handleInteraction(interaction, menuName, options?)` | Start a new session from a slash command                              |
+| `routeComponentInteraction(interaction)`             | Route a button/select interaction to an active session                |
+| `isFlowCordInteraction(customId)`                    | Check if a `customId` belongs to a FlowCord session                   |
+| `getSession(sessionId)`                              | Get an active session by ID                                           |
+| `activeSessionCount`                                 | Number of currently active sessions                                   |
 
-### `MenuBuilder<TState, TCtx, TMode>`
+### `MenuBuilder<TState, TSessionState, TCtx, TMode>`
 
-| Method | Mode | Description |
-|--------|------|-------------|
-| `.setup(fn)` | Any | One-time initialization |
-| `.setEmbeds(fn)` | Embeds | Embed rendering callback |
-| `.setButtons(fn, options?)` | Embeds | Button array callback (optional pagination) |
-| `.setSelectMenu(fn)` | Embeds | Select menu callback |
-| `.setLayout(fn)` | Layout | Components v2 layout callback |
-| `.setModal(fn)` | Any | Modal config callback (single or array) |
-| `.setMessageHandler(fn)` | Any | Handle text message replies |
-| `.setCancellable()` | Any | Add Cancel button |
-| `.setReturnable()` | Any | Add Back button |
-| `.setTrackedInHistory()` | Any | Push to nav stack when leaving |
-| `.setFallbackMenu(id, options?)` | Any | Fallback for goBack on empty stack |
-| `.setListPagination(options)` | Any | Configure list pagination |
-| `.onEnter(fn)` | Any | Hook: menu entered |
-| `.onLeave(fn)` | Any | Hook: menu leaving |
-| `.onCancel(fn)` | Any | Hook: session cancelled |
-| `.beforeRender(fn)` | Any | Hook: before render cycle |
-| `.afterRender(fn)` | Any | Hook: after render cycle |
-| `.onNext(fn)` | Any | Hook: page advanced |
-| `.onPrevious(fn)` | Any | Hook: page reversed |
-| `.onAction(fn)` | Any | Hook: custom action executed |
-| `.extendContext(fn)` | Any | Add custom properties to context |
-| `.fromDefinition(def)` | Any | Configure from object literal |
-| `.build()` | — | Produce the final `MenuDefinition` |
+| Method                           | Mode   | Description                                                    |
+| -------------------------------- | ------ | -------------------------------------------------------------- |
+| `.setup(fn)`                     | Any    | One-time initialization                                        |
+| `.setEmbeds(fn)`                 | Embeds | Embed rendering callback                                       |
+| `.setButtons(fn, options?)`      | Embeds | Button array callback (optional pagination)                    |
+| `.setSelectMenu(fn)`             | Embeds | Select menu callback                                           |
+| `.setLayout(fn)`                 | Layout | Components v2 layout callback                                  |
+| `.setModal(fn)`                  | Any    | Modal config callback (single or array)                        |
+| `.setMessageHandler(fn)`         | Any    | Handle text message replies                                    |
+| `.setCancellable()`              | Any    | Add Cancel button                                              |
+| `.setReturnable()`               | Any    | Add Back button                                                |
+| `.setTrackedInHistory()`         | Any    | Push to nav stack when leaving                                 |
+| `.setPreserveStateOnReturn()`    | Any    | Restore previous menu state snapshot when returning via goBack |
+| `.setFallbackMenu(id, options?)` | Any    | Fallback for goBack on empty stack                             |
+| `.setListPagination(options)`    | Any    | Configure list pagination                                      |
+| `.onEnter(fn)`                   | Any    | Hook: menu entered                                             |
+| `.onLeave(fn)`                   | Any    | Hook: menu leaving                                             |
+| `.onCancel(fn)`                  | Any    | Hook: session cancelled                                        |
+| `.beforeRender(fn)`              | Any    | Hook: before render cycle                                      |
+| `.afterRender(fn)`               | Any    | Hook: after render cycle                                       |
+| `.onNext(fn)`                    | Any    | Hook: page advanced                                            |
+| `.onPrevious(fn)`                | Any    | Hook: page reversed                                            |
+| `.onAction(fn)`                  | Any    | Hook: custom action executed                                   |
+| `.extendContext(fn)`             | Any    | Add custom properties to context                               |
+| `.fromDefinition(def)`           | Any    | Configure from object literal                                  |
+| `.build()`                       | —      | Produce the final `MenuDefinition`                             |
 
 ### Built-in Actions
 
-| Function | Description |
-|----------|-------------|
-| `goTo(menuId, options?)` | Navigate to another menu |
-| `goBack(result?)` | Return to previous menu (optional result for continuations) |
-| `closeMenu()` | End the session |
-| `openModal(modalId?)` | Open a modal dialog |
-| `pipeline(...actions)` | Sequential action composition |
-| `guard(predicate, message)` | Guard middleware — halts pipeline on failure |
+| Function                    | Description                                                 |
+| --------------------------- | ----------------------------------------------------------- |
+| `goTo(menuId, options?)`    | Navigate to another menu                                    |
+| `goBack(result?)`           | Return to previous menu (optional result for continuations) |
+| `closeMenu()`               | End the session                                             |
+| `openModal(modalId?)`       | Open a modal dialog                                         |
+| `pipeline(...actions)`      | Sequential action composition                               |
+| `guard(predicate, message)` | Guard middleware — halts pipeline on failure                |
 
 ---
 
@@ -617,14 +654,14 @@ const events = flowcord.tracer.events;
 
 The [`examples/`](./examples/) directory contains runnable examples demonstrating FlowCord's features:
 
-| Example | Description |
-|---------|-------------|
-| [`01-quickstart.ts`](./examples/01-quickstart.ts) | Bare-bones setup — single command, single menu, under 5 minutes |
-| [`02-multi-menu-navigation.ts`](./examples/02-multi-menu-navigation.ts) | Multiple menus with navigation between them |
-| [`03-state-and-lifecycle.ts`](./examples/03-state-and-lifecycle.ts) | Menu state, session state, and lifecycle hooks |
-| [`04-sub-menu-continuation.ts`](./examples/04-sub-menu-continuation.ts) | Parent–child menu pattern with result passing |
-| [`05-selects-and-modals.ts`](./examples/05-selects-and-modals.ts) | Select menus and modal forms |
-| [`06-pagination-and-guards.ts`](./examples/06-pagination-and-guards.ts) | Button pagination, list pagination, and guard pipelines |
+| Example                                                                 | Description                                                     |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [`01-quickstart.ts`](./examples/01-quickstart.ts)                       | Bare-bones setup — single command, single menu, under 5 minutes |
+| [`02-multi-menu-navigation.ts`](./examples/02-multi-menu-navigation.ts) | Multiple menus with navigation between them                     |
+| [`03-state-and-lifecycle.ts`](./examples/03-state-and-lifecycle.ts)     | Menu state, session state, and lifecycle hooks                  |
+| [`04-sub-menu-continuation.ts`](./examples/04-sub-menu-continuation.ts) | Parent–child menu pattern with result passing                   |
+| [`05-selects-and-modals.ts`](./examples/05-selects-and-modals.ts)       | Select menus and modal forms                                    |
+| [`06-pagination-and-guards.ts`](./examples/06-pagination-and-guards.ts) | Button pagination, list pagination, and guard pipelines         |
 
 ---
 

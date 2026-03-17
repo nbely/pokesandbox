@@ -25,10 +25,17 @@ import {
 import { FlowCord, MenuBuilder, closeMenu } from '@flowcord/core';
 
 // --- Fake data ---
-const weatherConditions = ['☀️ Sunny', '🌧️ Rainy', '⛈️ Stormy', '🌤️ Partly Cloudy', '❄️ Snowy'];
+const weatherConditions = [
+  '☀️ Sunny',
+  '🌧️ Rainy',
+  '⛈️ Stormy',
+  '🌤️ Partly Cloudy',
+  '❄️ Snowy',
+];
 
 function getRandomWeather() {
-  const condition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+  const condition =
+    weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
   const temp = Math.floor(Math.random() * 35) + 5; // 5–40°C
   return { condition, temp };
 }
@@ -51,7 +58,7 @@ flowcord.registerMenu('weather', (session) =>
         .setTitle('🌍 Weather Report — Cerulean City')
         .setDescription(
           `**Condition:** ${ctx.state.get('condition')}\n` +
-          `**Temperature:** ${ctx.state.get('temp')}°C`
+            `**Temperature:** ${ctx.state.get('temp')}°C`
         )
         .setColor(0x3498db)
         .setFooter({ text: 'Press Refresh to check again' })
@@ -74,7 +81,7 @@ flowcord.registerMenu('weather', (session) =>
         action: closeMenu(),
       },
     ])
-    .setCancellable() // Adds a ✕ Cancel button
+    .setCancellable() // Adds a Cancel button
     .build()
 );
 

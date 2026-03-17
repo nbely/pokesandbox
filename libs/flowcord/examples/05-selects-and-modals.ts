@@ -27,13 +27,17 @@ import {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ActionRowBuilder,
+  LabelBuilder,
 } from 'discord.js';
-import { FlowCord, MenuBuilder, goTo, goBack, closeMenu } from '@flowcord/core';
+import { FlowCord, MenuBuilder, goTo, closeMenu } from '@flowcord/core';
 
 // --- Types ---
 type ThemePickerState = {
   selectedTheme: string | null;
+};
+
+type EventSessionState = {
+  eventTheme: string;
 };
 
 type EventDetailsState = {
@@ -60,7 +64,7 @@ const flowcord = new FlowCord({ client });
 // Menu 1: Theme Picker (Select Menu)
 // ---------------------------------------------------------------------------
 flowcord.registerMenu('event', (session) =>
-  new MenuBuilder<ThemePickerState>(session, 'event')
+  new MenuBuilder<ThemePickerState, EventSessionState>(session, 'event')
     .setup((ctx) => {
       ctx.state.set('selectedTheme', null);
     })
@@ -99,6 +103,15 @@ flowcord.registerMenu('event', (session) =>
       },
     }))
 
+    // --- BUTTONS ---
+    .setButtons((ctx) => [
+      {
+        label: 'Plan Event',
+        style: ButtonStyle.Primary,
+        disabled: !ctx.state.get('selectedTheme'),
+        action: goTo('event-details'),
+      },
+    ])
     .setCancellable()
     .setTrackedInHistory()
     .build()
@@ -108,13 +121,16 @@ flowcord.registerMenu('event', (session) =>
 // Menu 2: Event Details (Modal Form)
 // ---------------------------------------------------------------------------
 flowcord.registerMenu('event-details', (session) =>
-  new MenuBuilder<EventDetailsState>(session, 'event-details')
+  new MenuBuilder<EventDetailsState, EventSessionState>(
+    session,
+    'event-details'
+  )
     .setup((ctx) => {
       ctx.state.set('name', null);
       ctx.state.set('description', null);
       ctx.state.set('maxGuests', null);
 
-      const selectedTheme = ctx.sessionState.get<string>('eventTheme');
+      const selectedTheme = ctx.sessionState.get('eventTheme');
       ctx.state.set('theme', selectedTheme ?? null);
     })
 
@@ -132,7 +148,7 @@ flowcord.registerMenu('event-details', (session) =>
             .setTitle('📝 Event Details')
             .setDescription(
               `Theme: **${theme?.label ?? 'None'}**\n\n` +
-              'Click "Fill Details" to enter your event information.'
+                'Click "Fill Details" to enter your event information.'
             )
             .setColor(theme?.color ?? 0x95a5a6),
         ];
@@ -145,10 +161,16 @@ flowcord.registerMenu('event-details', (session) =>
           .setDescription(description ?? 'No description provided.')
           .addFields(
             { name: '🎨 Theme', value: theme?.label ?? 'None', inline: true },
-            { name: '👥 Max Guests', value: maxGuests ?? 'Unlimited', inline: true },
+            {
+              name: '👥 Max Guests',
+              value: maxGuests ?? 'Unlimited',
+              inline: true,
+            }
           )
           .setColor(theme?.color ?? 0x2ecc71)
-          .setFooter({ text: 'Click "Edit Details" to modify, or "Confirm" to finalize.' }),
+          .setFooter({
+            text: 'Click "Edit Details" to modify, or "Confirm" to finalize.',
+          }),
       ];
     })
 
@@ -163,38 +185,47 @@ flowcord.registerMenu('event-details', (session) =>
           builder: new ModalBuilder()
             .setCustomId('create-event')
             .setTitle('Create Event')
-            .addComponents(
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('event-name')
-                  .setLabel('Event Name')
-                  .setStyle(TextInputStyle.Short)
-                  .setPlaceholder('e.g. Annual Company Party')
-                  .setRequired(true)
-                  .setMaxLength(100)
-              ),
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('event-description')
-                  .setLabel('Description')
-                  .setStyle(TextInputStyle.Paragraph)
-                  .setPlaceholder('Tell guests what to expect...')
-                  .setRequired(false)
-                  .setMaxLength(500)
-              ),
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('event-max-guests')
-                  .setLabel('Maximum Guests')
-                  .setStyle(TextInputStyle.Short)
-                  .setPlaceholder('e.g. 50 (leave blank for unlimited)')
-                  .setRequired(false)
-              ),
+            .addLabelComponents(
+              new LabelBuilder()
+                .setLabel('Name')
+                .setTextInputComponent(
+                  new TextInputBuilder()
+                    .setCustomId('event-name')
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder('e.g. Annual Company Party')
+                    .setRequired(true)
+                    .setMaxLength(100)
+                ),
+              new LabelBuilder()
+                .setLabel('Description')
+                .setTextInputComponent(
+                  new TextInputBuilder()
+                    .setCustomId('event-description')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setPlaceholder('Tell guests what to expect...')
+                    .setRequired(false)
+                    .setMaxLength(500)
+                ),
+              new LabelBuilder()
+                .setLabel('Maximum Guests')
+                .setTextInputComponent(
+                  new TextInputBuilder()
+                    .setCustomId('event-max-guests')
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder('e.g. 50 (leave blank for unlimited)')
+                    .setRequired(false)
+                )
             ),
           onSubmit: async (ctx, fields) => {
             ctx.state.set('name', fields.getTextInputValue('event-name'));
-            ctx.state.set('description', fields.getTextInputValue('event-description') || null);
-            ctx.state.set('maxGuests', fields.getTextInputValue('event-max-guests') || null);
+            ctx.state.set(
+              'description',
+              fields.getTextInputValue('event-description') || null
+            );
+            ctx.state.set(
+              'maxGuests',
+              fields.getTextInputValue('event-max-guests') || null
+            );
             // Menu re-renders automatically after modal submit
           },
         },
@@ -203,36 +234,42 @@ flowcord.registerMenu('event-details', (session) =>
           builder: new ModalBuilder()
             .setCustomId('edit-event')
             .setTitle('Edit Event')
-            .addComponents(
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
+            .addLabelComponents(
+              new LabelBuilder().setLabel('Name').setTextInputComponent(
                 new TextInputBuilder()
                   .setCustomId('event-name')
-                  .setLabel('Event Name')
                   .setStyle(TextInputStyle.Short)
                   .setValue(existingName ?? '')
                   .setRequired(true)
               ),
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
+              new LabelBuilder().setLabel('Description').setTextInputComponent(
                 new TextInputBuilder()
                   .setCustomId('event-description')
-                  .setLabel('Description')
                   .setStyle(TextInputStyle.Paragraph)
                   .setValue(ctx.state.get('description') ?? '')
                   .setRequired(false)
               ),
-              new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('event-max-guests')
-                  .setLabel('Maximum Guests')
-                  .setStyle(TextInputStyle.Short)
-                  .setValue(ctx.state.get('maxGuests') ?? '')
-                  .setRequired(false)
-              ),
+              new LabelBuilder()
+                .setLabel('Maximum Guests')
+                .setTextInputComponent(
+                  new TextInputBuilder()
+                    .setCustomId('event-max-guests')
+
+                    .setStyle(TextInputStyle.Short)
+                    .setValue(ctx.state.get('maxGuests') ?? '')
+                    .setRequired(false)
+                )
             ),
           onSubmit: async (ctx, fields) => {
             ctx.state.set('name', fields.getTextInputValue('event-name'));
-            ctx.state.set('description', fields.getTextInputValue('event-description') || null);
-            ctx.state.set('maxGuests', fields.getTextInputValue('event-max-guests') || null);
+            ctx.state.set(
+              'description',
+              fields.getTextInputValue('event-description') || null
+            );
+            ctx.state.set(
+              'maxGuests',
+              fields.getTextInputValue('event-max-guests') || null
+            );
           },
         },
       ];

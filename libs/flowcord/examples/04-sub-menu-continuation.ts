@@ -20,7 +20,13 @@ import {
   EmbedBuilder,
   ButtonStyle,
 } from 'discord.js';
-import { FlowCord, MenuBuilder, closeMenu, goBack } from '@flowcord/core';
+import {
+  type ButtonInputConfig,
+  FlowCord,
+  MenuBuilder,
+  closeMenu,
+  goBack,
+} from '@flowcord/core';
 
 // --- Types ---
 interface Adventurer {
@@ -71,16 +77,22 @@ flowcord.registerMenu('party', (session) =>
             members.length === 0
               ? 'Your party is empty! Recruit some adventurers.'
               : `**Party (${members.length}/${maxSize}):**\n\n` +
-                members
-                  .map((m, i) => `${i + 1}. ${m.emoji} **${m.name}** — ${m.role} (⚡ ${m.power})`)
-                  .join('\n') +
-                `\n\n**Total Power:** ⚡ ${totalPower}`
+                  members
+                    .map(
+                      (m, i) =>
+                        `${i + 1}. ${m.emoji} **${m.name}** — ${m.role} (⚡ ${
+                          m.power
+                        })`
+                    )
+                    .join('\n') +
+                  `\n\n**Total Power:** ⚡ ${totalPower}`
           )
           .setColor(members.length >= maxSize ? 0x2ecc71 : 0xe67e22)
           .setFooter({
-            text: members.length >= maxSize
-              ? 'Party is full! Ready for adventure!'
-              : `${maxSize - members.length} slot(s) remaining`,
+            text:
+              members.length >= maxSize
+                ? 'Party is full! Ready for adventure!'
+                : `${maxSize - members.length} slot(s) remaining`,
           }),
       ];
     })
@@ -108,7 +120,9 @@ flowcord.registerMenu('party', (session) =>
               onComplete: async (parentCtx, result) => {
                 if (result) {
                   const recruited = result as Adventurer;
-                  const updatedMembers = parentCtx.state.get('members');
+                  const updatedMembers = parentCtx.state.get(
+                    'members'
+                  ) as Adventurer[];
                   updatedMembers.push(recruited);
                   parentCtx.state.set('members', [...updatedMembers]);
                 }
@@ -137,6 +151,7 @@ flowcord.registerMenu('party', (session) =>
 
     .setCancellable()
     .setTrackedInHistory()
+    .setPreserveStateOnReturn() // Ensure state is preserved when returning from the sub-menu
     .build()
 );
 
@@ -145,7 +160,9 @@ flowcord.registerMenu('party', (session) =>
 // ---------------------------------------------------------------------------
 flowcord.registerMenu('recruit', (session, options) => {
   const alreadyRecruited = (options?.alreadyRecruited as string[]) ?? [];
-  const available = availableRecruits.filter((r) => !alreadyRecruited.includes(r.name));
+  const available = availableRecruits.filter(
+    (r) => !alreadyRecruited.includes(r.name)
+  );
 
   return new MenuBuilder(session, 'recruit')
     .setEmbeds(() => [
@@ -155,12 +172,14 @@ flowcord.registerMenu('recruit', (session, options) => {
           available.length === 0
             ? 'No more adventurers available!'
             : 'Choose an adventurer to recruit:\n\n' +
-              available
-                .map(
-                  (r, i) =>
-                    `**${i + 1}.** ${r.emoji} **${r.name}** — ${r.role} (⚡ ${r.power})`
-                )
-                .join('\n')
+                available
+                  .map(
+                    (r, i) =>
+                      `**${i + 1}.** ${r.emoji} **${r.name}** — ${r.role} (⚡ ${
+                        r.power
+                      })`
+                  )
+                  .join('\n')
         )
         .setColor(0x9b59b6),
     ])
@@ -169,7 +188,7 @@ flowcord.registerMenu('recruit', (session, options) => {
       ...available.map((recruit, index) => ({
         label: `${index + 1}`,
         style: ButtonStyle.Primary as ButtonStyle,
-        action: async (ctx) => {
+        action: async (ctx): ButtonInputConfig => {
           // Complete the sub-menu and return the selected recruit to the parent
           await ctx.complete(recruit);
         },

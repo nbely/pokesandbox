@@ -21,7 +21,7 @@ import {
   EmbedBuilder,
   ButtonStyle,
 } from 'discord.js';
-import { FlowCord, MenuBuilder, goTo, goBack, closeMenu } from '@flowcord/core';
+import { FlowCord, MenuBuilder, goTo } from '@flowcord/core';
 
 // --- Fake data ---
 interface Recipe {
@@ -40,7 +40,14 @@ const recipes: Recipe[] = [
     emoji: '🍝',
     description: 'A classic Italian pasta dish with rich meat sauce.',
     cookTime: '45 minutes',
-    ingredients: ['Spaghetti', 'Ground beef', 'Tomato sauce', 'Onion', 'Garlic', 'Olive oil'],
+    ingredients: [
+      'Spaghetti',
+      'Ground beef',
+      'Tomato sauce',
+      'Onion',
+      'Garlic',
+      'Olive oil',
+    ],
   },
   {
     id: 'sushi',
@@ -48,7 +55,14 @@ const recipes: Recipe[] = [
     emoji: '🍣',
     description: 'Inside-out sushi roll with crab, avocado, and cucumber.',
     cookTime: '30 minutes',
-    ingredients: ['Sushi rice', 'Nori', 'Crab stick', 'Avocado', 'Cucumber', 'Rice vinegar'],
+    ingredients: [
+      'Sushi rice',
+      'Nori',
+      'Crab stick',
+      'Avocado',
+      'Cucumber',
+      'Rice vinegar',
+    ],
   },
   {
     id: 'tacos',
@@ -56,7 +70,14 @@ const recipes: Recipe[] = [
     emoji: '🌮',
     description: 'Authentic Mexican street tacos with fresh toppings.',
     cookTime: '20 minutes',
-    ingredients: ['Corn tortillas', 'Carne asada', 'Cilantro', 'Onion', 'Lime', 'Salsa verde'],
+    ingredients: [
+      'Corn tortillas',
+      'Carne asada',
+      'Cilantro',
+      'Onion',
+      'Lime',
+      'Salsa verde',
+    ],
   },
 ];
 
@@ -74,7 +95,9 @@ flowcord.registerMenu('cookbook', (session) =>
         .setTitle('📖 Cookbook')
         .setDescription(
           'Choose a recipe to view:\n\n' +
-          recipes.map((r, i) => `**${i + 1}.** ${r.emoji} ${r.name}`).join('\n')
+            recipes
+              .map((r, i) => `**${i + 1}.** ${r.emoji} ${r.name}`)
+              .join('\n')
         )
         .setColor(0xe67e22),
     ])
@@ -105,7 +128,11 @@ flowcord.registerMenu('recipe-detail', (session, options) => {
         .setDescription(recipe.description)
         .addFields(
           { name: '⏱️ Cook Time', value: recipe.cookTime, inline: true },
-          { name: '🥘 Ingredients', value: `${recipe.ingredients.length} items`, inline: true },
+          {
+            name: '🥘 Ingredients',
+            value: `${recipe.ingredients.length} items`,
+            inline: true,
+          }
         )
         .setColor(0x2ecc71),
     ])
@@ -125,8 +152,8 @@ flowcord.registerMenu('recipe-detail', (session, options) => {
         },
       },
     ])
-    .setReturnable()          // Shows ← Back button
-    .setTrackedInHistory()    // So 'ingredients' can goBack() here
+    .setReturnable() // Shows ← Back button
+    .setTrackedInHistory() // So 'ingredients' can goBack() here
     .setFallbackMenu('cookbook') // If opened directly (empty stack), Back → cookbook
     .build();
 });
@@ -138,19 +165,21 @@ flowcord.registerMenu('ingredients', (session, options) => {
   const recipeId = options?.recipeId as string;
   const recipe = recipes.find((r) => r.id === recipeId)!;
 
-  return new MenuBuilder(session, 'ingredients')
-    .setEmbeds(() => [
-      new EmbedBuilder()
-        .setTitle(`📋 Ingredients — ${recipe.name}`)
-        .setDescription(
-          recipe.ingredients.map((ing, i) => `${i + 1}. ${ing}`).join('\n')
-        )
-        .setColor(0x9b59b6)
-        .setFooter({ text: 'Press Back to return to the recipe' }),
-    ])
-    // No buttons besides Back — just informational
-    .setReturnable() // ← Back returns to recipe-detail
-    .build();
+  return (
+    new MenuBuilder(session, 'ingredients')
+      .setEmbeds(() => [
+        new EmbedBuilder()
+          .setTitle(`📋 Ingredients — ${recipe.name}`)
+          .setDescription(
+            recipe.ingredients.map((ing, i) => `${i + 1}. ${ing}`).join('\n')
+          )
+          .setColor(0x9b59b6)
+          .setFooter({ text: 'Press Back to return to the recipe' }),
+      ])
+      // No buttons besides Back — just informational
+      .setReturnable() // ← Back returns to recipe-detail
+      .build()
+  );
 });
 
 // --- Interaction handler ---

@@ -24,6 +24,7 @@ import type { Action } from '../types/common';
 import { GuardFailedError } from '../action/pipeline';
 import { StateStore } from '../state/StateStore';
 import { MenuStack } from '../state/MenuStack';
+import type { MenuStackEntry } from '../state/MenuStack';
 import { MenuInstance } from '../menu/MenuInstance';
 import { MenuRenderer } from '../menu/MenuRenderer';
 import { LifecycleManager } from '../lifecycle/LifecycleManager';
@@ -152,10 +153,22 @@ export class MenuSession implements MenuSessionLike {
 
     // If we have a current menu that's tracked, push it to history
     if (this._currentMenu?.definition.isTrackedInHistory) {
-      this._stack.push({
+      const entry: MenuStackEntry = {
         menuId: this._currentMenu.name,
         options: this._currentOptions,
-      });
+      };
+
+      // Snapshot state + pagination for menus that preserve state on return
+      if (this._currentMenu.definition.preserveStateOnReturn) {
+        entry.stateSnapshot = structuredClone(
+          this._currentMenu.stateAccessor.current
+        );
+        entry.paginationSnapshot = this._currentMenu.paginationState
+          ? { ...this._currentMenu.paginationState }
+          : null;
+      }
+
+      this._stack.push(entry);
     }
 
     // Fire onLeave on current menu
@@ -270,8 +283,16 @@ export class MenuSession implements MenuSessionLike {
     const instance = new MenuInstance(definition, this.id);
     this._currentMenu = instance;
 
-    // Run setup
-    if (definition.setup) {
+    // Restore snapshotted state or run setup
+    if (entry.stateSnapshot) {
+      instance.stateAccessor.reset(
+        entry.stateSnapshot as Record<string, unknown>
+      );
+      if (entry.paginationSnapshot) {
+        instance.paginationState = { ...entry.paginationSnapshot };
+      }
+      // Skip setup — state is already initialized from snapshot
+    } else if (definition.setup) {
       const ctx = this.buildContext(instance);
       await definition.setup(ctx);
     }
