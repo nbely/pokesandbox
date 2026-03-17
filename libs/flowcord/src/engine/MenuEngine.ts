@@ -1,17 +1,15 @@
 /**
- * MenuEngine — Entry point for FlowCord v2.
+ * MenuEngine — Core engine for the FlowCord framework.
  *
- * Replaces FlowCord for v2 menus. Holds registries, creates sessions,
+ * Holds registries, creates sessions,
  * handles interaction entry, and tracks active sessions for routing.
- *
- * Both v1 FlowCord and v2 MenuEngine can coexist in the same bot.
  */
 import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
   type MessageComponentInteraction,
 } from 'discord.js';
-import type { FlowCordClient } from '../../FlowCordClient';
+import type { FlowCordClient } from '../FlowCordClient';
 import type { CreateMenuDefinitionFn } from '../registry/MenuRegistry';
 import { MenuRegistry } from '../registry/MenuRegistry';
 import { ActionRegistry } from '../registry/ActionRegistry';
@@ -77,7 +75,7 @@ const defaultOnError = async (
       ephemeral: true,
     });
   } catch (discordError) {
-    console.error('[FlowCord v2] Failed to send error response:', discordError);
+    console.error('[FlowCord] Failed to send error response:', discordError);
   }
 };
 
@@ -186,10 +184,10 @@ export class MenuEngine {
   }
 
   /**
-   * Check if a customId belongs to a v2 session.
+   * Check if a customId belongs to a FlowCord session.
    * Useful in the interactionCreate handler to decide routing.
    */
-  isV2Interaction(customId: string): boolean {
+  isFlowCordInteraction(customId: string): boolean {
     const parsed = ComponentIdManager.parse(customId);
     if (!parsed) return false;
     return this._sessions.has(parsed.sessionId);

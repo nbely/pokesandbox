@@ -5,10 +5,10 @@ import {
 } from 'discord.js';
 import { z } from 'zod';
 
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles, parseCommandOptions } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { getSelectMatchedPokemonEmbeds } from './pokedex.embeds';
 import type { PokedexMenuState } from './types';
@@ -32,13 +32,13 @@ export const SelectMatchedPokemonCommand: ISlashCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Select a matched Pokémon from a search')
     .setContexts(InteractionContextType.Guild),
-  createMenuV2: (session, options) => {
+  createMenu: (session, options) => {
     const { matchedDexEntryIds } = parseCommandOptions(
       selectMatchedPokemonCommandOptionsSchema,
       options
     );
 
-    return new AdminMenuBuilderV2<PokedexMenuState>(
+    return new AdminMenuBuilder<PokedexMenuState>(
       session,
       COMMAND_NAME,
       options

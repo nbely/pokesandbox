@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { z } from 'zod';
 
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   handleRegionAutocomplete,
@@ -13,7 +13,7 @@ import {
   parseCommandOptions,
   sortByOrdinal,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { LOCATION_COMMAND_NAME } from './location';
 import {
@@ -48,13 +48,13 @@ export const LocationsCommand: ISlashCommand = {
         .setAutocomplete(true);
     }),
   autocomplete: handleRegionAutocomplete,
-  createMenuV2: (session, options) => {
+  createMenu: (session, options) => {
     const { region_id } = parseCommandOptions(
       locationsCommandOptionsSchema,
       options
     );
 
-    return new AdminMenuBuilderV2<LocationsMenuState>(
+    return new AdminMenuBuilder<LocationsMenuState>(
       session,
       COMMAND_NAME,
       options

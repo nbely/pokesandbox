@@ -7,14 +7,14 @@ import {
 import { z } from 'zod';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   handleRegionAndProgressionAutocomplete,
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
@@ -60,7 +60,7 @@ export const ProgressionEditCommand: ISlashCommand = {
         .setRequired(true)
         .setAutocomplete(true)
     ),
-  createMenuV2: async (session, options) => {
+  createMenu: async (session, options) => {
     const { region_id, progression_key } = parseCommandOptions(
       progressionEditCommandOptionsSchema,
       options
@@ -76,7 +76,7 @@ export const ProgressionEditCommand: ISlashCommand = {
       progressionEditField ?? ''
     );
 
-    const builder = new AdminMenuBuilderV2<ProgressionEditMenuState>(
+    const builder = new AdminMenuBuilder<ProgressionEditMenuState>(
       session,
       COMMAND_NAME,
       options

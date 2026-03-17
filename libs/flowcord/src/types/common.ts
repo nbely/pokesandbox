@@ -1,5 +1,5 @@
 /**
- * Common utility types used throughout FlowCord v2.
+ * Common utility types used throughout FlowCord.
  */
 import type {
   ActionRowBuilder,
@@ -242,9 +242,9 @@ export interface MenuContextLike {
 }
 
 /**
- * Modal configuration for v2 menus.
+ * Modal configuration for menus.
  * The modal builder is a standard Discord.js ModalBuilder,
- * but the onSubmit handler uses the v2 action pattern.
+ * but the onSubmit handler uses the FlowCord action pattern.
  */
 export interface ModalConfig<TCtx = MenuContextLike> {
   /** Optional identifier for multi-modal menus. Omit for single-modal menus. */

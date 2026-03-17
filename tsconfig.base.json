@@ -23,7 +23,6 @@
       "@bot/structures/*": ["./apps/bot/src/structures/*"],
       "@bot/utils": ["./apps/bot/src/utils/index.ts"],
       "@flowcord": ["./libs/flowcord/src/index.ts"],
-      "@flowcord/v2": ["./libs/flowcord/src/v2/index.ts"],
       "@shared/cache": ["./shared/src/cache/index.ts"],
       "@shared/connectDb": ["./shared/src/connectDb.ts"],
       "@shared/dtos": ["./shared/src/dtos/index.ts"],

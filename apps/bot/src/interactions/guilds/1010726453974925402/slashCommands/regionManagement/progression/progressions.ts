@@ -13,7 +13,7 @@ import {
 import { z } from 'zod';
 
 import { saveRegion } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   getModalSelectValue,
@@ -21,7 +21,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig, ModalConfig } from '@flowcord/v2';
+import type { ButtonInputConfig, ModalConfig } from '@flowcord';
 import type { ProgressionDefinition } from '@shared/models';
 
 import { progressionsMenuEmbeds } from './progression.embeds';
@@ -60,13 +60,13 @@ export const ProgressionsCommand: ISlashCommand = {
         .setAutocomplete(true);
     }),
   autocomplete: handleRegionAutocomplete,
-  createMenuV2: (session, options) => {
+  createMenu: (session, options) => {
     const { region_id } = parseCommandOptions(
       progressionsCommandOptionsSchema,
       options
     );
 
-    return new AdminMenuBuilderV2<ProgressionsMenuState>(
+    return new AdminMenuBuilder<ProgressionsMenuState>(
       session,
       COMMAND_NAME,
       options

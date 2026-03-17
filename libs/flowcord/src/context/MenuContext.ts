@@ -1,5 +1,5 @@
 /**
- * MenuContext — the single typed object passed to every v2 callback.
+ * MenuContext — the single typed object passed to every menu callback.
  *
  * Builder subclasses extend the context type via `.extendContext(fn)`.
  * For example, AdminMenuBuilder adds `ctx.admin: AdminHelpers`.

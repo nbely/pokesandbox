@@ -81,7 +81,7 @@ export const slashCommandsManager = async (client: BotClient) => {
       for (const slashCmd of guild.slashCommands) {
         if (
           !slashCmd.command ||
-          (!slashCmd.createMenu && !slashCmd.createMenuV2)
+          !slashCmd.createMenu
         )
           continue;
         client.slashCommands.set(slashCmd.command.name, slashCmd);

@@ -6,14 +6,14 @@ import {
 import { z } from 'zod';
 
 import { saveRegion } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   handleRegionAndLocationAutocomplete,
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { LOCATION_EDIT_MODAL_ID, getLocationEditModal } from './location.modal';
 import { getLocationMenuEmbeds } from './location.embeds';
@@ -54,13 +54,13 @@ export const LocationCommand: ISlashCommand = {
         .setAutocomplete(true)
     ),
   autocomplete: handleRegionAndLocationAutocomplete,
-  createMenuV2: (session, options) => {
+  createMenu: (session, options) => {
     const { region_id, location_id } = parseCommandOptions(
       locationCommandOptionsSchema,
       options
     );
 
-    return new AdminMenuBuilderV2<LocationMenuState>(
+    return new AdminMenuBuilder<LocationMenuState>(
       session,
       COMMAND_NAME,
       options

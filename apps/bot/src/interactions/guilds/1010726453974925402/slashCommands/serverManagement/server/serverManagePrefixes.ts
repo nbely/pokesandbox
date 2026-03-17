@@ -5,10 +5,10 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';
@@ -26,8 +26,8 @@ export const ServerManagePrefixesCommand: ISlashCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage command prefixes for your server')
     .setContexts(InteractionContextType.Guild),
-  createMenuV2: (session) =>
-    new AdminMenuBuilderV2(session, COMMAND_NAME)
+  createMenu: (session) =>
+    new AdminMenuBuilder(session, COMMAND_NAME)
       .setButtons(getServerManagePrefixesButtons)
       .setEmbeds((ctx) => getServerMenuEmbeds(ctx, 'Add or remove a prefix.'))
       .setCancellable()

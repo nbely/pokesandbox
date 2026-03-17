@@ -1,5 +1,5 @@
 /**
- * Component helper functions for FlowCord v2.
+ * Component helper functions for FlowCord.
  *
  * These return framework component configs — NOT Discord.js builders.
  * The MenuRenderer converts these to Discord API payloads at send time.

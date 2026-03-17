@@ -11,11 +11,11 @@ import {
 } from '@bot/cache';
 import { Server } from '@shared/models';
 import type { Location, Region } from '@shared/models';
-import { MenuBuilder } from '@flowcord/v2';
-import type { MenuContext, MenuSessionLike } from '@flowcord/v2';
+import { MenuBuilder } from '@flowcord';
+import type { MenuContext, MenuSessionLike } from '@flowcord';
 
 /**
- * Typed admin helpers injected onto `ctx.admin` by AdminMenuBuilderV2.
+ * Typed admin helpers injected onto `ctx.admin` by AdminMenuBuilder.
  */
 export interface AdminHelpers {
   getServer(): Promise<Server>;
@@ -32,14 +32,14 @@ export type AdminMenuContext<
 > = MenuContext<TState> & { admin: AdminHelpers };
 
 /**
- * v2 AdminMenuBuilder — extends MenuBuilder with PokeSandbox admin domain helpers.
+ * AdminMenuBuilder — extends MenuBuilder with PokeSandbox admin domain helpers.
  *
  * Adds `ctx.admin` via context extension so all callbacks have typed access
  * to server, region, location, and role helpers.
  *
  * Also runs server auto-initialization on setup (creates server if not found).
  */
-export class AdminMenuBuilderV2<
+export class AdminMenuBuilder<
   TState extends Record<string, unknown> = Record<string, unknown>
 > extends MenuBuilder<TState, AdminMenuContext<TState>> {
   constructor(
@@ -130,7 +130,7 @@ function buildAdminHelpers(
 }
 
 // ---------------------------------------------------------------------------
-// Server auto-initialization (mirrors v1 AdminMenu.initialize)
+// Server auto-initialization
 // ---------------------------------------------------------------------------
 
 async function ensureServerInitialized(ctx: AdminMenuContext): Promise<void> {

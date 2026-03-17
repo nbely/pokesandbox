@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ButtonStyle,
   InteractionContextType,
+  LabelBuilder,
   ModalBuilder,
   SlashCommandBuilder,
   TextInputBuilder,
@@ -10,11 +11,11 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { REGION_COMMAND_NAME } from '../region/region';
 import { getRegionsMenuEmbeds } from './regions.embeds';
@@ -24,7 +25,6 @@ const COMMAND_NAME = 'regions';
 export const REGIONS_COMMAND_NAME = COMMAND_NAME;
 const REGION_CREATE_MODAL_ID = 'region-create-modal';
 const REGION_NAME_FIELD_ID = 'region-name';
-const REGIONS_PROMPT_SESSION_KEY = 'regions.prompt';
 
 export const RegionsCommand: ISlashCommand = {
   name: COMMAND_NAME,
@@ -36,8 +36,8 @@ export const RegionsCommand: ISlashCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Manage Regions for your PokéSandbox server')
     .setContexts(InteractionContextType.Guild),
-  createMenuV2: (session) =>
-    new AdminMenuBuilderV2<RegionsMenuState>(session, COMMAND_NAME)
+  createMenu: (session) =>
+    new AdminMenuBuilder<RegionsMenuState>(session, COMMAND_NAME)
       .setButtons(getRegionsButtons)
       .setModal(() => ({
         id: REGION_CREATE_MODAL_ID,
@@ -102,15 +102,17 @@ const getRegionCreateModal = (): ModalBuilder => {
   return new ModalBuilder()
     .setCustomId(REGION_CREATE_MODAL_ID)
     .setTitle('Create New Region')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId(REGION_NAME_FIELD_ID)
-          .setLabel('Region Name')
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true)
-          .setMaxLength(80)
-      )
+    .addLabelComponents(
+      new LabelBuilder()
+        .setLabel('Region Name')
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId(REGION_NAME_FIELD_ID)
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('e.g. Kanto, Johto, etc.')
+            .setRequired(true)
+            .setMaxLength(80)
+        )
     );
 };
 

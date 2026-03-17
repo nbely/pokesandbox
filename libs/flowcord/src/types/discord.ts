@@ -1,5 +1,5 @@
 /**
- * FlowCord-specific Discord.js union aliases used throughout v2.
+ * FlowCord-specific Discord.js union aliases.
  */
 import type {
   AnySelectMenuInteraction,

@@ -1,7 +1,7 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
 
 import { connectDb } from '@shared/connectDb';
-import { MenuEngine } from '@flowcord/v2';
+import { FlowCord } from '@flowcord';
 
 import { BotClient } from '@bot/classes';
 import {
@@ -44,11 +44,9 @@ connectDb().then(async () => {
   await stringSelectMenusManager(client);
   await userSelectMenusManager(client);
 
-  const flowcord = new MenuEngine({ client });
+  const flowcord = new FlowCord({ client });
   client.slashCommands.forEach((command, commandName) => {
-    if (command.createMenuV2) {
-      flowcord.registerMenu(commandName, command.createMenuV2);
-    }
+    flowcord.registerMenu(commandName, command.createMenu);
   });
   client.flowcord = flowcord;
 
