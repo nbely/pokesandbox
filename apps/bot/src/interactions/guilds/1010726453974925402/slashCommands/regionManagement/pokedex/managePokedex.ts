@@ -2,7 +2,7 @@ import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 import { z } from 'zod';
 
 import { getAssertedCachedRegion } from '@bot/cache';
-import { AdminMenuBuilderV2 } from '@bot/classes';
+import { AdminMenuBuilder } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   handleRegionAutocomplete,
@@ -40,13 +40,13 @@ export const ManagePokedexCommand: ISlashCommand = {
         .setRequired(true)
         .setAutocomplete(true)
     ),
-  createMenuV2: async (session, options) => {
+  createMenu: async (session, options) => {
     const { region_id } = parseCommandOptions(
       managePokedexCommandOptionsSchema,
       options
     );
 
-    return new AdminMenuBuilderV2<PokedexMenuState>(
+    return new AdminMenuBuilder<PokedexMenuState>(
       session,
       COMMAND_NAME,
       options

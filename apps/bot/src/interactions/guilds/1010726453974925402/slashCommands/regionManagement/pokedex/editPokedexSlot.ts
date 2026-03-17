@@ -6,7 +6,7 @@ import {
 import { z } from 'zod';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import {
   handleRegionAutocomplete,
@@ -14,7 +14,7 @@ import {
   parseCommandOptions,
 } from '@bot/utils';
 import type { Region } from '@shared/models';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import {
   getAddPokedexSlotEmbeds,
@@ -67,14 +67,14 @@ export const EditPokedexSlotCommand: ISlashCommand = {
         .setMinValue(1)
         .setMaxValue(1500)
     ),
-  createMenuV2: async (session, options) => {
+  createMenu: async (session, options) => {
     const { region_id, pokedex_no } = parseCommandOptions(
       editPokedexSlotCommandOptionsSchema,
       options
     );
     const region = await getAssertedCachedRegion(region_id);
 
-    const builder = new AdminMenuBuilderV2<PokedexMenuState>(
+    const builder = new AdminMenuBuilder<PokedexMenuState>(
       session,
       COMMAND_NAME,
       options

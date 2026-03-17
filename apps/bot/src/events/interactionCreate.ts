@@ -95,10 +95,9 @@ const handleApplicationCommandInteraction = async (
         return;
       }
 
-      if (!slashCommand.createMenuV2) {
+      if (!slashCommand.createMenu) {
         await interaction.reply({
-          content:
-            'This command is still on the legacy menu system and is not migrated to v2 yet.',
+          content: 'This command does not have a menu defined.',
           ephemeral: true,
         });
         return;
@@ -169,8 +168,8 @@ const handleMessageComponentInteraction = async (
   client: BotClient,
   interaction: MessageComponentInteraction
 ): Promise<void> => {
-  // v2 interactions are routed by session ID embedded in the customId
-  if (client.flowcord?.isV2Interaction(interaction.customId)) {
+  // FlowCord interactions are routed by session ID embedded in the customId
+  if (client.flowcord?.isFlowCordInteraction(interaction.customId)) {
     client.flowcord.routeComponentInteraction(interaction);
     return;
   }

@@ -15,7 +15,7 @@ import {
   setValueOnInputBuilderIfExists,
 } from '@bot/utils';
 import { Location } from '@shared/models';
-import type { ModalConfig } from '@flowcord/v2';
+import type { ModalConfig } from '@flowcord';
 
 import type { LocationMenuState, LocationsMenuState } from './types';
 

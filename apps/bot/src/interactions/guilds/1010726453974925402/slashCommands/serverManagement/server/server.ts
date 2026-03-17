@@ -4,10 +4,10 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { DISCOVERY_COMMAND_NAME } from '../discovery/discovery';
 import { getServerMenuEmbeds } from './server.embeds';
@@ -27,8 +27,8 @@ export const ServerCommand: ISlashCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Update your PokeSandbox server settings')
     .setContexts(InteractionContextType.Guild),
-  createMenuV2: (session) =>
-    new AdminMenuBuilderV2(session, COMMAND_NAME)
+  createMenu: (session) =>
+    new AdminMenuBuilder(session, COMMAND_NAME)
       .setButtons(getServerButtons)
       .setEmbeds(getServerMenuEmbeds)
       .setCancellable()

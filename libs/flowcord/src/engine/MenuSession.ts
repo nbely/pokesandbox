@@ -4,7 +4,7 @@
  * Manages the interaction loop lifecycle, state, navigation stack,
  * and delegates rendering/lifecycle to appropriate managers.
  *
- * This is the v2 evolution of v1's Session class.
+ * Manages the interaction loop lifecycle, state, navigation stack,
  */
 import { randomUUID } from 'crypto';
 import type {

@@ -1,7 +1,7 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 
@@ -21,8 +21,8 @@ export const DiscoveryDescriptionCommand: ISlashCommand = {
     .setName(COMMAND_NAME)
     .setDescription('Update your server discovery description')
     .setContexts(InteractionContextType.Guild),
-  createMenuV2: (session) =>
-    new AdminMenuBuilderV2(session, COMMAND_NAME)
+  createMenu: (session) =>
+    new AdminMenuBuilder(session, COMMAND_NAME)
       .setEmbeds(getDiscoveryMenuEmbeds)
       .setMessageHandler(async (ctx: AdminMenuContext, response: string) => {
         const server = await ctx.admin.getServer();

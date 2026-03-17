@@ -1,149 +1,82 @@
-import type { ChatInputCommandInteraction } from 'discord.js';
-import { defaultErrorHandler } from './errors';
-import { MenuRegistry } from './registry';
-import type { Session } from './session/Session';
+import type {
+  ChatInputCommandInteraction,
+  MessageComponentInteraction,
+} from 'discord.js';
+import { MenuEngine } from './engine/MenuEngine';
+import type { MenuEngineConfig } from './engine/MenuEngine';
+import type { CreateMenuDefinitionFn } from './registry/MenuRegistry';
+import type { MenuSession } from './engine/MenuSession';
 import type { FlowCordClient } from './FlowCordClient';
-import type { CreateMenuFunction } from './types';
 
 /**
- * Configuration options for FlowCord
+ * Configuration options for FlowCord.
  */
-export interface FlowCordConfig {
-  /**
-   * The Discord client instance (required)
-   */
-  client: FlowCordClient;
-
-  /**
-   * Custom error handler (optional, defaults to displaying a red error embed)
-   */
-  onError?: (session: Session, error: unknown) => Promise<void>;
-
-  /**
-   * Interaction timeout in milliseconds (optional, defaults to 120000ms / 2 minutes)
-   */
-  timeout?: number;
-
-  /**
-   * Custom Session class for advanced use cases (optional, defaults to Session)
-   */
-  sessionClass?: typeof Session;
-}
+export type FlowCordConfig = MenuEngineConfig;
 
 /**
  * Main entry point for the FlowCord framework.
- * Manages menu registration and interaction dispatching.
+ *
+ * Manages menu registration, interaction dispatching, and active session routing.
  *
  * @example
- * ```typescript
- * const flow = new FlowCord({ client });
- * flow.registerMenu('ping', pingMenu);
- *
- * client.on('interactionCreate', (interaction) => {
- *   if (interaction.isChatInputCommand()) {
- *     flow.handleInteraction(interaction);
- *   }
- * });
+ * ```ts
+ * const flowcord = new FlowCord({ client });
+ * flowcord.registerMenu('server', serverMenu);
+ * // In interactionCreate handler:
+ * flowcord.handleInteraction(interaction, interaction.commandName);
  * ```
  */
 export class FlowCord {
-  private _client: FlowCordClient;
-  private _registry: MenuRegistry;
-  private _config: FlowCordConfig;
+  private readonly _engine: MenuEngine;
 
   constructor(config: FlowCordConfig) {
-    this._client = config.client;
-    this._registry = new MenuRegistry();
-    this._config = {
-      ...config,
-      onError: config.onError || defaultErrorHandler,
-      timeout: config.timeout || 120000, // 2 minutes default
-    };
+    this._engine = new MenuEngine(config);
   }
 
-  /**
-   * Get the Discord client instance
-   */
   get client(): FlowCordClient {
-    return this._client;
+    return this._engine.client;
+  }
+
+  get activeSessionCount(): number {
+    return this._engine.activeSessionCount;
   }
 
   /**
-   * Get the menu registry
+   * Register a menu definition factory for a command name.
    */
-  get registry(): MenuRegistry {
-    return this._registry;
+  registerMenu(name: string, factory: CreateMenuDefinitionFn): void {
+    this._engine.registerMenu(name, factory);
   }
 
   /**
-   * Get the configuration
-   */
-  get config(): FlowCordConfig {
-    return this._config;
-  }
-
-  /**
-   * Register a menu factory function for a command name.
-   * The factory function will be called when a user invokes the command.
-   *
-   * @param name The command name (must match the Discord slash command name)
-   * @param createMenu The factory function that creates the menu instance
-   *
-   * @example
-   * ```typescript
-   * flow.registerMenu('settings', async (session) =>
-   *   new MenuBuilder(session, 'settings')
-   *     .setEmbeds(getSettingsEmbeds)
-   *     .setButtons(getSettingsButtons)
-   *     .build()
-   * );
-   * ```
-   */
-  registerMenu(name: string, createMenu: CreateMenuFunction): void {
-    this._registry.register(name, createMenu);
-  }
-
-  /**
-   * Handle a Discord chat input command interaction.
-   * This is the primary API for FlowCord - call this from your interactionCreate event handler.
-   *
-   * This method:
-   * 1. Looks up the menu factory by command name
-   * 2. Creates a Session instance
-   * 3. Initializes the session (builds menu, enters interaction loop)
-   * 4. Handles any errors automatically
-   *
-   * @param interaction The Discord chat input command interaction
-   *
-   * @example
-   * ```typescript
-   * client.on('interactionCreate', (interaction) => {
-   *   if (interaction.isChatInputCommand()) {
-   *     flow.handleInteraction(interaction);
-   *   }
-   * });
-   * ```
+   * Handle an incoming slash command interaction.
    */
   async handleInteraction(
-    interaction: ChatInputCommandInteraction
+    interaction: ChatInputCommandInteraction,
+    menuName: string,
+    options?: Record<string, unknown>
   ): Promise<void> {
-    const commandName = interaction.commandName;
-    const menuFactory = this._registry.getMenuFactory(commandName);
+    return this._engine.handleInteraction(interaction, menuName, options);
+  }
 
-    if (!menuFactory) {
-      // Not a FlowCord-managed command - silently skip
-      return;
-    }
+  /**
+   * Route an incoming component interaction to the correct active session.
+   */
+  routeComponentInteraction(interaction: MessageComponentInteraction): boolean {
+    return this._engine.routeComponentInteraction(interaction);
+  }
 
-    // Import Session dynamically to avoid circular dependency issues during initialization
-    const { Session } = await import('./session/Session');
-    const SessionClass = this._config.sessionClass || Session;
+  /**
+   * Check if a customId belongs to an active FlowCord session.
+   */
+  isFlowCordInteraction(customId: string): boolean {
+    return this._engine.isFlowCordInteraction(customId);
+  }
 
-    const session = new SessionClass(this, interaction, commandName);
-    try {
-      await session.initialize();
-    } catch (error) {
-      await session.handleError(error);
-    }
+  /**
+   * Get an active session by ID.
+   */
+  getSession(sessionId: string): MenuSession | undefined {
+    return this._engine.getSession(sessionId);
   }
 }

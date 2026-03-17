@@ -5,10 +5,10 @@ import {
 } from 'discord.js';
 
 import { saveServer } from '@bot/cache';
-import { AdminMenuBuilderV2, type AdminMenuContext } from '@bot/classes';
+import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord/v2';
+import type { ButtonInputConfig } from '@flowcord';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_ROLE_COMMAND_NAME } from './serverAddRole';
@@ -37,13 +37,13 @@ export const ServerManageRolesCommand: ISlashCommand = {
           { name: 'Mod', value: 'mod' }
         )
     ),
-  createMenuV2: (session, options) => {
+  createMenu: (session, options) => {
     const { role_type } = options as unknown as ServerManageRolesCommandOptions;
     if (!role_type) {
       throw new Error('Role type is required to manage server roles.');
     }
 
-    return new AdminMenuBuilderV2(session, COMMAND_NAME, options)
+    return new AdminMenuBuilder(session, COMMAND_NAME, options)
       .setButtons((ctx) => getServerManageRolesButtons(ctx, role_type), {})
       .setEmbeds((ctx) =>
         getServerMenuEmbeds(

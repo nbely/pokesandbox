@@ -5,9 +5,9 @@ import * as RegionManagementCommands from './regionManagement';
 import * as ServerManagementCommands from './serverManagement';
 
 const getAllCommands = (
-  commandImportMaps: Record<string, ISlashCommand<any, any>>[]
-): ISlashCommand<any, any>[] =>
-  commandImportMaps.reduce<ISlashCommand<any, any>[]>(
+  commandImportMaps: Record<string, ISlashCommand>[]
+): ISlashCommand[] =>
+  commandImportMaps.reduce<ISlashCommand[]>(
     (acc, commandImportMap) => {
       const commands = Object.values(commandImportMap);
       return [...acc, ...commands];

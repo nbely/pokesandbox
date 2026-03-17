@@ -16,7 +16,7 @@ import {
   setValueOnInputBuilderIfExists,
 } from '@bot/utils';
 import type { ProgressionMilestone } from '@shared/models';
-import type { ModalConfig } from '@flowcord/v2';
+import type { ModalConfig } from '@flowcord';
 
 import { assertProgressionKind } from '../utils';
 import type { MilestonesMenuState } from './types';
