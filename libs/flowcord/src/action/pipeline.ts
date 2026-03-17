@@ -15,8 +15,13 @@ import type { Action, MenuContextLike, Awaitable } from '../types/common';
 /**
  * A guard is a predicate. If it returns false (or the string is truthy),
  * the pipeline halts and the message is shown to the user.
+ *
+ * Generic over TCtx so that guards used within a typed builder
+ * can access typed state/sessionState.
  */
-export type GuardFn = (ctx: MenuContextLike) => Awaitable<boolean | string>;
+export type GuardFn<TCtx = MenuContextLike> = (
+  ctx: TCtx
+) => Awaitable<boolean | string>;
 
 /**
  * Create a guard action from a predicate and a failure message.
@@ -33,8 +38,11 @@ export type GuardFn = (ctx: MenuContextLike) => Awaitable<boolean | string>;
  *   'Cannot modify a deployed region. Undeploy it first.'
  * );
  */
-export function guard(predicate: GuardFn, failureMessage: string): Action {
-  return async (ctx: MenuContextLike) => {
+export function guard<TCtx = MenuContextLike>(
+  predicate: GuardFn<TCtx>,
+  failureMessage: string
+): Action<TCtx> {
+  return async (ctx: TCtx) => {
     const result = await predicate(ctx);
     if (result === false || (typeof result === 'string' && result)) {
       const message = typeof result === 'string' ? result : failureMessage;
@@ -54,8 +62,10 @@ export function guard(predicate: GuardFn, failureMessage: string): Action {
  *   async (ctx) => { ... },
  * )
  */
-export function pipeline(...actions: Action[]): Action {
-  return async (ctx: MenuContextLike) => {
+export function pipeline<TCtx = MenuContextLike>(
+  ...actions: Action<TCtx>[]
+): Action<TCtx> {
+  return async (ctx: TCtx) => {
     for (const action of actions) {
       await action(ctx);
     }

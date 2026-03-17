@@ -14,10 +14,12 @@ import type { StateStore } from '../state/StateStore';
  * The core context interface passed to all menu callbacks.
  *
  * TState — typed menu-local state (defined by the builder generic)
+ * TSessionState — typed session-wide state shared across menus
  * TOptions — typed command options
  */
 export interface MenuContext<
   TState extends Record<string, unknown> = Record<string, unknown>,
+  TSessionState extends Record<string, unknown> = Record<string, unknown>,
   TOptions extends Record<string, unknown> = Record<string, unknown>
 > {
   /** The current MenuSession instance */
@@ -29,8 +31,8 @@ export interface MenuContext<
   /** Typed menu-local state (get/set/merge) */
   state: StateAccessor<TState>;
 
-  /** Session-wide key-value state shared across menus */
-  sessionState: StateStore;
+  /** Typed session-wide key-value state shared across menus */
+  sessionState: StateStore<TSessionState>;
 
   /** Discord.js client (logged in) */
   client: Client<true>;

@@ -3,12 +3,17 @@
  * Tracks the chain of menus visited so that goBack() can restore
  * the previous menu and its options.
  */
+import type { PaginationState } from '../types/common';
 
 export interface MenuStackEntry {
   /** Registered menu identifier */
   menuId: string;
   /** Options the menu was opened with */
   options?: Record<string, unknown>;
+  /** Snapshot of menu-local state (populated when preserveStateOnReturn is true) */
+  stateSnapshot?: Record<string, unknown>;
+  /** Snapshot of pagination state (populated when preserveStateOnReturn is true) */
+  paginationSnapshot?: PaginationState | null;
 }
 
 export class MenuStack {

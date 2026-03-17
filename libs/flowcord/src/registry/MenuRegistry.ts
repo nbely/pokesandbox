@@ -32,10 +32,11 @@ export interface MenuDefinition<TCtx = MenuContext> {
   setModal?: (ctx: TCtx) => Awaitable<ModalConfig<TCtx> | ModalConfig<TCtx>[]>;
   setLayout?: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>;
   handleMessage?: (ctx: TCtx, response: string) => Awaitable<void>;
-  listPagination?: ListPaginationOptions;
+  listPagination?: ListPaginationOptions<TCtx>;
   isTrackedInHistory: boolean;
   isCancellable: boolean;
   isReturnable: boolean;
+  preserveStateOnReturn: boolean;
   fallbackMenu?: string;
   fallbackMenuOptions?: Record<string, unknown>;
   contextExtensions: Array<(baseCtx: MenuContext) => Record<string, unknown>>;

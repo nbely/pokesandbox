@@ -28,8 +28,9 @@ export interface AdminHelpers {
 }
 
 export type AdminMenuContext<
-  TState extends Record<string, unknown> = Record<string, unknown>
-> = MenuContext<TState> & { admin: AdminHelpers };
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TSessionState extends Record<string, unknown> = Record<string, unknown>
+> = MenuContext<TState, TSessionState> & { admin: AdminHelpers };
 
 /**
  * AdminMenuBuilder — extends MenuBuilder with PokeSandbox admin domain helpers.
@@ -40,8 +41,9 @@ export type AdminMenuContext<
  * Also runs server auto-initialization on setup (creates server if not found).
  */
 export class AdminMenuBuilder<
-  TState extends Record<string, unknown> = Record<string, unknown>
-> extends MenuBuilder<TState, AdminMenuContext<TState>> {
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TSessionState extends Record<string, unknown> = Record<string, unknown>
+> extends MenuBuilder<TState, TSessionState, AdminMenuContext<TState, TSessionState>> {
   constructor(
     sessionLike: MenuSessionLike,
     name: string,

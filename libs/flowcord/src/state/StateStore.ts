@@ -1,18 +1,27 @@
 /**
  * Session-wide key-value state store.
  * Shared across all menus within a single session.
- * Replaces v1's `session.setState(key, value)` untyped pattern.
+ *
+ * When parameterized with a type (e.g., StateStore<{ gold: number }>),
+ * get/set become type-safe with known keys.
+ * Falls back to untyped access when using the default generic.
  */
-export class StateStore {
+export class StateStore<
+  T extends Record<string, unknown> = Record<string, unknown>
+> {
   private readonly _data = new Map<string, unknown>();
 
-  /** Get a value by key. Returns undefined if not set. */
-  get<T = unknown>(key: string): T | undefined {
-    return this._data.get(key) as T | undefined;
+  /** Get a value by key. Typed when T is provided. */
+  get<K extends string & keyof T>(key: K): T[K] | undefined;
+  get<V = unknown>(key: string): V | undefined;
+  get(key: string): unknown {
+    return this._data.get(key);
   }
 
-  /** Set a value by key. */
-  set<T = unknown>(key: string, value: T): void {
+  /** Set a value by key. Typed when T is provided. */
+  set<K extends string & keyof T>(key: K, value: T[K]): void;
+  set<V = unknown>(key: string, value: V): void;
+  set(key: string, value: unknown): void {
     this._data.set(key, value);
   }
 

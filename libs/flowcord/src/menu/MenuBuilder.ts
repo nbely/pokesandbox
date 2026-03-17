@@ -43,7 +43,8 @@ import type { MenuDefinition } from '../registry/MenuRegistry';
 
 export class MenuBuilder<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TCtx extends MenuContext<TState> = MenuContext<TState>,
+  TSessionState extends Record<string, unknown> = Record<string, unknown>,
+  TCtx extends MenuContext<TState, TSessionState> = MenuContext<TState, TSessionState>,
   TMode extends 'unset' | 'embeds' | 'layout' = 'unset'
 > {
   protected declare readonly _typeMode?: TMode;
@@ -68,12 +69,13 @@ export class MenuBuilder<
   protected readonly _hooks: MenuHooks<TCtx> = {};
 
   // Pagination
-  protected _listPagination?: ListPaginationOptions;
+  protected _listPagination?: ListPaginationOptions<TCtx>;
 
   // Options
   protected _isTrackedInHistory = false;
   protected _isCancellable = false;
   protected _isReturnable = false;
+  protected _preserveStateOnReturn = false;
   protected _fallbackMenu?: string;
   protected _fallbackMenuOptions?: Record<string, unknown>;
 
@@ -117,12 +119,12 @@ export class MenuBuilder<
    * Switches the builder to embed mode.
    */
   setEmbeds(
-    this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
+    this: MenuBuilder<TState, TSessionState, TCtx, 'unset' | 'embeds'>,
     fn: (ctx: TCtx) => Awaitable<EmbedBuilder[]>
-  ): MenuBuilder<TState, TCtx, 'embeds'> {
+  ): MenuBuilder<TState, TSessionState, TCtx, 'embeds'> {
     this._setEmbeds = fn;
     this._mode = 'embeds';
-    return this as unknown as MenuBuilder<TState, TCtx, 'embeds'>;
+    return this as unknown as MenuBuilder<TState, TSessionState, TCtx, 'embeds'>;
   }
 
   /**
@@ -130,26 +132,26 @@ export class MenuBuilder<
    * Optional pagination options for embed-mode button pagination.
    */
   setButtons(
-    this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
+    this: MenuBuilder<TState, TSessionState, TCtx, 'unset' | 'embeds'>,
     fn: (ctx: TCtx) => Awaitable<ButtonInputConfig<TCtx>[]>,
     options?: SetButtonsOptions
-  ): MenuBuilder<TState, TCtx, 'embeds'> {
+  ): MenuBuilder<TState, TSessionState, TCtx, 'embeds'> {
     this._setButtons = normalizeButtonsFn(fn);
     this._setButtonsOptions = options;
     this._mode = 'embeds';
-    return this as unknown as MenuBuilder<TState, TCtx, 'embeds'>;
+    return this as unknown as MenuBuilder<TState, TSessionState, TCtx, 'embeds'>;
   }
 
   /**
    * Set the select menu rendering callback.
    */
   setSelectMenu(
-    this: MenuBuilder<TState, TCtx, 'unset' | 'embeds'>,
+    this: MenuBuilder<TState, TSessionState, TCtx, 'unset' | 'embeds'>,
     fn: (ctx: TCtx) => Awaitable<SelectInputConfig<TCtx>>
-  ): MenuBuilder<TState, TCtx, 'embeds'> {
+  ): MenuBuilder<TState, TSessionState, TCtx, 'embeds'> {
     this._setSelectMenu = normalizeSelectFn(fn);
     this._mode = 'embeds';
-    return this as unknown as MenuBuilder<TState, TCtx, 'embeds'>;
+    return this as unknown as MenuBuilder<TState, TSessionState, TCtx, 'embeds'>;
   }
 
   // -----------------------------------------------------------------------
@@ -162,12 +164,12 @@ export class MenuBuilder<
    * Cannot be combined with setEmbeds/setButtons/setSelectMenu.
    */
   setLayout(
-    this: MenuBuilder<TState, TCtx, 'unset' | 'layout'>,
+    this: MenuBuilder<TState, TSessionState, TCtx, 'unset' | 'layout'>,
     fn: (ctx: TCtx) => Awaitable<ComponentConfig<TCtx>[]>
-  ): MenuBuilder<TState, TCtx, 'layout'> {
+  ): MenuBuilder<TState, TSessionState, TCtx, 'layout'> {
     this._setLayout = fn;
     this._mode = 'layout';
-    return this as unknown as MenuBuilder<TState, TCtx, 'layout'>;
+    return this as unknown as MenuBuilder<TState, TSessionState, TCtx, 'layout'>;
   }
 
   // -----------------------------------------------------------------------
@@ -213,6 +215,17 @@ export class MenuBuilder<
   }
 
   /**
+   * Preserve menu-local state and pagination when returning via goBack().
+   * When enabled, the menu's state is snapshot on exit and restored on return,
+   * skipping setup() re-initialization. onEnter still fires on return.
+   * Requires setTrackedInHistory() to have effect.
+   */
+  setPreserveStateOnReturn(): this {
+    this._preserveStateOnReturn = true;
+    return this;
+  }
+
+  /**
    * Set a fallback menu for goBack() when the navigation stack is empty.
    * Instead of closing the session, navigates to this menu.
    * Useful for menus that can be opened directly but should return to a parent.
@@ -224,7 +237,7 @@ export class MenuBuilder<
   }
 
   /** Configure list pagination (page through items in embeds/layout). */
-  setListPagination(opts: ListPaginationOptions): this {
+  setListPagination(opts: ListPaginationOptions<TCtx>): this {
     this._listPagination = opts;
     return this;
   }
@@ -382,10 +395,11 @@ export class MenuBuilder<
       handleMessage: this._handleMessage as
         | ((ctx: MenuContext, response: string) => Awaitable<void>)
         | undefined,
-      listPagination: this._listPagination,
+      listPagination: this._listPagination as ListPaginationOptions<MenuContext> | undefined,
       isTrackedInHistory: this._isTrackedInHistory,
       isCancellable: this._isCancellable,
       isReturnable: this._isReturnable,
+      preserveStateOnReturn: this._preserveStateOnReturn,
       fallbackMenu: this._fallbackMenu,
       fallbackMenuOptions: this._fallbackMenuOptions,
       contextExtensions: [...this._contextExtensions],
