@@ -12,6 +12,16 @@ export const regionDTOSchema = z.object({
       .object({
         id: z.string(),
         name: z.string(),
+        isBaseFormNotIncluded: z.boolean().optional(),
+        baseFormOrdinal: z.number().optional(),
+        includedForms: z
+          .array(
+            z.object({
+              id: z.string(),
+              ordinal: z.number(),
+            })
+          )
+          .optional(),
       })
       .nullable()
   ),
@@ -37,6 +47,12 @@ export const RegionDTO = {
           ? {
               id: p.id.toHexString(),
               name: p.name,
+              isBaseFormNotIncluded: p.isBaseFormNotIncluded,
+              baseFormOrdinal: p.baseFormOrdinal,
+              includedForms: p.includedForms?.map((f) => ({
+                id: f.id.toHexString(),
+                ordinal: f.ordinal,
+              })),
             }
           : null
       ),

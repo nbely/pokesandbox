@@ -2,7 +2,11 @@ import type { AdminMenuContext } from '@bot/classes';
 import { searchPokemon } from '@bot/utils';
 import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
 import type { DexEntry, Region } from '@shared/models';
-import { saveRegion } from '@bot/cache';
+import {
+  getAssertedCachedDexEntry,
+  getAssertedCachedRegion,
+  saveRegion,
+} from '@bot/cache';
 
 export const handleAddPokemonToSlot = async (
   ctx: AdminMenuContext,
@@ -77,4 +81,16 @@ export const handlePokemonSelected = async (
     await saveRegion(region);
     await ctx.hardRefresh();
   }
+};
+
+export const checkHasOtherFormes = async (
+  regionId: string,
+  pokedexNo: string
+): Promise<boolean> => {
+  const region = await getAssertedCachedRegion(regionId);
+  const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
+  const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
+  return Promise.resolve(
+    !!dexEntry.otherFormes && dexEntry.otherFormes.length > 0
+  );
 };
