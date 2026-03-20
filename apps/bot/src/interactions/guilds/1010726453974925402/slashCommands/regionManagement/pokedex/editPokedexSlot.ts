@@ -21,6 +21,7 @@ import {
 import {
   handleAddPokemonToSlot,
   removePokedexSlot,
+  checkHasOtherFormes,
 } from './pokedexHelperFunctions';
 import type { PokedexMenuState } from './types';
 import { pokedexNoCommandOptionsSchema } from './schemas';
@@ -96,18 +97,22 @@ const getEditPokedexSlotButtons = async (
   regionId: string,
   pokedexNo: string
 ): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
-  const pokedexIndex = +pokedexNo - 1;
+  const hasOtherFormes = await checkHasOtherFormes(regionId, pokedexNo);
 
-  return [
-    {
+  const buttons: ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[] = [];
+
+  if (hasOtherFormes) {
+    buttons.push({
       label: 'Customize',
       style: ButtonStyle.Primary,
       action: async (ctx) =>
-        ctx.goTo('customize-pokedex-slot', {
-          regionId,
-          pokedexNo,
+        ctx.goTo('pokedex-slot-customize', {
+          region_id: regionId,
+          pokedex_no: pokedexNo,
         }),
-    },
+    });
+  }
+  buttons.push(
     {
       label: 'Swap',
       style: ButtonStyle.Primary,
@@ -122,10 +127,13 @@ const getEditPokedexSlotButtons = async (
       style: ButtonStyle.Danger,
       action: async (ctx) => {
         const region = await ctx.admin.getRegion(regionId);
+        const pokedexIndex = +pokedexNo - 1;
+
         removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
         await ctx.hardRefresh();
       },
-    },
-  ];
+    }
+  );
+  return buttons;
 };

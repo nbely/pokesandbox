@@ -9,6 +9,7 @@ import {
 import { DexEntry, Gen5 } from '@shared/models';
 
 import type { PokedexMenuState } from './types';
+import { PokedexSlotCustomizeMenuState } from './types';
 
 export const getManagePokedexMenuEmbeds = async (
   ctx: AdminMenuContext<PokedexMenuState>,
@@ -218,4 +219,45 @@ const setPokemonThumbnail = (embed: EmbedBuilder, dexEntry: DexEntry): void => {
   if (thumbnail) {
     embed.setThumbnail(thumbnail);
   }
+};
+
+export const getPokedexSlotCustomizeEmbeds = async (
+  ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>,
+  regionId: string,
+  pokedexSlotNo: string,
+  forms: Map<string, string>,
+  defaultPrompt = 'Select available forms for this Pokédex slot by clicking the corresponding button.'
+): Promise<EmbedBuilder[]> => {
+  const region = await ctx.admin.getRegion(regionId);
+  const slot = region.pokedex[+pokedexSlotNo - 1];
+  const dexEntry = await getAssertedCachedDexEntry(slot?.id);
+
+  const formeOptions: string[] =
+    slot?.includedForms?.map(
+      (forme, idx) =>
+        `\n${idx + 1}. ${forms.get(forme.id.toString()) || 'Unknown Form'}`
+    ) || [];
+  !slot?.isBaseFormNotIncluded &&
+    formeOptions.unshift(
+      `0. ${forms.get(dexEntry.id.toString()) || 'Unknown Form'} (Base Form)`
+    );
+  const fields: EmbedField[] = [];
+
+  fields.push({
+    name: '\u200b',
+    value: formeOptions.join(''),
+    inline: true,
+  });
+
+  return [
+    new EmbedBuilder()
+      .setTitle(`Customize Pokédex Slot ${pokedexSlotNo}`)
+      .setDescription(
+        `Current: ${
+          region.pokedex[+pokedexSlotNo - 1]?.name
+        }\n\n${defaultPrompt}`
+      )
+      .addFields(fields)
+      .setTimestamp(),
+  ];
 };
