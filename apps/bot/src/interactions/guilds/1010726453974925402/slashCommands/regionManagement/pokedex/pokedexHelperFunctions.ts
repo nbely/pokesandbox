@@ -3,12 +3,14 @@ import { searchPokemon } from '@bot/utils';
 import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
 import type { DexEntry, Region } from '@shared/models';
 import { saveRegion } from '@bot/cache';
+import { Types } from 'mongoose';
 
 export const handleAddPokemonToSlot = async (
   ctx: AdminMenuContext,
   regionId: string,
   pokedexNo: string,
-  pokemonName: string
+  pokemonName: string,
+  menuToNavigateToAfterSwap?: string
 ) => {
   const server = await ctx.admin.getServer();
   const region = await ctx.admin.getRegion(regionId);
@@ -19,7 +21,13 @@ export const handleAddPokemonToSlot = async (
   );
 
   if (exactMatch) {
-    await handlePokemonSelected(ctx, exactMatch, region, pokedexNo);
+    await handlePokemonSelected(
+      ctx,
+      exactMatch,
+      region,
+      pokedexNo,
+      menuToNavigateToAfterSwap
+    );
     return;
   }
 
@@ -44,7 +52,8 @@ export const handleAddPokemonToSlot = async (
           adminCtx,
           selectedPokemon,
           region,
-          pokedexNo
+          pokedexNo,
+          menuToNavigateToAfterSwap
         );
       },
       regionId: region._id.toString(),
@@ -62,7 +71,8 @@ export const handlePokemonSelected = async (
   ctx: AdminMenuContext,
   selectedPokemon: DexEntry,
   region: Region,
-  pokedexNo: string
+  pokedexNo: string,
+  menuToNavigateToAfterSwap?: string
 ) => {
   if (region.pokedex.some((pkmn) => pkmn?.id.equals(selectedPokemon._id))) {
     ctx.state.set(
@@ -75,6 +85,26 @@ export const handlePokemonSelected = async (
       name: selectedPokemon.name,
     };
     await saveRegion(region);
+    menuToNavigateToAfterSwap &&
+      (await ctx.goTo(menuToNavigateToAfterSwap, {
+        region_id: region._id.toString(),
+      }));
     await ctx.hardRefresh();
+  }
+};
+
+export const removePokedexSlot = (
+  region: Region,
+  pokedexIndex: number
+): { name: string; id: Types.ObjectId } | null => {
+  const pokedexEntry = region.pokedex[pokedexIndex];
+  region.pokedex[pokedexIndex] = null;
+  removeNullsFromEndOfPokedex(region);
+  return pokedexEntry;
+};
+
+const removeNullsFromEndOfPokedex = (region: Region): void => {
+  while (region.pokedex[region.pokedex.length - 1] === null) {
+    region.pokedex.pop();
   }
 };

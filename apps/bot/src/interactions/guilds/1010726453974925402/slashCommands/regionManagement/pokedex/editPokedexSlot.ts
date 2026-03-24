@@ -13,14 +13,16 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { Region } from '@shared/models';
 import type { ButtonInputConfig } from '@flowcord/core';
 
 import {
   getAddPokedexSlotEmbeds,
   getEditPokedexSlotEmbeds,
 } from './pokedex.embeds';
-import { handleAddPokemonToSlot } from './pokedexHelperFunctions';
+import {
+  handleAddPokemonToSlot,
+  removePokedexSlot,
+} from './pokedexHelperFunctions';
 import type { PokedexMenuState } from './types';
 
 const COMMAND_NAME = 'edit-pokedex-slot';
@@ -109,6 +111,9 @@ const getEditPokedexSlotButtons = async (
   regionId: string,
   pokedexNo: string
 ): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
+  const region = await _ctx.admin.getRegion(regionId);
+  const pokedexIndex = +pokedexNo - 1;
+
   return [
     {
       label: 'Customize',
@@ -124,32 +129,19 @@ const getEditPokedexSlotButtons = async (
       style: ButtonStyle.Primary,
       action: async (ctx) =>
         ctx.goTo('swap-pokedex-slot', {
-          regionId,
-          pokedexNo,
+          region_id: regionId,
+          pokedex_no: pokedexNo,
+          pokemon_name: region.pokedex[pokedexIndex]?.name,
         }),
     },
     {
       label: 'Remove',
       style: ButtonStyle.Danger,
       action: async (ctx) => {
-        const region = await ctx.admin.getRegion(regionId);
-        const pokedexIndex = +pokedexNo - 1;
-
         removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
         await ctx.hardRefresh();
       },
     },
   ];
-};
-
-const removePokedexSlot = (region: Region, pokedexIndex: number): void => {
-  region.pokedex[pokedexIndex] = null;
-  removeNullsFromEndOfPokedex(region);
-};
-
-const removeNullsFromEndOfPokedex = (region: Region): void => {
-  while (region.pokedex[region.pokedex.length - 1] === null) {
-    region.pokedex.pop();
-  }
 };
