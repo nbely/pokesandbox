@@ -87,6 +87,7 @@ export const SwapPokedexSlotCommand: ISlashCommand = {
           response,
           MANAGE_POKEDEX_COMMAND_NAME
         );
+        // if a Pokémon isn't added back into the slot (e.g. if the user cancels out of the add flow), add the original Pokémon back into the slot to prevent it from being lost
         if (!region.pokedex[+pokedexNo - 1]) {
           region.pokedex[+pokedexNo - 1] = pokedexSlot;
         }
@@ -117,6 +118,7 @@ const getPokedexNo = (
   region: Region,
   givenPokedexNo?: string
 ): string | undefined => {
+  // checking if Pokédex number was already resolved from the context phase, During the update phase, this will skip looking for the old Pokémon name after it was already replaced.
   let pokedexNo = session.sessionState.get('resolvedPokedexNo') as
     | string
     | undefined;

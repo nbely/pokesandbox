@@ -131,6 +131,8 @@ const getEditPokedexSlotButtons = async (
         ctx.goTo('swap-pokedex-slot', {
           region_id: regionId,
           pokedex_no: pokedexNo,
+          // the actual Pokémon name isn't needed here but something needs to be sent for the pokemon_name param since the slash command requires it (i.e. any 3-14 characters string would work).
+          // pokemon_name was made required so that when typing the command, the Discord interface will show Pokémon name as required and behave accordingly
           pokemon_name: region.pokedex[pokedexIndex]?.name,
         }),
     },

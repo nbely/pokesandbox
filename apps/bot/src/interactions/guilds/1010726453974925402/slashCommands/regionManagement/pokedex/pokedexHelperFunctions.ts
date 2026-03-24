@@ -10,7 +10,7 @@ export const handleAddPokemonToSlot = async (
   regionId: string,
   pokedexNo: string,
   pokemonName: string,
-  menuToNavigateToAfterSwap?: string
+  menuToNavigateToAfterAdd?: string
 ) => {
   const server = await ctx.admin.getServer();
   const region = await ctx.admin.getRegion(regionId);
@@ -26,7 +26,7 @@ export const handleAddPokemonToSlot = async (
       exactMatch,
       region,
       pokedexNo,
-      menuToNavigateToAfterSwap
+      menuToNavigateToAfterAdd
     );
     return;
   }
@@ -53,7 +53,7 @@ export const handleAddPokemonToSlot = async (
           selectedPokemon,
           region,
           pokedexNo,
-          menuToNavigateToAfterSwap
+          menuToNavigateToAfterAdd
         );
       },
       regionId: region._id.toString(),
@@ -72,7 +72,7 @@ export const handlePokemonSelected = async (
   selectedPokemon: DexEntry,
   region: Region,
   pokedexNo: string,
-  menuToNavigateToAfterSwap?: string
+  menuToNavigateToAfterAdd?: string
 ) => {
   if (region.pokedex.some((pkmn) => pkmn?.id.equals(selectedPokemon._id))) {
     ctx.state.set(
@@ -85,8 +85,8 @@ export const handlePokemonSelected = async (
       name: selectedPokemon.name,
     };
     await saveRegion(region);
-    menuToNavigateToAfterSwap &&
-      (await ctx.goTo(menuToNavigateToAfterSwap, {
+    menuToNavigateToAfterAdd &&
+      (await ctx.goTo(menuToNavigateToAfterAdd, {
         region_id: region._id.toString(),
       }));
     await ctx.hardRefresh();
