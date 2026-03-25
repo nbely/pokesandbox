@@ -21,7 +21,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig, ModalConfig } from '@flowcord';
+import type { ButtonInputConfig, ModalConfig } from '@flowcord/core';
 import type { ProgressionDefinition } from '@shared/models';
 
 import { progressionsMenuEmbeds } from './progression.embeds';

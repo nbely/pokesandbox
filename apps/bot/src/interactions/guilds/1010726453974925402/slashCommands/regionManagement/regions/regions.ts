@@ -14,7 +14,7 @@ import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
 import { Region } from '@shared/models';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { REGION_COMMAND_NAME } from '../region/region';
 import { getRegionsMenuEmbeds } from './regions.embeds';

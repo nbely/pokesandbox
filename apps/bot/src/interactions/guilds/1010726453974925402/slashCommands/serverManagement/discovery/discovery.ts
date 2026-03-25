@@ -8,7 +8,7 @@ import { saveServer } from '@bot/cache';
 import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import getDiscoveryMenuEmbeds from './discovery.embeds';
 import { DISCOVERY_DESCRIPTION_COMMAND_NAME } from './discoveryDescription';

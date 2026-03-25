@@ -13,7 +13,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { LOCATION_EDIT_MODAL_ID, getLocationEditModal } from './location.modal';
 import { getLocationMenuEmbeds } from './location.embeds';

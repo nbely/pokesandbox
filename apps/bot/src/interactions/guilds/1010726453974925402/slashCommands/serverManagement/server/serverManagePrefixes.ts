@@ -8,7 +8,7 @@ import { saveServer } from '@bot/cache';
 import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_ADD_PREFIX_COMMAND_NAME } from './serverAddPrefix';

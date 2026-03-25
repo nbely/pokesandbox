@@ -13,7 +13,7 @@ import {
   parseCommandOptions,
   sortByOrdinal,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { LOCATION_COMMAND_NAME } from './location';
 import {
