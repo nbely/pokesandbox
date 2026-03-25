@@ -13,7 +13,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { MANAGE_POKEDEX_COMMAND_NAME } from '../pokedex/managePokedex';
 import { PROGRESSIONS_COMMAND_NAME } from '../progression/progressions';

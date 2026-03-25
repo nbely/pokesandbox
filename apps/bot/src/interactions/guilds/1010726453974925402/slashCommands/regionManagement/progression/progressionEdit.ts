@@ -14,7 +14,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';

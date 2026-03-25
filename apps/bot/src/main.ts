@@ -1,7 +1,7 @@
 import { GatewayIntentBits, Partials } from 'discord.js';
 
 import { connectDb } from '@shared/connectDb';
-import { FlowCord } from '@flowcord';
+import { FlowCord } from '@flowcord/core';
 
 import { BotClient } from '@bot/classes';
 import {

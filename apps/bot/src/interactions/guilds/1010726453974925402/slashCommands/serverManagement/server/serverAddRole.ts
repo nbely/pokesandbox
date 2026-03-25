@@ -8,7 +8,7 @@ import { saveServer } from '@bot/cache';
 import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles } from '@bot/utils';
-import type { SelectInputConfig } from '@flowcord';
+import type { SelectInputConfig } from '@flowcord/core';
 
 import { getServerMenuEmbeds } from './server.embeds';
 import { SERVER_MANAGE_ROLES_COMMAND_NAME } from './serverManageRoles';

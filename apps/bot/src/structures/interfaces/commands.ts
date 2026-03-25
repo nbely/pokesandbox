@@ -20,7 +20,7 @@ import type {
 } from 'discord.js';
 
 import type { BotClient } from '@bot/classes';
-import type { CreateMenuDefinitionFn } from '@flowcord';
+import type { CreateMenuDefinitionFn } from '@flowcord/core';
 
 export interface IBaseCommand {
   allClientPermissions?: string[];

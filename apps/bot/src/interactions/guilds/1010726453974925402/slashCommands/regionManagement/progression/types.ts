@@ -1,6 +1,6 @@
 import type { AdminMenuContext } from '@bot/classes';
 import type { ProgressionDefinition, Region } from '@shared/models';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 export type ProgressionsMenuState = {
   prompt?: string;

@@ -11,8 +11,8 @@ import {
 } from '@bot/cache';
 import { Server } from '@shared/models';
 import type { Location, Region } from '@shared/models';
-import { MenuBuilder } from '@flowcord';
-import type { MenuContext, MenuSessionLike } from '@flowcord';
+import { MenuBuilder } from '@flowcord/core';
+import type { MenuContext, MenuSessionLike } from '@flowcord/core';
 
 /**
  * Typed admin helpers injected onto `ctx.admin` by AdminMenuBuilder.

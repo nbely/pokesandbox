@@ -14,7 +14,7 @@ import {
   parseCommandOptions,
 } from '@bot/utils';
 import type { Region } from '@shared/models';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import {
   getAddPokedexSlotEmbeds,

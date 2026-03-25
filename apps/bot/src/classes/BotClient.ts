@@ -1,5 +1,5 @@
 import { Client, Collection } from 'discord.js';
-import type { FlowCord } from '@flowcord';
+import type { FlowCord } from '@flowcord/core';
 
 import type {
   IBotEvent,

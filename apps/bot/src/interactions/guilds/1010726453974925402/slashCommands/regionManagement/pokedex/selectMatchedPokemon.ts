@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
 import type { ISlashCommand } from '@bot/structures/interfaces';
 import { onlyAdminRoles, parseCommandOptions } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { getSelectMatchedPokemonEmbeds } from './pokedex.embeds';
 import type { PokedexMenuState } from './types';

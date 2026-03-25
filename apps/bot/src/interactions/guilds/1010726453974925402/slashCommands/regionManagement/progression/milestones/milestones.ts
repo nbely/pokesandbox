@@ -12,7 +12,7 @@ import {
   onlyAdminRoles,
   parseCommandOptions,
 } from '@bot/utils';
-import type { ButtonInputConfig } from '@flowcord';
+import type { ButtonInputConfig } from '@flowcord/core';
 
 import { assertProgressionKind } from '../utils';
 import { milestonesMenuEmbeds } from './milestone.embeds';
