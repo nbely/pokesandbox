@@ -3,7 +3,6 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
-import { z } from 'zod';
 
 import {
   getAssertedCachedDexEntry,
@@ -19,29 +18,14 @@ import {
 } from '@bot/utils';
 
 import { getPokedexSlotCustomizeEmbeds } from './pokedex.embeds';
-import { Region } from '@shared/models';
-import { Types } from 'mongoose';
+import { DexEntry, Region } from '@shared/models';
 import { ButtonInputConfig } from '@flowcord/core';
-import { PokedexSlotCustomizeMenuState } from './types';
+import { Form, PokedexSlotCustomizeMenuState, Slot } from './types';
 import { checkHasOtherFormes } from './pokedexHelperFunctions';
+import { pokedexNoCommandOptionsSchema } from './schemas';
 
 const COMMAND_NAME = 'customize-pokedex-slot';
 export const POKEDEX_SLOT_CUSTOMIZE_COMMAND_NAME = COMMAND_NAME;
-
-const customizePokedexSlotCommandOptionsSchema = z.object({
-  region_id: z.string().min(1),
-  pokedex_no: z
-    .union([z.string(), z.number()])
-    .transform((value) => `${value}`)
-    .refine((value) => {
-      const pokedexNumber = Number(value);
-      return (
-        Number.isInteger(pokedexNumber) &&
-        pokedexNumber >= 1 &&
-        pokedexNumber <= 1500
-      );
-    }, 'Must be an integer between 1 and 1500'),
-});
 
 export const PokedexSlotCustomizeCommand: ISlashCommand = {
   name: COMMAND_NAME,
@@ -73,7 +57,7 @@ export const PokedexSlotCustomizeCommand: ISlashCommand = {
     ),
   createMenu: async (session, options) => {
     const { region_id, pokedex_no } = parseCommandOptions(
-      customizePokedexSlotCommandOptionsSchema,
+      pokedexNoCommandOptionsSchema,
       options
     );
     const region = await getAssertedCachedRegion(region_id);
@@ -81,16 +65,13 @@ export const PokedexSlotCustomizeCommand: ISlashCommand = {
     const hasOtherFormes = await checkHasOtherFormes(region_id, pokedex_no);
     const slot = region.pokedex[+pokedex_no - 1];
     const dexEntry = await getAssertedCachedDexEntry(slot?.id);
-    const formsMap = new Map<string, string>();
-    dexEntry.formeOrder?.forEach((form) =>
-      formsMap.set(form.id.toString(), form.name)
-    );
+    const formsMap = createFormsMap(dexEntry);
 
     if (!isSlotFilled) {
       throw new Error(`No Pokémon found in Pokédex slot ${pokedex_no}.`);
     } else if (!hasOtherFormes) {
       throw new Error(
-        `The Pokémon in Pokédex slot ${pokedex_no} has no alternate formes to customize.`
+        `${dexEntry.name} has no alternate formes to customize - Pokédex slot ${pokedex_no}.`
       );
     }
 
@@ -116,7 +97,7 @@ const getPokedexSlotCustomizeButtons = async (
   _ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>,
   regionId: string,
   pokedexNo: string,
-  formsMap: Map<string, string>
+  formsMap: Map<string, { name: string; ordinal?: number }>
 ): Promise<
   ButtonInputConfig<AdminMenuContext<PokedexSlotCustomizeMenuState>>[]
 > => {
@@ -126,59 +107,63 @@ const getPokedexSlotCustomizeButtons = async (
     throw new Error(`Pokédex slot ${pokedexNo} is empty.`);
   }
   const dexEntry = await getAssertedCachedDexEntry(slot.id);
-  dexEntry.formeOrder?.forEach((form) =>
-    formsMap.set(form.id.toString(), form.name)
-  );
 
   const buttons: ButtonInputConfig<
     AdminMenuContext<PokedexSlotCustomizeMenuState>
-  >[] =
-    dexEntry.otherFormes?.map((form) => {
-      const isFormAvailable =
-        slot.includedForms?.some((includedForm) =>
-          includedForm.id.equals(form.id)
-        ) || false;
-      return {
-        label: `${form.name}`,
-        style: isFormAvailable ? ButtonStyle.Success : ButtonStyle.Danger,
-        disabled:
-          isFormAvailable &&
-          slot.includedForms?.length === 1 &&
-          slot.isBaseFormNotIncluded,
-        action: async (
-          ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>
-        ) => {
-          const slotIndex = +pokedexNo - 1;
-          const slot = region.pokedex[slotIndex];
-          if (isFormAvailable) {
-            slot?.includedForms?.splice(
-              slot.includedForms.findIndex((f) => f.id.equals(form.id)),
-              1
-            );
-          } else {
-            slot?.includedForms?.push({
-              id: form.id,
-              ordinal: slot.includedForms.length,
-            });
-          }
-          await saveRegion(region);
-          await ctx.hardRefresh();
-        },
-      };
-    }) || [];
-  buttons.unshift(toggleBaseFormButton(slot, region));
+  >[] = [toggleBaseFormButton(slot, region)];
+  buttons.push(
+    ...(dexEntry.otherFormes?.map((form) =>
+      getFormeButton(slot, form, region, formsMap)
+    ) || [])
+  );
 
   return buttons;
 };
 
+const getFormeButton = (
+  slot: Slot,
+  form: Form,
+  region: Region,
+  formsMap: Map<string, { name: string; ordinal?: number }>
+): ButtonInputConfig<AdminMenuContext<PokedexSlotCustomizeMenuState>> => {
+  const isFormAvailable = slot.includedForms?.some((includedForm) =>
+    includedForm.id.equals(form.id)
+  );
+  return {
+    label: `${form.name}`,
+    style: isFormAvailable ? ButtonStyle.Success : ButtonStyle.Danger,
+    disabled:
+      isFormAvailable &&
+      slot.includedForms?.length === 1 &&
+      slot.isBaseFormNotIncluded,
+    action: async (ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>) => {
+      if (isFormAvailable) {
+        removeForme(slot, form);
+      } else {
+        slot?.includedForms?.push({
+          id: form.id,
+          // giving a unique ordinal based on the form's position in the dexEntry.otherFormes array
+          // ordinals are not used yet but the type was built out and it is a required property so this process of assigning unique ordinals was implemented
+          ordinal: formsMap.get(form.id.toString())?.ordinal || 1,
+        });
+      }
+      await saveRegion(region);
+      await ctx.hardRefresh();
+    },
+  };
+};
+
+const removeForme = (slot: Slot, form: Form) => {
+  slot.includedForms?.splice(
+    slot.includedForms.findIndex((currentForm) =>
+      currentForm.id.equals(form.id)
+    ),
+    1
+  );
+};
+
 const toggleBaseFormButton = (
-  slot: {
-    name: string;
-    id: Types.ObjectId;
-    isBaseFormNotIncluded?: boolean;
-    baseFormOrdinal?: number;
-    includedForms?: { id: Types.ObjectId; ordinal: number }[];
-  },
+  slot: Slot,
   region: Region
 ): ButtonInputConfig<AdminMenuContext<PokedexSlotCustomizeMenuState>> => {
   return {
@@ -196,4 +181,15 @@ const toggleBaseFormButton = (
       await menu.hardRefresh();
     },
   };
+};
+
+const createFormsMap = (
+  dexEntry: DexEntry
+): Map<string, { name: string; ordinal?: number }> => {
+  const formsMap = new Map<string, { name: string; ordinal?: number }>();
+  formsMap.set(dexEntry.id.toString(), { name: dexEntry.name });
+  dexEntry.otherFormes?.forEach((form, idx) =>
+    formsMap.set(form.id.toString(), { name: form.name, ordinal: idx + 1 })
+  );
+  return formsMap;
 };

@@ -123,7 +123,5 @@ export const checkHasOtherFormes = async (
   const region = await getAssertedCachedRegion(regionId);
   const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
   const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
-  return Promise.resolve(
-    !!dexEntry.otherFormes && dexEntry.otherFormes.length > 0
-  );
+  return !!dexEntry.otherFormes && dexEntry.otherFormes.length > 0;
 };

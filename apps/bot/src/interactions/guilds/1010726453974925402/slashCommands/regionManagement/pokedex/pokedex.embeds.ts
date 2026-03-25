@@ -1,4 +1,5 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
+import pluralize from 'pluralize';
 
 import type { AdminMenuContext } from '@bot/classes';
 import {
@@ -58,7 +59,7 @@ export const getManagePokedexMenuEmbeds = async (
   const footerText =
     totalItems === 0
       ? 'Showing Pokédex entries 0 of 0'
-      : `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${
+      : `Showing Pokédex ${pluralize('entry', totalItems)} ${
           startIndex + 1
         }-${endIndex} of ${totalItems}`;
 
@@ -225,8 +226,8 @@ export const getPokedexSlotCustomizeEmbeds = async (
   ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>,
   regionId: string,
   pokedexSlotNo: string,
-  forms: Map<string, string>,
-  defaultPrompt = 'Select available forms for this Pokédex slot by clicking the corresponding button.'
+  forms: Map<string, { name: string; ordinal?: number }>,
+  defaultPrompt = 'Toggle available forms for this Pokédex slot by clicking the corresponding button.'
 ): Promise<EmbedBuilder[]> => {
   const region = await ctx.admin.getRegion(regionId);
   const slot = region.pokedex[+pokedexSlotNo - 1];
@@ -235,11 +236,15 @@ export const getPokedexSlotCustomizeEmbeds = async (
   const formeOptions: string[] =
     slot?.includedForms?.map(
       (forme, idx) =>
-        `\n${idx + 1}. ${forms.get(forme.id.toString()) || 'Unknown Form'}`
+        `\n${idx + 1}. ${
+          forms.get(forme.id.toString())?.name || 'Unknown Form'
+        }`
     ) || [];
   !slot?.isBaseFormNotIncluded &&
     formeOptions.unshift(
-      `0. ${forms.get(dexEntry.id.toString()) || 'Unknown Form'} (Base Form)`
+      `0. ${
+        forms.get(dexEntry.id.toString())?.name || 'Unknown Form'
+      } (Base Form)`
     );
   const fields: EmbedField[] = [];
 
