@@ -106,7 +106,7 @@ const getEditPokedexSlotButtons = async (
       label: 'Customize',
       style: ButtonStyle.Primary,
       action: async (ctx) =>
-        ctx.goTo('pokedex-slot-customize', {
+        ctx.goTo('customize-pokedex-slot', {
           region_id: regionId,
           pokedex_no: pokedexNo,
         }),

@@ -25,7 +25,7 @@ import { ButtonInputConfig } from '@flowcord/core';
 import { PokedexSlotCustomizeMenuState } from './types';
 import { checkHasOtherFormes } from './pokedexHelperFunctions';
 
-const COMMAND_NAME = 'pokedex-slot-customize';
+const COMMAND_NAME = 'customize-pokedex-slot';
 export const POKEDEX_SLOT_CUSTOMIZE_COMMAND_NAME = COMMAND_NAME;
 
 const customizePokedexSlotCommandOptionsSchema = z.object({
@@ -142,7 +142,9 @@ const getPokedexSlotCustomizeButtons = async (
         label: `${form.name}`,
         style: isFormAvailable ? ButtonStyle.Success : ButtonStyle.Danger,
         disabled:
-          slot.includedForms?.length === 1 && slot.isBaseFormNotIncluded,
+          isFormAvailable &&
+          slot.includedForms?.length === 1 &&
+          slot.isBaseFormNotIncluded,
         action: async (
           ctx: AdminMenuContext<PokedexSlotCustomizeMenuState>
         ) => {
