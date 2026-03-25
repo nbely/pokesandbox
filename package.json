@@ -17,7 +17,7 @@
   "private": true,
   "dependencies": {
     "@discordjs/rest": "^2.6.0",
-    "@flowcord/core": "next",
+    "@flowcord/core": "0.1.0-alpha.0",
     "@tanstack/react-query": "^5.90.20",
     "@trpc/client": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
