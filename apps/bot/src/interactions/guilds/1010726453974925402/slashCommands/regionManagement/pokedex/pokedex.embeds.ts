@@ -1,7 +1,11 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenuContext } from '@bot/classes';
-import { getAssertedCachedDexEntry, getCachedDexEntries } from '@bot/cache';
+import {
+  getAssertedCachedDexEntry,
+  getAssertedCachedRegion,
+  getCachedDexEntries,
+} from '@bot/cache';
 import { DexEntry, Gen5 } from '@shared/models';
 
 import type { PokedexMenuState } from './types';
@@ -188,7 +192,7 @@ export const getSwapPokedexSlotMenuEmbeds = async (
   regionId: string,
   pokedexNo: string
 ) => {
-  const region = await ctx.admin.getRegion(regionId);
+  const region = await getAssertedCachedRegion(regionId);
   const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
   const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
 

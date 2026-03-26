@@ -4,13 +4,14 @@ import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
 import type { DexEntry, Region } from '@shared/models';
 import { saveRegion } from '@bot/cache';
 import { Types } from 'mongoose';
+import { NavigateMenuOptions } from './types';
 
 export const handleAddPokemonToSlot = async (
   ctx: AdminMenuContext,
   regionId: string,
   pokedexNo: string,
   pokemonName: string,
-  menuToNavigateToAfterAdd?: string
+  navigateToMenuOptions?: NavigateMenuOptions
 ) => {
   const server = await ctx.admin.getServer();
   const region = await ctx.admin.getRegion(regionId);
@@ -26,7 +27,7 @@ export const handleAddPokemonToSlot = async (
       exactMatch,
       region,
       pokedexNo,
-      menuToNavigateToAfterAdd
+      navigateToMenuOptions
     );
     return;
   }
@@ -53,7 +54,7 @@ export const handleAddPokemonToSlot = async (
           selectedPokemon,
           region,
           pokedexNo,
-          menuToNavigateToAfterAdd
+          navigateToMenuOptions
         );
       },
       regionId: region._id.toString(),
@@ -72,7 +73,7 @@ export const handlePokemonSelected = async (
   selectedPokemon: DexEntry,
   region: Region,
   pokedexNo: string,
-  menuToNavigateToAfterAdd?: string
+  navigateToMenuOptions?: NavigateMenuOptions
 ) => {
   if (region.pokedex.some((pkmn) => pkmn?.id.equals(selectedPokemon._id))) {
     ctx.state.set(
@@ -85,10 +86,11 @@ export const handlePokemonSelected = async (
       name: selectedPokemon.name,
     };
     await saveRegion(region);
-    menuToNavigateToAfterAdd &&
-      (await ctx.goTo(menuToNavigateToAfterAdd, {
-        region_id: region._id.toString(),
-      }));
+    navigateToMenuOptions &&
+      (await ctx.goTo(
+        navigateToMenuOptions.commandName,
+        navigateToMenuOptions.navigatePayload
+      ));
     await ctx.hardRefresh();
   }
 };

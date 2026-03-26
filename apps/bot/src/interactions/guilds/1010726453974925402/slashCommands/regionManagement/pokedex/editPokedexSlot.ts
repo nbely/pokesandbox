@@ -3,7 +3,6 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from 'discord.js';
-import { z } from 'zod';
 
 import { getAssertedCachedRegion, saveRegion } from '@bot/cache';
 import { AdminMenuBuilder, type AdminMenuContext } from '@bot/classes';
@@ -24,24 +23,10 @@ import {
   removePokedexSlot,
 } from './pokedexHelperFunctions';
 import type { PokedexMenuState } from './types';
+import { pokedexNoCommandOptionsSchema } from './schemas';
 
 const COMMAND_NAME = 'edit-pokedex-slot';
 export const EDIT_POKEDEX_SLOT_COMMAND_NAME = COMMAND_NAME;
-
-const editPokedexSlotCommandOptionsSchema = z.object({
-  region_id: z.string().min(1),
-  pokedex_no: z
-    .union([z.string(), z.number()])
-    .transform((value) => `${value}`)
-    .refine((value) => {
-      const pokedexNumber = Number(value);
-      return (
-        Number.isInteger(pokedexNumber) &&
-        pokedexNumber >= 1 &&
-        pokedexNumber <= 1500
-      );
-    }, 'Must be an integer between 1 and 1500'),
-});
 
 export const EditPokedexSlotCommand: ISlashCommand = {
   name: COMMAND_NAME,
@@ -71,7 +56,7 @@ export const EditPokedexSlotCommand: ISlashCommand = {
     ),
   createMenu: async (session, options) => {
     const { region_id, pokedex_no } = parseCommandOptions(
-      editPokedexSlotCommandOptionsSchema,
+      pokedexNoCommandOptionsSchema,
       options
     );
     const region = await getAssertedCachedRegion(region_id);
@@ -111,7 +96,6 @@ const getEditPokedexSlotButtons = async (
   regionId: string,
   pokedexNo: string
 ): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
-  const region = await _ctx.admin.getRegion(regionId);
   const pokedexIndex = +pokedexNo - 1;
 
   return [
@@ -131,15 +115,13 @@ const getEditPokedexSlotButtons = async (
         ctx.goTo('swap-pokedex-slot', {
           region_id: regionId,
           pokedex_no: pokedexNo,
-          // the actual Pokémon name isn't needed here but something needs to be sent for the pokemon_name param since the slash command requires it (i.e. any 3-14 characters string would work).
-          // pokemon_name was made required so that when typing the command, the Discord interface will show Pokémon name as required and behave accordingly
-          pokemon_name: region.pokedex[pokedexIndex]?.name,
         }),
     },
     {
       label: 'Remove',
       style: ButtonStyle.Danger,
       action: async (ctx) => {
+        const region = await getAssertedCachedRegion(regionId);
         removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
         await ctx.hardRefresh();
