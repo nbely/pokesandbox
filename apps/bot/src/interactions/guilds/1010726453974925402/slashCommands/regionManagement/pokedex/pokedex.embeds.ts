@@ -1,8 +1,12 @@
 import { EmbedBuilder, type EmbedField } from 'discord.js';
 
 import type { AdminMenuContext } from '@bot/classes';
-import { getAssertedCachedDexEntry, getCachedDexEntries } from '@bot/cache';
-import { Gen5 } from '@shared/models';
+import {
+  getAssertedCachedDexEntry,
+  getAssertedCachedRegion,
+  getCachedDexEntries,
+} from '@bot/cache';
+import { DexEntry, Gen5 } from '@shared/models';
 
 import type { PokedexMenuState } from './types';
 
@@ -53,7 +57,9 @@ export const getManagePokedexMenuEmbeds = async (
   const footerText =
     totalItems === 0
       ? 'Showing Pokédex entries 0 of 0'
-      : `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${startIndex + 1}-${endIndex} of ${totalItems}`;
+      : `Showing Pokédex entr${startIndex === endIndex - 1 ? 'y' : 'ies'} ${
+          startIndex + 1
+        }-${endIndex} of ${totalItems}`;
 
   const embed = new EmbedBuilder()
     .setColor('Gold')
@@ -119,10 +125,7 @@ export const getEditPokedexSlotEmbeds = async (
     )
     .setTimestamp();
 
-  const thumbnail = dexEntry.sprites.g5?.get(Gen5.bw)?.normal?.front;
-  if (thumbnail) {
-    embed.setThumbnail(thumbnail);
-  }
+  setPokemonThumbnail(embed, dexEntry);
 
   return [embed];
 };
@@ -182,4 +185,37 @@ export const getSelectMatchedPokemonEmbeds = async (
       })
       .setTimestamp(),
   ];
+};
+
+export const getSwapPokedexSlotMenuEmbeds = async (
+  ctx: AdminMenuContext<PokedexMenuState>,
+  regionId: string,
+  pokedexNo: string
+) => {
+  const region = await getAssertedCachedRegion(regionId);
+  const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
+  const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
+
+  const embed = new EmbedBuilder()
+    .setColor('Gold')
+    .setAuthor({
+      name: `#${pokedexNo}: ${dexEntry.name} - The ${dexEntry.classification} Pokémon`,
+      iconURL: ctx.interaction.guild?.iconURL() || undefined,
+    })
+    .setDescription(
+      ctx.state.get('prompt') ||
+        'Please enter the name of the Pokémon you would like to swap into this Pokédex slot.'
+    )
+    .setTimestamp();
+
+  setPokemonThumbnail(embed, dexEntry);
+
+  return [embed];
+};
+
+const setPokemonThumbnail = (embed: EmbedBuilder, dexEntry: DexEntry): void => {
+  const thumbnail = dexEntry.sprites.g5?.get(Gen5.bw)?.normal?.front;
+  if (thumbnail) {
+    embed.setThumbnail(thumbnail);
+  }
 };

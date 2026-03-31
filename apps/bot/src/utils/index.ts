@@ -10,6 +10,7 @@ export {
   handleRegionAndLocationAutocomplete,
   handleRegionAndProgressionAutocomplete,
   handleRegionAutocomplete,
+  handleRegionAndPokedexNoOrNameAutocomplete,
 } from './autocompleteHelpers';
 export {
   getModalSelectValue,
