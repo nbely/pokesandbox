@@ -121,7 +121,7 @@ const getEditPokedexSlotButtons = async (
       label: 'Remove',
       style: ButtonStyle.Danger,
       action: async (ctx) => {
-        const region = await getAssertedCachedRegion(regionId);
+        const region = await ctx.admin.getRegion(regionId);
         removePokedexSlot(region, pokedexIndex);
         await saveRegion(region);
         await ctx.hardRefresh();

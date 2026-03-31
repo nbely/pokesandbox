@@ -96,24 +96,32 @@ export const handleRegionAndPokedexNoOrNameAutocomplete = async (
 
   if (focused.name === 'pokedex_no') {
     const regionId = interaction.options.getString('region_id');
-    if (!regionId) return interaction.respond([]);
-    const region = await getCachedRegion(regionId);
-
-    const choices = Array.from(
-      { length: region?.pokedex?.length || 1500 },
-      (_, i) => {
-        return {
-          // a combination of the pokedex number and Pokémon name (if it exists; separated by a dot) to allow autocompletion whether the user types the number or the name
-          name: `${i + 1}.${region?.pokedex[i]?.name}`,
-          value: `${i + 1}`,
-        };
-      }
-    )
-      .filter((choice) => choice.name.includes(focused.value))
-      .slice(0, 25);
+    const choices = await getPokedexNoWithNameChoices(regionId, focused.value);
 
     await interaction.respond(choices);
   }
+};
+
+const getPokedexNoWithNameChoices = async (
+  regionId: string | null,
+  focusedValue: string
+): Promise<AutocompleteChoice[]> => {
+  if (!regionId) return [];
+  const region = await getCachedRegion(regionId);
+
+  const choices = Array.from(
+    { length: region?.pokedex?.length || 1500 },
+    (_, i) => {
+      return {
+        // a combination of the pokedex number and Pokémon name (if it exists; separated by a dot) to allow autocompletion whether the user types the number or the name
+        name: `${i + 1}. ${region?.pokedex[i]?.name}`,
+        value: `${i + 1}`,
+      };
+    }
+  );
+  return filterAndFormatChoices(choices, focusedValue);
+  // .filter((choice) => choice.name.includes(focused.value))
+  // .slice(0, 25);
 };
 
 /**
