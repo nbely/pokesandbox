@@ -86,11 +86,12 @@ export const handlePokemonSelected = async (
       name: selectedPokemon.name,
     };
     await saveRegion(region);
-    navigateToMenuOptions &&
-      (await ctx.goTo(
+    if (navigateToMenuOptions) {
+      await ctx.goTo(
         navigateToMenuOptions.commandName,
         navigateToMenuOptions.navigatePayload
-      ));
+      );
+    }
     await ctx.hardRefresh();
   }
 };
