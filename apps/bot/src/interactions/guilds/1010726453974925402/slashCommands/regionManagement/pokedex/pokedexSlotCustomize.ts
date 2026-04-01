@@ -71,7 +71,7 @@ export const PokedexSlotCustomizeCommand: ISlashCommand = {
       throw new Error(`No Pokémon found in Pokédex slot ${pokedex_no}.`);
     } else if (!hasOtherFormes) {
       throw new Error(
-        `${dexEntry.name} has no alternate formes to customize - Pokédex slot ${pokedex_no}.`
+        `#${pokedex_no} - ${dexEntry.name} has no alternate forms to customize.`
       );
     }
 
