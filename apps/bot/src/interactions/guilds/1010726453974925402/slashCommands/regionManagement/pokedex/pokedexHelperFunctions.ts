@@ -2,7 +2,11 @@ import type { AdminMenuContext } from '@bot/classes';
 import { searchPokemon } from '@bot/utils';
 import { SELECT_MATCHED_POKEMON_COMMAND_NAME } from './selectMatchedPokemon';
 import type { DexEntry, Region } from '@shared/models';
-import { saveRegion } from '@bot/cache';
+import {
+  getAssertedCachedDexEntry,
+  getAssertedCachedRegion,
+  saveRegion,
+} from '@bot/cache';
 import { Types } from 'mongoose';
 import { NavigateMenuOptions } from './types';
 
@@ -110,4 +114,14 @@ const removeNullsFromEndOfPokedex = (region: Region): void => {
   while (region.pokedex[region.pokedex.length - 1] === null) {
     region.pokedex.pop();
   }
+};
+
+export const checkHasOtherFormes = async (
+  regionId: string,
+  pokedexNo: string
+): Promise<boolean> => {
+  const region = await getAssertedCachedRegion(regionId);
+  const dexEntryId = region.pokedex[+pokedexNo - 1]?.id;
+  const dexEntry = await getAssertedCachedDexEntry(dexEntryId);
+  return !!dexEntry.otherFormes && dexEntry.otherFormes.length > 0;
 };

@@ -17,6 +17,7 @@ import {
   progressionDefinitionDbSchema,
   progressionDefinitionSchema,
 } from './progressionDefinition';
+import { PokedexSlotSchema, pokedexSlotSchema } from './pokedexSlot';
 
 export const regionEntitySchema = baseEntitySchema.extend({
   baseGeneration: z.number(),
@@ -33,14 +34,7 @@ export const regionEntitySchema = baseEntitySchema.extend({
   }),
   locations: z.array(z.instanceof(Types.ObjectId)),
   name: z.string(),
-  pokedex: z.array(
-    z
-      .object({
-        id: z.instanceof(Types.ObjectId),
-        name: z.string(),
-      })
-      .nullable()
-  ),
+  pokedex: z.array(pokedexSlotSchema),
   progressionDefinitions: zMapHydrator(progressionDefinitionSchema),
   quests: z.object({
     active: z.array(z.instanceof(Types.ObjectId)),
@@ -98,12 +92,7 @@ export const regionSchema = new Schema<
     },
     name: { type: String, required: true },
     pokedex: {
-      type: [
-        {
-          id: { type: Schema.Types.ObjectId, ref: 'DexEntry', required: false },
-          name: String,
-        },
-      ],
+      type: [PokedexSlotSchema],
       required: true,
     },
     progressionDefinitions: {
