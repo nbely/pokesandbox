@@ -18,14 +18,11 @@ import type { ButtonInputConfig } from '@flowcord/core';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
-import type {
-  EditProgressionFieldConfig,
-  ProgressionEditMenuState,
-} from './types';
+import type { ProgressionEditMenuState } from './types';
 import {
-  editProgressionFieldConfigMap,
-  handleEditProgressionField,
-} from './utils';
+  getProgressionEditModal,
+  PROGRESSION_EDIT_MODAL_ID,
+} from './progressionEdit.modal';
 
 const COMMAND_NAME = 'progression-edit';
 export const PROGRESSION_EDIT_COMMAND_NAME = COMMAND_NAME;
@@ -69,57 +66,24 @@ export const ProgressionEditCommand: ISlashCommand = {
     const progression = region.progressionDefinitions.get(progression_key);
     assert(progression, 'Progression definition not found');
 
-    const progressionEditField = session.sessionState.get(
-      'progressionEditField'
-    ) as string | undefined;
-    const config = editProgressionFieldConfigMap.get(
-      progressionEditField ?? ''
-    );
-
     const builder = new AdminMenuBuilder<ProgressionEditMenuState>(
       session,
       COMMAND_NAME,
       options
     )
       .setEmbeds((ctx) =>
-        progressionEditMenuEmbeds(
-          ctx,
-          region_id,
-          progression_key,
-          progressionEditField
-        )
+        progressionEditMenuEmbeds(ctx, region_id, progression_key)
       )
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory();
 
-    if (!progressionEditField) {
-      builder.setButtons((ctx) =>
-        getEditProgressionDefinitionButtons(ctx, region_id, progression_key)
-      );
-    } else {
-      if (config?.getCustomButtons) {
-        builder.setButtons((ctx) =>
-          getProgressionEditFieldButtons(
-            ctx,
-            config,
-            region_id,
-            progression_key
-          )
-        );
-      }
-      if (config?.hasMessageHandler) {
-        builder.setMessageHandler(async (ctx, response) => {
-          await handleEditProgressionField(
-            ctx,
-            config,
-            region_id,
-            progression_key,
-            response
-          );
-        });
-      }
-    }
+    builder.setButtons((ctx) =>
+      getEditProgressionDefinitionButtons(ctx, region_id, progression_key)
+    );
+    builder.setModal((ctx) =>
+      getProgressionEditModal(ctx, region_id, progression_key)
+    );
 
     return builder.build();
   },
@@ -138,87 +102,23 @@ const getEditProgressionDefinitionButtons = async (
     AdminMenuContext<ProgressionEditMenuState>
   >[] = [
     {
-      id: 'name',
-      label: 'Name',
+      label: 'Edit',
       style: ButtonStyle.Primary,
-      action: async (ctx) => {
-        ctx.sessionState.set('progressionEditField', 'name');
-        await ctx.hardRefresh();
-      },
-    },
-    {
-      id: 'description',
-      label: 'Description',
-      style: ButtonStyle.Primary,
-      action: async (ctx) => {
-        ctx.sessionState.set('progressionEditField', 'description');
-        await ctx.hardRefresh();
-      },
-    },
-    {
-      id: 'visibility',
-      label: 'Visibility',
-      style: ButtonStyle.Primary,
-      action: async (ctx) => {
-        ctx.sessionState.set('progressionEditField', 'visibility');
-        await ctx.hardRefresh();
-      },
+      opensModal: PROGRESSION_EDIT_MODAL_ID,
     },
   ];
 
-  // Add kind-specific buttons
-  if (progression.kind === 'numeric') {
-    buttons.push(
-      {
-        id: 'min',
-        label: 'Min Value',
-        style: ButtonStyle.Primary,
-        action: async (ctx) => {
-          ctx.sessionState.set('progressionEditField', 'min');
-          await ctx.hardRefresh();
-        },
+  if (progression.kind === 'milestone') {
+    buttons.push({
+      label: 'Milestones',
+      style: ButtonStyle.Primary,
+      action: async (ctx) => {
+        await ctx.goTo(MILESTONES_COMMAND_NAME, {
+          region_id: regionId,
+          progression_key: progressionKey,
+        });
       },
-      {
-        id: 'max',
-        label: 'Max Value',
-        style: ButtonStyle.Primary,
-        action: async (ctx) => {
-          ctx.sessionState.set('progressionEditField', 'max');
-          await ctx.hardRefresh();
-        },
-      }
-    );
-  } else if (progression.kind === 'milestone') {
-    buttons.push(
-      {
-        label: 'Milestones',
-        style: ButtonStyle.Primary,
-        action: async (ctx) => {
-          await ctx.goTo(MILESTONES_COMMAND_NAME, {
-            region_id: regionId,
-            progression_key: progressionKey,
-          });
-        },
-      },
-      {
-        label: 'Toggle Sequential',
-        style: ButtonStyle.Primary,
-        action: async (ctx) => {
-          const region = await ctx.admin.getRegion(regionId);
-          if (progression.kind === 'milestone') {
-            progression.sequential = !progression.sequential;
-            region.progressionDefinitions.set(progressionKey, progression);
-            await saveRegion(region);
-            ctx.state.set(
-              'prompt',
-              `Sequential mode ${
-                progression.sequential ? 'enabled' : 'disabled'
-              }`
-            );
-          }
-        },
-      }
-    );
+    });
   }
 
   // Add delete button
@@ -232,48 +132,6 @@ const getEditProgressionDefinitionButtons = async (
       await ctx.goBack();
     },
   });
-
-  return buttons;
-};
-
-const getProgressionEditFieldButtons = async (
-  ctx: AdminMenuContext<ProgressionEditMenuState>,
-  config: EditProgressionFieldConfig,
-  regionId: string,
-  progressionKey: string
-): Promise<ButtonInputConfig<AdminMenuContext<ProgressionEditMenuState>>[]> => {
-  const region = await ctx.admin.getRegion(regionId);
-  const progression = region.progressionDefinitions.get(progressionKey);
-  assert(progression, 'Progression definition not found');
-
-  const buttons: ButtonInputConfig<
-    AdminMenuContext<ProgressionEditMenuState>
-  >[] = [];
-
-  if (config.hasClearButton) {
-    buttons.push({
-      label: 'Clear',
-      style: ButtonStyle.Danger,
-      action: async (ctx) => {
-        await handleEditProgressionField(
-          ctx,
-          config,
-          regionId,
-          progressionKey,
-          ''
-        );
-      },
-    });
-  }
-  if (config.getCustomButtons) {
-    const customButtons = await config.getCustomButtons(
-      config,
-      region,
-      progressionKey,
-      progression
-    );
-    buttons.push(...customButtons);
-  }
 
   return buttons;
 };
