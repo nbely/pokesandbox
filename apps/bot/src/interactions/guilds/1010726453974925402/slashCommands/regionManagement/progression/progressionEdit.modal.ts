@@ -17,6 +17,7 @@ import {
 import { saveRegion } from '@bot/cache';
 import { progressionDefinitionSchema } from 'shared/src/models/region/progressionDefinition';
 import z from 'zod';
+import { assertProgressionKind } from './utils';
 
 export const PROGRESSION_EDIT_MODAL_ID = 'progression-edit-modal';
 
@@ -35,9 +36,9 @@ export const getProgressionEditModal = async (
     .setTitle(`Edit Progression`);
   addCommonProgressionModalFields(builder, progression);
   if (progression?.kind === 'milestone') {
-    addSequentialModalField(builder, progression);
+    addMilestoneKindModalFields(builder, progression);
   } else if (progression?.kind === 'numeric') {
-    addMinMaxModalFields(builder, progression);
+    addNumericKindModalFields(builder, progression);
   }
 
   return {
@@ -50,7 +51,6 @@ export const getProgressionEditModal = async (
         getUpdatedProgression(progression, fields)
       );
       await saveRegion(region);
-      await ctx.hardRefresh();
     },
   };
 };
@@ -113,10 +113,11 @@ const addCommonProgressionModalFields = (
   );
 };
 
-const addSequentialModalField = (
+const addMilestoneKindModalFields = (
   builder: ModalBuilder,
   progression: Progression | undefined
 ): void => {
+  assertProgressionKind('milestone', progression);
   builder.addLabelComponents(
     new LabelBuilder().setLabel('sequential').setStringSelectMenuComponent(
       new StringSelectMenuBuilder()
@@ -126,16 +127,12 @@ const addSequentialModalField = (
           {
             label: 'Yes',
             value: 'yes',
-            default:
-              progression?.kind === 'milestone' &&
-              progression.sequential === true,
+            default: progression.sequential === true,
           },
           {
             label: 'No',
             value: 'no',
-            default:
-              progression?.kind === 'milestone' &&
-              progression.sequential === false,
+            default: progression.sequential === false,
           },
         ])
         .setRequired(false)
@@ -143,10 +140,11 @@ const addSequentialModalField = (
   );
 };
 
-const addMinMaxModalFields = (
+const addNumericKindModalFields = (
   builder: ModalBuilder,
   progression: Progression | undefined
 ): void => {
+  assertProgressionKind('numeric', progression);
   builder.addLabelComponents(
     new LabelBuilder()
       .setLabel('min')
@@ -157,9 +155,7 @@ const addMinMaxModalFields = (
             .setStyle(TextInputStyle.Short)
             .setPlaceholder('Minimum value for the numeric progression')
             .setRequired(false),
-          progression?.kind === 'numeric'
-            ? progression.min?.toString()
-            : undefined
+          progression.min?.toString()
         )
       ),
     new LabelBuilder()
@@ -171,9 +167,7 @@ const addMinMaxModalFields = (
             .setStyle(TextInputStyle.Short)
             .setPlaceholder('Maximum value for the numeric progression')
             .setRequired(false),
-          progression?.kind === 'numeric'
-            ? progression.max?.toString()
-            : undefined
+          progression.max?.toString()
         )
       )
   );
