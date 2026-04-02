@@ -18,14 +18,7 @@ import type { ButtonInputConfig } from '@flowcord/core';
 
 import { MILESTONES_COMMAND_NAME } from './milestones';
 import { progressionEditMenuEmbeds } from './progression.embeds';
-import type {
-  EditProgressionFieldConfig,
-  ProgressionEditMenuState,
-} from './types';
-import {
-  editProgressionFieldConfigMap,
-  handleEditProgressionField,
-} from './utils';
+import type { ProgressionEditMenuState } from './types';
 import {
   getProgressionEditModal,
   PROGRESSION_EDIT_MODAL_ID,
@@ -73,57 +66,21 @@ export const ProgressionEditCommand: ISlashCommand = {
     const progression = region.progressionDefinitions.get(progression_key);
     assert(progression, 'Progression definition not found');
 
-    const progressionEditField = session.sessionState.get(
-      'progressionEditField'
-    ) as string | undefined;
-    const config = editProgressionFieldConfigMap.get(
-      progressionEditField ?? ''
-    );
-
     const builder = new AdminMenuBuilder<ProgressionEditMenuState>(
       session,
       COMMAND_NAME,
       options
     )
       .setEmbeds((ctx) =>
-        progressionEditMenuEmbeds(
-          ctx,
-          region_id,
-          progression_key,
-          progressionEditField
-        )
+        progressionEditMenuEmbeds(ctx, region_id, progression_key)
       )
       .setCancellable()
       .setReturnable()
       .setTrackedInHistory();
 
-    if (!progressionEditField) {
-      builder.setButtons((ctx) =>
-        getEditProgressionDefinitionButtons(ctx, region_id, progression_key)
-      );
-    } else {
-      if (config?.getCustomButtons) {
-        builder.setButtons((ctx) =>
-          getProgressionEditFieldButtons(
-            ctx,
-            config,
-            region_id,
-            progression_key
-          )
-        );
-      }
-      if (config?.hasMessageHandler) {
-        builder.setMessageHandler(async (ctx, response) => {
-          await handleEditProgressionField(
-            ctx,
-            config,
-            region_id,
-            progression_key,
-            response
-          );
-        });
-      }
-    }
+    builder.setButtons((ctx) =>
+      getEditProgressionDefinitionButtons(ctx, region_id, progression_key)
+    );
     builder.setModal((ctx) =>
       getProgressionEditModal(ctx, region_id, progression_key)
     );
@@ -175,48 +132,6 @@ const getEditProgressionDefinitionButtons = async (
       await ctx.goBack();
     },
   });
-
-  return buttons;
-};
-
-const getProgressionEditFieldButtons = async (
-  ctx: AdminMenuContext<ProgressionEditMenuState>,
-  config: EditProgressionFieldConfig,
-  regionId: string,
-  progressionKey: string
-): Promise<ButtonInputConfig<AdminMenuContext<ProgressionEditMenuState>>[]> => {
-  const region = await ctx.admin.getRegion(regionId);
-  const progression = region.progressionDefinitions.get(progressionKey);
-  assert(progression, 'Progression definition not found');
-
-  const buttons: ButtonInputConfig<
-    AdminMenuContext<ProgressionEditMenuState>
-  >[] = [];
-
-  if (config.hasClearButton) {
-    buttons.push({
-      label: 'Clear',
-      style: ButtonStyle.Danger,
-      action: async (ctx) => {
-        await handleEditProgressionField(
-          ctx,
-          config,
-          regionId,
-          progressionKey,
-          ''
-        );
-      },
-    });
-  }
-  if (config.getCustomButtons) {
-    const customButtons = await config.getCustomButtons(
-      config,
-      region,
-      progressionKey,
-      progression
-    );
-    buttons.push(...customButtons);
-  }
 
   return buttons;
 };

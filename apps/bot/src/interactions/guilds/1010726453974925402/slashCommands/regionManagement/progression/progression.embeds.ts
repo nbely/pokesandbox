@@ -117,33 +117,13 @@ export const progressionsMenuEmbeds = async (
 export const progressionEditMenuEmbeds = async (
   ctx: AdminMenuContext<ProgressionEditMenuState>,
   regionId: string,
-  progressionKey: string,
-  editField?: string
+  progressionKey: string
 ) => {
   const region = await ctx.admin.getRegion(regionId);
   const progression = region.progressionDefinitions.get(progressionKey);
   assert(progression, 'Progression definition not found.');
 
-  let prompt = ctx.state.get('prompt');
-  if (editField) {
-    switch (editField) {
-      case 'name':
-        prompt = 'Enter a new name.';
-        break;
-      case 'description':
-        prompt = 'Enter a new description.';
-        break;
-      case 'visibility':
-        prompt = 'Select a new visibility option.';
-        break;
-      case 'min':
-        prompt = 'Enter a new minimum value, or clear the current value';
-        break;
-      case 'max':
-        prompt = 'Enter a new maximum value, or clear the current value';
-        break;
-    }
-  }
+  const prompt = ctx.state.get('prompt');
 
   const fields: EmbedField[] = [
     {
