@@ -99,7 +99,22 @@ const getEditPokedexSlotButtons = async (
 ): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
   const hasOtherFormes = await checkHasOtherFormes(regionId, pokedexNo);
 
-  const buttons: ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[] = [];
+  const buttons: ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[] = [
+    {
+      label: '◀',
+      style: ButtonStyle.Secondary,
+      action: async (ctx) => {
+        const previousPokedexNo = await getPreviousFilledPokedexNo(
+          regionId,
+          pokedexNo
+        );
+        ctx.goTo(COMMAND_NAME, {
+          region_id: regionId,
+          pokedex_no: previousPokedexNo,
+        });
+      },
+    },
+  ];
 
   if (hasOtherFormes) {
     buttons.push({
@@ -112,6 +127,7 @@ const getEditPokedexSlotButtons = async (
         }),
     });
   }
+
   buttons.push(
     {
       label: 'Swap',
@@ -133,7 +149,71 @@ const getEditPokedexSlotButtons = async (
         await saveRegion(region);
         await ctx.hardRefresh();
       },
+    },
+    {
+      label: '▶',
+      style: ButtonStyle.Secondary,
+      action: async (ctx) => {
+        const nextPokedexNo = await getNextFilledPokedexNo(regionId, pokedexNo);
+        ctx.goTo(COMMAND_NAME, {
+          region_id: regionId,
+          pokedex_no: nextPokedexNo,
+        });
+      },
     }
   );
   return buttons;
+};
+
+const getNextFilledPokedexNo = async (
+  regionId: string,
+  currentPokedexNo: string
+): Promise<number> => {
+  const pokedex = (await getAssertedCachedRegion(regionId)).pokedex;
+  const startIndex = +currentPokedexNo;
+  const nextIndex = findFilledPokedexIndex(pokedex, startIndex, pokedex.length);
+  if (nextIndex !== null) {
+    return nextIndex;
+  }
+
+  const firstIndex = findFilledPokedexIndex(pokedex, 0, startIndex);
+  return firstIndex !== null ? firstIndex : startIndex;
+};
+
+const getPreviousFilledPokedexNo = async (
+  regionId: string,
+  currentPokedexNo: string
+): Promise<number> => {
+  const pokedex = (await getAssertedCachedRegion(regionId)).pokedex;
+  const startIndex = +currentPokedexNo - 2;
+  const previousIndex = findPreviousFilledPokedexIndex(pokedex, startIndex);
+
+  return previousIndex !== null ? previousIndex + 1 : pokedex.length;
+};
+
+const findPreviousFilledPokedexIndex = (
+  pokedex: Array<unknown | null>,
+  start: number
+): number | null => {
+  for (let idx = start; idx >= 0; idx -= 1) {
+    if (pokedex[idx]) {
+      return idx;
+    }
+  }
+
+  return null;
+};
+
+const findFilledPokedexIndex = (
+  pokedex: Array<unknown | null>,
+  start: number,
+  end: number
+): number | null => {
+  for (let idx = start; idx < end; idx += 1) {
+    if (pokedex[idx]) {
+      return idx + 1;
+    }
+  }
+
+  return null;
 };
