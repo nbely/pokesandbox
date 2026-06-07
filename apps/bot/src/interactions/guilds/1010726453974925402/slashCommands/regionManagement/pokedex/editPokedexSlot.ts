@@ -98,16 +98,18 @@ const getEditPokedexSlotButtons = async (
   pokedexNo: string
 ): Promise<ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[]> => {
   const hasOtherFormes = await checkHasOtherFormes(regionId, pokedexNo);
+  const pokedex = (await getAssertedCachedRegion(regionId)).pokedex;
+  const previousPokedexNo = await getPreviousFilledPokedexNo(
+    pokedex,
+    pokedexNo
+  );
+  const nextPokedexNo = await getNextFilledPokedexNo(pokedex, pokedexNo);
 
   const buttons: ButtonInputConfig<AdminMenuContext<PokedexMenuState>>[] = [
     {
-      label: '◀',
+      label: `◀ ${previousPokedexNo}`,
       style: ButtonStyle.Secondary,
       action: async (ctx) => {
-        const previousPokedexNo = await getPreviousFilledPokedexNo(
-          regionId,
-          pokedexNo
-        );
         ctx.goTo(COMMAND_NAME, {
           region_id: regionId,
           pokedex_no: previousPokedexNo,
@@ -151,10 +153,9 @@ const getEditPokedexSlotButtons = async (
       },
     },
     {
-      label: '▶',
+      label: `${nextPokedexNo} ▶`,
       style: ButtonStyle.Secondary,
       action: async (ctx) => {
-        const nextPokedexNo = await getNextFilledPokedexNo(regionId, pokedexNo);
         ctx.goTo(COMMAND_NAME, {
           region_id: regionId,
           pokedex_no: nextPokedexNo,
@@ -166,10 +167,9 @@ const getEditPokedexSlotButtons = async (
 };
 
 const getNextFilledPokedexNo = async (
-  regionId: string,
+  pokedex: Array<unknown | null>,
   currentPokedexNo: string
 ): Promise<number> => {
-  const pokedex = (await getAssertedCachedRegion(regionId)).pokedex;
   const startIndex = +currentPokedexNo;
   const nextIndex = findFilledPokedexIndex(pokedex, startIndex, pokedex.length);
   if (nextIndex !== null) {
@@ -181,10 +181,9 @@ const getNextFilledPokedexNo = async (
 };
 
 const getPreviousFilledPokedexNo = async (
-  regionId: string,
+  pokedex: Array<unknown | null>,
   currentPokedexNo: string
 ): Promise<number> => {
-  const pokedex = (await getAssertedCachedRegion(regionId)).pokedex;
   const startIndex = +currentPokedexNo - 2;
   const previousIndex = findPreviousFilledPokedexIndex(pokedex, startIndex);
 
