@@ -71,6 +71,13 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
    - Move the 10 hardcoded custom moves out of base data (into injected custom data, i.e. a library), or drop them. Then restore the 3 commented-out upstream tests.
    - Keep `secondaryChanceCallback` only if those moves stay.
 
+## Decisions (Oct 2026)
+- **Strategy:** rebase onto current upstream and apply the revised patch set above. **Fallback:** if the rebase is painful, start fresh from upstream `master` and re-apply only the patches we keep, as new, clean commits. Either way, the end state is upstream + a small, named patch set.
+- **Custom moves:** the 10 hardcoded moves go to a separate preservation branch (e.g. `archive/new-logora-moves`) and are **removed from `master`**. The 3 commented-out upstream tests are restored. Designing custom moves that reuse Showdown's internal mechanics and load dynamically (like the isolated custom-data dex) is deferred to the custom-moves/abilities/items work (post-MVP). `secondaryChanceCallback` goes with the moves unless that design needs it.
+- **Repo:** renamed to `pokesandbox-showdown` after the org move.
+- **Upstream sync:** a scheduled monthly sync PR.
+- **Consumption:** the monorepo depends on the fork as a **versioned package** (git tag or GitHub Packages release), not a git submodule.
+
 ## BattleService (engine)
 ```ts
 BattleService.start({ kind: 'wild' | 'trainer' | 'pvp' | 'ai-arena', sides, format, rules, seed }) → battleId

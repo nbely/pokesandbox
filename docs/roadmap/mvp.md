@@ -119,12 +119,14 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M1: Battle Core & Catalog
 
-**Epic: Showdown Fork Modernization** (Q20)
-- [ ] Spike: rebase fork onto current upstream. Inventory conflicts (M)
-- [ ] Move New Logora content from base data into a mod (M)
-- [ ] Patch: battle-start state injection (HP/status/PP) with sim tests (M)
-- [ ] Patch: external choice hook (bag/catch/run consume turn) + custom end reasons (L)
-- [ ] Remove debug code. Publish the fork as a versioned package consumed by the monorepo (M)
+**Epic: Showdown Fork Modernization** (Q20, decided)
+- [ ] Preserve the 10 custom moves on an archive branch. Remove them from `master` and restore the 3 commented-out upstream tests (S)
+- [ ] Rebase onto current upstream (fallback: fresh from upstream + re-apply kept patches as new commits) (M)
+- [ ] Patch: generalized state injection (any side; HP/status/PP) with sim tests (M)
+- [ ] Patch: external choice hook (bag/catch/run consume turn) + `caught`/`ran` end reasons (L)
+- [ ] Patch: isolated custom-data dexes (per content hash) for `Battle` + `TeamValidator`, evolved from `dynamic-dex-data` (L)
+- [ ] Remove debug code (`pause`/`resume`/`sendToJSON`) (S)
+- [ ] Publish as a versioned package consumed by the monorepo. Set up the monthly upstream-sync PR. Rename to `pokesandbox-showdown` after the org move (M)
 
 **Epic: Catalog**
 - [ ] Catalog service over the Showdown Dex (species, moves, items, abilities, learnsets) (M)
