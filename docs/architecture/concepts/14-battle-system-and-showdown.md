@@ -55,6 +55,29 @@ BattleService.recover()                                // on boot: rebuild live 
 - **Persistence:** store `{ battleId, seed, formatId, teams (input), inputLog[], status }` in a `Battle` collection, updated after each turn. Recovery replays the log. This also gives **replays** for free, and "battle history" for the webapp roadmap item.
 - **Spectating:** PvP renders to a public channel message (edited per turn). Choices go to ephemeral prompts for each player. This is the multi-user FlowCord capability you discussed in your Alpha-strategy chat.
 
+## Arena formats (decided Oct 2026: server-scoped, not region-scoped)
+
+PvP in the Arena isn't tied to any region's deployment or adventure state. It's tied to the **server** and the formats the server offers. A format defines *which Pokémon/moves/items are legal* and *the battle rules*:
+
+```ts
+ArenaFormat {
+  id; serverId | 'builtin'; name;                    // "Server OU", "Little Cup Lv5", "Kanto 151 Lv50"
+  pool: {                                            // where legal species come from (union of sources)
+    canon?: { gens?: number[]; tiers?: string[] } | 'all';
+    library?: 'all' | SpeciesId[];                   // the server's custom content (fakemon etc.)
+    fromRegionDex?: RegionId;                        // optional convenience: "species in this region's dex"
+    include?: SpeciesId[]; exclude?: SpeciesId[];    // bans
+  };
+  bans?: { moves?: MoveId[]; abilities?: string[]; items?: ItemId[] };
+  rules: { mechanicsGen; level: 'as-built' | 50 | 100 | { max: number }; gameType: 'singles' | 'doubles'; clauses: string[]; teamSize; pickN?; timer };
+}
+```
+
+- **Built-in formats** (e.g. National Dex Lv50, a Gen 1 151 format) ship by default, so the Arena works on a fresh server with zero setup.
+- Admins can create server formats that mix canon and **server library** content (see [12](12-content-catalog-species-moves-items.md#server-content-library-decided-oct-2026)). `fromRegionDex` is just a convenience source. A format never depends on a region being deployed.
+- Compiles to a Showdown custom format inside the server's mod, so `TeamValidator` enforces it.
+- Pausing a region has **no effect** on Arena battles. (Only Phase 3 in-game PvP with *adventure parties* is region-bound.)
+
 ## AI trainers
 Your roadmap wants the Arena to double as the AI playtest surface. Good instinct. Plan AI as **profiles**:
 
@@ -77,6 +100,6 @@ On end, BattleService emits `battleEnded { result, sides[].pokemon[].{hp,status,
 ## Open questions
 - **Mechanics generation:** RBY content with *modern* mechanics (Fairy type, physical/special split, Gen 9 moves), or authentic Gen 1 mechanics (Showdown has a `gen1` mod)? Per-region rule? (This is the biggest battle-related decision.)
 - **Mid-battle level-ups** (authentic: stats update immediately) vs post-battle (simpler)? Recommendation: post-battle for MVP, with the injection hook designed to allow mid-battle later.
-- Is the Arena **per-region** (teams validated against that region's dex and rules) or **server-wide** formats (OU, VGC-like)? Your text says "from a region's dex". Confirm, and whether Arena exists before any region is deployed.
+- ~~Is the Arena per-region or server-wide?~~ Decided: server-scoped formats (see Arena formats above); Arena works before any region exists.
 - Level normalization for Arena (all level 50/100?) and **clauses** (species, sleep, OHKO)?
 - Who owns the fork after the org move? Same org, renamed `pokesandbox-showdown`?

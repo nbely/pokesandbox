@@ -39,12 +39,12 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 
 ## Phase 1: Pre-MVP "Arena" (public release #1)
 
-**Goal:** Showdown-style battles between two server members (and vs AI) with teams built from a region's dex. Battles run publicly, button-driven, independent of adventure state. This ships the hardest subsystem first and gets real users early.
+**Goal:** Showdown-style battles between two server members (and vs AI) with teams validated against server-scoped Arena formats (canon and/or the server's custom content library). Battles run publicly, button-driven, independent of adventure state. This ships the hardest subsystem first and gets real users early.
 
 | Area | Deliverable |
 |---|---|
 | Catalog | Showdown dex as battle truth; DexEntry `speciesId`; ItemDefinition (battle-relevant subset) |
-| Rules | `RegionRules` with presets; Arena format derivation from region dex + rules (+ one built-in format so the Arena works before any region exists) |
+| Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats so the Arena works on a fresh server; `RegionRules` presets for adventure |
 | Teams | `TeamPreset` model; Showdown paste import/export; guided builder; TeamValidator against the format |
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers; forfeits; spectating |
 | Multi-user | FlowCord multi-user flow capability (challenge → accept → battle) |
@@ -99,7 +99,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 | Quests v2 | Active quests (scripts + quest log), passive objectives (event listeners), loaner Pokémon, quiz stages, repeatable quests, passive-slot limits, tutorial-as-quest | Script VM, engine events |
 | Narrative | Persistent dialogue choices (choice kind is already MVP), quest-local choices as script locals | Conditions, scripts |
 | Effects++ | Teleport, start-script, new attach points (transport hops, quest stages) | Effect registry |
-| Custom content | Fakemon/forms/types per server via the Showdown **mod compiler** | Catalog layering, fork mod |
+| Custom content | Server content library (fakemon/forms/types/moves/items reusable across a server's regions) via the Showdown **mod compiler** | Catalog layering, fork mod |
 | Social | In-game PvP with adventure parties; trading; Wonder Trade; GTS-style listings | PokemonInstance collection, BattleService |
 | Breeding | Contained service + server pool; eggs; hatching | `storage.kind` |
 | Happiness | Friendship evolutions, move unlocks | PokemonInstance.friendship |

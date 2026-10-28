@@ -15,9 +15,24 @@
 ```
 Layer 0  Showdown Dex (code, pinned version)  → battle truth: stats, types, moves, abilities, items-in-battle, learnsets
 Layer 1  PokeSandbox catalog (Mongo, global)   → DexEntry enrichment + ItemDefinition (pocket, price, field use) + Move enrichment (TM/tutor metadata)
-Layer 2  Custom content (Mongo, per server)    → fakemon, custom items/moves (Full / Pie-in-sky), compiled into a Showdown mod
-Layer 3  Region content (release)              → regional dex order, TM list, shop prices, item availability, starters
+Layer 2  Server content library (Mongo)        → fakemon, forms, custom types/items/moves, trainer classes; owned by the SERVER, reusable by every region on it
+Layer 3  Region content (release)              → regional dex order, TM list, shop prices, item availability, starters (selects from Layers 0–2)
 ```
+
+## Server content library (decided Oct 2026)
+
+Custom content belongs to the **server**, not to a region. A region is one game, and a server can host several (sequels, side stories, remakes). A creator should be able to make a fakemon, custom move, or custom item once and use it in any of their regions without recreating it.
+
+| Scope | Holds | Examples |
+|---|---|---|
+| **Global** (Layer 0–1) | Canon catalog + enrichment | Bulbasaur, Thunderbolt, Potion |
+| **Server library** (Layer 2) | Custom species/forms/types/moves/abilities/items, plus reusable registries (trainer classes, custom encounter methods) | `x_<server>_sparkitten`, a "Ranger" trainer class |
+| **Region** (Layer 3, in the release) | Which library and canon entries this game *uses*, and how: regional dex order, TM list, shop prices, rules | "Kanto 2 uses Sparkitten as dex #152" |
+
+Consequences:
+- Region releases **reference** library entries by ID. They don't copy them. Publishing a region validates that every referenced library entry exists. Editing a library entry (e.g. rebalancing a fakemon's stats) affects every region that uses it at that region's next publish. The release pins a **library snapshot version**, so live play doesn't change under players until the admin republishes.
+- The **mod compiler** compiles the *server library* into one Showdown mod per server (`ps_<serverId>`). Regions and Arena formats on that server both battle with it.
+- Library content is reusable across regions on the same server only. Sharing it across servers is a separate decision (Q23).
 
 ## Items (the biggest catalog gap)
 Showdown knows that Leftovers heal in battle. It doesn't know:

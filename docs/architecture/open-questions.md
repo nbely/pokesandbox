@@ -20,7 +20,7 @@ Questions for the project owner. Answers shape the MVP backlog. Grouped by theme
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| Q10 | Arena teams validated against **a region's dex/rules** (needs a region first) or **server-wide standard formats** too? | Region-scoped formats + one built-in "Kanto Classic" format so it works before any region exists | |
+| Q10 | Arena teams validated against **a region's dex/rules** (needs a region first) or **server-wide standard formats** too? | Region-scoped formats + one built-in "Kanto Classic" format so it works before any region exists | **Decided (Oct 2026):** Not region-scoped. Custom content (fakemon, moves, items) lives in a **server content library** reusable across regions, e.g. sequels. Arena formats are **server-scoped**: built-in canon formats work out of the box, and admins can define formats mixing canon and library content (a region's dex is just an optional pool source). See [12](concepts/12-content-catalog-species-moves-items.md#server-content-library-decided-oct-2026) and [14](concepts/14-battle-system-and-showdown.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped). |
 | Q11 | Level normalization (50/100/as-built) and **clauses** (species, sleep, OHKO, evasion)? | Lv 50, Showdown standard clauses | |
 | Q12 | Team building UX: **Showdown paste import** acceptable as the primary path, with a guided builder second? | Yes | |
 | Q13 | Turn **timer** length and timeout behavior (random move vs forfeit after N)? | 90s, default move, forfeit after 3 | |

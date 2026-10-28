@@ -53,7 +53,7 @@ PokemonInstance {
 Arena teams aren't owned Pokémon. They're **TeamPresets**:
 
 ```ts
-TeamPreset { _id; userId; serverId; regionId (whose dex/rules validate it); name; format; sets: PokemonSet[] /* Showdown set shape */; }
+TeamPreset { _id; userId; serverId; formatId (ArenaFormat that validates it, server-scoped, see 14); name; sets: PokemonSet[] /* Showdown set shape */; }
 ```
 
 Using the same `PokemonSet` shape means the arena's team builder, validator, and battle hookup are **reused** for adventure battles later. Allow **Showdown paste import/export** in the arena team builder. It's the fastest team-building UX possible in Discord (one modal) and the format competitive players already know.

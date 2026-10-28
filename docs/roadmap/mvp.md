@@ -33,7 +33,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 ### Pre-MVP Arena
 | Feature | Status | Milestone |
 |---|---|---|
-| Build teams from a region's dex | ❌ (dex slots exist) | M1 |
+| Build teams for server-scoped Arena formats | ❌ | M1 |
 | Showdown battles between two members, button-driven | ❌ | M1/M2 |
 | Public channel battles / spectating | ❌ | M2 |
 | Player vs AI (pick AI team or random by tier) | ❌ | M2 |
@@ -133,7 +133,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 **Epic: Teams**
 - [ ] `PokemonSet` shared type and `TeamPreset` model (S)
-- [ ] Format derivation: region dex + rules → Showdown format + TeamValidator (M)
+- [ ] `ArenaFormat` model (server-scoped) + built-in canon formats → Showdown custom format + TeamValidator (M)
 - [ ] Showdown paste import/export (M)
 - [ ] Guided team builder menus (species → moves → item/ability → EVs/nature) (L)
 

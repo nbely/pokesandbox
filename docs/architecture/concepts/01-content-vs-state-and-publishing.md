@@ -117,7 +117,7 @@ Region.discovery: {
   showStatus: boolean;                   // show "In development" / "Live" / "Paused" badge on the discovery page
 }
 ```
-- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Characters are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. In-flight PvP battles involving the region end as no-contest at pause time. (Revisit when the Arena design is detailed.)
+- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Characters are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. Arena PvP is server-scoped and **unaffected** by pausing a region (see [14](14-battle-system-and-showdown.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped)). Only Phase 3 in-game PvP with adventure parties is region-bound, and those battles are frozen like any other battle.
 - `Server.discovery` stays as the *server-level* listing. `Region.discovery` is the per-region listing within it. The discovery page shows a region only if both are enabled.
 - This replaces the old `deployed` / `deployable` booleans. "Deployable" is the computed validator result.
 
