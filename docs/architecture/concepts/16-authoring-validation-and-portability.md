@@ -57,7 +57,7 @@ These are **warnings**, never blockers, so creative non-standard games still pub
 - Tier 1 and basic Tier 2 (reachability ignoring conditions, plus "grants exist for required milestones/flags"), the Region Health view, delete-guard "used by", and JSON export/import of a region.
 
 ## Principle: Discord-complete authoring (decided Oct 2026)
-Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands ([03](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord support for Components v2 is a dependency to confirm.
+Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands ([03](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
 
 ## Open questions
 - Should **publish be blocked by errors only**, with warnings allowed? (Recommendation: yes.)

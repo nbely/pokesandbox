@@ -23,7 +23,7 @@
    - Documents use ObjectIds.
    - Content entries use a **key that is unique within the region** and survives export/import/clone.
 2. **Canon catalog uses Showdown IDs.** Showdown's `toID()` keys (`mrmime`, `kingsrock`, `hiddenpowerfire`) are what the simulator, the team validator, `@smogon/calc`, and sprite CDNs all use. Storing `speciesId: "pikachu"` means no translation layer on the battle hot path.
-3. **Custom content gets namespaced IDs.** Server-made fakemon/items get IDs like `x_<serverSlug>_<name>` (or a hash) so they can never collide with future canon additions or other servers' content.
+3. **Custom content gets namespaced IDs.** Server library content uses `<handle>:<slug>` (e.g. `newlogora:sparkitten`), where `handle` is the server's immutable publisher namespace. Showdown IDs never contain `:`, so these can never collide with canon (current or future) or with other servers' content. **Overrides** of canon species deliberately reuse the canon ID. See [12 § Species identity](12-content-catalog-species-moves-items.md#species-identity-canon-custom-species-variants-overrides--sharing-proposed-oct-2026).
 4. **One-directional ownership.** The child stores the parent ID and the parent doesn't store a child list. Query by indexed parent ID, and keep explicit ordering in an `ordinal` field (as `Location.ordinal` already does).
 5. **Keys are opaque.** Never parse meaning out of a key. Display names live in fields.
 

@@ -75,7 +75,7 @@ ArenaFormat {
 
 - **Built-in formats** (e.g. National Dex Lv50, a Gen 1 151 format) ship by default, so the Arena works on a fresh server with zero setup.
 - Admins can create server formats that mix canon and **server library** content (see [12](12-content-catalog-species-moves-items.md#server-content-library-decided-oct-2026)). `fromRegionDex` is just a convenience source. A format never depends on a region being deployed.
-- Compiles to a Showdown custom format inside the server's mod, so `TeamValidator` enforces it.
+- Compiles to its own Showdown mod + custom format (canon + selected library entries + overrides), so `TeamValidator` enforces it. See [12 § Species identity](12-content-catalog-species-moves-items.md#species-identity-canon-custom-species-variants-overrides--sharing-proposed-oct-2026).
 - Pausing a region has **no effect** on Arena battles. (Only Phase 3 in-game PvP with *adventure parties* is region-bound.)
 
 ## AI trainers

@@ -26,13 +26,83 @@ Custom content belongs to the **server**, not to a region. A region is one game,
 | Scope | Holds | Examples |
 |---|---|---|
 | **Global** (Layer 0–1) | Canon catalog + enrichment | Bulbasaur, Thunderbolt, Potion |
-| **Server library** (Layer 2) | Custom species/forms/types/moves/abilities/items, plus reusable registries (trainer classes, custom encounter methods) | `x_<server>_sparkitten`, a "Ranger" trainer class |
+| **Server library** (Layer 2) | Custom species/forms/types/moves/abilities/items, plus reusable registries (trainer classes, custom encounter methods) | `newlogora:sparkitten`, a "Ranger" trainer class |
 | **Region** (Layer 3, in the release) | Which library and canon entries this game *uses*, and how: regional dex order, TM list, shop prices, rules | "Kanto 2 uses Sparkitten as dex #152" |
 
 Consequences:
 - Region releases **reference** library entries by ID. They don't copy them. Publishing a region validates that every referenced library entry exists. Editing a library entry (e.g. rebalancing a fakemon's stats) affects every region that uses it at that region's next publish. The release pins a **library snapshot version**, so live play doesn't change under players until the admin republishes.
-- The **mod compiler** compiles the *server library* into one Showdown mod per server (`ps_<serverId>`). Regions and Arena formats on that server both battle with it.
-- Library content is reusable across regions on the same server only. Sharing it across servers is a separate decision (Q23).
+- The **mod compiler** builds one Showdown mod per **battle context**: each region release and each Arena format. A server-wide mod can't work, because two regions on the same server may use different overrides of the same species (see below).
+- Library content can also be **published for other servers to import** (private by default). See "Species identity" below.
+
+## Species identity: canon, custom species, variants, overrides & sharing (proposed Oct 2026)
+
+Requirements from the owner:
+- Global canon species.
+- Servers can add their own species, plus **variants of existing species**.
+- Servers can **publish** custom content for other servers to import (private by default).
+- Everything must work in Showdown **without conflicting with canon**.
+- An **override** of a canon species/form and the original **can't both be in one region**. If a creator wants both, the variant must be a separate **form**.
+
+### Two identities per species entry
+| Identity | What it is | Used by |
+|---|---|---|
+| **Species ID** (in-game identity) | What a Pokémon *is*: `pikachu`, `newlogora:sparkitten`, `newlogora:pikachu-surfer` | Pokémon instances, encounter slots, trainer parties, regional dex, conditions, team presets |
+| **Definition ref** (authoring identity) | *Which version of which library entry* supplies the data: `{ entryId, version }` | Region releases and Arena formats (what they compile), import/sharing, update notices |
+
+They're usually 1:1. **Overrides** are the reason they're separate: an override is a library entry whose species ID *is a canon ID*.
+
+### The three kinds of custom species entry
+| Kind | Species ID | Showdown name in the compiled mod | Example |
+|---|---|---|---|
+| **New species** (fakemon) | `<handle>:<slug>` | its display name ("Sparkitten") | `newlogora:sparkitten` |
+| **New form of an existing species** (canon or custom base) | `<handle>:<base>-<form>` | "Pikachu-Surfer" (`baseSpecies: Pikachu`, `forme: Surfer`) | `newlogora:pikachu-surfer` |
+| **Override** of a canon species or form | **the canon ID** (`pikachu`, `raichualola`) | the canon name (`inherit: true` + changed fields) | a server's rebalanced Pikachu |
+
+- **`<handle>`** is a short, unique, **immutable server handle** (a publisher namespace) chosen when the server first creates library content.
+- Showdown IDs are lowercase alphanumeric only, so **any ID containing `:` can never collide with canon**, now or in future generations.
+- A rename changes the display name, never the species ID.
+
+### Why overrides fit Showdown naturally
+Showdown mods already work this way: a mod entry with `inherit: true` replaces the base entry for battles using that mod. Because each region release / Arena format compiles its **own** mod:
+- **Region with the override:** its mod replaces `pikachu`. Every content reference (`pikachu` in encounter tables, trainer parties) picks up the override with no reference changes. Toggling the override on or off never touches content.
+- **Region without it:** gets canon Pikachu.
+- **The "not both in one region" rule is structural:** a region's species set maps each species ID to exactly one definition, so the original and the override literally can't coexist. The validator explains: "Pikachu is overridden by *Rebalanced Pikachu*. To use both, create it as a new form instead."
+
+### Compiling to Showdown without name clashes
+Inside one compiled mod, Showdown keys species by `toID(name)`. The compiler:
+1. **New species/forms:** emits the display name. If it collides with a canon name or another selected entry in the *same* region/format, publish is blocked with a "set a local display name" fix. (Two servers' "Sparkitten"s only clash if one region imports both.)
+2. **Overrides:** emit under the canon key with `inherit: true`.
+3. Keeps a per-release **translation table** (species ID ↔ Showdown ID) so battle logs map back to our IDs.
+
+Future canon additions are safe: a new real "Sparkitten" just becomes a name clash, caught at that region's next publish. Existing instances keep `newlogora:sparkitten`.
+
+### Sharing & import
+```ts
+LibraryEntry {
+  entryId; kind: 'species' | 'form' | 'override' | 'move' | 'ability' | 'item' | 'type';
+  ownerServerId; handle; speciesId /* or moveId… */; 
+  visibility: 'private' | 'public';              // private by default
+  versions: { version; publishedAt; data; dependencies: DefinitionRef[] }[];  // immutable once published
+  derivedFrom?: DefinitionRef;                    // set when forked from someone else's entry
+}
+ServerLibrary.imports: { ref: DefinitionRef; pinned: true }[]
+```
+- **Import = pinned reference**, not a copy. The importer uses `<their-handle>:<slug>@v3`, gets "v4 available" notices, and upgrades explicitly. Species IDs stay the author's, so Pokémon stay the same species if cross-server features (trading, travel) ever arrive.
+- **Fork = copy to edit.** It creates a new entry under the importer's handle with `derivedFrom`. It's a different species ID (or an override, if it targets a canon ID).
+- **Dependencies** (custom moves, abilities, types a species needs) are imported as a closure, at pinned versions.
+- If the author **unpublishes or goes private**, existing importers keep their pinned versions (published versions are immutable), but new imports stop.
+- Moves, abilities, items, and types follow the same three-kind scheme (new / variant / override) and the same sharing rules.
+
+### What happens to owned Pokémon when definitions change
+- **Override, region-level:** a Pokémon's species ID is `pikachu` either way. If cross-region travel/trading ever exists, it battles with the *destination's* Pikachu definition. That's the intended meaning of an override: "Pikachu works differently in this game".
+- **Library version bump:** applies at the region's next publish, same as any content change ([01](01-content-vs-state-and-publishing.md)).
+- **Deleted entry:** blocked while any published release or instance references it. Archive instead.
+
+### Mongo shape
+- `DexEntry` becomes `SpeciesDefinition`: `_id` stays an ObjectId per **(speciesId, version)** document, with a unique index on `{ speciesId, version }`.
+  - Canon docs use `speciesId = showdown id` and the data version.
+  - All references store `speciesId` (plus a definition ref where pinning matters), never the `_id`.
+- The existing `isCanon` / `isPublic` / `originServer` fields map onto `kind`, `visibility`, and `ownerServerId`.
 
 ## Items (the biggest catalog gap)
 Showdown knows that Leftovers heal in battle. It doesn't know:
