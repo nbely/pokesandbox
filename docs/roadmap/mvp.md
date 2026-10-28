@@ -94,6 +94,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] `dispatch(characterId, action)` with per-character lock, action/event types, and error model (M)
 - [ ] Injected `Clock` and seeded `Rng` (S)
 - [ ] In-memory test harness (fixtures from region bundles) (M)
+- [ ] Scaffold `libs/core` (content schemas, registries, validator home) and `libs/authoring` (`execute(actor, command)`, per-entity OCC, role checks, `ContentChange` output) (M)
+- [ ] Migrate existing admin menus (pokedex, progression, locations) onto `libs/authoring` commands (M)
 
 **Epic: Conditions & Effects** (Q17)
 - [ ] Condition tree schema (`all/any/not`) + predicate registry API (M)
