@@ -52,5 +52,5 @@ type Effect =
 
 ## Open questions
 - Can money go **negative** (debt mechanics)? Default no.
-- When the party is full and you receive a Pokémon: always to the PC (Gen 1 behavior) or prompt to swap (modern)? Make it a region rule.
+- ~~Full party on receiving a Pokémon?~~ **Decided (Q9): prompt to swap in MVP.** The `givePokemon` effect stays atomic and non-interactive: it places the Pokémon in the PC when the party is full and emits `pokemonGranted { to: 'pc', canSwapIn: true }`. The renderer then offers a **non-blocking "Swap into party?"** follow-up action (pick a party member to send to the PC). Catches use the same flow. If the player ignores it, the Pokémon simply stays in the PC.
 - Do effects need **conditions inline** (`{ if: Condition, then: Effect[] }`)? Recommendation: no. Branching belongs in scripts. Keep effects dumb.

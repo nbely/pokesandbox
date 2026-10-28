@@ -15,7 +15,7 @@ RegionRules {
   dexScope?: 'regional' | 'national';       // what can exist/be traded in
   exp: { formula: 'gen1-4' | 'gen5-scaled' | 'gen6+' ; expShare: 'item' | 'always-on' | 'off'; tradedBonus: boolean };
   catch: { formula: 'gen1' | 'gen3-4' | 'gen5+' ; criticalCapture: boolean };
-  party: { size: 6; whenFull: 'toPc' | 'promptSwap' };
+  party: { size: 6; whenFull: 'toPc' | 'promptSwap' };   // default 'promptSwap' (Q9): PC first, then a non-blocking swap offer
   boxes: { count: number; size: number };
   whiteout: { moneyLoss: 'half' | 'badgeFormula' | 'none'; respawn: 'lastHeal' | 'start' };
   levelCap?: { by: 'milestoneCount'; key: string; caps: number[] };   // Nuzlocke-style or modern-style obedience

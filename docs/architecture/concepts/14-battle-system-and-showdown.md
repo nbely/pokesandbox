@@ -62,7 +62,7 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 | D. Upstream package, no patches (construct `Battle` directly and mutate state; implement bag/catch/run by intercepting choices and calling sim internals) | Zero fork | Leans on private internals, so upgrades break silently. Bag/catch need turn consumption, which is hard without a sim hook. |
 
 **Recommended patch set** (keep each in its own file/commit with tests):
-1. **State injection:** generalize `updatePlayerState` to any side and to HP/status/PP (and level/EXP-derived stats), before the first turn and mid-battle (for level-ups if wanted, and for the community-boss shared HP pool).
+1. **State injection:** generalize `updatePlayerState` to any side and to HP/status/PP/level/stats/move slots, both before the first turn and **mid-battle** (required for immediate level-ups, see Decisions; also used by the community-boss shared HP pool).
 2. **External choice hook:** a generic `choice: external <payload>` that ends the player's action for the turn without moving, letting the engine apply an outcome (heal, stat stage, catch result) via injection before the turn resolves. Bag, catch, and run all use this one hook.
 3. **Battle end with custom reason:** `caught` / `ran` as clean end states.
 4. **Isolated custom-data dexes:** evolve the `dynamic-dex-data` POC into per-content-set isolated `ModdedDex` instances (cached by content hash) used by both `Battle` and `TeamValidator`. This is how server library content, overrides, and Arena formats reach Showdown ([12](12-content-catalog-species-moves-items.md)).
@@ -77,6 +77,7 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 - **Repo:** renamed to `pokesandbox-showdown` after the org move.
 - **Upstream sync:** a scheduled monthly sync PR.
 - **Consumption:** the monorepo depends on the fork as a **versioned package** (git tag or GitHub Packages release), not a git submodule.
+- **Mid-battle level-ups (Q8):** the engine awards EXP on `faint` events (all participants, plus Exp. All/Share per rules). On level-up it injects the new level and recalculated stats (max HP grows, and current HP rises by the same amount) through the state-injection patch, which must therefore support **mid-battle level/stat/move-slot updates**, not just battle-start state. A new move is a **blocking prompt inside the battle**: BattleService holds the side's next request until the player learns, replaces, or skips the move, then injects the move-slot change. **Evolution never happens in the sim.** It's evaluated post-battle by the engine (level/stone/etc.) and runs as a blocking post-battle interaction.
 
 ## BattleService (engine)
 ```ts
@@ -134,7 +135,7 @@ On end, BattleService emits `battleEnded { result, sides[].pokemon[].{hp,status,
 
 ## Open questions
 - **Mechanics generation:** RBY content with *modern* mechanics (Fairy type, physical/special split, Gen 9 moves), or authentic Gen 1 mechanics (Showdown has a `gen1` mod)? Per-region rule? (This is the biggest battle-related decision.)
-- **Mid-battle level-ups** (authentic: stats update immediately) vs post-battle (simpler)? Recommendation: post-battle for MVP, with the injection hook designed to allow mid-battle later.
+- ~~Mid-battle vs post-battle level-ups?~~ **Decided: mid-battle (authentic).** Stats, max HP (current HP raised by the gain), and new-move prompts apply immediately during the battle. Evolution is evaluated post-battle by the engine, never in the sim.
 - ~~Is the Arena per-region or server-wide?~~ Decided: server-scoped formats (see Arena formats above); Arena works before any region exists.
 - Level normalization for Arena (all level 50/100?) and **clauses** (species, sleep, OHKO)?
 - Who owns the fork after the org move? Same org, renamed `pokesandbox-showdown`?
