@@ -159,7 +159,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Publish as a versioned package consumed by the monorepo. Set up the monthly upstream-sync PR. Rename to `pokesandbox-showdown` after the org move (M)
 
 **Epic: Catalog**
-- [ ] Catalog service over the Showdown Dex (species, moves, items, abilities, learnsets) (M)
+- [ ] Canon catalog import from Showdown (pinned version): SpeciesDefinition, MoveDefinition (per-gen data + text), Learnset (per-gen sources) into Mongo; re-runnable with diff on upgrades (L)
+- [ ] Catalog read service + move detail display (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
 - [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
 - [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp. "Classic Gen 1" preset (L)

@@ -52,7 +52,20 @@ Check current pricing and plan terms before committing. Free-tier limits change,
 
 **Atlas paid vs a database container on a managed host.** What the paid Atlas tier buys is mostly what a container *doesn't* give you: automatic backups (daily snapshot on Flex; continuous + point-in-time restore on M10), replica-set failover (M10), engine upgrades, monitoring and index advice, encryption, and support. A database container on a managed host is still self-operated: the host keeps the container running, but data safety is yours. For player saves, the managed backups are the real value.
 
-**Note on Postgres:** a Postgres container would mean reopening the database decision (Q33, MongoDB chosen). If cost alone ever pushes toward Postgres, the comparison should be against *managed* Postgres free tiers (e.g. Neon, Supabase), not a self-run container. That's a revisit for the Phase 3 checkpoint, not now.
+**Managed Postgres vs managed Mongo at similar cost (researched Oct 2026; indicative, verify before buying):**
+| Option | Rough monthly cost | Backups | Notes |
+|---|---|---|---|
+| **Atlas Flex** (Mongo) | ~$8–30 (capped at $30) | One daily snapshot | Up to ~5 GB. Ops/sec cap. No code changes. |
+| **DigitalOcean Managed MongoDB** | ~$15.23 (1 GiB / 1 vCPU, single node); ~$45.68 as a 3-node replica | Daily backups bundled | Extra storage ~$0.20–0.215/GiB-month. No code changes. |
+| DigitalOcean Managed Postgres | ~$15 (1 GB / 10 GB) | Daily backups included | HA roughly doubles the price |
+| Supabase Pro (Postgres) | ~$25 base + compute/usage | Daily backups | Free tier pauses when idle |
+| Neon (Postgres) | Usage-based; ~$15 intermittent, ~$23 small always-on | History-based restore | Highest per-GB storage rate |
+| Render Postgres | ~$6 to ~$22 depending on size (sources conflict) | Not confirmed | |
+
+**Takeaway:** managed Postgres isn't cheaper than managed Mongo at this size. Both start around $15/month with daily backups (DigitalOcean offers both), and Atlas Flex is in the same range. The expensive Mongo option is Atlas *M10* (~$57+), which we don't need until thousands of players. So cost isn't a reason to reopen Q33. Moving to Postgres would cost engineering time (rewriting models, DTOs, seeds, conventions) for no savings.
+
+**Revised database path:** Atlas Free (MVP, your server, plus nightly dumps) → **Atlas Flex or DigitalOcean Managed MongoDB (~$15)** before opening to other servers → a 3-node replica / M10 only if growth demands it.
+
 
 **Proposed path:**
 1. **MVP (your server only):** VPS (~$5–20) + Atlas Free + nightly `mongodump` to free object storage. Roughly **$5–20/month total.**
@@ -64,7 +77,7 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 
 | Data | Size estimate | Notes |
 |---|---|---|
-| Catalog (DexEntry etc.) | **~4–5 MB** (measured: 1,371 dex entries ≈ 3.7 MB JSON) | Learnsets/moves come from Showdown code, not the DB. Sprites are URLs. |
+| Catalog (species, moves, learnsets, items) | **~10–20 MB** (measured: 1,371 dex entries ≈ 3.7 MB JSON; Showdown's learnsets ≈ 3.5 MB and moves + move text ≈ 1 MB as source) | Moves and learnsets live in the DB catalog (overrides, custom learnsets, TM/HM assignment, move details). Per-gen variants add a little. Sprites are URLs. |
 | Region draft content (Kanto-sized) | ~1–3 MB per region | Locations, NPCs, trainers, scripts, encounter tables |
 | Region releases | ~1–3 MB each uncompressed, ~0.2–0.5 MB **gzip-compressed** | **Must have a retention policy**: keep the last N plus any referenced by characters/clones/templates |
 | Character | ~5–20 KB | Flags grow over a playthrough |

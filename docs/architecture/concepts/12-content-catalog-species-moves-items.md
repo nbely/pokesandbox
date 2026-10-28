@@ -10,14 +10,30 @@
 - No items, moves, or TM models. The Region menu has "Moves" as a placeholder.
 - The Showdown fork carries New Logora fakemon in base data files.
 
-## Layering
+## Layering (revised Oct 2026)
+
+**Correction:** species, **moves, and learnsets must all live in the DB catalog**, not only in Showdown's code:
+- Admins override canon Pokémon and write **custom learnsets**.
+- Players need **move details** (power, accuracy, PP, type, category, effect text) to understand their moves.
+- Moves are **assigned to TMs/HMs** per region.
+- Piecemeal rules pick move data and learnsets **per generation**.
+
+Showdown stays the **battle executor**. The DB is the **catalog of record** that authoring, display, validation, and the isolated custom-data dex all read from.
 
 ```
-Layer 0  Showdown Dex (code, pinned version)  → battle truth: stats, types, moves, abilities, items-in-battle, learnsets
-Layer 1  PokeSandbox catalog (Mongo, global)   → DexEntry enrichment + ItemDefinition (pocket, price, field use) + Move enrichment (TM/tutor metadata)
-Layer 2  Server content library (Mongo)        → fakemon, forms, custom types/items/moves, trainer classes; owned by the SERVER, reusable by every region on it
-Layer 3  Region content (release)              → regional dex order, TM list, shop prices, item availability, starters (selects from Layers 0–2)
+Layer 0  Canon import (from Showdown's dex + gen mods, pinned version) → seeds Layer 1; re-run on Showdown upgrades
+Layer 1  Global catalog (Mongo)    → SpeciesDefinition (stats, types, sprites, catch rate, EXP yield/growth…),
+                                     MoveDefinition (per-gen data + description text), Learnset (per species, per gen sources),
+                                     ItemDefinition (pocket, price, field/battle use), AbilityDefinition (later gens)
+Layer 2  Server content library    → original + linked entries (species, forms, learnsets, later moves/items/abilities); owned by the server
+Layer 3  Region content (release)  → regional dex order, TM/HM list (TM slot → move), shop prices, item availability, starters, rules
+Battle   Per release/format: assemble Layers 1–3 (+ chosen generations) → isolated Showdown dex injection
 ```
+
+- **Per-generation data:** a `MoveDefinition` holds a base record plus per-gen overrides (e.g. Bite: Normal in Gen 1, Dark from Gen 2). Learnsets keep Showdown's per-gen source codes (`1L15`, `1M`, …), so `rules.data.learnsets: 'gen1'` filters to Gen 1 sources. Species stats follow the same pattern.
+- **Overrides and custom learnsets** are *linked* library entries patching the canon learnset (add/remove moves, change levels), the same mechanism as species overrides (see Species identity below).
+- **TMs/HMs:** a region's TM/HM list maps machine slots to `MoveId`s. Compatibility comes from the (possibly overridden) learnset's machine sources, or explicit additions in a custom learnset.
+- **Showdown upgrades:** re-run the canon import, then diff. Changes to canon data reach regions at their next publish (releases pin catalog versions).
 
 ## Server content library (decided Oct 2026)
 
