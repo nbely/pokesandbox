@@ -27,7 +27,7 @@
    - Don't cache: Character, PokemonInstance, draft content being edited. Fetch fresh, and keep docs short-lived per action.
    - If caching documents for reads, cache `lean()` plain objects (frozen in dev) rather than hydrated docs.
 2. **Writes to player state**
-   - Per-character mutex in `engine.dispatch` (in-process now, Redis/Redlock when sharded).
+   - Per-character lock in `engine.dispatch` as a **short DB lease** (`locks` collection with TTL index), because the bot and webapp both run the engine (see [03 § Process topology](03-engine-boundary-and-game-loop.md#process-topology-should-the-engine-be-its-own-container-proposed-oct-2026)). Redis later if lock traffic grows.
    - `optimisticConcurrency: true` on Character (Mongoose throws on a version mismatch, and the engine retries the action once).
    - Prefer atomic operators for hot counters (`$inc` money with a `$gte` guard) where they fit.
 3. **Transactions**

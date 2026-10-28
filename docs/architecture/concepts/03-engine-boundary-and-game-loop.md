@@ -60,7 +60,7 @@ overworld ──interact/trigger──► script(pc, locals) ──battle step�
 The bot's `/play` command renders whatever mode the character is in. If the bot restarted, the player just presses `/play` again and lands exactly where they were. This one decision makes the product feel robust.
 
 ### Per-character serialization
-`dispatch` takes a per-character lock (in-process mutex in MVP; Redis lock when sharded) and uses optimistic concurrency on the Character document. Double-clicks become no-ops or "already processing" instead of double rewards.
+`dispatch` takes a per-character lock and uses optimistic concurrency on the Character document. Double-clicks become no-ops or "already processing" instead of double rewards. **Because more than one process may run the engine (see Process topology), the lock is a short DB lease** (a `locks` document with `characterId`, owner, and expiry, acquired atomically), not an in-process mutex. Redis can replace it later if lock traffic grows.
 
 ## Options
 
@@ -69,6 +69,27 @@ The bot's `/play` command renders whatever mode the character is in. If the bot 
 | **A. Logic in bot handlers** (status quo) | Fastest to start | Not testable headless. Can't share with webapp/AI. Restart-fragile. |
 | **B. Service functions in `shared/`** (called by handlers, but no action/event contract) | Small step | Rendering and rules stay entangled. Every handler re-implements validation and "what happened" messaging. |
 | **C. Engine package with action/event contract** (recommended) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
+
+## Process topology: should the engine be its own container? (proposed Oct 2026)
+
+**Concern:** if game actions also run from the webapp (e.g. box reordering), they shouldn't depend on the Discord bot process being up.
+
+| Option | How | For | Against |
+|---|---|---|---|
+| **A. Embedded library** | Bot and webapp both import `libs/engine` and call `dispatch` in-process against the same DB | Webapp actions keep working when the bot is down. No extra service, API, or cost. | Locks must work across processes (DB lease). Stateful parts (live battles, timers) can only live in one process. |
+| **B. Separate engine service** | Engine runs in its own container. Bot and webapp call it over an API (e.g. tRPC/HTTP), and it pushes events back (pub/sub) | One authority for locks, battles, timers. Bot crashes don't touch game state. Scales independently. | Another container (cost) and an API contract, auth between services, and event push to the bot. **The engine becomes a single point of failure for both clients**, which is the same blast radius moved, not removed. |
+| **C. Hybrid (recommended)** | A now, designed for B: `libs/engine` is embedded in both clients for **stateless, short actions** (box reorder, party order, profile settings). **Stateful runtime** (BattleService, turn timers, scheduled jobs) runs in exactly one **game host** process, which is the bot process for MVP. | The webapp is independent of the bot for QoL actions. There's no extra container yet. Extraction later is mechanical, because the boundary is already "action in, events out". | Two deployment shapes to keep in mind. The webapp must refuse actions that touch Pokémon in an active battle (the character's `mode` already says so). |
+
+**Notes on option C:**
+- **Failure isolation you actually get:** the webapp (box management, profiles, authoring) keeps working if the bot crashes. Discord play is down while the bot is down under *any* option, since Discord *is* that client. Live battles are persisted and recovered on restart, so a bot crash costs a few seconds, not game state.
+- **Correctness across processes** comes from the DB: lease-based per-character locks, optimistic concurrency on Character/Pokémon documents, and transactions for multi-document changes. Nothing relies on in-memory state shared between processes.
+- **CPU isolation inside the game host:** AI turn search and battle simulation run in **worker threads**, so heavy AI can't stall the bot's Discord event loop.
+- **When to extract the engine/game host into its own container (option B):**
+  - The bot shards into multiple processes (battles need one authority).
+  - A second client needs real-time gameplay (e.g. a webapp battle UI).
+  - Engine CPU or memory starts hurting bot responsiveness despite workers.
+
+  The extraction is: wrap `dispatch` and BattleService in an API, move the battle host into the new container, and have the bot subscribe to events. No game logic changes.
 
 ## Where adventure play is shown (decided Oct 2026, Q2)
 - **Server-configurable display mode, ephemeral by default.** MVP implements only ephemeral. **Per-player threads** are the long-term favorite. A designated play channel is the third option.
