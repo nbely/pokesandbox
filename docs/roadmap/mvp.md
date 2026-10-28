@@ -24,6 +24,21 @@ M0 ──► M1 ──► M2 🚀
 
 Two people can run M1→M2 (battle track) and M3→M4 (authoring track) in parallel after M0.
 
+### Proposed re-sequencing: Arena critical path (Oct 2026, after Q29)
+With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, and every PR reviewed by the owner, M0 as written is too big to sit in front of the Arena. **The Arena doesn't need most of M0.** It needs no conditions/effects, scripts, content keys, releases, or authoring layer. Proposal: split M0.
+
+| # | Milestone | Contents | Blocks |
+|---|---|---|---|
+| **M0a** | **Platform & Arena Foundations** | Org move, CI, **hosting + prod environment** (Q30), Mongo replica set, indexes, cache policy, `libs/engine` skeleton (dispatch, lock, Clock/Rng, test harness), `libs/core` skeleton | M1, M2 |
+| **M0b** | **Content Foundations** | Conditions + effects, content keys + model cleanup, `libs/authoring`, region releases/publish, progression `choice` kind, flags | M3, M4, M5 |
+
+```
+M0a ──► M1 ──► M2 🚀 (Arena)
+  └──► M0b ──► M3 ──► M4 ──► M5 ──► M6 🚀 (MVP)
+```
+- The battle track (M0a → M1 → M2) and the content track (M0b → M3…) can run in parallel. Seniors own the foundation-heavy work (engine, fork rebase/patches, BattleService, conditions/effects). Juniors take well-specified issues: catalog seed data, item definitions, renderers, builder menus, webapp editors, tests.
+- **Timeline honesty:** an end-of-year Arena (~9 weeks from late Oct) would need M0a + M1 + M2 done with this team while also standing up hosting/CI. That's possible only if the Arena scope stays tight: paste import, built-in formats, `basic` AI, timers, restart recovery. Plan for **end of year as a stretch, Q1 as realistic**, and re-estimate once M0a's issues are sized.
+
 ---
 
 ## Gap matrix (owner's MVP list → status → milestone)
