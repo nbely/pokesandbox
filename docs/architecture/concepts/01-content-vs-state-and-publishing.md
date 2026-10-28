@@ -86,7 +86,47 @@ Active battles and scripts pin the release they started on and finish there. The
 - `RegionRelease` model, the publish command, the validator hook, the `ContentProvider` interface, and `Character.releaseVersion` plus 2–3 migration rules.
 - Not in MVP: diff UI, rollback UI, preview mode.
 
+## Decisions (Oct 2026)
+
+Option C was adopted. The owner's refinements:
+
+**1. Release notes: opt-in, configurable destination.** Models are needed for MVP. The UI is low priority.
+```ts
+Server.settings.releaseNotes: {
+  enabled: boolean;               // default false (opt-in)
+  channelId?: string;             // any channel, e.g. a private staff channel. Owners can refine there and repost publicly.
+  mentionRoleId?: string;         // optional ping
+}
+RegionRelease.notes: {
+  generated: ReleaseDiffSummary;  // auto: added/changed/removed content since the previous version
+  authored?: string;              // optional admin-written notes entered at publish time
+}
+```
+On publish, if enabled, the bot posts `authored ?? rendered(generated)` to `channelId`. With no channel set, nothing is posted, but the notes are still stored on the release (the webapp and future release history can show them).
+
+**2. Deployment and discovery are separate axes.** Deploy state controls *play*. Discovery controls *visibility*. An undeployed, in-progress region can be discoverable (sneak peeks, recruiting testers), and a deployed region can be unlisted.
+```ts
+Region.deployment: {
+  status: 'draft' | 'live' | 'paused';   // draft = never published; live = playable; paused = undeployed (characters frozen)
+  publishedVersion?: number;             // release served while live
+  pausedAt?: Date; pauseMessage?: string;
+}
+Region.discovery: {
+  listed: boolean;                       // independent of deployment.status
+  description?; bannerImageUrl?; tags?: string[];
+  showStatus: boolean;                   // show "In development" / "Live" / "Paused" badge on the discovery page
+}
+```
+- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Characters are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. In-flight PvP battles involving the region end as no-contest at pause time. (Revisit when the Arena design is detailed.)
+- `Server.discovery` stays as the *server-level* listing. `Region.discovery` is the per-region listing within it. The discovery page shows a region only if both are enabled.
+- This replaces the old `deployed` / `deployable` booleans. "Deployable" is the computed validator result.
+
+**3. Draft preview is later, designed for now.** To keep it cheap later:
+- Releases can be compiled *from the current draft without being published*: `compileRelease(regionId, { mode: 'preview' })` produces an ephemeral release that is never set as `publishedVersion`.
+- `Character.isTest: boolean` plus `Character.releaseRef: { kind: 'published', version } | { kind: 'preview', id }`.
+- Test characters are excluded from discovery stats, leaderboards, trading, and PvP.
+
 ## Open questions
 - Should admins be able to **hot-fix** a typo in a published release without a full publish? (Recommendation: no. Publish is cheap; keep one path.)
-- Should content changes be **announced to players** automatically (release notes to a channel)?
-- Does "undeploy" mean "pause play" (characters frozen) or "hide region" (discovery off, play continues)?
+- ~~Announce releases to players?~~ Decided: opt-in, configurable channel (see above).
+- ~~Undeploy semantics?~~ Decided: pause play. Discovery is a separate axis (see above).
