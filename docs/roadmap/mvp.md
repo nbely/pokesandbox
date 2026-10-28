@@ -210,7 +210,9 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - **No Safari Zone in MVP** (bait/rock/ball mechanics deferred). Its key rewards come another way, e.g. a Fuchsia NPC gift script gives HM03 Surf, and the Warden gives HM04 Strength directly or via a simpler fetch.
 - **No unidentifiable-ghost mechanic.** Pokémon Tower's upper floors are gated on `bag.count silph-scope ≥ 1` (presentation `attemptable`, with a "the ghosts block your way" script). The rival battle stays reachable *outside* that gate (lobby/first floor), so story order matches RBY. The Marowak ghost is a scripted `wildBattle` behind the gate.
 
-- [ ] Author "Kanto Classic" with the tools (dogfooding; track every builder friction as an issue) (XL → split per area)
+- [ ] Generator script: bulk Kanto data (locations, connections, encounters, trainers/parties, marts, TM list) → region bundle (L)
+- [ ] Author Kanto Classic story/scripts/gates in the tools on the HQ server (dogfooding; track every builder friction as an issue) (XL → split per area)
+- [ ] Canonical bundle in repo (`templates/kanto-classic/`), deterministic lossless export/import, CI validation + headless playthrough, deploy-time install (M)
 - [ ] Headless engine playthrough test to badge 2 (M)
 - [ ] Human playtest Pallet → Champion; balance pass (L)
 - [ ] Load test: N concurrent players + battles on target hosting (M)
