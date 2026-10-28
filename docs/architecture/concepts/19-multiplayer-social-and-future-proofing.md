@@ -14,7 +14,7 @@
 | Weather/terrain by location | Conditions on encounters, battle field state at start | Encounter conditions ([10](10-encounters.md)), battle start options in BattleService |
 | Custom fakemon/types/moves | Showdown mod compiler | New Logora → mod refactor as the spike ([12](12-content-catalog-species-moves-items.md)) |
 | Staff ops (grant items/Pokémon/money) | Audited state mutations | "Staff applies effects to character" = Effect executor + audit log ([06](06-effects.md)) |
-| Webapp character sheet, battle/RP history, activity log | Event history | Engine `GameEvent` log + persisted battle input logs ([03](03-engine-boundary-and-game-loop.md), [14](14-battle-system-and-showdown.md)) |
+| Webapp character sheet, battle/RP history, activity log | Event history | Permanent **adventure log** with turn digests ([22](22-adventure-log-and-narration.md)) |
 | Webapp as play surface | Client-agnostic rules | `libs/engine` ([03](03-engine-boundary-and-game-loop.md)) |
 | Co-op story, multi battles | Multiple characters in one script/battle | Script `mode` keyed by a **session** that can hold N characters (design the mode record with `participants[]` from day one, even if MVP always has 1) |
 | Cross-region / cross-server travel | Character ↔ region decoupling | Character keyed by (user, region). Pokémon instances portable via `ownerCharacterId`. Showdown IDs for species ([02](02-identity-and-references.md)). |
@@ -24,7 +24,7 @@
 
 ## Cheap insurance to add in MVP
 1. `participants: CharacterId[]` on script/battle mode records (co-op later).
-2. `GameEvent` log collection (append-only, TTL'd or archived): activity log, debugging, webapp history.
+2. Permanent `AdventureLogEntry` collection written from MVP (narration attaches later; see [22](22-adventure-log-and-narration.md)).
 3. Audit log for admin/staff mutations (who changed what, when).
 4. Region `WorldState` doc reserved (even if empty).
 
