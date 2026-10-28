@@ -41,6 +41,7 @@ Trigger {
     | { event: 'characterCreated' }                      // onboarding
     | { event: 'useItem'; item: ItemId; location?: ContentKey }
     | { event: 'explore'; location: ContentKey }         // e.g. Snorlax blocks Route 12
+    | { event: 'gateBlocked'; gate: GateOwnerRef }       // player attempted an 'attemptable' gate and failed (see 05 §4)
   condition?: Condition;       // e.g. not flag script:rival-r22:done, milestone badges≥…
   once: boolean;               // engine writes flag script:<key>:done
   priority: number;            // multiple matches → highest wins

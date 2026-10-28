@@ -109,7 +109,8 @@ type AuthoringCommand =
   | { type: 'region.publish'; regionId }
   | …;
 
-authoring.execute(actor, command) → { ok: true; changes: ContentChange[]; warnings: Issue[] } | { ok: false; issues: Issue[] }
+authoring.execute(actor, command) → { ok: true; changes: ContentChange[]; warnings: Issue[]; suggestions: Suggestion[] } | { ok: false; issues: Issue[] }
+// suggestions: follow-up commands a client may offer (e.g. after adding HM Fly: "Enable traditional Fly travel?"). Empty in MVP; the hook exists so builder shortcuts are additive later.
 ```
 
 **How it differs from the gameplay engine:**

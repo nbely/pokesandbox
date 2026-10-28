@@ -119,19 +119,27 @@ So scripts and quests don't need their own condition system. They add **scopes**
 ### 3. Conditions check *current state*. Objectives accumulate *history*.
 Some quest goals look like requirements but aren't: "defeat 10 wild Pokémon", "catch 3 Bug types", "deliver 5 Oran Berries". These aren't true or false about the current state; they count **events over time**. Model them as **objective trackers**: event listeners (`pokemonDefeated`, `pokemonCaught`, `itemsChanged`) that update quest-scope variables. Then a plain condition checks the variable (`var quest.bugsCaught gte 3`). Conditions stay pure and stateless, and the counting lives where events are. Without this split, people try to cram counters into conditions, and that's where rule systems rot.
 
-### 4. A standard "gate" envelope for anything that blocks an action
-Most attach points need more than a boolean:
+### 4. A standard "gate" envelope for anything that blocks an action (decided Oct 2026)
+Most attach points need more than a boolean. *How* a failed check is presented is a **caller/UI concern, not part of the condition**. The same condition can be invisible in one place, shown locked in another, and attemptable in a third.
 
 ```ts
 Gate = {
   condition?: Condition;
-  cost?: Effect[];                       // consumed when the gated action happens (fares, entry fees, ticket items)
-  onLocked?: 'show' | 'hide';            // default 'show' (teases content)
-  lockedText?: string;                   // overrides the auto-explanation ("The guard won't let you pass.")
+  cost?: Effect[];                                   // consumed when the gated action happens (fares, entry fees, tickets)
+  presentation?: 'hidden' | 'locked' | 'attemptable';
+  lockedText?: string;                               // overrides the auto-explanation ("The guard won't let you pass.")
 }
 ```
 
-Locations, edges, shops, transport hubs, NPC interactions, and quest starts all take a `Gate`. One builder component and one engine function (`checkGate` → `{ allowed, explanation, cost }`).
+| Presentation | Player sees | On attempt | Typical use |
+|---|---|---|---|
+| `hidden` (**default**) | nothing | n/a | background checks, secret paths, NPC visibility, encounter tables |
+| `locked` | the option, disabled, with the explanation / `lockedText` | n/a | shop items, Fly destinations, badge-gated doors you want to tease |
+| `attemptable` | the option, enabled | blocked: shows the rationale **and emits a `gateBlocked` trigger event**, so a script can react (a guard's dialogue, a forced battle, starting a quest) | "The road is blocked by a sleeping Snorlax", "You need a Card Key", tutorial nudges |
+
+- Each attach point declares its **default** presentation (e.g. shop entries default to `locked`, edges and NPCs to `hidden`), and authors can override per gate.
+- Reacting to a blocked attempt is **not** part of the condition or the gate. It's an ordinary trigger (`{ event: 'gateBlocked', gate: <owner ref> }`, see [07](07-scripts-triggers-and-events.md)). The builder can offer "on blocked, run script…" as sugar that creates the trigger.
+- Locations, edges, shops and shop entries, transport hubs, NPC interactions, and quest starts all take a `Gate`. There's one builder component and one engine function: `checkGate` → `{ allowed, presentation, explanation, cost }`.
 
 ### 5. Same conditions, different *usage policies*
 The condition is the same everywhere. What differs is how the caller uses the result, so make the policy explicit instead of re-implementing it per feature:
@@ -172,5 +180,6 @@ The condition is the same everywhere. What differs is how the caller uses the re
 - Evaluator, explainer, validator, and builder (flat list + one nesting level).
 
 ## Open questions
-- Should failing conditions on a **connection** hide the edge, or show it as locked with an explanation? (Recommendation: per-condition `hiddenWhenLocked` flag. Default is to show it locked, which teases content like real games do.)
-- Should HM field moves require the move only, or also a badge (Gen 1–4 style)? With conditions that's a *content* decision (`all: [party has cut, milestone cascade]`), not an engine one. Confirm you want it to stay content-defined.
+- ~~Hide or show locked?~~ Decided: caller-owned `presentation` on the Gate (`hidden` default, `locked`, `attemptable` with a `gateBlocked` trigger event). See §4.
+- ~~HM gating rules?~~ Decided: creator-defined content, never engine logic. **Post-MVP builder shortcuts:** common gate templates ("Requires HM move", "Requires badge + HM"), plus contextual suggestions. For example, adding HM02 Fly to the region's TM/HM list prompts "Enable traditional Fly travel?" and creates the Fly transport network with its conditions. Design hook for now: authoring command results include `suggestions: Suggestion[]` (see [03 § Authoring](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)) that any client can offer; MVP returns none.
+- **Power-user text syntax** (e.g. `badges.count >= 2 and not flag(rival_r22)`) that compiles into the tree: agreed as a later, very low priority enhancement.
