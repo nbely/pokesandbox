@@ -70,6 +70,17 @@ The bot's `/play` command renders whatever mode the character is in. If the bot 
 | **B. Service functions in `shared/`** (called by handlers, but no action/event contract) | Small step | Rendering and rules stay entangled. Every handler re-implements validation and "what happened" messaging. |
 | **C. Engine package with action/event contract** (recommended) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
 
+## Where adventure play is shown (decided Oct 2026, Q2)
+- **Server-configurable display mode, ephemeral by default.** MVP implements only ephemeral. **Per-player threads** are the long-term favorite. A designated play channel is the third option.
+  ```ts
+  Server.settings.play: { mode: 'ephemeral' | 'thread' | 'channel'; channelId?: string; threadVisibility?: 'private' | 'public' }
+  Region.settings.playOverride?: same shape   // optional per-region override
+  ```
+  Because the engine emits events and renderers draw them, each mode is a different *renderer target*, not different game logic.
+- **Highlights channel** (opt-in posts for badges, rare catches, champion clears): a nice follow-up, not MVP. It reuses the opt-in, configurable-channel pattern from release notes.
+- **Viewing other players:** on the webapp in MVP. Discord lookup commands come later.
+- **Privacy:** players control who can see their profile and each character (see [13](13-characters-and-pokemon-instances.md#privacy-decided-oct-2026)).
+
 ## Discord surface (game-dev perspective)
 
 - **One `/play` hub** per region with contextual buttons (Travel, Explore, Talk, Shop, Party, Bag, Map) instead of dozens of slash commands. FlowCord's menu graph is perfect for this. This also matches the UX lesson from your FlowCord "Street Dominion" chat.

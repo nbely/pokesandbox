@@ -68,6 +68,16 @@ TeamPreset {                     // decided Oct 2026: owned by the USER, usable 
 
 Using the same `PokemonSet` shape means the arena's team builder, validator, and battle hookup are **reused** for adventure battles later. Allow **Showdown paste import/export** in the arena team builder. It's the fastest team-building UX possible in Discord (one modal) and the format competitive players already know.
 
+## Privacy (decided Oct 2026)
+Players can make their **profile** and/or individual **characters** private.
+```ts
+User.privacy: { profile: 'public' | 'private' }                       // webapp profile page (account-level info, list of characters)
+Character.visibility: 'public' | 'private' | 'inherit'                  // 'inherit' (default) = follow User.privacy.profile
+```
+- **Private** hides the profile/character (party, badges, progress, battle history) from everyone except the owner and that server's staff. Staff visibility is needed for moderation and support.
+- Applies to every surface: the webapp profile pages and, later, Discord lookup commands. Public Arena battles are inherently visible while they happen.
+- Defaults to `public`. A "server members only" level could be added later if requested.
+
 ## Game-dev notes
 - **HP/status persist** between battles (heal at Centers). The fork's HP injection (or a battle construction hook) is needed. See [14](14-battle-system-and-showdown.md).
 - **EXP, levels, evolution, and move learning happen in the engine**, using DexEntry growth rates and Showdown learnsets. Evolution prompts ("What? Charmander is evolving!", cancelable) and move-replacement prompts are **script-like blocking interactions**, so reuse the mode machinery.
