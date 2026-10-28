@@ -110,7 +110,8 @@ BattleService.recover()                                // on boot: rebuild live 
 ```
 - **Process model:** in-process for MVP. Put it behind an interface so battles can move to worker threads/processes when CPU becomes a concern (AI search and many concurrent battles). Showdown's own server runs battles in child processes.
 - **Timers:** per-side choice deadline (configurable). On timeout: PvP uses the default choice, or loss after N timeouts; PvE pauses (no timer) since adventure play is async.
-- **Persistence:** store `{ battleId, seed, formatId, teams (input), inputLog[], status }` in a `Battle` collection, updated after each turn. Recovery replays the log. This also gives **replays** for free, and "battle history" for the webapp roadmap item.
+- **Persistence:** store `{ battleId, seed, formatId, teams (input), inputLog[], status }` in a `Battle` collection, updated after each turn. Recovery replays the log. This also gives **replays** for free, and "battle history" for the webapp roadmap item. After the battle the record is compressed and kept for a retention window. The permanent history is the adventure log ([22](22-adventure-log-and-narration.md)). Opponent Pokémon exist only in the battle (from trainer/encounter recipes) and become `PokemonInstance`s only if caught.
+- **Turn-gating hook (reserved):** `BattleSpec.turnGate` can hold each turn's resolution until required narration/approval arrives, for a future narrated (forum-style) battle mode ([22](22-adventure-log-and-narration.md#future-narrated-battle-mode-the-forum-model-with-the-engine-as-calculator)).
 - **Spectating:** PvP renders to a public channel message (edited per turn). Choices go to ephemeral prompts for each player. This is the multi-user FlowCord capability you discussed in your Alpha-strategy chat.
 
 ## Arena formats (decided Oct 2026: server-scoped, not region-scoped)

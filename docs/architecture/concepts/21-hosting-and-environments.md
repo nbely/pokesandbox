@@ -83,11 +83,13 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 | Character | ~5–20 KB | Flags grow over a playthrough |
 | Pokémon instances | ~0.5–1 KB each; 50–300 per engaged player | ≈ 50–300 KB per player at endgame |
 | Battle records (seed + input log) | ~5–20 KB per battle | **Biggest risk.** 100 players × 30 battles/day × 10 KB ≈ 30 MB/day without cleanup |
-| Game event / activity log | ~0.2–0.5 KB per event | Also high-volume |
+| Adventure log (permanent) | ~0.5–2 KB per entry; ~5–15 KB/day per active player with wild rollups | ≈ 0.2–0.5 GB/year for 100 active players (see [22](22-adventure-log-and-narration.md)) |
 
 **Retention rules (needed for any tier):**
-- **Wild/trainer battle records:** delete when the battle ends. They're only needed for crash recovery. Keep **PvP/Arena** records for replays with a TTL (e.g. 30 days).
-- **Event log:** keep only *notable* events long term (catches, badges, evolutions, trades) for the activity log. Debug-level events go to application logs, not Mongo, or use a short TTL index (e.g. 48h).
+- **Opponent Pokémon are ephemeral:** created from recipes for the battle, gone afterwards unless caught.
+- **Full battle records:** compressed after the battle, kept for a retention window (default 90 days; PvP/Arena for replays), then deleted. The **permanent adventure log** keeps a compact summary (with turn digests for trainer battles) forever. See [22](22-adventure-log-and-narration.md).
+- **Wild battles roll up** into one log entry per visit. Catches, trainer battles, milestones, and evolutions get their own entries.
+- **Debug-level events** go to application logs, not Mongo (or a short TTL index, e.g. 48h).
 - **Releases:** gzip-compress, keep the last ~10 per region plus every release still referenced (characters on it, clone bases, template versions).
 
 **When the limits bite (rough, with retention in place):**

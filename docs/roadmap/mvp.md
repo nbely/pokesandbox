@@ -109,7 +109,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
 - [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
 - [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
-- [ ] Data retention: TTL/cleanup for battle records and the event log, compressed + pruned region releases (M)
+- [ ] Data retention: compressed battle records with a retention window, debug events out of Mongo, compressed + pruned region releases (M)
 - [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
 
@@ -245,6 +245,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Shops buy/sell (S)
 - [ ] Heal points + respawn (S)
 - [ ] Profile: badge case, milestones, visited, dex (M)
+- [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, wild rollups, milestones, evolutions, scenes) + webapp log view; ephemeral opponent Pokémon from recipes (M)
 
 ## M6: Kanto Classic & MVP Release 🚀
 
