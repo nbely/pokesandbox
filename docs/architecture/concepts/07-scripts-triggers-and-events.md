@@ -114,7 +114,7 @@ Option B was adopted: one Script + Trigger system, **on the condition that build
    ```
    The MVP renderer ignores `presentation`. Later renderers use it, plus region-level dialogue themes, without migrating scripts.
 3. **Discord-complete authoring (principle, applies to every builder feature, not just scripts):** everything must be editable in Discord, even where it's less friendly than the webapp. Some creators will never leave Discord. The webapp is an *additional* client of the same `libs/authoring` commands, never the only place a feature can be edited. For scripts this means a Discord **step-list editor** (list steps, add/insert/move/delete, edit a step via modal, pick step types from select menus), on top of templates. It leans on Components v2 where it helps: sections with per-step edit accessories, separators between labels, and text displays for long dialogue previews.
-4. **Guardrails** (no script-calls-script in MVP; step cap per dispatch): proposed, not yet explicitly confirmed. These are the defaults unless changed.
+4. **Guardrails:** confirmed. No script-calls-script in MVP (add `call` later with a depth limit), and a step cap per dispatch so a bad `goto` can't loop forever.
 
 ## Open questions
 - ~~Offered triggers vs People here?~~ See Decision 1.
