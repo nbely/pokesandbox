@@ -50,6 +50,45 @@ Recommendation: (1) for MVP, plus a **Repel** status (N explores without encount
 ### Static & special encounters
 Snorlax, legendaries, Electrode "items", and Voltorb traps are **scripts** with `wildBattle` steps, gated by flags. They're not table entries.
 
+## Decisions (Oct 2026, Q3)
+
+### Explore is the core loop, and it always finds *something*
+MVP uses **Explore buttons per method** ("Walk in the grass", "Fish", "Surf"). A press never yields "nothing happened". It rolls a location's **explore outcome table**:
+
+```ts
+Location.explore: {
+  outcomes: (
+    | { kind: 'wild';    method: EncounterMethodId; weight: number }       // uses the location's encounter tables
+    | { kind: 'trainer'; weight: number }                                  // an undefeated NPC trainer here with engagement 'onExplore'
+    | { kind: 'item';    weight: number }                                  // a hidden-item pickup here not yet taken (one-time, flag pickup:<key>:taken)
+    | { kind: 'aside';   weight: number }                                  // POST-MVP: one-time flavor scripts (see below)
+  )[];
+}
+```
+- Exhausted outcomes drop out and the remaining weights renormalize. Once all trainers are beaten and all items found, Explore yields wild encounters only.
+- **Asides (post-MVP):** short one-time scripts in place of "nothing happened". A description of the area, a cute or eerie moment, a fleeting NPC. Ordinary scripts with `once`, authored per location. They make the world feel alive without wasting the player's time.
+- Repel suppresses only `wild` outcomes below the lead's level.
+
+### Traversal requirements (model now, build after MVP)
+Authors can make moving through a location cost something, e.g. *"the first time through Route 2 you must fight 5 wild Pokémon and 3 trainers before the exit opens. Afterwards, 1 wild battle, or nothing."* Explore presses are how players meet these requirements.
+
+```ts
+Location.traversal?: {
+  exits: ContentKey[] | 'all';                 // which outgoing edges are gated
+  firstClear: { wildBattles?: number; trainerBattles?: number; explores?: number; trainers?: ContentKey[] };
+  afterClear?: { wildBattles?: number; trainerBattles?: number; explores?: number } | null;   // null = free passage once cleared
+}
+```
+How it maps onto existing primitives (no special engine path):
+- The engine keeps per-character **location progress**: `{ cleared: boolean; lifetime: Counters; visit: Counters }`, where `visit` resets on each entry. It's updated by the same event listeners used for quest objective tracking (wild battle finished, trainer defeated, explore pressed).
+- New condition facts `location.cleared` and `location.visit.<counter>` (scope: the location being exited). The builder compiles `traversal` into **gates on the exit edges** (`presentation: 'attemptable'`, explanation "Defeat 2 more trainers to continue").
+- Reaching `firstClear` sets `cleared = true`, after which `afterClear` (or nothing) applies.
+
+Not MVP (RBY has no such gating). The model and facts are reserved so it's additive.
+
+### "Encounters while travelling" (option B), clarified
+Option B means **the trip itself can be interrupted**. You pick "Go to Viridian City" from Route 1, and the engine rolls encounters *along the way* (e.g. a chance per step of the route's length). You might be ambushed by a Rattata or a trainer before arriving, and you can't decline the encounter except via Repel or running. With option A (MVP), choosing a destination moves you instantly, and encounters only happen when you press Explore.
+
 ## MVP scope
 - Method registry with canon defaults (grass, cave, surf, old/good/super rod).
 - Conditioned tables, the "Explore" action, the Repel effect, and the encounter-rate setting.

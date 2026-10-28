@@ -56,7 +56,7 @@ RegionRules {
     payout: GenId;                            // trainer prize money
   };
   graphics: {
-    sprites: { gen: GenId; game?: string; palette?: 'normal' | 'gray' | 'color' };   // MVP: original Gen 1 sprites (e.g. g1 'rb' or 'y')
+    sprites: { gen: GenId; game?: string; palette?: 'normal' | 'gray' | 'color' };   // MVP: original Gen 1 sprites. Kanto Classic default: g1 'y', palette 'color'
     shinies: boolean;                         // Gen 1 has none
   };
   systems: {                                  // gameplay systems, mostly not generation-bound
