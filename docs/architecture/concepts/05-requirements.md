@@ -128,8 +128,11 @@ Gate = {
   cost?: Effect[];                                   // consumed when the gated action happens (fares, entry fees, tickets)
   presentation?: 'hidden' | 'locked' | 'attemptable';
   lockedText?: string;                               // overrides the auto-explanation ("The guard won't let you pass.")
+  latch?: boolean;                                   // default false. true = "once cleared, always cleared" (see below)
 }
 ```
+
+**Live by default, latch optionally (decided Oct 2026).** Gates are evaluated against **current** state. If a badge is revoked or a numeric progression drops, access is genuinely lost again. That's the simple, predictable default. For "once cleared, always cleared", set `latch: true`: the first time the gate passes, the engine writes the reserved flag `gate:<ownerRef>:passed`, and from then on the gate passes without re-checking its condition (costs still apply if the gate has them). It's one check in `checkGate` plus a flag, with no milestone history to track. It's the same pattern `location.cleared` uses for traversal.
 
 | Presentation | Player sees | On attempt | Typical use |
 |---|---|---|---|

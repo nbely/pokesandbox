@@ -55,6 +55,13 @@ Admin-authored flags are free-form (`rocket_hideout_cleared`). Conditions can te
 - `visibility` already handles the profile.
 - Add an optional `display` hint: `badgeCase` (grid of milestone images), `meter`, `list`, `hidden`. The profile renderer and the webapp can then make badges look like badges without special-casing the key "badges".
 
+## Decisions (Oct 2026, Q21)
+Option B (two layers) adopted: curated **progressions** (displayable) + open **flags** (engine-reserved prefixes `trainer:`, `script:`, `pickup:`, `gift:`, `gate:`, plus author flags created inline). The builder offers a dropdown of every flag used in the region, and a "Promote to progression" action for flags that turn out to matter to players.
+
 ## Open questions
-- Should flags be **region-scoped only**, or do you foresee **server-scoped / global** flags (e.g. server events, the community boss defeated)? Recommendation: character flags are region-scoped, and add a separate `WorldState` doc per region for server-wide state when you build server events.
-- Can a player ever **lose** a milestone? (It affects whether `sequential` checks "has N-1" or "has ever had N-1".)
+- ~~Region-scoped flags?~~ **Decided:** character flags are per character, per region. Server-wide state lives in a separate `WorldState` doc per region (arrives with server events).
+- ~~Can a player lose a milestone?~~ **Decided: yes**, as numeric progressions can decrease. Milestones are revoked with the `milestone` effect (`grant: false`).
+  - Conditions evaluate **current** state, so revoking genuinely removes access.
+  - Gates that should stay open use `latch: true` ([05 §4](05-requirements.md)).
+  - `sequential` checks the **current** holdings ("has N-1 now"). Revoking an earlier milestone does not cascade-revoke later ones.
+- **Staff flag tools** (view/edit a character's flags): not MVP. The MVP runs on the owner's server, and maintainers fix records directly.
