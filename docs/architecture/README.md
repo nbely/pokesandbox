@@ -8,6 +8,8 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 3. [`open-questions.md`](open-questions.md): decisions needed from the owner.
 4. [`decision-log.md`](decision-log.md): what was already decided in the ChatGPT sessions (with the transcript in `reference/`).
 
+> **Status (Oct 2026):** all 33 open questions are answered. Decisions are recorded in [`open-questions.md`](open-questions.md) and in each concept doc's "Decisions" section, and they supersede the original proposals where they differ.
+
 ## The big alternates (vs. the current plan)
 
 | # | Current plan / code | Proposed | Why | Doc |
