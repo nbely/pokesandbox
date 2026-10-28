@@ -78,51 +78,71 @@ MVP needs no publisher UI. It needs only the auto-created Publisher per server a
 
 They're usually 1:1. **Overrides** are the reason they're separate: an override is a library entry whose species ID *is a canon ID*.
 
-### The three kinds of custom species entry
-| Kind | Species ID | Showdown name in the compiled mod | Example |
-|---|---|---|---|
-| **New species** (fakemon) | `<ns>:<slug>` | its display name ("Sparkitten") | `newlogora:sparkitten` |
-| **New form of an existing species** (canon or custom base) | `<ns>:<base>-<form>` | "Pikachu-Surfer" (`baseSpecies: Pikachu`, `forme: Surfer`) | `newlogora:pikachu-surfer` |
-| **Override** of a canon species or form | **the canon ID** (`pikachu`, `raichualola`) | the canon name (`inherit: true` + changed fields) | a server's rebalanced Pikachu |
+### Two kinds of library entry: *original* and *linked* (decided Oct 2026)
+Every library entry is one of two kinds. Overrides of canon and imports from other servers turn out to be **the same mechanism**: a *linked* entry, which is a pinned base definition plus a local patch.
 
-- **`<ns>`** is the **publisher ID**: an opaque, immutable, system-generated ID (decided Oct 2026; see "Namespaces & publishers" below). No one chooses or claims it. Examples in this doc use `newlogora` as a readable stand-in. A real ID looks like `p7k2m9x4:sparkitten`.
+| Kind | What it is | Species ID | Examples |
+|---|---|---|---|
+| **Original** | Data authored from scratch | `<ns>:<slug>` (the creator's namespace) | A new fakemon `newlogora:sparkitten`. A new **form** of an existing species `newlogora:pikachu-surfer` (`baseSpecies: Pikachu`, `forme: Surfer`). |
+| **Linked** | `base` (a pinned definition: canon@dataVersion or another publisher's entry@vN) **+ `patch`** (local field changes, possibly empty) | **the base's ID** (unchanged) | **Canon override:** base = canon Pikachu, patch = new stats. **Import:** base = `newlogora:sparkitten@v3`, patch = {} or local tweaks. |
+
+```ts
+LibraryEntry {
+  entryId; publisherId; visibility: 'private' | 'public';     // private by default
+  subject: 'species';                                           // later: 'move' | 'ability' | 'item' | 'type'
+  kind: 'original' | 'linked';
+  // original
+  speciesId?: `${ns}:${slug}`; versions?: { version; publishedAt; data; dependencies: DefinitionRef[] }[];  // immutable once published
+  // linked
+  base?: { ref: DefinitionRef; pinnedVersion: string };       // canon@<data version> or <ns>:<slug>@vN
+  patch?: Partial<SpeciesData>;                                 // field-level local changes; effective = base ⊕ patch
+  detachedFrom?: DefinitionRef;                                 // provenance after "detach"
+}
+```
+
+- **`<ns>`** is the **publisher ID**: an opaque, immutable, system-generated ID (see "Namespaces & publishers" below). Examples in this doc use `newlogora` as a readable stand-in. A real ID looks like `p7k2m9x4:sparkitten`.
 - Showdown IDs are lowercase alphanumeric only, so **any ID containing `:` can never collide with canon**, now or in future generations.
 - A rename changes the display name, never the species ID.
 
-### Why overrides fit Showdown naturally
-Showdown mods already work this way: a mod entry with `inherit: true` replaces the base entry for battles using that mod. Because each region release / Arena format compiles its **own** mod:
-- **Region with the override:** its mod replaces `pikachu`. Every content reference (`pikachu` in encounter tables, trainer parties) picks up the override with no reference changes. Toggling the override on or off never touches content.
-- **Region without it:** gets canon Pikachu.
-- **The "not both in one region" rule is structural:** a region's species set maps each species ID to exactly one definition, so the original and the override literally can't coexist. The validator explains: "Pikachu is overridden by *Rebalanced Pikachu*. To use both, create it as a new form instead."
+### Why this fits Showdown naturally
+A linked entry *is* Showdown's mod pattern: `inherit: true` + changed fields. Each region release / Arena format compiles its **own** mod, so:
+- **A region using a linked entry** gets `base ⊕ patch` under the base's ID. Every content reference (`pikachu`, `newlogora:sparkitten` in encounter tables, trainer parties) picks it up with no reference changes. Switching between the original and a linked version never touches content.
+- **The "not both in one region" rule is structural:** a region's species set maps each species ID to exactly one definition, so canon Pikachu and a linked (overridden) Pikachu can't coexist. The validator explains: "Pikachu is overridden by *Rebalanced Pikachu*. To use both, create it as a new form instead."
 
 ### Compiling to Showdown without name clashes
 Inside one compiled mod, Showdown keys species by `toID(name)`. The compiler:
-1. **New species/forms:** emits the display name. If it collides with a canon name or another selected entry in the *same* region/format, publish is blocked with a "set a local display name" fix. (Two servers' "Sparkitten"s only clash if one region imports both.)
-2. **Overrides:** emit under the canon key with `inherit: true`.
+1. **Originals (species/forms):** emits the display name. If it collides with a canon name or another selected entry in the *same* region/format, publish is blocked with a "set a local display name" fix. (Two servers' "Sparkitten"s only clash if one region imports both.)
+2. **Linked entries:** emit under the base's key with `inherit: true` + patch (for canon bases), or the base's compiled data + patch (for imported bases).
 3. Keeps a per-release **translation table** (species ID ↔ Showdown ID) so battle logs map back to our IDs.
 
 Future canon additions are safe: a new real "Sparkitten" just becomes a name clash, caught at that region's next publish. Existing instances keep `newlogora:sparkitten`.
 
-### Sharing & import
-```ts
-LibraryEntry {
-  entryId; kind: 'species' | 'form' | 'override' | 'move' | 'ability' | 'item' | 'type';
-  publisherId; speciesId /* or moveId… */; 
-  visibility: 'private' | 'public';              // private by default
-  versions: { version; publishedAt; data; dependencies: DefinitionRef[] }[];  // immutable once published
-  derivedFrom?: DefinitionRef;                    // set when forked from someone else's entry
-}
-ServerLibrary.imports: { ref: DefinitionRef; pinned: true }[]
-```
-- **Import = pinned reference**, not a copy. The importer uses `<author-ns>:<slug>@v3`, gets "v4 available" notices, and upgrades explicitly. Species IDs stay the author's, so Pokémon stay the same species if cross-server features (trading, travel) ever arrive.
-- **Fork = copy to edit.** It creates a new entry under the importer's own namespace with `derivedFrom`. It's a different species ID (or an override, if it targets a canon ID).
-- **Dependencies** (custom moves, abilities, types a species needs) are imported as a closure, at pinned versions.
-- If the author **unpublishes or goes private**, existing importers keep their pinned versions (published versions are immutable), but new imports stop.
-- Moves, abilities, items, and types follow the same three-kind scheme (new / variant / override) and the same sharing rules.
+### Importing from another server
+1. **Import** creates a *linked* entry in your library: `base = author's entry @ latest published version`, `patch = {}`. It's immediately usable, and it's **editable locally**: any field you change goes into your patch. The author's data is never modified.
+2. **Updates:** when the author publishes v4, you get a notice listing what changed. **Upgrading** re-pins the base to v4 and re-applies your patch:
+   - Fields only the author changed → you get the new values.
+   - Fields only you changed → your values stay.
+   - Fields **both** changed → shown as conflicts; your value wins unless you pick theirs.
+   Nothing changes until you upgrade, and live play only changes at your next region publish.
+3. **Detach** (optional): flatten `base ⊕ patch` into an *original* under **your** namespace (new species ID, `detachedFrom` provenance). Use it when your version has become its own thing and you want to publish it yourself.
+4. **Dependencies** (custom moves/abilities/types the species needs) import together as linked entries at pinned versions.
+5. If the author **unpublishes or goes private**: you keep your pinned base (published versions are immutable). New imports stop, and you can still detach.
+
+**Identity choice:** a linked entry keeps the base's species ID even with local tweaks, the same way a canon override keeps `pikachu`. A locally patched Sparkitten is still a Sparkitten that "works differently in this game". If cross-server trading or travel ever arrives, a Pokémon battles with the definition of the place it's in. Detaching is how a creator says "this is a different species now".
+
+**Why not the alternatives:**
+| Option | Problem |
+|---|---|
+| Pinned reference only (no local edits) | Fails the requirement: importers must be able to tweak locally. |
+| Plain copy with a source link | Local edits are easy, but upstream updates become a manual re-import that loses your edits, and each copy needs a new ID (or else two servers own the same ID). |
+| **Linked: pinned base + local patch** | Local edits *and* clean upgrades. Same mechanism as canon overrides. Keeps IDs stable. |
+
+### Later: moves, abilities, items, types (post-MVP)
+The same original/linked scheme applies, but it's deferred until custom moves/abilities/items are designed. Their behavior is code in Showdown, so patches must be limited to safe, data-only fields (power, accuracy, type, PP, effect chances) on existing behaviors.
 
 ### What happens to owned Pokémon when definitions change
-- **Override, region-level:** a Pokémon's species ID is `pikachu` either way. If cross-region travel/trading ever exists, it battles with the *destination's* Pikachu definition. That's the intended meaning of an override: "Pikachu works differently in this game".
-- **Library version bump:** applies at the region's next publish, same as any content change ([01](01-content-vs-state-and-publishing.md)).
+- **Linked entries (overrides or tweaked imports):** the Pokémon's species ID is the base's ID either way. It battles with whatever definition the current region uses.
+- **Version bumps / upgrades:** apply at the region's next publish, same as any content change ([01](01-content-vs-state-and-publishing.md)).
 - **Deleted entry:** blocked while any published release or instance references it. Archive instead.
 
 ### Mongo shape

@@ -97,7 +97,7 @@ No player-facing commands exist yet. Automated tests are e2e scaffolds only, wit
 1. Requirements become a composable **Condition** tree with a predicate registry.
 2. Add a single **Script** system (trigger → condition → steps) instead of bespoke trigger/gauntlet/gift/NPC-dialogue features.
 3. Add a **draft → published release** split for region content. Runtime reads immutable releases.
-4. Use **string content keys** (Showdown IDs for canon content, generated slugs/UUIDs for authored content) instead of cross-content ObjectIds.
+4. Use **string content keys** (Showdown IDs for canon content, opaque region-scoped keys for authored content) instead of cross-content ObjectIds.
 5. Create a **`libs/engine`** package: a pure domain layer (actions in, events out) that the bot and webapp both call.
 6. Pokémon instances get **their own collection**. Character stays a compact save-state document.
 7. Slim the Showdown fork to a **thin patch set + mod**, rebased on current upstream.

@@ -29,20 +29,44 @@
 
 ## Options for authored content keys
 
-| Option | Example | Pros | Cons |
-|---|---|---|---|
-| ObjectId (status quo) | `69a66f9c…` | Native, free | Needs remapping on clone/import. Unreadable in JSON exports and scripts. |
-| UUID | `3f2a…` | Globally unique, clone-safe if you re-key | Unreadable. Clones keep identical keys unless rekeyed (that's fine, since keys are region-scoped). |
-| **Slug + short suffix** (recommended) | `route-1~k3f9`, `npc:brock~a12c` | Readable in exports, logs, and future script files. Stable under rename (the slug is just a hint). Region-scoped uniqueness is easy. | Slightly more code (generator + uniqueness check). |
+Authored content (locations, NPCs, trainers, scripts, shops, transport networks, encounter tables) needs a reference key that is:
+1. **Stable**: never changes on rename or edit.
+2. **Copy-safe**: survives cloning a region (templates, sequels), importing a bundle, duplicating an entry, and compiling a release, **without remapping references**.
 
-Rename should **not** change the key. The slug part is cosmetic, frozen at creation.
+The second property is the reason a separate key exists at all. If references used the Mongo `_id`, every copy would create new `_id`s and every reference field in every content type would need rewriting. One missed field silently points the copy at the template's original content.
+
+| Option | Pros | Cons |
+|---|---|---|
+| Mongo `_id` as the reference | Native, nothing new | Copies need a full reference remap across every schema. Missed fields fail silently. |
+| Slug + suffix (`route-1~k3f9`) | Readable in raw JSON | The readability only matters in raw exports. It adds a generator, uniqueness rules, and a frozen slug that goes stale after renames. |
+| **Opaque region-scoped key, separate from `_id`** (decided Oct 2026) | Copies keep keys verbatim, so no remapping. Rename-safe. A tiny generator (`nanoid`, ~10 chars). Matches the existing progression/milestone keys (already opaque UUIDs, not `_id`s). | One extra indexed field (`{ regionId, key }` unique) |
+
+**Who sees keys?** Nobody, in normal use. Players never see them. Authors see names in every builder (Discord and webapp), with names resolved from the key through the same presentation-layer idea used for publishers. Keys only appear in raw JSON export/import and logs. There, the exporter writes a non-authoritative `_label` next to each reference (`{ "to": "k3f9a1x7qz", "_label": "Route 1" }`) so humans can read the file. Import ignores `_label`.
 
 ## Recommendation
 
-- Introduce a shared `ContentKey` type (`z.string().regex(...)`) and a generator. Use it for locations, NPCs, trainers, scripts, shops, transport networks, encounter tables, and progression/milestone keys (keep existing UUIDs; they're valid opaque keys).
+- Introduce a shared `ContentKey` type (opaque, ~10-char `nanoid`) and generator. Use it for locations, NPCs, trainers, scripts, shops, transport networks, and encounter tables. Keep the existing progression/milestone UUIDs (already valid opaque keys).
 - Content cross-references use keys: `connection.to: ContentKey`, `encounterSlot.species: SpeciesId`, `itemCondition.item: ItemId`.
-- Drop `Region.locations`, `Region.characterList`, `Region.shops`, `Region.quests`, and `Server.playerList`. Add `Region.serverId`. Add indexes (`Location {regionId, ordinal}`, `Character {userId, regionId}` unique, etc.).
-- Keep `User.servers` only if the webapp really needs "my servers" without a membership query. Otherwise derive it from Characters/memberships.
+- Drop `Region.locations`, `Region.characterList`, `Region.shops`, `Region.quests`, and `Server.playerList`. Add `Region.serverId`. Add indexes (`{ regionId, key }` unique, `Location {regionId, ordinal}`, `Character {userId, regionId}` unique, etc.).
+
+### A user's server list (decided Oct 2026)
+Replaces `User.servers` / `Server.playerList` (no bidirectional arrays). The webapp's left nav (Discord-style) combines two sources:
+
+| Source | Stored? | How |
+|---|---|---|
+| **Membership:** registered PokeSandbox servers you're in on Discord | **No, derived** | From the user's Discord guild list (OAuth `guilds` scope; refreshed on login and periodically, briefly cached) intersected with registered servers. Leaving a Discord server removes it automatically. |
+| **Favorites:** servers you saved from discovery to check out later | **Yes** | User preference |
+| **Layout:** order, folders/groups (name, color), collapsed state | **Yes** | User preference, like Discord's server folders |
+
+```ts
+UserNavLayout {             // one doc per user (or embedded on User; it's bounded by the user's own actions)
+  userId;
+  favorites: ObjectId[];    // serverIds the user explicitly saved
+  items: ( { type: 'server'; serverId } | { type: 'folder'; id; name; color?; collapsed?; serverIds: ObjectId[] } )[];
+}
+```
+- Rendering = `items` order first, then any member/favorite servers not yet placed (appended in default order). Stale entries (server deleted, membership gone and not favorited) are pruned lazily.
+- This is a **one-directional user preference** (user → servers). Servers never list users. "Players in this server" comes from Characters or a membership query.
 
 ### Do authored content entries stay as separate Mongo docs?
 Yes, for the **draft** (one doc per location/NPC/script keeps authoring writes small and concurrent-safe). The **release** compiles them into a keyed bundle (see [01](01-content-vs-state-and-publishing.md)). The engine resolves references against the bundle's in-memory maps, never with populates.
