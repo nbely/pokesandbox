@@ -199,6 +199,11 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Profile: badge case, milestones, visited, dex (M)
 
 ## M6: Kanto Classic & MVP Release 🚀
+
+**Kanto Classic adaptations (decided Oct 2026).** These keep MVP scope down without special mechanics:
+- **No Safari Zone in MVP** (bait/rock/ball mechanics deferred). Its key rewards come another way, e.g. a Fuchsia NPC gift script gives HM03 Surf, and the Warden gives HM04 Strength directly or via a simpler fetch.
+- **No unidentifiable-ghost mechanic.** Pokémon Tower's upper floors are gated on `bag.count silph-scope ≥ 1` (presentation `attemptable`, with a "the ghosts block your way" script). The rival battle stays reachable *outside* that gate (lobby/first floor), so story order matches RBY. The Marowak ghost is a scripted `wildBattle` behind the gate.
+
 - [ ] Author "Kanto Classic" with the tools (dogfooding; track every builder friction as an issue) (XL → split per area)
 - [ ] Headless engine playthrough test to badge 2 (M)
 - [ ] Human playtest Pallet → Champion; balance pass (L)

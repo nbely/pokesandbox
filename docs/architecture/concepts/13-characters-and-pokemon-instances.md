@@ -11,6 +11,10 @@ Character {
   releaseVersion: number;                        // see 01
   mode: { type: 'overworld' } | { type: 'script'; … } | { type: 'battle'; battleId };   // see 03
   location: { current: ContentKey; respawn: ContentKey; visited: ContentKey[] };
+  // respawn = the "save point" for blackouts. Initialized to Region.defaultRespawnKey (e.g. the player's house, like RBY),
+  // updated automatically when the player uses a `heal` service (Pokémon Center), or explicitly by the `setRespawn` effect.
+  // Read by the engine on whiteout (RegionRules.whiteout) and by Teleport/Escape Rope-style effects. Not a condition fact.
+  // Later, if needed: named anchors (Record<string, ContentKey>), with 'respawn' as the default anchor. Additive.
   money: number;
   bag: Record<ItemId, number>;                   // pockets derived from ItemDefinition
   progress: Record<progressionKey, number | boolean | string | string[]>;

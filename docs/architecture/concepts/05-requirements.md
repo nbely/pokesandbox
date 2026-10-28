@@ -176,7 +176,30 @@ The condition is the same everywhere. What differs is how the caller uses the re
 **Verdict:** conditions remain the one gating primitive for everything. Facts + scopes + the Gate envelope + usage policies make it fit scripts, quests (with objective trackers alongside), and every other access gate without special cases.
 
 ## MVP scope
-- Predicate types: `progression`, `milestone`, `choice`, `flag`, `item`, `currency`, `party` (move/species), `visited`, `time`, plus `all`/`any`/`not`.
+- `all` / `any` / `not` with at least one level of grouping in the Discord builder. RBY needs both: *knows Cut **and** has the Cascade Badge*, and the Saffron gate guards accept *Fresh Water **or** Soda Pop **or** Lemonade*.
+- **MVP facts (decided Oct 2026, scoped to a Red/Blue/Yellow Kanto):**
+
+  | Fact | RBY use |
+  |---|---|
+  | `milestone.has` | Badge needed to use each HM outside battle, Route 23 badge guards |
+  | `milestone.count` | Viridian Gym locked until 7 badges |
+  | `choice.value` | Rival team keyed off the starter |
+  | `flag` | Oak's Parcel, trainers defeated, Snorlax, Silph Co., S.S. Anne departure, gifts claimed |
+  | `bag.count` | S.S. Ticket, Bicycle, Silph Scope, Poké Flute, Card Key, Lift Key, Secret Key, gate drinks |
+  | `visited` (incl. `$target`) | Fly destinations |
+  | `party.knowsMove` | Cut / Surf / Strength / Flash obstacles, using Fly |
+  | `dex.caughtCount` | Oak's aides (HM05 Flash at 10, Itemfinder at 30, Exp. All at 50) |
+  | `progression.value` | Not required by RBY, but admins will gate on numeric and boolean progressions they define |
+
+- **Deferred:**
+  - `money`: affordability is already handled by the cost check before effects apply.
+  - `time.partOfDay`: RBY has no day/night, so encounter tables use `any`.
+  - `currentLocation`: NPCs are already placed per location.
+  - `party.hasSpecies`: in-game trades, not MVP.
+  - `party.size`: covered by the starter choice/flag.
+  - Script `var`: MVP branching uses choice labels.
+  - `dex.caught`; plus everything already listed as post-MVP (quest vars, world state, single-Pokémon facts, weekday, weather, `party.maxLevel`).
+- **Not a fact: the blackout/respawn point.** It's character *state* (`Character.location.respawn`), written by the `setRespawn` effect and automatically by using a `heal` service. The engine reads it directly on whiteout, per `RegionRules.whiteout`. It only becomes a fact if some condition ever needs to ask "where is my respawn?", which no known content does.
 - Evaluator, explainer, validator, and builder (flat list + one nesting level).
 
 ## Open questions
