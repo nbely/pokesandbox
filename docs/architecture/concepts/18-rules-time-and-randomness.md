@@ -26,7 +26,67 @@ RegionRules {
 }
 ```
 
-Ship **presets**: "Classic Gen 1", "Gen 3 (RSE)", "Modern (Gen 9)". Admins pick a preset and then tweak. Rules are part of the release, so changing them is a publish.
+Rules are part of the release, so changing them is a publish. *(Superseded by the piecemeal design in "Decisions" below; the shape above is kept for history.)*
+
+## Decisions (Oct 2026): piecemeal rules, Gen 1 first
+
+**Principle:** a region's rules are chosen **dimension by dimension**, each from any generation that implements it (e.g. Gen 1 catch formula + Gen 3 learnsets + Gen 6 type chart). **Only battle mechanics are holistic.** They're a single Showdown mechanics generation, because the simulator implements them as one coherent unit. Gimmicks (Mega Evolution, Z-Moves, Dynamax, Terastallization) are **separate toggles**, independent of the generation choice, and **not MVP**.
+
+**MVP:** every dimension defaults to **Gen 1 (Classic)**, and Gen 1 is the only implemented option. The model supports all dimensions and generations from day one. Other generations' implementations are follow-up work, added per dimension without schema changes.
+
+```ts
+RegionRules {
+  battle: {                                   // HOLISTIC: handled by the battle simulator
+    mechanicsGen: GenId;                      // Showdown gen mod: damage/crit/turn order/status mechanics. MVP: 'gen1'
+    gimmicks: { mega: false; zMoves: false; dynamax: false; tera: false };   // separate toggles; post-MVP
+    defaultFormat: 'singles' | 'doubles'; setMode: boolean; clauses?: string[];
+  };
+  data: {                                     // PIECEMEAL: which generation's data the region uses
+    speciesStats: GenId;                      // base stats (Gen 1 single Special stat; later-gen stat changes)
+    types: GenId;                             // type chart + species/move typings (Gen 1: no Dark/Steel/Fairy, Ghost↛Psychic bug)
+    moves: GenId;                             // move data (power/accuracy/type/PP as of that gen)
+    learnsets: GenId;                         // level-up/TM/tutor sources
+    catchRates: GenId;                        // species catch-rate data
+  };
+  formulas: {                                 // PIECEMEAL: engine-side calculations
+    exp: GenId; expShare: 'item' | 'always-on' | 'off'; tradedBonus: boolean;   // MVP: gen1, Exp. All item
+    catch: GenId;                             // MVP: gen1 catch algorithm
+    escape: GenId;                            // run-away odds
+    whiteoutPenalty: GenId | 'none';          // Gen 1: lose half your money
+    payout: GenId;                            // trainer prize money
+  };
+  graphics: {
+    sprites: { gen: GenId; game?: string; palette?: 'normal' | 'gray' | 'color' };   // MVP: original Gen 1 sprites (e.g. g1 'rb' or 'y')
+    shinies: boolean;                         // Gen 1 has none
+  };
+  systems: {                                  // gameplay systems, mostly not generation-bound
+    party: { size: 6; whenFull: 'toPc' | 'promptSwap' };   // 'promptSwap' (Q9)
+    boxes: { count: number; size: number };   // Gen 1: 12 boxes × 20
+    bagCapacity?: number;                     // Gen 1: 20 item slots (optional authentic limit)
+    nicknames: boolean; time: TimeRules;      // time unused in Gen 1 regions
+    levelCap?: …; obedience?: …;
+  };
+}
+// GenId = 'gen1' | 'gen2' | … | 'gen9'. Each dimension has a registry of implemented options.
+```
+
+**How piecemeal data reaches the simulator.** Showdown's gen mods (`data/mods/gen1`, …) already hold per-generation species stats, move data, and type charts. The engine assembles the chosen mix per region release and injects it into that release's **isolated custom-data dex** (the same mechanism as server library content, see [14](14-battle-system-and-showdown.md)), running under `battle.mechanicsGen`.
+
+**Compatibility is validated, not assumed.** Some mixes can't work with a given mechanics generation, e.g.:
+- Split Special Attack/Defense data under Gen 1 mechanics (which only read one Special stat).
+- Abilities or held items under Gen 1/2 mechanics.
+- Fairy typings under a mechanics gen whose type handling predates it.
+
+Each option declares its constraints (`requires`, `incompatibleWith`), and the validator blocks publishing an invalid mix with an explanation. The builder only offers compatible options.
+
+**Gen 1 specifics the MVP must handle (no modern mechanics):**
+- No abilities, held items, natures, genders, shinies, or breeding.
+- DVs (0–15) and Stat Experience instead of IVs/EVs. Pokémon instances store values in Showdown's set shape, which encodes Gen 1/2 DVs and Stat Exp; the rules decide valid ranges.
+- Original Gen 1 learnsets and move data (e.g. Bite is Normal-type).
+- Gen 1 EXP, catch, escape, and payout formulas.
+- **Original Gen 1 sprites.** DexEntry already stores `g1` sprite sets (`rb`, `rg`, `y`; normal/gray/color).
+
+**Presets** become saved combinations ("Classic Gen 1", later "RSE", "Modern"). The MVP ships only **Classic Gen 1**. Admins can still change any dimension once more generations are implemented.
 
 ## Time
 - **Real-time in the server's timezone** is the most "Pokémon" option (Gen 2+ day/night, weekly NPCs) and the easiest to reason about for a community.

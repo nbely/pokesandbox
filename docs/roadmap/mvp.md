@@ -131,7 +131,9 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 **Epic: Catalog**
 - [ ] Catalog service over the Showdown Dex (species, moves, items, abilities, learnsets) (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
-- [ ] `RegionRules` model + "Modern" and "Classic Gen 1" presets (M)
+- [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
+- [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp. "Classic Gen 1" preset (L)
+- [ ] Assemble per-release data mixes from Showdown gen mods into isolated custom-data dexes (M)
 
 **Epic: Teams**
 - [ ] `PokemonSet` shared type and `TeamPreset` model (S)
