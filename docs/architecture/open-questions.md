@@ -38,7 +38,7 @@ Questions for the project owner. Answers shape the MVP backlog. Grouped by theme
 | Q20 | **Rebase and slim the Showdown fork** (patch set + mod) before integrating? | Yes ([14](concepts/14-battle-system-and-showdown.md)) | |
 | Q21 | Split **engine-managed flags** from curated progressions? | Yes ([04](concepts/04-progression-and-flags.md)) | |
 | Q22 | Pokémon instances as their **own collection**? | Yes ([13](concepts/13-characters-and-pokemon-instances.md)) | |
-| Q33 | Stay on **MongoDB** (properly configured, behind repository interfaces), with Postgres re-evaluated at Phase 3 and SpacetimeDB as a spike-only watch item? | Yes ([20](concepts/20-database-and-realtime-platform.md)) | |
+| Q33 | Stay on **MongoDB** (properly configured, behind repository interfaces), with Postgres re-evaluated at Phase 3 and SpacetimeDB as a spike-only watch item? | Yes ([20](concepts/20-database-and-realtime-platform.md)) | **Decided (Oct 2026):** stay on MongoDB. Live PvP stays in Discord for the foreseeable future; moving play fully to the webapp is ~1–2% likely, so SpacetimeDB is shelved. |
 
 ## Scope & ownership
 

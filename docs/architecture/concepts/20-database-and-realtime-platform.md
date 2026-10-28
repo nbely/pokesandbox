@@ -4,6 +4,8 @@
 
 **MVP impact:** Medium · **Cost to change later:** Medium if persistence stays behind repositories, very high if it doesn't
 
+> **Decision (Oct 2026):** Stay on MongoDB. Live PvP stays in Discord for the foreseeable future. The owner puts moving play fully to the webapp, which is the only scenario that would favor SpacetimeDB, at roughly 1–2%. SpacetimeDB is shelved, with no spike planned. The Phase 3 Postgres checkpoint still stands. Revisit only if a webapp-first play surface becomes a real plan.
+
 ## First: what kind of "concurrent multiplayer" is PokeSandbox?
 
 | Property | PokeSandbox | Typical realtime game (SpacetimeDB's target) |
@@ -84,10 +86,10 @@ Why it's a poor fit here:
 2. **Keep the database swappable.** `libs/engine` talks to `CharacterRepo`, `PokemonRepo`, `TradeRepo`, `ContentProvider`, etc., and never imports Mongoose. That's the real hedge. If you move to Postgres later, it's a repository rewrite, not an engine rewrite.
 3. **Add Redis when you run more than one bot process** (Discord sharding): distributed locks, cache, pub/sub between shards, and live-battle routing. Not before.
 4. **Phase 3 checkpoint:** before building trading, GTS, and breeding pools, re-evaluate Postgres. Trigger it if Mongo transactions prove painful, if you need marketplace-style queries (filtering GTS listings by complex criteria), or if analytics becomes important.
-5. **SpacetimeDB stays a watch item** for a future real-time webapp play surface. If you want to test it, timebox a 2-day spike: run one PvP battle (Showdown sim) inside a TypeScript module, with the bot as a subscriber. That would turn the open questions above into facts.
+5. **SpacetimeDB is shelved** (see the decision above). It's only relevant to a future real-time webapp play surface. If you want to test it, timebox a 2-day spike: run one PvP battle (Showdown sim) inside a TypeScript module, with the bot as a subscriber. That would turn the open questions above into facts.
 
 ## Open questions
-- Do you foresee **many simultaneous real-time viewers** (e.g. a webapp spectator mode for raids/tournaments with hundreds of browsers)? That's the only scenario that changes this recommendation.
+- ~~Do you foresee many simultaneous real-time viewers in a webapp?~~ Answered: no. Live PvP and spectating stay in Discord, and a webapp-first move is ~1–2% likely.
 - Hosting preference: managed (Atlas / Neon) or self-hosted on a VM? It affects the backup story more than the engine choice.
 - Comfort with SQL vs document modeling for contributors joining after the org move?
 
