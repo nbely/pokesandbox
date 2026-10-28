@@ -85,3 +85,75 @@ Yes, for the **draft** (one doc per location/NPC/script keeps authoring writes s
 ## Open questions
 - Will regions ever be **shared across servers** (a published "Kanto Classic" that many servers deploy)? If yes, Region needs `ownerServerId` plus a separate "installation" concept. If no, `Region.serverId` is enough.
 - Should DexEntry keep ObjectId `_id`s at all, or switch `_id` to the Showdown ID string? (Recommendation: `_id` can stay, but add a unique `speciesId` string field and reference by that.)
+
+## Worked example: copying a template region to another server
+
+**Setup.** The PokeSandbox HQ server publishes a "Kanto Classic" template region. The Pallet Paradise server imports it, then modifies it.
+
+### 1. In the template's server (draft documents)
+```jsonc
+// regions
+{ "_id": "R_A", "serverId": "S_HQ", "name": "Kanto Classic", "startingLocationKey": "Lp4Xk9aQ2m",
+  "progressionDefinitions": { "6f1c…uuid": { "kind": "milestone", "name": "Badges",
+      "milestones": [ { "key": "milestone-91ab…", "label": "Boulder Badge" } ] } } }
+
+// locations
+{ "_id": "L_A1", "regionId": "R_A", "key": "Lp4Xk9aQ2m", "name": "Pallet Town",
+  "edges": [ { "to": "Rr1Zt8wB3c" } ] }
+{ "_id": "L_A2", "regionId": "R_A", "key": "Rr1Zt8wB3c", "name": "Route 1",
+  "edges": [ { "to": "Lp4Xk9aQ2m" }, { "to": "Vv7Qm2pL0d" } ],
+  "encounters": [ { "method": "grass", "slots": [ { "species": "pidgey", "minLevel": 2, "maxLevel": 5, "weight": 50 } ] } ] }
+{ "_id": "L_A3", "regionId": "R_A", "key": "Vv7Qm2pL0d", "name": "Viridian City",
+  "edges": [ { "to": "Rr1Zt8wB3c" }, { "to": "Gy5Hn3sK8e",
+      "gate": { "condition": { "fact": { "kind": "milestoneCount", "key": "6f1c…uuid" }, "op": "gte", "value": 7 },
+                "presentation": "locked" } } ] }
+
+// npcs
+{ "_id": "N_A1", "regionId": "R_A", "key": "Nb2Rk6yT1w", "name": "Brock", "location": "Pw3Gm8cX5v", "interact": "Sc9Ld4fJ7u" }
+```
+
+### 2. Import into another server = copy the documents, keep the keys
+```jsonc
+// regions (new doc, new _id, new owner)
+{ "_id": "R_B", "serverId": "S_PALLET", "name": "Kanto Classic", "startingLocationKey": "Lp4Xk9aQ2m",
+  "clonedFrom": { "regionId": "R_A", "releaseVersion": 3 },
+  "progressionDefinitions": { "6f1c…uuid": { … identical … } } }
+
+// locations: new _ids, new regionId, everything else byte-for-byte identical
+{ "_id": "L_B1", "regionId": "R_B", "key": "Lp4Xk9aQ2m", "name": "Pallet Town",   "edges": [ { "to": "Rr1Zt8wB3c" } ] }
+{ "_id": "L_B2", "regionId": "R_B", "key": "Rr1Zt8wB3c", "name": "Route 1",       "edges": [ { "to": "Lp4Xk9aQ2m" }, { "to": "Vv7Qm2pL0d" } ], … }
+{ "_id": "L_B3", "regionId": "R_B", "key": "Vv7Qm2pL0d", "name": "Viridian City", "edges": [ … same gate, same progression key … ] }
+```
+The copy changed only `_id` and `regionId`. Every reference (edges, the gate's progression key, Brock's location and script, the start location) is already correct, because each key is resolved *within the region it's read in*:
+```ts
+locations.get('R_B', 'Vv7Qm2pL0d')  // → L_B3, Pallet Paradise's Viridian
+locations.get('R_A', 'Vv7Qm2pL0d')  // → L_A3, the template's Viridian
+```
+Global references are untouched by design: `pidgey` (canon) and `p7k2m9x4:sparkitten` (library species) mean the same thing everywhere. Library entries the template uses are brought along as *linked* imports (see [12](12-content-catalog-species-moves-items.md)).
+
+### 3. The importer modifies their copy
+```jsonc
+{ "_id": "L_B2", "regionId": "R_B", "key": "Rr1Zt8wB3c", "name": "Route 1 (Tall Grass)",           // renamed
+  "edges": [ { "to": "Lp4Xk9aQ2m" }, { "to": "Vv7Qm2pL0d" }, { "to": "Hd6Wq1zN4r" } ] }             // new edge
+{ "_id": "L_B9", "regionId": "R_B", "key": "Hd6Wq1zN4r", "name": "Hidden Grove", "edges": [ { "to": "Rr1Zt8wB3c" } ] }  // new location
+```
+The template (`R_A`) is untouched. Renames never touch keys.
+
+### 4. Later: the template publishes a fix (why stable keys pay off)
+HQ changes Viridian's gym gate from 7 to 8 badges in release v4. Because both copies share keys, the importer can be shown a **per-entry diff by key** and offered a merge, the same three-way logic as linked library entries:
+
+| Key | Template v3 → v4 | Your copy | Result |
+|---|---|---|---|
+| `Vv7Qm2pL0d` (Viridian) | gate 7 → 8 | unchanged | take the update |
+| `Rr1Zt8wB3c` (Route 1) | unchanged | renamed, edge added | keep yours |
+| `Hd6Wq1zN4r` (Hidden Grove) | doesn't exist | added by you | keep yours |
+
+"Pull template updates" is post-MVP, but this is the identity that makes it possible.
+
+### The same import with `_id` references instead (the alternative)
+Every reference must be rewritten during the copy:
+```jsonc
+// template:  { "_id": "L_A2", "edges": [ { "to": "L_A1" }, { "to": "L_A3" } ] }
+// copy must become: { "_id": "L_B2", "edges": [ { "to": "L_B1" }, { "to": "L_B3" } ] }
+```
+That means building an old→new map and walking every reference field in every content type: edges, gates, condition facts, NPC locations, script steps (`travel`, `battle` trainer refs), shop locations, transport hubs, start/respawn location. A missed field silently points the copy at the template's data. And the step-4 merge would need that mapping stored forever to tell which copied entry corresponds to which template entry.
