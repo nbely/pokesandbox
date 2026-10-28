@@ -69,29 +69,38 @@ Location.explore: {
 - **Asides (post-MVP):** short one-time scripts in place of "nothing happened". A description of the area, a cute or eerie moment, a fleeting NPC. Ordinary scripts with `once`, authored per location. They make the world feel alive without wasting the player's time.
 - Repel suppresses only `wild` outcomes below the lead's level.
 
-### Traversal requirements (model now, build after MVP)
-Authors can make moving through a location cost something, e.g. *"the first time through Route 2 you must fight 5 wild Pokémon and 3 trainers before the exit opens. Afterwards, 1 wild battle, or nothing."* Explore presses are how players meet these requirements.
+### Traversal requirements (MVP, decided Oct 2026)
+Authors can make moving through a location cost something. Explore presses are how players pay it. Two kinds of cost, which can be combined:
+- **One-time route costs** (first pass only), e.g. the unavoidable trainers on a route, or "fight 5 wild Pokémon your first time through".
+- **Permanent minimum costs** (every pass), e.g. caves you can't cross without walking through them, unlike grass routes you can skirt.
 
 ```ts
 Location.traversal?: {
-  exits: ContentKey[] | 'all';                 // which outgoing edges are gated
-  firstClear: { wildBattles?: number; trainerBattles?: number; explores?: number; trainers?: ContentKey[] };
-  afterClear?: { wildBattles?: number; trainerBattles?: number; explores?: number } | null;   // null = free passage once cleared
+  exits: ContentKey[] | 'all';                 // which outgoing edges are gated (direction matters: north exit vs south exit)
+  firstPass?: {                                // one-time: must be met once, then never again
+    trainers?: ContentKey[];                   // specific unavoidable trainers that must be defeated
+    trainerBattles?: number; wildBattles?: number; explores?: number;
+  };
+  everyPass?: { explores: number };            // permanent minimum per visit, counted in *explores* (steps), not battles
 }
 ```
+**Why permanent costs count explores, not battles:** a Repel should still help in caves, as in the games. With a Repel active, an explore press that would have rolled a weak wild Pokémon resolves as a **safe step** ("You press deeper into the cave…"). It still counts toward `everyPass.explores`, but no battle happens. If permanent costs counted *battles*, Repel would make a cave impassable.
+
+The **first pass** must satisfy both `firstPass` and `everyPass`. Later passes only need `everyPass`. Locations without `traversal` are free to cross.
+
 How it maps onto existing primitives (no special engine path):
-- The engine keeps per-character **location progress**: `{ cleared: boolean; lifetime: Counters; visit: Counters }`, where `visit` resets on each entry. It's updated by the same event listeners used for quest objective tracking (wild battle finished, trainer defeated, explore pressed).
-- New condition facts `location.cleared` and `location.visit.<counter>` (scope: the location being exited). The builder compiles `traversal` into **gates on the exit edges** (`presentation: 'attemptable'`, explanation "Defeat 2 more trainers to continue").
-- Reaching `firstClear` sets `cleared = true`, after which `afterClear` (or nothing) applies.
+- The engine keeps per-character **location progress**: `{ cleared: boolean; lifetime: Counters; visit: Counters }`, where `visit` resets on each entry. Updated by engine event listeners: wild battle finished, trainer defeated, explore pressed.
+- Condition facts `location.cleared` and `location.visit.<counter>`, scoped to the location being exited, are added to the **MVP fact list** ([05](05-requirements.md#mvp-scope)).
+- The builder compiles `traversal` into **gates on the exit edges** (`presentation: 'attemptable'`, explanation e.g. "Defeat Bug Catcher Rick and 1 more trainer to continue", "Keep exploring: 2 more steps to get through Mt. Moon"). Reaching `firstPass` sets `cleared = true`.
+- Unavoidable trainers can also use `engagement: 'onEnter'` (they battle you as you arrive). Traversal is for "you can't leave until…".
 
-Not MVP (RBY has no such gating). The model and facts are reserved so it's additive.
-
-### "Encounters while travelling" (option B), clarified
-Option B means **the trip itself can be interrupted**. You pick "Go to Viridian City" from Route 1, and the engine rolls encounters *along the way* (e.g. a chance per step of the route's length). You might be ambushed by a Rattata or a trainer before arriving, and you can't decline the encounter except via Repel or running. With option A (MVP), choosing a destination moves you instantly, and encounters only happen when you press Explore.
+### "Encounters while travelling" (option B): decided no
+Option B means **the trip itself can be interrupted**. You pick "Go to Viridian City" from Route 1, and the engine rolls encounters *along the way* (e.g. a chance per step of the route's length). You might be ambushed by a Rattata or a trainer before arriving, and you can't decline the encounter except via Repel or running. With option A (MVP), choosing a destination moves you instantly, and encounters only happen when you press Explore. **Decision: B won't be built.** Authors who want routes to cost something every time use `traversal.everyPass` instead.
 
 ## MVP scope
 - Method registry with canon defaults (grass, cave, surf, old/good/super rod).
-- Conditioned tables, the "Explore" action, the Repel effect, and the encounter-rate setting.
+- Conditioned tables, the explore outcome table (wild/trainer/item), the Repel effect (with safe steps), and the encounter-rate setting.
+- Traversal requirements (one-time and permanent costs) compiled into exit gates.
 - A wild battle that hands off to the battle system with catch/run/bag (see [14](14-battle-system-and-showdown.md)).
 
 ## Open questions
