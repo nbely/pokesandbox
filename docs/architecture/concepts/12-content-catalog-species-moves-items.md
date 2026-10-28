@@ -31,7 +31,7 @@ Custom content belongs to the **server**, not to a region. A region is one game,
 
 Consequences:
 - Region releases **reference** library entries by ID. They don't copy them. Publishing a region validates that every referenced library entry exists. Editing a library entry (e.g. rebalancing a fakemon's stats) affects every region that uses it at that region's next publish. The release pins a **library snapshot version**, so live play doesn't change under players until the admin republishes.
-- The **mod compiler** builds one Showdown mod per **battle context**: each region release and each Arena format. A server-wide mod can't work, because two regions on the same server may use different overrides of the same species (see below).
+- The **mod compiler** builds one Showdown data set per **battle context**: each region release and each Arena format. Preferred delivery is **runtime injection into an isolated dex** (evolving the fork's `dynamic-dex-data` POC, see [14](14-battle-system-and-showdown.md#current-state-of-the-fork-branch-inventory-oct-2026)), not generated mod files. A server-wide mod can't work, because two regions on the same server may use different overrides of the same species (see below).
 - Library content can also be **published for other servers to import** (private by default). See "Species identity" below.
 
 ## Species identity: canon, custom species, variants, overrides & sharing (proposed Oct 2026)

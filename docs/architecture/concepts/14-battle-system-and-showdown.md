@@ -4,15 +4,39 @@
 
 **MVP impact:** Very high · **Cost to change later:** High
 
-## Current state of the fork
-- Based on upstream as of **Aug 2023**, so about three years of mechanics fixes, data, and Gen 9 DLC content are missing.
-- Custom work:
-  - New Logora fakemon edited **into base `data/pokedex.ts` / `learnsets.ts` / `moves.ts`**. Every upstream rebase conflicts.
-  - `updatePlayerState` stream command (HP/status injection at battle start).
-  - `secondaryChanceCallback` hook.
-  - Exports for `moves` and AI.
-  - Debug `pause`/`sendToJSON` code in `battle-stream.ts`, which should not ship.
-- Not yet consumed by `pokesandbox`.
+## Current state of the fork (branch inventory, Oct 2026)
+
+Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom commits were rebased onto it on 2023-08-05.
+
+| Branch | Status | Unique content |
+|---|---|---|
+| `master` | Default | See "What master changes" below |
+| `dynamic-dex-data` | **Unmerged**, 2 commits ahead (2023-08-06) | Proof of concept: inject custom dex data **at battle start** instead of hardcoding it |
+| `fix-lint-issues` | Squash-merged as #7, no unique content left | — |
+| `rebase/8-5-23` | Fully contained in `master` | — |
+
+### What `master` changes vs upstream (13 files, +527/−93)
+- **New Logora species are already gone.** #7 reverted `data/pokedex.ts`, `learnsets.ts`, and `text/pokedex.ts` back to upstream (CAP species restored), so no custom species are hardcoded.
+- **10 custom moves are still hardcoded** in `data/moves.ts` + `data/text/moves.ts` (negative `num`s): Coal Scatter, Drain Life, Eagle Eye, Germ Spray, Mach Turn, Nip, Para Needle, Piston Kick, Psych Out, Shadow Dart.
+  - Side effect: inserting moves into the base move table shifts Metronome's random pool, so **3 upstream tests were commented out** (`twoturnmoves`, `counter`, `mirrormove`) with "put back once updating the seed is figured out". This is the concrete cost of editing base data.
+- **`secondaryChanceCallback`** hook in `battle-actions.ts` + type in `dex-moves.ts`. It's used by one custom move. Keep it as a small patch, or drop it with the moves.
+- **`updatePlayerState`** stream command. It sets **HP only** (no status, despite the commit message), and **only for side `p1`**. It's the seed of patch #1 below, but needs generalizing.
+- **Debug code** in `battle-stream.ts`: `pause`, `resume`, `sendToJSON`. Remove.
+- **Exports:** `RandomPlayerAI` and `Moves` from `sim/index.ts`. `build` refactored into a callable `buildSimulator()`.
+- Example scripts updated (AI vs player).
+
+### `dynamic-dex-data` (the POC)
+- `BattleOptions.customData?: { Dex: DexTableData; Text: TextTableData }` is passed in the `start` message. `Dex.forFormat(format, customData)` → `ModdedDex.loadCustomData()` `Object.assign`s it into the dex's data and text caches.
+- The example injects a fakemon (`Acafia`) keyed by **Discord guild ID + name** (`1010726453974925402acafia`), plus its learnset.
+- **The idea is right and better than generated mod files:** content comes from the release/format at battle start, with no files written, no restarts, and no rebuilds. It replaces the "generated mod files" approach in [12](12-content-catalog-species-moves-items.md) as the preferred path.
+- **Issues to fix before relying on it:**
+  1. **Global mutation.** It merges into the shared, process-wide dex cache, so custom data leaks into every later battle in the process (other servers and regions included). Needs **isolated dex instances**: a fresh `ModdedDex` (child of the right gen mod) per *content set*, cached by content hash (release version / format version), never touching base.
+  2. **First-load-wins flag.** `customDataLoaded` is set once per dex, so a second battle with *different* custom data is silently ignored.
+  3. **Load-order dependency.** If the base `dataCache` isn't loaded yet when `loadCustomData` runs, `this.dataCache?.[type]` is undefined. Nothing merges, but the flag still flips to loaded. It only works in the example because `Teams.generate` loads data first.
+  4. **Mods don't see it.** It merges into the dex `forFormat` is called on (base), while formats that use a mod (e.g. gen 1) resolve a different, already-built dex.
+  5. **Key vs name.** The table key (`1010…acafia`) doesn't equal `toID(name)` (`acafia`). Showdown derives IDs from names in several places (species/learnset lookups, the validator), so this likely breaks outside the happy path. **Verify during the spike.** The compiler should emit keys as `toID(displayName)` within each isolated dex and keep a translation table to our species IDs (see [12](12-content-catalog-species-moves-items.md)).
+  6. **TeamValidator** doesn't receive custom data, so Arena team validation needs the same isolated dex.
+  7. Species, move, and learnset object caches (`speciesCache`, etc.) need to live per isolated dex too.
 
 ## What Showdown does vs what PokeSandbox must do
 
@@ -38,10 +62,14 @@
 | D. Upstream package, no patches (construct `Battle` directly and mutate state; implement bag/catch/run by intercepting choices and calling sim internals) | Zero fork | Leans on private internals, so upgrades break silently. Bag/catch need turn consumption, which is hard without a sim hook. |
 
 **Recommended patch set** (keep each in its own file/commit with tests):
-1. **State injection:** set HP/status/PP (and level/EXP-derived stats) before the first turn and mid-battle (for level-ups if you want them mid-battle, and for the community-boss shared HP pool).
+1. **State injection:** generalize `updatePlayerState` to any side and to HP/status/PP (and level/EXP-derived stats), before the first turn and mid-battle (for level-ups if wanted, and for the community-boss shared HP pool).
 2. **External choice hook:** a generic `choice: external <payload>` that ends the player's action for the turn without moving, letting the engine apply an outcome (heal, stat stage, catch result) via injection before the turn resolves. Bag, catch, and run all use this one hook.
 3. **Battle end with custom reason:** `caught` / `ran` as clean end states.
-4. Remove debug code. Move New Logora into `data/mods/newlogora` (or a PokeSandbox mod) as the prototype for compiled custom content ([12](12-content-catalog-species-moves-items.md)).
+4. **Isolated custom-data dexes:** evolve the `dynamic-dex-data` POC into per-content-set isolated `ModdedDex` instances (cached by content hash) used by both `Battle` and `TeamValidator`. This is how server library content, overrides, and Arena formats reach Showdown ([12](12-content-catalog-species-moves-items.md)).
+5. **Clean-up:**
+   - Remove the debug code.
+   - Move the 10 hardcoded custom moves out of base data (into injected custom data, i.e. a library), or drop them. Then restore the 3 commented-out upstream tests.
+   - Keep `secondaryChanceCallback` only if those moves stay.
 
 ## BattleService (engine)
 ```ts
