@@ -25,6 +25,24 @@ import { collectionSeedMap, SUPPORTED_COLLECTIONS } from './collections';
 const DATABASE_URI =
   process.env.DATABASE_URI || 'mongodb://localhost:27017/pokesandbox';
 
+// The seeded server points at this guild; DEV_GUILD_ID swaps in your own test server
+const SEED_GUILD_ID = '1010726453974925402';
+
+type SeedDocument = Record<string, unknown>;
+
+function applyDevGuildId(
+  name: string,
+  seedData: SeedDocument[],
+  devGuildId: string
+): SeedDocument[] {
+  if (name !== 'servers') return seedData;
+  return seedData.map((server) =>
+    server.serverId === SEED_GUILD_ID
+      ? { ...server, serverId: devGuildId }
+      : server
+  );
+}
+
 async function dropCollections(): Promise<void> {
   const db = mongoose.connection.db;
   if (!db) return;
@@ -43,6 +61,12 @@ async function dropCollections(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  // Checked before connecting so a missing value never leaves the DB half-reset
+  const devGuildId = process.env.DEV_GUILD_ID;
+  if (!devGuildId) {
+    throw new Error('DEV_GUILD_ID in env is not set');
+  }
+
   console.info(`Connecting to MongoDB at ${DATABASE_URI}…`);
   await mongoose.connect(DATABASE_URI);
   console.info('Connected.\n');
@@ -56,7 +80,7 @@ async function main(): Promise<void> {
       continue;
     }
     console.info(`Seeding ${name}…`);
-    await model.insertMany(seedData);
+    await model.insertMany(applyDevGuildId(name, seedData, devGuildId));
     console.info(`  Inserted ${seedData.length} ${name}.`);
   }
 
