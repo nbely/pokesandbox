@@ -1,0 +1,29 @@
+# 19: Multiplayer, Social & Future-Proofing
+
+> **TL;DR:** None of the Full-Feature or Pie-in-the-Sky items need to be *built* in MVP. A handful of MVP decisions decide whether they're additive or a rebuild. This doc maps each later feature to the MVP decision that unblocks it.
+
+| Later feature (from your roadmap) | Needs | MVP decision that unblocks it |
+|---|---|---|
+| In-game PvP with adventure parties | Party → battle set conversion, multi-user battle UI | PokemonInstance in Showdown set shape ([13](13-characters-and-pokemon-instances.md)). The Arena builds the multi-user BattleService ([14](14-battle-system-and-showdown.md)). |
+| Trading, Wonder Trade, GTS | Moving Pokémon between owners atomically | Separate PokemonInstance collection + transactions ([13](13-characters-and-pokemon-instances.md), [15](15-persistence-caching-concurrency.md)) |
+| Breeding (contained / server pool) | Pokémon storage outside party/box, egg instances | `storage.kind` union (`daycare`, `pool`) ([13](13-characters-and-pokemon-instances.md)) |
+| Quest engine v2 (active/passive, loaners, quiz, RP-hurdle stages) | Composable sequences, persistence, objective tracking | Script VM + mode machine + engine events ([07](07-scripts-triggers-and-events.md), [03](03-engine-boundary-and-game-loop.md)) |
+| Persistent dialogue choices | Choice storage readable everywhere | `choice` progression kind + Condition predicate ([04](04-progression-and-flags.md), [05](05-requirements.md)) |
+| Server events, giveaways, plot NPC chance encounters | Server-scoped state, scheduled publishes, triggers with chance | `WorldState` per region (later), `chance` predicate, triggers ([07](07-scripts-triggers-and-events.md)) |
+| Community boss (shared HP pool) | HP injection mid-battle, server-scoped counter | Patch set's state-injection hook ([14](14-battle-system-and-showdown.md)) + WorldState |
+| Weather/terrain by location | Conditions on encounters, battle field state at start | Encounter conditions ([10](10-encounters.md)), battle start options in BattleService |
+| Custom fakemon/types/moves | Showdown mod compiler | New Logora → mod refactor as the spike ([12](12-content-catalog-species-moves-items.md)) |
+| Staff ops (grant items/Pokémon/money) | Audited state mutations | "Staff applies effects to character" = Effect executor + audit log ([06](06-effects.md)) |
+| Webapp character sheet, battle/RP history, activity log | Event history | Engine `GameEvent` log + persisted battle input logs ([03](03-engine-boundary-and-game-loop.md), [14](14-battle-system-and-showdown.md)) |
+| Webapp as play surface | Client-agnostic rules | `libs/engine` ([03](03-engine-boundary-and-game-loop.md)) |
+| Co-op story, multi battles | Multiple characters in one script/battle | Script `mode` keyed by a **session** that can hold N characters (design the mode record with `participants[]` from day one, even if MVP always has 1) |
+| Cross-region / cross-server travel | Character ↔ region decoupling | Character keyed by (user, region). Pokémon instances portable via `ownerCharacterId`. Showdown IDs for species ([02](02-identity-and-references.md)). |
+| Energy/pacing system | Action costs, timers | `timer` progression kind, action cost hook in `dispatch` |
+| Pluggable RP adjudication (mod queue / AI judge) | A blocking step that waits on an *external* decision | Script step `await: { kind: 'approval' }`. Same mode/persistence machinery, resumed by a staff/AI action instead of the player. |
+| AI enrichments (BYO key) | Hooks around dialogue and battle text | Renderers consume `GameEvent`s, so an optional "narrator" decorator can rewrite text without touching rules |
+
+## Cheap insurance to add in MVP
+1. `participants: CharacterId[]` on script/battle mode records (co-op later).
+2. `GameEvent` log collection (append-only, TTL'd or archived): activity log, debugging, webapp history.
+3. Audit log for admin/staff mutations (who changed what, when).
+4. Region `WorldState` doc reserved (even if empty).

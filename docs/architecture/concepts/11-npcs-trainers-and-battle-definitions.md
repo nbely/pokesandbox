@@ -1,0 +1,69 @@
+# 11: NPCs, Trainers & Battle Definitions
+
+> **TL;DR:** Split **who is standing here** (NPC: name, sprite, location, talk script) from **how they battle** (Trainer: class, ordered conditioned party variants, AI profile, reward formula, format). An NPC may reference a trainer. Defeat state is an engine flag. Gym leaders, rivals, and Elite 4 members are trainers with richer scripts, not special types.
+
+**MVP impact:** High · **Cost to change later:** Medium
+
+## Current shape
+`Location.trainerIds` (refs a non-existent `Trainer`). The chat agreed the rival is a Trainer with multiple teams. Your roadmap adds talkable and/or battleable NPCs, on-defeat effects, gym-leader-tier config, and party variants keyed off progressions.
+
+## Proposed shape
+```ts
+TrainerClass {                  // region registry, canon defaults seeded (Youngster, Bug Catcher, Gym Leader…)
+  id; name; baseMoney;          // payout = baseMoney × level of last Pokémon (Gen 1–4 formula; rules may override)
+  spriteUrl?; defaultAi: AiProfileId; music?/emoji?
+}
+
+Trainer {
+  key; regionId; name; class: TrainerClassId; spriteUrl?;
+  format: 'singles' | 'doubles';
+  parties: {                    // ordered: first variant whose condition passes is used
+    condition?: Condition;      // e.g. choice starterChoice in ['bulbasaur'] ∧ milestone badges ≥ 3
+    pokemon: TrainerPokemon[];  // species, level, moves? (default: last 4 level-up moves), ability?, item?, nature?, ivs/evs?
+    items?: { item: ItemId; count: number }[];   // trainer bag (Full Restores)
+  }[];
+  ai: AiProfileId;              // 'random' | 'basic' | 'smart' | 'gym' | 'champion' (see 14)
+  rewards?: { money?: number | 'formula'; effects?: Effect[] };
+  rematch?: { condition: Condition; parties: … }; // later
+  defeatFlag: auto;             // engine writes trainer:<key>:defeated
+}
+
+Npc {
+  key; regionId; location: ContentKey; name; spriteUrl?; ordinal;
+  visibleWhen?: Condition;      // Team Rocket grunts disappear after the hideout is cleared
+  trainer?: ContentKey;         // battleable
+  interact?: ContentKey;        // talk trigger/script (gym leader dialogue, item gifts)
+  engagement?: 'onTalk' | 'onEnter' | 'onExplore';   // how trainer battles start (see game-dev note)
+}
+```
+
+### Party variants
+This covers rival teams keyed off `starterChoice`, story-stage milestones, and post-game rematches *with one evaluator* (conditions). The validator warns if no variant matches for some reachable state (e.g. you forgot the Squirtle branch). That's a strong soft-lock check.
+
+### Game-dev: how do trainers engage in a text game?
+In the games, line of sight forces battles. Options:
+- `onEnter`: entering the location triggers each undefeated trainer (punishing, very authentic).
+- `onExplore`: each "Explore" may surface an undefeated trainer instead of a wild Pokémon (organic, recommended default for routes).
+- `onTalk`: optional battles (gym trainers you can skip, like in some games).
+- **Route clearance:** optional rule that the exit edge stays locked until all `blocking` trainers are defeated.
+
+## Options
+
+| Option | Pros | Cons |
+|---|---|---|
+| A. Trainer only (talk text embedded in trainer) | Fewer models | Non-battling NPCs (Oak, nurse, item givers) don't fit. Dialogue gets duplicated. |
+| **B. NPC + Trainer split** (recommended) | Talkers, battlers, and both. Trainers are reusable (rival appears in 7 places with one definition). | Two builder screens (templates hide this: "Add Trainer NPC") |
+| C. BattleDefinition as its own model (floated) | Reuse battle configs | Scripts' `battle` step already carries per-encounter config (canLose, healAfter). Not needed. |
+
+## Gym leaders, Elite 4, rivals
+- Gym leader = Trainer (class Gym Leader, smart AI, badge/TM rewards via script) + NPC in the Gym node + "Gym Leader" script template.
+- Elite 4 = gauntlet script (see [07](07-scripts-triggers-and-events.md)).
+- Rival = one Trainer with variants. Encounters are triggers in several locations.
+
+## MVP scope
+- TrainerClass registry (canon seed), Trainer with conditioned parties, Npc with location/visibility/interact/trainer, engagement modes (`onTalk`, `onExplore`, `onEnter`), payout formula, defeat flags, and templates (Route Trainer, Gym Leader, Rival).
+- Later: rematches (VS Seeker / Gen 2 phone), double battles with two trainers, multi-battles (tag partners).
+
+## Open questions
+- Should trainer Pokémon default to **canon-like movesets** (last 4 level-up moves) when admins don't specify moves? (Recommendation: yes, since it makes authoring fast.)
+- Do you want **trainer bag items** (Full Restore spam) in MVP AI?
