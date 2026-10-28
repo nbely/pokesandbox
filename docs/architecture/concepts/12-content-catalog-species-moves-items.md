@@ -43,6 +43,33 @@ Requirements from the owner:
 - Everything must work in Showdown **without conflicting with canon**.
 - An **override** of a canon species/form and the original **can't both be in one region**. If a creator wants both, the variant must be a separate **form**.
 
+### Namespaces & publishers (decided Oct 2026)
+The namespace in custom IDs is an **opaque, immutable publisher ID**. It's never a user-chosen handle, and it's not the raw Discord guild ID. A **presentation layer** shows a human name wherever IDs would surface.
+
+```ts
+Publisher {
+  _id: string;                     // short opaque ID, e.g. 'p7k2m9x4'. The namespace in `<ns>:<slug>`. Never changes.
+  displayName: string;             // defaults to the server name; changeable any time
+  iconUrl?; description?;
+  ownerServerIds: ObjectId[];      // MVP: exactly one (auto-created, lazily, the first time a server makes library content)
+}
+```
+
+Why not the alternatives:
+
+| Option | For | Against |
+|---|---|---|
+| User-chosen, set-once handle (`newlogora`) | Readable in raw IDs | Needs a claim flow, uniqueness checks, squatting/impersonation moderation, and "I regret my handle" support. It's permanent, so a typo or an outgrown name sticks forever. Readability only matters in raw IDs, which users shouldn't see. |
+| Discord guild ID (`1010726453974925402`) | Already unique and immutable, no claim flow. This was the original plan. | Couples content identity to one Discord guild: if a creator rebuilds their server or moves to a new guild, their whole library's IDs point at a dead guild. It also ties IDs to Discord specifically. |
+| **Opaque publisher ID + display name** (recommended) | No claim flow, no collisions, rename-safe. **Ownership can move** between servers (rebuilt server, a creator running two servers that share one library) without touching a single ID. | One small model. The UI must always resolve IDs to names (it should anyway). |
+
+Presentation rules:
+- Users see "Sparkitten · by **New Logora**" (publisher display name + icon), never `p7k2m9x4:sparkitten`.
+- Display names don't need to be unique. Public browsing shows the icon, the server name, and later a "verified" badge for disambiguation.
+- Raw IDs appear only in JSON export/import, logs, and developer tools, where the readable `slug` half is enough for humans.
+
+MVP needs no publisher UI. It needs only the auto-created Publisher per server and name resolution in the builder.
+
 ### Two identities per species entry
 | Identity | What it is | Used by |
 |---|---|---|
@@ -54,11 +81,11 @@ They're usually 1:1. **Overrides** are the reason they're separate: an override 
 ### The three kinds of custom species entry
 | Kind | Species ID | Showdown name in the compiled mod | Example |
 |---|---|---|---|
-| **New species** (fakemon) | `<handle>:<slug>` | its display name ("Sparkitten") | `newlogora:sparkitten` |
-| **New form of an existing species** (canon or custom base) | `<handle>:<base>-<form>` | "Pikachu-Surfer" (`baseSpecies: Pikachu`, `forme: Surfer`) | `newlogora:pikachu-surfer` |
+| **New species** (fakemon) | `<ns>:<slug>` | its display name ("Sparkitten") | `newlogora:sparkitten` |
+| **New form of an existing species** (canon or custom base) | `<ns>:<base>-<form>` | "Pikachu-Surfer" (`baseSpecies: Pikachu`, `forme: Surfer`) | `newlogora:pikachu-surfer` |
 | **Override** of a canon species or form | **the canon ID** (`pikachu`, `raichualola`) | the canon name (`inherit: true` + changed fields) | a server's rebalanced Pikachu |
 
-- **`<handle>`** is a short, unique, **immutable server handle** (a publisher namespace) chosen when the server first creates library content.
+- **`<ns>`** is the **publisher ID**: an opaque, immutable, system-generated ID (decided Oct 2026; see "Namespaces & publishers" below). No one chooses or claims it. Examples in this doc use `newlogora` as a readable stand-in. A real ID looks like `p7k2m9x4:sparkitten`.
 - Showdown IDs are lowercase alphanumeric only, so **any ID containing `:` can never collide with canon**, now or in future generations.
 - A rename changes the display name, never the species ID.
 
@@ -80,15 +107,15 @@ Future canon additions are safe: a new real "Sparkitten" just becomes a name cla
 ```ts
 LibraryEntry {
   entryId; kind: 'species' | 'form' | 'override' | 'move' | 'ability' | 'item' | 'type';
-  ownerServerId; handle; speciesId /* or moveId… */; 
+  publisherId; speciesId /* or moveId… */; 
   visibility: 'private' | 'public';              // private by default
   versions: { version; publishedAt; data; dependencies: DefinitionRef[] }[];  // immutable once published
   derivedFrom?: DefinitionRef;                    // set when forked from someone else's entry
 }
 ServerLibrary.imports: { ref: DefinitionRef; pinned: true }[]
 ```
-- **Import = pinned reference**, not a copy. The importer uses `<their-handle>:<slug>@v3`, gets "v4 available" notices, and upgrades explicitly. Species IDs stay the author's, so Pokémon stay the same species if cross-server features (trading, travel) ever arrive.
-- **Fork = copy to edit.** It creates a new entry under the importer's handle with `derivedFrom`. It's a different species ID (or an override, if it targets a canon ID).
+- **Import = pinned reference**, not a copy. The importer uses `<author-ns>:<slug>@v3`, gets "v4 available" notices, and upgrades explicitly. Species IDs stay the author's, so Pokémon stay the same species if cross-server features (trading, travel) ever arrive.
+- **Fork = copy to edit.** It creates a new entry under the importer's own namespace with `derivedFrom`. It's a different species ID (or an override, if it targets a canon ID).
 - **Dependencies** (custom moves, abilities, types a species needs) are imported as a closure, at pinned versions.
 - If the author **unpublishes or goes private**, existing importers keep their pinned versions (published versions are immutable), but new imports stop.
 - Moves, abilities, items, and types follow the same three-kind scheme (new / variant / override) and the same sharing rules.
