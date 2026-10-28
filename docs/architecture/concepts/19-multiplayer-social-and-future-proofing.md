@@ -18,7 +18,7 @@
 | Webapp as play surface | Client-agnostic rules | `libs/engine` ([03](03-engine-boundary-and-game-loop.md)) |
 | Co-op story, multi battles | Multiple characters in one script/battle | Script `mode` keyed by a **session** that can hold N characters (design the mode record with `participants[]` from day one, even if MVP always has 1) |
 | Cross-region / cross-server travel | Character ↔ region decoupling | Character keyed by (user, region). Pokémon instances portable via `ownerCharacterId`. Showdown IDs for species ([02](02-identity-and-references.md)). |
-| Energy/pacing system | Action costs, timers | `timer` progression kind, action cost hook in `dispatch` |
+| Energy/pacing system (storytelling servers) | Action costs, regenerating energy, narration refunds | Action-cost hook in `dispatch` (returns 0 in MVP) + `RegionRules.systems.pacing` (see below) |
 | Pluggable RP adjudication (mod queue / AI judge) | A blocking step that waits on an *external* decision | Script step `await: { kind: 'approval' }`. Same mode/persistence machinery, resumed by a staff/AI action instead of the player. |
 | AI enrichments (BYO key) | Hooks around dialogue and battle text | Renderers consume `GameEvent`s, so an optional "narrator" decorator can rewrite text without touching rules |
 
@@ -27,3 +27,21 @@
 2. `GameEvent` log collection (append-only, TTL'd or archived): activity log, debugging, webapp history.
 3. Audit log for admin/staff mutations (who changed what, when).
 4. Region `WorldState` doc reserved (even if empty).
+
+## Energy / pacing for storytelling servers (post-MVP design notes, Oct 2026)
+**Why a server might want it:** it paces players so they write between actions instead of grind-racing. It keeps a community at a similar point in the story, limits facilitator load in moderated modes, and nudges toward the forum-RPG rhythm.
+
+```ts
+RegionRules.systems.pacing?: {
+  mode: 'off' | 'daily' | 'regen';             // daily reset vs gradual regeneration (regen avoids "log in at reset" pressure)
+  scope: 'character' | 'user';                  // per character, or per user across regions (prevents alt-region farming)
+  capacity: number;                             // max energy
+  refill: { perDay?: number; perHours?: { amount: number; every: number } };
+  costs: Partial<Record<GameActionType, number>>;   // e.g. explore 1, trainer battle 2, travel 0; menus/party/shop/heal/narration free
+  narrationRefund?: { minWords: number; amount: number; dailyCap: number; requiresApproval?: boolean };   // "narrate to recharge"
+}
+```
+- **Narrate to recharge** ties progress to storytelling: a narration of N+ words on a log entry refunds energy, with a daily cap. Low-effort spam is the risk, so optionally require facilitator or AI approval (reuses RP adjudication).
+- **Implementation:** store `energy` + `updatedAt` and compute regeneration lazily on read (no cron). `dispatch` checks the action cost before executing and explains shortfalls ("Your team needs rest. 3 energy at 6pm").
+- **Risks:** a mobile-game feel and frustration for players who want long sessions. Keep it strictly **opt-in per server/region**, off by default.
+- **MVP hook:** the action-cost step exists in `dispatch` and always returns 0.

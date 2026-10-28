@@ -13,7 +13,7 @@ PokeSandbox grew out of forum text-RPGs. Players narrated their adventures in th
 |---|---|---|
 | **Opponent Pokémon** (wild, trainer) | Instantiated from the **recipe**: an encounter slot + RNG, or the trainer party variant. Lives only inside the battle (BattleSpec + Showdown state). | **Ephemeral.** Gone when the battle ends. **If caught**, it becomes a `PokemonInstance` (the only path into persistence). |
 | **Player-owned Pokémon** | `PokemonInstance` | Permanent (released = soft-deleted, purged after 30 days) |
-| **Battle record (full fidelity)** | Seed, BattleSpec, input log. Can regenerate the exact battle. | Needed during the battle for crash recovery. Afterwards: **compressed** (~2–5 KB) and kept for a window (default **90 days**, configurable; PvP/Arena for replays). Exact replay also needs the same Showdown version + release data, which are pinned for that window. |
+| **Battle record (full fidelity)** | Seed, BattleSpec, input log. Can regenerate the exact battle. | **Adventure battles:** needed only while live (crash recovery), then kept compressed for a short **support window (7 days)** for bug reports/disputes, then deleted. The turn digest is the permanent record (decided Oct 2026). **Arena/PvP:** kept per the replay policy. |
 | **Adventure log entry (low fidelity)** | Compact, version-independent summary of what happened | **Permanent** |
 | **Narration** | Prose attached to a log entry (or a specific turn) | **Permanent** (author-editable) |
 
@@ -38,8 +38,8 @@ AdventureLogEntry {
 
 TurnDigest { turn: number; actions: { side; pokemon; action: 'move' | 'switch' | 'item' | 'catch' | 'run'; detail; result: { damagePct?; ko?; crit?; effectiveness?; status? } }[] }
 ```
-- **Trainer battles, PvP, catches, story scenes, milestones, evolutions:** one entry each. Trainer battles keep the **turn digest** (~100–300 bytes/turn), which is enough to narrate turn by turn after the fact, even once the full battle record has expired.
-- **Defeated wild Pokémon:** **rolled up** per visit ("Defeated 6 wild Pokémon on Route 1: Pidgey ×4, Rattata ×2") to keep volume sane. Catches always get their own entry.
+- **Trainer battles, PvP, catches, story scenes, milestones, evolutions:** one entry each. **Turn digests** (~100–300 bytes/turn) are kept for trainer battles, **catches** (the whole wild battle that ended in the catch), and other notable wild battles: scripted/static encounters (Snorlax, legendaries) and battles where the player's Pokémon fainted or the player whited out. That's enough to narrate turn by turn after the fact.
+- **Ordinary defeated wild Pokémon:** **rolled up** per visit ("Defeated 6 wild Pokémon on Route 1: Pidgey ×4, Rattata ×2") to keep volume sane. Catches always get their own entry.
 - Written by the engine from domain events, inside the same transaction as the state change, so the log never disagrees with the game.
 
 ## Narration
@@ -64,16 +64,20 @@ The original forum flow (player narrates a move, moderator resolves it with a ca
 ## Storage impact (estimates)
 - Log entries: ~0.5–2 KB (trainer battles with digests are at the top end). With wild-battle rollups, an active player writes ~5–15 KB/day. That's ~100 active players ≈ **0.2–0.5 GB/year**: Free tier for the MVP period, Flex/DO-managed (~$15) for the first public year.
 - Narration: depends on how much people write. Text is small and compresses well. Even prolific writers add MBs, not GBs.
-- Compressed battle records for 90 days: ~100 players × 30 battles × 3 KB × 90 days ≈ 0.8 GB at heavy play. **Tunable:** shorten the window or keep full records only for trainer/PvP battles if storage gets tight. The permanent log doesn't depend on them.
+- Compressed adventure battle records for a 7-day support window: ~100 players × 30 battles × 3 KB × 7 days ≈ 60 MB at heavy play. The permanent log doesn't depend on them.
+
+## Decisions (Oct 2026)
+- **Full battle records outside the Arena are not kept long term.** The turn digest is sufficient. Full records exist for crash recovery while a battle is live, plus a 7-day support window for bug reports and disputes.
+- **Catches get full turn digests**, as do other notable wild battles (static/scripted encounters, faints/whiteouts). Ordinary defeated wild Pokémon roll up.
+- **All narration is post-MVP**, by players and facilitators alike. **Logging starts at MVP** so the history exists from day one.
 
 ## MVP scope
 - Ephemeral opponent Pokémon (recipes → battle-only; catch → PokemonInstance).
 - `AdventureLogEntry` written by the engine (trainer battles with turn digests, catches, wild rollups, milestones, evolutions, scenes).
-- Compressed battle records with a retention window.
+- Compressed battle records for live recovery + a 7-day support window (Arena replays per policy).
 - A basic adventure log view on the webapp character page.
 - Later: Narration model + UI (webapp first, then thread capture), AI narration drafts, narrated battle mode.
 
-## Open questions
+## Open questions (post-MVP)
 - Who can narrate on a character's entries: owner only, owner + server moderators, or invited co-authors (co-op)?
 - Should narration be able to **feed back into the game** (e.g. RP-hurdle approvals unlocking rewards), or stay purely cosmetic until RP quests exist?
-- Default retention window for full battle records: 90 days OK, or keep trainer-battle records forever (more storage) for exact replays?

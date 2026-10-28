@@ -87,7 +87,7 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 
 **Retention rules (needed for any tier):**
 - **Opponent Pokémon are ephemeral:** created from recipes for the battle, gone afterwards unless caught.
-- **Full battle records:** compressed after the battle, kept for a retention window (default 90 days; PvP/Arena for replays), then deleted. The **permanent adventure log** keeps a compact summary (with turn digests for trainer battles) forever. See [22](22-adventure-log-and-narration.md).
+- **Full battle records:** adventure battles are compressed after the battle and kept for a 7-day support window, then deleted (PvP/Arena per the replay policy). The **permanent adventure log** keeps a compact summary (with turn digests for trainer battles) forever. See [22](22-adventure-log-and-narration.md).
 - **Wild battles roll up** into one log entry per visit. Catches, trainer battles, milestones, and evolutions get their own entries.
 - **Debug-level events** go to application logs, not Mongo (or a short TTL index, e.g. 48h).
 - **Releases:** gzip-compress, keep the last ~10 per region plus every release still referenced (characters on it, clone bases, template versions).
