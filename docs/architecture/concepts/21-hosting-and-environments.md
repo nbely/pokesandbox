@@ -30,6 +30,33 @@
 
 Check current pricing and plan terms before committing. Free-tier limits change, and some have non-commercial clauses. **Upgrade Atlas** to a paid tier with built-in backups when real data volume or player count justifies it. The free cluster's limits (storage, connections, no automated backups) are fine for an owner-server MVP.
 
+## Cost comparison (researched Oct 2026; verify before buying)
+**Database**
+| Option | Rough monthly cost | What you get |
+|---|---|---|
+| Atlas **Free** (M0) | $0 | 512 MB, shared, replica set (transactions), **no backups** (do your own `mongodump`) |
+| Atlas **Flex** | ~$8–30 (hourly, capped at $30) | Up to ~5 GB, ops/sec limit, **one daily snapshot** (no point-in-time restore) |
+| Atlas **M10** dedicated | ~$57–60 + backup storage (~$75–85 realistic) | Dedicated 3-node replica set, automatic failover, continuous backups + point-in-time restore, performance advisor |
+| DB container on a managed app host (Railway/Fly/Render) | ~$5–15 + volume storage | **A container, not a managed database:** single node, no failover. You configure the replica set, backups, and upgrades yourself. |
+| DB container on your own VPS | $0 extra (shares the VPS) | Same as above, plus the VPS's resources are shared with the bot |
+
+**App hosting (bot + engine + webapp; plan for ~2–4 GB RAM total)**
+| Option | Rough monthly cost | Notes |
+|---|---|---|
+| Unmanaged VPS | ~$5–20 depending on provider/size | Hetzner raised cloud prices twice in 2026 (e.g. CPX22 €7.99 → €19.49 from June; its cheapest tier is often unavailable), so compare providers |
+| Fly.io | ~$3.69 per always-on 512 MB machine; ~$7–15 for realistic sizes | Usage-based, no free tier, RAM price increased Oct 2026 |
+| Railway | $5 Hobby (includes $5 usage) + overage; realistic ~$5–15 | Usage-based (~$20/vCPU-month, ~$10/GB-month RAM) |
+| Render | $7 per Starter service (512 MB), so ~$14+ for bot + web | 512 MB is tight for the bot + Showdown; the next size up costs more |
+
+**Atlas paid vs a database container on a managed host.** What the paid Atlas tier buys is mostly what a container *doesn't* give you: automatic backups (daily snapshot on Flex; continuous + point-in-time restore on M10), replica-set failover (M10), engine upgrades, monitoring and index advice, encryption, and support. A database container on a managed host is still self-operated: the host keeps the container running, but data safety is yours. For player saves, the managed backups are the real value.
+
+**Note on Postgres:** a Postgres container would mean reopening the database decision (Q33, MongoDB chosen). If cost alone ever pushes toward Postgres, the comparison should be against *managed* Postgres free tiers (e.g. Neon, Supabase), not a self-run container. That's a revisit for the Phase 3 checkpoint, not now.
+
+**Proposed path:**
+1. **MVP (your server only):** VPS (~$5–20) + Atlas Free + nightly `mongodump` to free object storage. Roughly **$5–20/month total.**
+2. **Before opening to other servers:** move to **Atlas Flex** for managed daily snapshots (keep the nightly dump as a second copy). Roughly **$15–50/month total.**
+3. **Only if growth demands it:** M10 (~$60–85).
+
 ## Self-managed VPS: what you take on
 | Area | What it means in practice | Mitigation |
 |---|---|---|
