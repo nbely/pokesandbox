@@ -106,11 +106,11 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Switch slash commands to global registration with per-server feature gating (M)
 
 **Epic: Hosting & Environments** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md))
-- [ ] Provision VPS: SSH hardening, firewall, unattended security updates, Docker + Compose (M)
-- [ ] Compose stack: bot + webapp + Caddy (TLS, reverse proxy), restart policies, log rotation (M)
+- [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
 - [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
 - [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
-- [ ] GitHub Actions deploy: `main` → staging bot, version tag → prod (M)
+- [ ] Data retention: TTL/cleanup for battle records and the event log, compressed + pruned region releases (M)
+- [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
 
 **Epic: Engine Skeleton** (Q18)

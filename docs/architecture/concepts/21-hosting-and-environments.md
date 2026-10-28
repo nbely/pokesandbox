@@ -1,6 +1,8 @@
 # 21: Hosting & Environments
 
-> **TL;DR (proposed Oct 2026):** Keep cost near zero apart from one small VPS.
+> **Update (Oct 2026):** the owner prefers a **managed host to start** (Railway/Fly/Render class), and may get discounted or free hosting through a developer's family host. The VPS notes below remain as the self-managed alternative.
+>
+> **TL;DR (original proposal):** Keep cost near zero apart from one small VPS.
 > - **VPS** (self-managed, Docker Compose) runs the bot, engine, battle service, and webapp behind Caddy.
 > - **MongoDB Atlas free cluster** stores data. It's a replica set, so transactions work.
 > - **Nightly `mongodump`** goes to free-tier object storage.
@@ -56,6 +58,33 @@ Check current pricing and plan terms before committing. Free-tier limits change,
 1. **MVP (your server only):** VPS (~$5–20) + Atlas Free + nightly `mongodump` to free object storage. Roughly **$5–20/month total.**
 2. **Before opening to other servers:** move to **Atlas Flex** for managed daily snapshots (keep the nightly dump as a second copy). Roughly **$15–50/month total.**
 3. **Only if growth demands it:** M10 (~$60–85).
+
+## Storage sizing & data retention (estimates, Oct 2026)
+Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default storage (2 GB RAM, ~$57–60/month plus backup storage). Storage counts data **and indexes**. Free and Flex also cap **throughput** (ops/sec), which may bind before storage does.
+
+| Data | Size estimate | Notes |
+|---|---|---|
+| Catalog (DexEntry etc.) | **~4–5 MB** (measured: 1,371 dex entries ≈ 3.7 MB JSON) | Learnsets/moves come from Showdown code, not the DB. Sprites are URLs. |
+| Region draft content (Kanto-sized) | ~1–3 MB per region | Locations, NPCs, trainers, scripts, encounter tables |
+| Region releases | ~1–3 MB each uncompressed, ~0.2–0.5 MB **gzip-compressed** | **Must have a retention policy**: keep the last N plus any referenced by characters/clones/templates |
+| Character | ~5–20 KB | Flags grow over a playthrough |
+| Pokémon instances | ~0.5–1 KB each; 50–300 per engaged player | ≈ 50–300 KB per player at endgame |
+| Battle records (seed + input log) | ~5–20 KB per battle | **Biggest risk.** 100 players × 30 battles/day × 10 KB ≈ 30 MB/day without cleanup |
+| Game event / activity log | ~0.2–0.5 KB per event | Also high-volume |
+
+**Retention rules (needed for any tier):**
+- **Wild/trainer battle records:** delete when the battle ends. They're only needed for crash recovery. Keep **PvP/Arena** records for replays with a TTL (e.g. 30 days).
+- **Event log:** keep only *notable* events long term (catches, badges, evolutions, trades) for the activity log. Debug-level events go to application logs, not Mongo, or use a short TTL index (e.g. 48h).
+- **Releases:** gzip-compress, keep the last ~10 per region plus every release still referenced (characters on it, clone bases, template versions).
+
+**When the limits bite (rough, with retention in place):**
+| Stage | Data | Throughput | Tier |
+|---|---|---|---|
+| MVP on your server (≤ ~100 players) | ~50–150 MB | Low | **Free** is fine |
+| Early public (several servers, ~1,000 players) | ~0.3–1 GB | Hundreds of ops/sec at peaks | **Flex** |
+| Growing (~5–10k players) | ~2–5 GB | Approaching Flex's ops/sec cap | **M10** |
+
+**Without** the retention rules, battle and event logs alone could fill the free tier within weeks, even on one server.
 
 ## Self-managed VPS: what you take on
 | Area | What it means in practice | Mitigation |
