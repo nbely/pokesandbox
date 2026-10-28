@@ -41,6 +41,14 @@ The second property is the reason a separate key exists at all. If references us
 | Slug + suffix (`route-1~k3f9`) | Readable in raw JSON | The readability only matters in raw exports. It adds a generator, uniqueness rules, and a frozen slug that goes stale after renames. |
 | **Opaque region-scoped key, separate from `_id`** (decided Oct 2026) | Copies keep keys verbatim, so no remapping. Rename-safe. A tiny generator (`nanoid`, ~10 chars). Matches the existing progression/milestone keys (already opaque UUIDs, not `_id`s). | One extra indexed field (`{ regionId, key }` unique) |
 
+**How lookups work (clarification).**
+- **Unique within the region, not globally.** There's a unique index on `{ regionId, key }`. A key is *not* a link back to a copy's source. Clone provenance, where it matters, is recorded once at region level (`Region.clonedFrom: { regionId, releaseVersion }`), not per entry.
+- **References only ever use the key.** `_id` is just Mongo's storage handle and is never stored in another document. Each content entry still has exactly one identity that matters.
+- **Scoped by `regionId` only, never `serverId`.** `regionId` is a global ObjectId. Content references never cross regions (cross-region things like library species use globally unique IDs), and every authoring command already carries the region it edits.
+- **Runtime does no DB graph fetching at all.** The engine reads the compiled release bundle in memory, where the graph is `Map<key, Location>` plus adjacency lists, so traversal is a hash lookup. Draft-side lookups are `findOne({ regionId, key })`, which is as fast as `findById` with the compound index.
+- **Guardrail against forgetting the scope:** repositories never expose key-only lookups. Signatures require the region (`locations.get(regionId, key)`), so an unscoped query can't be written by accident. The cost is that Mongoose `populate` by key needs virtuals. We don't plan to use populate for content anyway.
+- **Considered alternative:** use `_id` everywhere and remap references on clone/import, with a schema walker that finds every branded `ContentRef` field (including inside condition trees and script steps). That's viable, with one identity and `findById` working, but copies, imports, and future "pull template fixes into my clone" flows all need remap logic. The separate key avoids that. Revisit if the scoping feels heavy in practice.
+
 **Who sees keys?** Nobody, in normal use. Players never see them. Authors see names in every builder (Discord and webapp), with names resolved from the key through the same presentation-layer idea used for publishers. Keys only appear in raw JSON export/import and logs. There, the exporter writes a non-authoritative `_label` next to each reference (`{ "to": "k3f9a1x7qz", "_label": "Route 1" }`) so humans can read the file. Import ignores `_label`.
 
 ## Recommendation
