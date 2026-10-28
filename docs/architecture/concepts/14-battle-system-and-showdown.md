@@ -79,7 +79,29 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 - **Consumption:** the monorepo depends on the fork as a **versioned package** (git tag or GitHub Packages release), not a git submodule.
 - **Mid-battle level-ups (Q8):** the engine awards EXP on `faint` events (all participants, plus Exp. All/Share per rules). On level-up it injects the new level and recalculated stats (max HP grows, and current HP rises by the same amount) through the state-injection patch, which must therefore support **mid-battle level/stat/move-slot updates**, not just battle-start state. A new move is a **blocking prompt inside the battle**: BattleService holds the side's next request until the player learns, replaces, or skips the move, then injects the move-slot change. **Evolution never happens in the sim.** It's evaluated post-battle by the engine (level/stone/etc.) and runs as a blocking post-battle interaction.
 
-## BattleService (engine)
+## Package placement (decided Oct 2026): its own library, `libs/battle`
+The Showdown integration is a **separate library from the game engine**:
+- **Dependencies:** it's the only code that needs the Showdown fork and `@smogon/calc`, both heavy. The webapp embeds `libs/engine` for QoL actions and must not bundle a battle simulator.
+- **Different lifecycle:** battles are stateful and long-lived, run in worker threads, and exist in exactly one game host process. Engine actions are short and stateless.
+- **The Arena doesn't need the adventure engine:** PvP/PvAI with team presets uses `libs/battle` plus a thin Arena module, with no world state.
+- **Most likely future split:** if anything moves into its own container first, it's the battle host (sharding, CPU-heavy AI).
+
+**How the engine and battles talk** (ports, serializable data, both directions):
+```ts
+// defined by libs/engine, implemented by libs/battle (wired in apps/bot)
+interface BattlePort {
+  start(spec: BattleSpec): Promise<BattleId>;                  // sides (PokemonSet + persistent state), format/rules data, AI profiles, seed
+  choose(id: BattleId, side: SideId, choice: string): Promise<void>;
+  inject(id: BattleId, patch: StatePatch): Promise<void>;     // mid-battle level-ups, move learning, boss HP
+  subscribe(id: BattleId, sink: (e: BattleEvent) => void): Unsubscribe;
+}
+// libs/battle calls back into the game only via an injected resolver for external choices:
+interface ExternalActionResolver { resolve(ctx: ExternalActionContext): Promise<ExternalOutcome> }  // bag item, catch, run → engine applies rules (catch formula, item effects)
+```
+- `libs/battle` emits `BattleEvent`s (move, damage, `faint`, request-for-choice, ended). The engine reacts, e.g. on `faint` it computes EXP with `libs/core` formulas and calls `inject(levelUp)`. Battle code never computes EXP or reads characters.
+- Catch/escape/item formulas live in `libs/core` (pure). The engine's `ExternalActionResolver` uses them, so the battle library stays free of game rules.
+
+## BattleService (in `libs/battle`)
 ```ts
 BattleService.start({ kind: 'wild' | 'trainer' | 'pvp' | 'ai-arena', sides, format, rules, seed }) → battleId
 BattleService.choose(battleId, sideId, choice)        // validates against the current request

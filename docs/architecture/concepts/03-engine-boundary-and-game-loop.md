@@ -70,7 +70,7 @@ The bot's `/play` command renders whatever mode the character is in. If the bot 
 | **B. Service functions in `shared/`** (called by handlers, but no action/event contract) | Small step | Rendering and rules stay entangled. Every handler re-implements validation and "what happened" messaging. |
 | **C. Engine package with action/event contract** (recommended) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
 
-## Process topology: should the engine be its own container? (proposed Oct 2026)
+## Process topology: should the engine be its own container? (decided Oct 2026: option C)
 
 **Concern:** if game actions also run from the webapp (e.g. box reordering), they shouldn't depend on the Discord bot process being up.
 
@@ -90,6 +90,27 @@ The bot's `/play` command renders whatever mode the character is in. If the bot 
   - Engine CPU or memory starts hurting bot responsiveness despite workers.
 
   The extraction is: wrap `dispatch` and BattleService in an API, move the battle host into the new container, and have the bot subscribe to events. No game logic changes.
+
+### Package layout & encapsulation rules (decided Oct 2026)
+Option C is only safe if the boundaries are enforced, so the engine (and the battle host) can be pulled into their own containers later without untangling code.
+
+```
+libs/core       pure: content/catalog schemas, ContentKey, PokemonSet conversions, condition/effect/fact registries,
+                rule formulas (EXP, catch, escape, payout per gen), validator. No I/O, no Showdown, no Discord.
+libs/battle     Showdown adapter + BattleService + AI. Depends on core + the Showdown fork + @smogon/calc.
+                Knows nothing about characters, regions, scripts, or Discord.
+libs/engine     game rules: dispatch, modes, scripts, travel/explore, economy, post-battle progression.
+                Depends on core. Talks to battles ONLY through a `BattlePort` interface it defines.
+libs/authoring  admin commands. Depends on core.
+apps/bot        game host: wires engine + the real libs/battle implementation of BattlePort, Discord renderers.
+apps/webapp     wires engine with a BattlePort that only *reads* battle state (never hosts battles), plus authoring.
+```
+
+Rules (enforced with Nx module-boundary tags + `@nx/enforce-module-boundaries` lint, so violations fail CI):
+1. `core` imports nothing internal. `engine`/`authoring` import only `core`. `battle` imports only `core`.
+2. **Only apps compose implementations.** `engine` never imports `battle`. It receives a `BattlePort` at construction. The webapp never imports `battle`, so it never bundles Showdown.
+3. Engine and battle are **constructed from injected ports** (repositories, BattlePort, Clock, Rng, event sink). No module-level singletons and no direct Mongoose/discord.js imports inside libs. Swapping an in-process port for a network client is how either one moves into its own container.
+4. Everything crossing a port is **serializable data** (actions, events, battle specs, results), so the in-process call can become an API/queue message unchanged.
 
 ## Where adventure play is shown (decided Oct 2026, Q2)
 - **Server-configurable display mode, ephemeral by default.** MVP implements only ephemeral. **Per-player threads** are the long-term favorite. A designated play channel is the third option.

@@ -119,6 +119,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Injected `Clock` and seeded `Rng` (S)
 - [ ] In-memory test harness (M)
 - [ ] Scaffold `libs/core` (shared schemas, registries home) (S)
+- [ ] Scaffold `libs/battle` + `BattlePort`/`ExternalActionResolver` interfaces. Nx module-boundary tags + lint rule enforcing core/engine/battle/authoring layering (webapp must not import battle) (M)
 
 **Epic: Persistence & Data Basics**
 - [ ] docker-compose Mongo as a replica set (transactions) for local dev (S)
