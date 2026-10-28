@@ -60,6 +60,33 @@ In the games, line of sight forces battles. Options:
 - Elite 4 = gauntlet script (see [07](07-scripts-triggers-and-events.md)).
 - Rival = one Trainer with variants. Encounters are triggers in several locations.
 
+## Decisions (Oct 2026, Q4)
+
+**Engagement modes** are set per trainer NPC: `onExplore` (default for route trainers), `onEnter`, `onTalk`.
+
+**Every trainer battle in a location counts toward its traversal costs**, however it started (explore, entry, talk, or a script). Location progress counters are fed by "trainer defeated *here*" events, not by engagement mode. Named trainers in `traversal.firstPass.trainers` count whenever they're beaten.
+
+**Several `onEnter` trainers = back-to-back battles, i.e. a gauntlet.** Entering a location with undefeated `onEnter` trainers runs them **in sequence** (by NPC ordinal), with no healing between. A loss whites you out as usual, and trainers already beaten stay beaten. Under the hood this is the same thing as an authored gauntlet: the engine generates an entry-trigger script of consecutive `battle` steps. Authors who want more control (dialogue between battles, different loss rules) write the gauntlet explicitly as a script.
+
+**Gauntlets** (already covered in [07](07-scripts-triggers-and-events.md)) are scripts made of consecutive `battle` steps with no `heal` between. The **Gauntlet template** (used for the Elite 4) adds two options:
+- `resetOnLoss`: E4-style. A loss clears progress, so the whole gauntlet restarts from the first battle next time.
+- `lockedUntilComplete`: exits are gated until the gauntlet is finished, or the player whites out.
+
+**After defeat: customizable per trainer.**
+```ts
+Npc.afterDefeat?: {
+  visible: boolean;            // stay in "People here" (default true) or disappear
+  interact?: ContentKey;       // post-battle talk script ("You're too strong!"); omit = no dialogue
+}
+```
+
+**Gym leader availability: customizable, via a Gate on the NPC.** NPC interaction already takes a `Gate` ([05](05-requirements.md)), so "the leader only appears after N gym trainers are beaten" is a gate condition on the leader:
+- `presentation: 'hidden'`: the leader isn't listed until the condition passes.
+- `presentation: 'locked'`: listed but disabled ("Defeat 2 more trainers to challenge Brock").
+- `presentation: 'attemptable'`: talking runs a "Not so fast!" script.
+
+The condition uses a new MVP fact, `location.trainersDefeated` (distinct trainers defeated here), or specific trainer flags. The **Gym Leader template** exposes this as an option ("Require N gym trainers first", off by default) and generates the gate.
+
 ## MVP scope
 - TrainerClass registry (canon seed), Trainer with conditioned parties, Npc with location/visibility/interact/trainer, engagement modes (`onTalk`, `onExplore`, `onEnter`), payout formula, defeat flags, and templates (Route Trainer, Gym Leader, Rival).
 - Later: rematches (VS Seeker / Gen 2 phone), double battles with two trainers, multi-battles (tag partners).

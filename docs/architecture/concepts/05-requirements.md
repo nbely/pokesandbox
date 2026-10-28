@@ -191,6 +191,7 @@ The condition is the same everywhere. What differs is how the caller uses the re
   | `dex.caughtCount` | Oak's aides (HM05 Flash at 10, Itemfinder at 30, Exp. All at 50) |
   | `progression.value` | Not required by RBY, but admins will gate on numeric and boolean progressions they define |
   | `location.cleared` / `location.visit.<counter>` | Traversal requirements: unavoidable route trainers, cave step costs (see [10](10-encounters.md#traversal-requirements-mvp-decided-oct-2026)) |
+  | `location.trainersDefeated` | Gym leader appears/unlocks after N gym trainers are beaten (see [11](11-npcs-trainers-and-battle-definitions.md#decisions-oct-2026-q4)) |
 
 - **Deferred:**
   - `money`: affordability is already handled by the cost check before effects apply.
