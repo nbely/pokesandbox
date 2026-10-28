@@ -137,7 +137,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] `PokemonSet` shared type and `TeamPreset` model (S)
 - [ ] `ArenaFormat` model (server-scoped) + built-in canon formats → Showdown custom format + TeamValidator (M)
 - [ ] Showdown paste import/export (M)
-- [ ] Guided team builder menus (species → moves → item/ability → EVs/nature) (L)
+- [ ] Guided team builder (Components v2 + FlowCord submenu/pagination flows; reuse the Pokédex builder's Pokémon search flow; autocomplete for moves). Can follow the Arena launch (L)
+- [ ] Random legal team for a format + per-Pokémon validation error messages (M)
 
 **Epic: BattleService**
 - [ ] BattleService start/choose/events API, in-process (L)

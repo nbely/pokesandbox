@@ -57,7 +57,13 @@ PokemonInstance {
 Arena teams aren't owned Pokémon. They're **TeamPresets**:
 
 ```ts
-TeamPreset { _id; userId; serverId; formatId (ArenaFormat that validates it, server-scoped, see 14); name; sets: PokemonSet[] /* Showdown set shape */; }
+TeamPreset {                     // decided Oct 2026: owned by the USER, usable across servers
+  _id; userId; name;
+  intendedFormat?: { serverId?: ObjectId | 'builtin'; formatId };   // UI hint only. Validated against the chosen format at challenge time.
+  sets: PokemonSet[];            /* Showdown set shape; species may be canon IDs or <ns>:<slug> library IDs */
+}
+// Cap: 50 teams per user for now (folders later). A team using a server's library species only validates
+// where that content is available. Canon-only teams work on any server with a compatible format.
 ```
 
 Using the same `PokemonSet` shape means the arena's team builder, validator, and battle hookup are **reused** for adventure battles later. Allow **Showdown paste import/export** in the arena team builder. It's the fastest team-building UX possible in Discord (one modal) and the format competitive players already know.
