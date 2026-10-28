@@ -176,6 +176,16 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Publish → RegionRelease (chunked) + ContentProvider + pause/undeploy (L)
 - [ ] Region bundle export/import (JSON) (M)
 
+**Epic: Webapp Authoring (Q24)** (can run in parallel with M3/M4 once the matching `libs/authoring` commands exist)
+- [ ] Webapp authoring shell: Discord-role-checked access to a region's draft, entity-level conflict handling (M)
+- [ ] Shared condition builder component (M)
+- [ ] World graph canvas (locations, directional/two-way edges, grouping, gate badges) (L)
+- [ ] Encounter table grid (M)
+- [ ] Trainer party editor with conditioned variants (M)
+- [ ] Script step editor (L)
+- [ ] Region Health view (read-only) (S)
+- [ ] Player profile + character pages with privacy settings (M)
+
 ## M4: Interaction Engine (Q16)
 - [ ] Script + Trigger models (M)
 - [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/heal/shop/travel/goto/end` (L)

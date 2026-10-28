@@ -77,7 +77,26 @@ Editing afterwards works either way: fix it in the tools on the HQ server and re
 | HQ server only | Full dogfooding | No review or history. The production DB is the only copy. Bulk data entry is slow. |
 | **Hybrid: script for bulk, tools for story, repo as truth** | Fast, reviewable, tested, and dogfoods the builder | Needs lossless, deterministic export/import (already needed for templates and backups) |
 
+**Versioning & "pull template updates" for clones.** The hybrid approach supports it:
+- Each deploy that changes the canonical bundle publishes a new **immutable template release** (v1, v2, …). Template releases are kept forever, because they're the merge bases.
+- A clone records `clonedFrom: { templateId, version }`. Pulling updates is a three-way merge **by content key**: base (the version you cloned) vs latest template vs your copy. See the worked example in [02](02-identity-and-references.md#worked-example-copying-a-template-region-to-another-server).
+- **Key stability is the one hard rule.** After the first generation, the repo bundle is the source of truth and the generator is never re-run blindly. If generation is re-run, it must **reuse existing keys** (via a natural-identity → key map committed alongside the bundle). Otherwise every clone would see "everything deleted and re-added". CI checks that no existing key disappears between template versions unless the entry was intentionally removed.
+
 **Data-source caution:** prefer openly licensed sources (e.g. PokeAPI) for generated data, and keep the generator plus its sources documented in the repo.
+
+## Webapp editors in MVP (decided Oct 2026)
+Targeted webapp editors for the authoring tasks that are **most painful in Discord**. They're built on the same `libs/authoring` commands (per-entity optimistic concurrency, role checks), so Discord stays complete.
+
+| Editor | Why Discord struggles | Webapp shape |
+|---|---|---|
+| **Script step editor** | Long ordered step lists, labels/branches, multi-paragraph dialogue | Step list with drag-reorder, inline dialogue editing, branch/label visualization, template insertion |
+| **World graph canvas** | Hundreds of locations and directional edges, grouping, traversal gates | Node-edge canvas (e.g. React Flow) with two-way edge drawing, parent grouping, gate badges on edges |
+| **Encounter table grid** | Species × level range × weight × method × condition | Spreadsheet-style grid with species search, weight-percentage preview, condition column |
+| **Trainer party editor** | Up to 6 Pokémon × moves/levels × conditioned party variants | Variant tabs, each with a party table; learnset-aware move pickers; condition per variant |
+| **Condition builder** (shared component) | Nested any/all/not trees | Tree editor used inside every editor above |
+| **Region Health** (read-only) | Long validator reports with cross-links | Grouped issue list linking to the relevant editor |
+
+Stays Discord-first (small, form-like): region settings and rules, progression definitions, Pokédex slotting (exists), shops, transport networks, NPC basics. They get webapp forms later as needed.
 
 ## Principle: Discord-complete authoring (decided Oct 2026)
 Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands ([03](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
