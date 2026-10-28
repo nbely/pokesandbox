@@ -81,7 +81,13 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 ## Game-dev notes
 - **HP/status persist** between battles (heal at Centers). The fork's HP injection (or a battle construction hook) is needed. See [14](14-battle-system-and-showdown.md).
 - **EXP, levels, evolution, and move learning happen in the engine**, using DexEntry growth rates and Showdown learnsets. Evolution prompts ("What? Charmander is evolving!", cancelable) and move-replacement prompts are **script-like blocking interactions**, so reuse the mode machinery.
-- **Original Trainer/ID** matters later for trading obedience rules and "traded Pokémon gain more EXP".
+- **Original Trainer/ID** drives Gen 1 rules once trading exists. Traded Pokémon (OT ≠ current owner) gain **1.5× EXP**, and **obey only up to a badge-based level cap**: 10 with no badges, 30 with Cascade, 50 with Rainbow, 70 with Marsh, all with Earth. Both are region rules (`formulas.exp` traded bonus, `systems.obedience`).
+
+## Decisions (Oct 2026, Q22)
+- **Option C:** all owned Pokémon live in one `PokemonInstance` collection with an owner and a `storage` location. Battle results, trades, and swaps use transactions (Mongo replica set).
+- **Party order** is an ordered list of ≤ 6 instance IDs on Character (`partyOrder`). Box contents come from each instance's `storage` field.
+- **Released Pokémon** are soft-deleted (`releasedAt`), kept for history and anti-abuse audits, then purged after **30 days**.
+- **Original trainer** is recorded from day one (character ID, name, trainer ID). It's needed for Gen 1's traded-Pokémon EXP bonus and obedience once trading exists.
 
 ## MVP scope
 - Character, PokemonInstance (party + boxes), TeamPreset (arena), and conversion `PokemonInstance → PokemonSet + state`.

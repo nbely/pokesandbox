@@ -49,7 +49,7 @@ RegionRules {
     catchRates: GenId;                        // species catch-rate data
   };
   formulas: {                                 // PIECEMEAL: engine-side calculations
-    exp: GenId; expShare: 'item' | 'always-on' | 'off'; tradedBonus: boolean;   // MVP: gen1, Exp. All item
+    exp: GenId; expShare: 'item' | 'always-on' | 'off'; tradedBonus: boolean;   // MVP: gen1 (traded ×1.5, trainer-owned foe ×1.5), Exp. All item
     catch: GenId;                             // MVP: gen1 catch algorithm
     escape: GenId;                            // run-away odds
     whiteoutPenalty: GenId | 'none';          // Gen 1: lose half your money
@@ -64,7 +64,8 @@ RegionRules {
     boxes: { count: number; size: number };   // Gen 1: 12 boxes × 20
     bagCapacity?: number;                     // Gen 1: 20 item slots (optional authentic limit)
     nicknames: boolean; time: TimeRules;      // time unused in Gen 1 regions
-    levelCap?: …; obedience?: …;
+    levelCap?: …;
+    obedience?: { traded: { capsByMilestone: { key: string; caps: [number, ...number[]] } } };   // Gen 1: traded Pokémon obey up to 10 / 30 (Cascade) / 50 (Rainbow) / 70 (Marsh) / all (Earth)
   };
 }
 // GenId = 'gen1' | 'gen2' | … | 'gen9'. Each dimension has a registry of implemented options.
