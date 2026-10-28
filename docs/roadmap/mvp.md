@@ -8,24 +8,25 @@ This doc breaks Phases 0–2 of [`roadmap.md`](roadmap.md) into **GitHub milesto
 
 | # | Milestone | Outcome | Depends on |
 |---|---|---|---|
-| M0 | **Foundations** | Engine package, primitives, identity/persistence fixes, org/CI | — |
-| M1 | **Battle Core & Catalog** | BattleService + slim Showdown fork + catalog + team presets | M0 |
+| M0a | **Platform & Arena Foundations** | Org/CI, hosting + environments, engine skeleton, persistence basics, species IDs | — |
+| M0b | **Content Foundations** | Conditions/effects/gates, content keys + model cleanup, authoring layer, releases | M0a |
+| M1 | **Battle Core & Catalog** | BattleService + slim Showdown fork + catalog + team presets | M0a |
 | M2 | **Arena Release (Pre-MVP)** 🚀 | Public PvP/PvAI in Discord | M1 |
-| M3 | **World Authoring** | Locations, encounters, transport, shops, rules, publish/validate | M0 (parallel with M1/M2) |
-| M4 | **Interaction Engine** | Scripts, triggers, NPCs, trainers, templates | M0, M3 |
+| M3 | **World Authoring** | Locations, encounters, transport, shops, rules, validate | M0b (parallel with M1/M2) |
+| M4 | **Interaction Engine** | Scripts, triggers, NPCs, trainers, templates | M0b, M3 |
 | M5 | **Adventure Core** | Character, travel, explore, wild/trainer battles, party/PC/bag, progression | M1, M3, M4 |
 | M6 | **Kanto Classic & MVP Release** 🚀 | Kanto built with the tools, playtested, released | M5 |
 
 ```
-M0 ──► M1 ──► M2 🚀
-  └──► M3 ──► M4 ──► M5 ──► M6 🚀
-         (M1 also feeds M5)
+M0a ──► M1 ──► M2 🚀 (Arena)
+  └──► M0b ──► M3 ──► M4 ──► M5 ──► M6 🚀 (MVP)
+                (M1 also feeds M5)
 ```
 
-Two people can run M1→M2 (battle track) and M3→M4 (authoring track) in parallel after M0.
+The battle track (M0a → M1 → M2) and the content track (M0b → M3 → M4) run in parallel.
 
-### Proposed re-sequencing: Arena critical path (Oct 2026, after Q29)
-With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, and every PR reviewed by the owner, M0 as written is too big to sit in front of the Arena. **The Arena doesn't need most of M0.** It needs no conditions/effects, scripts, content keys, releases, or authoring layer. Proposal: split M0.
+### Re-sequencing: Arena critical path (decided Oct 2026, after Q29)
+With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, and every PR reviewed by the owner, M0 as written is too big to sit in front of the Arena. **The Arena doesn't need most of M0.** It needs no conditions/effects, scripts, content keys, releases, or authoring layer. Decision: split M0.
 
 | # | Milestone | Contents | Blocks |
 |---|---|---|---|
@@ -58,21 +59,21 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 |---|---|---|---|
 | Create/configure region: name | ✅ | — | |
 | Currency, starters, starting location | 🟡 (`currencyType` only) | M3/M4 | Starter = pick-1 gift script |
-| Regional pokedex | ✅ | — | Switch refs to species IDs (M0) |
+| Regional pokedex | ✅ | — | Switch refs to species IDs (M0a) |
 | Locations: create | ✅ | — | |
 | Locations: connect (directional) / gate | 🟡 (schema only, builder "coming soon") | M3 | Conditions replace requirements |
 | Wild encounter tables | 🟡 (schema only) | M3 | Method registry, conditions |
 | Trainers/NPCs (dialogue, rewards, placement, gym-leader tier) | ❌ | M4 | |
 | NPC party variants by progression | ❌ | M4 | Conditioned parties |
 | Conditional triggers (forced dialogue/battles/effects, once/repeatable) | ❌ | M4 | Script system |
-| Effects primitive | ❌ | M0 | |
+| Effects primitive | ❌ | M0b | |
 | Pick-1 gift rewards | ❌ | M4 | Script template |
 | Battle gauntlets (Elite 4) | ❌ | M4 | Script template |
 | Transportation networks (Fly, ferry…) | ❌ (`transportationTypes: string[]`) | M3 | |
 | Shops | ❌ | M3 | |
 | TM/HM list | ❌ | M3 | |
 | Progression definitions (milestone/numeric/boolean) | ✅ | — | |
-| Progression `choice` kind | ❌ | M0 | |
+| Progression `choice` kind | ❌ | M0b | |
 | Deploy/undeploy with playability validation | 🟡 (toggle only, `deployable` never computed) | M3 | Publish → release |
 
 ### Playing
@@ -96,41 +97,55 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ---
 
-## M0: Foundations
+## M0a: Platform & Arena Foundations
 
 **Epic: Org & Delivery Setup**
-- [ ] Move `pokesandbox` and `pokemon-showdown` to the org; update README links, CODEOWNERS, agents.md (S)
+- [ ] Move `pokesandbox` and `pokemon-showdown` (→ `pokesandbox-showdown`) to the org; update README links, CODEOWNERS, agents.md (S)
 - [ ] CI: lint + typecheck + unit tests on PR (M)
-- [ ] Create labels, issue types, milestones, and project board per [`github-project-setup.md`](github-project-setup.md) (S)
+- [ ] Create labels (incl. `agent-ready`), issue types, milestones, and project board per [`github-project-setup.md`](github-project-setup.md) (S)
 - [ ] Switch slash commands to global registration with per-server feature gating (M)
 
-**Epic: Engine Package** (Q18)
+**Epic: Hosting & Environments** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md))
+- [ ] Provision VPS: SSH hardening, firewall, unattended security updates, Docker + Compose (M)
+- [ ] Compose stack: bot + webapp + Caddy (TLS, reverse proxy), restart policies, log rotation (M)
+- [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
+- [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
+- [ ] GitHub Actions deploy: `main` → staging bot, version tag → prod (M)
+- [ ] Error monitoring (Sentry) + uptime check (S)
+
+**Epic: Engine Skeleton** (Q18)
 - [ ] Scaffold `libs/engine` (pure TS, no discord.js) with repository and ContentProvider interfaces (M)
 - [ ] `dispatch(characterId, action)` with per-character lock, action/event types, and error model (M)
 - [ ] Injected `Clock` and seeded `Rng` (S)
-- [ ] In-memory test harness (fixtures from region bundles) (M)
-- [ ] Scaffold `libs/core` (content schemas, registries, validator home) and `libs/authoring` (`execute(actor, command)`, per-entity OCC, role checks, `ContentChange` output) (M)
-- [ ] Migrate existing admin menus (pokedex, progression, locations) onto `libs/authoring` commands (M)
+- [ ] In-memory test harness (M)
+- [ ] Scaffold `libs/core` (shared schemas, registries home) (S)
+
+**Epic: Persistence & Data Basics**
+- [ ] docker-compose Mongo as a replica set (transactions) for local dev (S)
+- [ ] Cache policy: stop caching hydrated mutable docs. Use atomic `$set` for admin edits (M)
+- [ ] Indexes and unique constraints across models (S)
+- [ ] Reference species/items by Showdown ID. Add `speciesId` to DexEntry. Fix the 3 broken Gen 2 shiny sprite links (M)
+
+## M0b: Content Foundations
 
 **Epic: Conditions & Effects** (Q17)
-- [ ] Condition tree schema (`all/any/not`) + predicate registry API (M)
-- [ ] MVP predicates: progression, milestone, choice, flag, item, currency, party, visited (`$target`), time (L)
-- [ ] Condition explainer ("Requires …") and validator hooks (M)
+- [ ] Condition tree (`all/any/not`) + fact/operator registry (evaluate/explain/validate/references) + scoped evaluation context (M)
+- [ ] MVP facts: `milestone.has`, `milestone.count`, `choice.value`, `flag`, `bag.count`, `visited` (incl. `$target`), `party.knowsMove`, `dex.caughtCount`, `progression.value`, `location.cleared`, `location.visit.*`, `location.trainersDefeated` (L)
+- [ ] Gate envelope (`presentation`, `latch`, `cost`) + `checkGate` + `gateBlocked` event (M)
 - [ ] Effect union + registry + atomic executor with idempotency (L)
-- [ ] MVP effects: currency, item, givePokemon, progression, milestone, choice, flag, heal, setRespawn, random (L)
+- [ ] MVP effects: currency, item, givePokemon (PC + swap offer), progression, milestone (grant/revoke), choice, flag, heal, setRespawn, random (L)
 
 **Epic: Model Cleanup & Identity** (Q19, Q21)
-- [ ] ContentKey type + generator. Add `key` to Location (S)
-- [ ] Reference species/items by Showdown ID. Add `speciesId` to DexEntry (M)
-- [ ] Remove `Region.locations/characterList/shops/quests/transportationTypes` and `Server.playerList`. Add `Region.serverId` (M)
+- [ ] ContentKey type + generator. Add `key` to Location with `{ regionId, key }` unique index (S)
+- [ ] Remove `Region.locations/characterList/shops/quests/transportationTypes`, `Server.playerList`, `User.servers`. Add `Region.serverId` (M)
 - [ ] Progression `choice` kind (+ builder) (M)
-- [ ] Engine-managed flag namespace conventions (S)
-- [ ] Indexes and unique constraints across models (S)
-
-**Epic: Persistence & Caching**
-- [ ] docker-compose Mongo as a replica set (transactions) (S)
-- [ ] Cache policy: stop caching hydrated mutable docs. Use atomic `$set` for admin edits (M)
+- [ ] Flag conventions (reserved prefixes) (S)
 - [ ] Inbound-edge cleanup and "used by" guard on deletes (M)
+
+**Epic: Authoring Layer & Releases** (Q15, Q18)
+- [ ] Scaffold `libs/authoring` (`execute(actor, command)`, per-entity OCC, role checks, `ContentChange` + `suggestions` output) (M)
+- [ ] Migrate existing admin menus (pokedex, progression, locations) onto `libs/authoring` commands (M)
+- [ ] `RegionRelease` model + publish/compile + `ContentProvider` + deployment status (draft/live/paused) separate from discovery (L)
 
 ## M1: Battle Core & Catalog
 
@@ -188,7 +203,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Transport networks + Fly/Ferry templates (M)
 - [ ] Shops with conditioned entries (M)
 - [ ] Validator Tier 1 + basic Tier 2 + "Region Health" view (L)
-- [ ] Publish → RegionRelease (chunked) + ContentProvider + pause/undeploy (L)
+- [ ] Release chunking for large regions + rollback hooks (publish core lands in M0b) (M)
 - [ ] Region bundle export/import (JSON) (M)
 
 **Epic: Webapp Authoring (Q24)** (can run in parallel with M3/M4 once the matching `libs/authoring` commands exist)

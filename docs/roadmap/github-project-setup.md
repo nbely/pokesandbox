@@ -23,7 +23,7 @@ Use **sub-issues** for Epic → Feature/Task.
 | Flags | `good first issue`, `help wanted`, `needs-decision`, `blocked`, `breaking-change`, `agent-ready` |
 
 ## Milestones
-Create M0–M6 exactly as in [`mvp.md`](mvp.md). Phase 3/4 items go into the backlog without milestones until MVP ships.
+Create M0a, M0b, and M1–M6 exactly as in [`mvp.md`](mvp.md). Phase 3/4 items go into the backlog without milestones until MVP ships.
 
 ## Project (Projects v2) fields
 | Field | Type | Values |
