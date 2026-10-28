@@ -85,6 +85,88 @@ registerPredicate('milestone', {
 ## Contextual targets (resolves the Fly debate)
 You were right in the ChatGPT discussion: `is_in_visited` is just another predicate over player state. The general form is a predicate that refers to `$target`. Transportation evaluates each hub's `destinationCondition` with `target = hub.location`, and Fly's template is `{ type: 'visited', location: '$target' }`. A ferry template simply omits it. No hardcoded Fly logic anywhere.
 
+## Is this the right pattern? (stress test against scripts, quests and every gate)
+
+A condition tree is a well-proven pattern. It's the *Specification* pattern, and it's what Bethesda's Creation Kit uses for every dialogue line, quest stage, and perk (`function(params) <op> value`, with AND/OR, run on a subject/target), and what RPG Maker event pages use. It holds up across scripts and quests **with six refinements**. Without them it starts to strain.
+
+### 1. Split *facts* from *comparisons*
+Instead of one bespoke predicate per feature, a predicate is **a fact read + an operator + a value**:
+
+```ts
+Predicate = { fact: FactRef; op: 'eq' | 'neq' | 'gte' | 'lte' | 'in' | 'has' | 'exists'; value?: unknown; subject?: Subject }
+FactRef   = { kind: 'progression'; key } | { kind: 'milestoneCount'; key } | { kind: 'flag'; flag }
+          | { kind: 'bag'; item } | { kind: 'money' } | { kind: 'party.knowsMove'; move } | { kind: 'party.hasSpecies'; species }
+          | { kind: 'visited'; location } | { kind: 'time.partOfDay' } | { kind: 'var'; scope: Scope; key } | …
+```
+
+The registry then holds **fact resolvers** (how to read X, its value type, how to describe it, what it references), and operators are shared. A new mechanic is one new fact kind, and every operator, the explainer, and the builder work with it automatically. The builder still shows friendly templates ("Requires badge…"); they just generate fact + op + value. *This replaces the per-predicate list in "Proposed shape" above as the internal structure. The authoring surface is unchanged.*
+
+### 2. Scoped facts make conditions work inside scripts and quests
+Conditions read through an **evaluation context** with scopes:
+
+| Scope | Lives on | Used by |
+|---|---|---|
+| `character` | Character (progress, flags, bag, money, visited) | everything |
+| `party` / `pokemon` | Pokémon instances | HM gates, evolution conditions, NPC reactions ("show me a Pikachu") |
+| `script` | the running script's locals | branching inside a script (`if local.choice == 'fight'`) |
+| `quest` | a quest instance's variables | quest stage gates and completion checks |
+| `world` | per-region/server `WorldState` | server events, community boss ("boss defeated") |
+| `target` / `subject` | whatever the caller is evaluating against | Fly destinations (`$target`), "the Pokémon being used on" for items |
+| `clock` | injected Clock | time of day, weekday |
+
+So scripts and quests don't need their own condition system. They add **scopes**, not new condition kinds. Quest v2 adds a `quest` scope; co-op adds a `participant` subject.
+
+### 3. Conditions check *current state*. Objectives accumulate *history*.
+Some quest goals look like requirements but aren't: "defeat 10 wild Pokémon", "catch 3 Bug types", "deliver 5 Oran Berries". These aren't true or false about the current state; they count **events over time**. Model them as **objective trackers**: event listeners (`pokemonDefeated`, `pokemonCaught`, `itemsChanged`) that update quest-scope variables. Then a plain condition checks the variable (`var quest.bugsCaught gte 3`). Conditions stay pure and stateless, and the counting lives where events are. Without this split, people try to cram counters into conditions, and that's where rule systems rot.
+
+### 4. A standard "gate" envelope for anything that blocks an action
+Most attach points need more than a boolean:
+
+```ts
+Gate = {
+  condition?: Condition;
+  cost?: Effect[];                       // consumed when the gated action happens (fares, entry fees, ticket items)
+  onLocked?: 'show' | 'hide';            // default 'show' (teases content)
+  lockedText?: string;                   // overrides the auto-explanation ("The guard won't let you pass.")
+}
+```
+
+Locations, edges, shops, transport hubs, NPC interactions, and quest starts all take a `Gate`. One builder component and one engine function (`checkGate` → `{ allowed, explanation, cost }`).
+
+### 5. Same conditions, different *usage policies*
+The condition is the same everywhere. What differs is how the caller uses the result, so make the policy explicit instead of re-implementing it per feature:
+
+| Policy | Used by |
+|---|---|
+| **Gate**: allow/deny + explain | locations, edges, shops, transport, quest start |
+| **Filter**: keep the items that pass | shop entries, choice options, NPC visibility, encounter tables |
+| **First match** (ordered) | trainer party variants, encounter-table priority |
+| **Most specific match** (most predicates satisfied) | dialogue variants, an NPC's "what do I say now". Valve's dynamic-dialogue technique: authors add specific lines without reordering lists. |
+| **Branch** | script `if` |
+| **Guard** | triggers |
+
+### 6. Know what each condition depends on, so it can react
+`references()` tells the engine which facts a condition reads. That enables:
+- **Reactive triggers** ("when badges reach 8, start the League invitation script"): re-evaluate only conditions that depend on a fact an effect just changed. No polling, no "check every trigger on every action".
+- **Validator dependency graph** for soft-lock detection (see [16](16-authoring-validation-and-portability.md)).
+- **"Used by"** in the builder.
+
+### What conditions must *not* do
+- No side effects. Costs are effects carried by the Gate.
+- No hidden randomness. `chance` (if kept) uses the action's seeded Rng, so re-rendering a menu doesn't re-roll. For most uses, a script `random` branch is clearer.
+- No unbounded work (e.g. "any Pokémon in all boxes with…"). Fact resolvers declare their cost, and the validator flags expensive facts in hot paths.
+
+### Alternatives considered
+
+| Alternative | Verdict |
+|---|---|
+| Off-the-shelf rules engine (`json-rules-engine`, Drools-style forward chaining) | Similar data shape, but you lose typed facts, explain/validate/references, and zod-first schemas. The core is ~300–500 lines. Build it. |
+| Embedded scripting for conditions (Lua/JS expressions) | Power-user only, sandboxing burden. Possible later as text syntax that compiles to this tree. |
+| Per-feature bespoke gates (status quo) | The thing we're replacing. |
+| Pure fact/rule "query" system (Valve-style), for everything | Excellent for dialogue selection, clumsy for hard gates. Adopted *as one usage policy* (most specific match), not as the whole system. |
+
+**Verdict:** conditions remain the one gating primitive for everything. Facts + scopes + the Gate envelope + usage policies make it fit scripts, quests (with objective trackers alongside), and every other access gate without special cases.
+
 ## MVP scope
 - Predicate types: `progression`, `milestone`, `choice`, `flag`, `item`, `currency`, `party` (move/species), `visited`, `time`, plus `all`/`any`/`not`.
 - Evaluator, explainer, validator, and builder (flat list + one nesting level).
