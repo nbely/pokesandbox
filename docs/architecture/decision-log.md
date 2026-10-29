@@ -1,6 +1,6 @@
 # Decision Log: ChatGPT Architecture Sessions
 
-A condensed record of what was decided in the "PokeSandbox DB Architecture" ChatGPT conversation (Feb–Mar 2026). The full transcript is in [`reference/chatgpt-db-architecture-transcript.md`](reference/chatgpt-db-architecture-transcript.md).
+A condensed record of what was decided in the "PokeSandbox DB Architecture" ChatGPT conversation (Feb–Mar 2026). The transcript itself isn't kept in the repo.
 
 Status legend: **Built** (in `shared/src/models` today) · **Agreed** (decided, not built) · **Floated** (discussed, no decision) · **Revisit** (this audit proposes changing it; see the linked concept doc).
 
