@@ -93,4 +93,4 @@ The condition uses a new MVP fact, `location.trainersDefeated` (distinct trainer
 
 ## Open questions
 - ~~Default trainer movesets?~~ **Decided (Oct 2026):** yes. A trainer Pokémon with no moves set gets the last 4 moves it would know at its level from the region's learnsets (Gen 1 for Kanto Classic), as RBY does. Moves the author sets always win.
-- Do you want **trainer bag items** (Full Restore spam) in MVP AI?
+- ~~Trainer bag items in MVP AI?~~ **Decided (Oct 2026):** yes, kept minimal. A trainer party's `items` list is used by every AI profile except `random`: heal when the active Pokémon's HP is low, or cure a status the item cures. It goes through the same external choice hook as the player's bag (see [14](14-battle-system-and-showdown.md#ai-trainers)). Gen 1 gym leaders and the Elite Four use items, so Kanto Classic needs it.

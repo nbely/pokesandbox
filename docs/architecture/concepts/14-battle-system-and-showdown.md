@@ -204,6 +204,8 @@ Your roadmap wants the Arena to double as the AI playtest surface. Good instinct
 
 The AI implements the same `choose()` interface as a human side. Arena PvAI with "pick tier" is just a format plus an AI profile.
 
+**Trainer items (decided Oct 2026):** when a trainer party has `items` ([11](11-npcs-trainers-and-battle-definitions.md)), every profile except `random` uses them: a healing item when the active Pokémon's HP is low, or a status cure for a status it cures. The AI submits it through the external choice hook, the same path as the player's bag, and the item count is tracked per battle. `smart` and `champion` may refine the timing later.
+
 ## Battle → engine results
 On end, BattleService emits `battleEnded { result, sides[].pokemon[].{hp,status,pp}, faints[], turns, caught?, ran? }`. The engine then:
 1. Writes persistent state back to PokemonInstances.

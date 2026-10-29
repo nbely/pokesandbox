@@ -170,7 +170,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 **Epic: AI Players**
 - [ ] AI player interface + `random` profile (S)
-- [ ] `basic` profile using `@smogon/calc` (M)
+- [ ] `basic` profile using `@smogon/calc`, plus trainer item use (heal at low HP, cure status) shared by all non-random profiles (M)
 - [ ] `smart` profile (switching, status, items) (L)
 
 ## M2: Arena Release 🚀

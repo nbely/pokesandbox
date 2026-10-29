@@ -102,6 +102,6 @@ Stays Discord-first (small, form-like): region settings and rules, progression d
 Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands ([03](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
 
 ## Open questions
-- Should **publish be blocked by errors only**, with warnings allowed? (Recommendation: yes.)
+- ~~Block publish on errors only?~~ **Decided (Oct 2026):** yes. Errors block. Warnings and info never block, but they are **shown before the publish button is pressed**: publishing is two steps, a review (validation results plus the release diff) and then a confirm. The confirm is tied to the reviewed draft, so if the draft changes in between, the review runs again.
 - ~~Official Kanto template?~~ **Decided (Q25):** yes, see [Official templates](#official-templates-decided-oct-2026).
 - ~~Webapp builder in MVP?~~ **Decided (Q24):** targeted editors, see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026).
