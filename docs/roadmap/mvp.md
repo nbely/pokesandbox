@@ -175,8 +175,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] BattleService start/choose/events API, in-process (L)
 - [ ] Battle persistence (seed + input log), recovery on boot, compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
 - [ ] Protocol → GameEvent translation (M)
-- [ ] Discord battle renderer (turn embed, HP bars, ephemeral choice prompts) (L)
-- [ ] Turn timers and timeout policy (M)
+- [ ] Discord battle view builders (pure `BattleView` → Components v2: turn state, HP bars, choice prompts). The Arena wiring is in M2 E-M2-2 (L)
+- [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)
 
 **Epic: AI Players**
 - [ ] AI player interface + `random` profile (S)
@@ -185,7 +185,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M2: Arena Release 🚀
 
-> **External dependency: FlowCord multi-user sessions.** FlowCord menus are currently single-person actionable. The Arena needs multi-person menu interactions, built in FlowCord (its own org; released as a new `@flowcord/core` version) **before** the Arena's challenge flow and battle UI. It's already tracked by an existing FlowCord issue, referenced from the tracking issue here (see [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md#external-dependencies)). It can be built in parallel with M0a/M1, but it's on the Arena's critical path.
+> **FlowCord is no longer on the critical path (recommended Oct 2026, Q34).** FlowCord menus are single-person actionable, and its multi-user epic ([#55](https://github.com/flowcord-dev/flowcord/issues/55)) is unbuilt and scheduled after a breaking release. BattleService owns rounds and timers. The Arena's shared surfaces (challenges, public battle message, participant checks, private prompts) are plain discord.js handlers behind a `BattleSurface` port (E-M2-2), and FlowCord runs the single-user `/arena` hub. Optional FlowCord asks are tracked in [M2-00](../backlog/m2-launch-readiness.md#external-dependencies). See [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34).
 
 **Epic: Launch Readiness: Hosting & Operations** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md); drafts in [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md))
 Scheduled last on the Arena track. Development runs locally until then.
@@ -195,9 +195,11 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
 
-- [ ] Challenge/accept/decline flow on FlowCord multi-user sessions (M). **Blocked by the external FlowCord dependency below.**
+- [ ] Challenge/accept/decline: direct + open challenges, atomic claim, 5-min expiry (M2-09) (M)
+- [ ] Arena interaction router with stable custom IDs (M2-08) + private choice prompts (M2-11) (M)
 - [ ] `/arena` hub: teams, challenge member, battle AI (M)
-- [ ] Public battle message + spectating (M)
+- [ ] Public battle message projector + spectating, re-attached after restart (M2-10) (M)
+- [ ] Arena scenario tests + restart drill (M2-12) (S)
 - [ ] PvAI: "AI picks team" / "random by tier" (M)
 - [ ] Battle history list (per user) (S)
 - [ ] Alpha test on the community server; feedback triage (M)
