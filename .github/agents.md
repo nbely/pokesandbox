@@ -466,7 +466,7 @@ autocomplete: async (client, interaction) => {
 
 ### Adding a Slash Command (Menu-based)
 
-This is the primary pattern. Almost all commands use `createMenu` rather than `execute`. Reference: `apps/bot/src/interactions/guilds/1010726453974925402/slashCommands/serverManagement/server/server.ts`.
+This is the primary pattern. Almost all commands use `createMenu` rather than `execute`. Reference: `apps/bot/src/interactions/guilds/dev/slashCommands/serverManagement/server/server.ts`.
 
 #### File structure
 
