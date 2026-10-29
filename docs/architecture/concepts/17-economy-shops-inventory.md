@@ -5,7 +5,7 @@
 **MVP impact:** Medium · **Cost to change later:** Low
 
 ## Current shape
-`Region.shops: ObjectId[]` and `Region.currencyType: string` (default `'P'`). The chat sketched `Shop { accessRequirements, tiers: [{ requirements, items }] }`.
+`Region.shops: ObjectId[]` and `Region.currencyType: string` (default `'P'`). The original plan sketched `Shop { accessRequirements, tiers: [{ requirements, items }] }`.
 
 ## Proposed shape
 ```ts

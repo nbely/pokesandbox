@@ -5,7 +5,7 @@
 **MVP impact:** High · **Cost to change later:** Medium
 
 ## Current shape
-`Location.trainerIds` (refs a non-existent `Trainer`). The chat agreed the rival is a Trainer with multiple teams. Your roadmap adds talkable and/or battleable NPCs, on-defeat effects, gym-leader-tier config, and party variants keyed off progressions.
+`Location.trainerIds` (refs a non-existent `Trainer`). The original plan agreed the rival is a Trainer with multiple teams. Your roadmap adds talkable and/or battleable NPCs, on-defeat effects, gym-leader-tier config, and party variants keyed off progressions.
 
 ## Proposed shape
 ```ts
