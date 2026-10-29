@@ -5,7 +5,7 @@
 | Later feature (from your roadmap) | Needs | MVP decision that unblocks it |
 |---|---|---|
 | In-game PvP with adventure parties | Party → battle set conversion, multi-user battle UI | PokemonInstance in Showdown set shape ([13](13-characters-and-pokemon-instances.md)). The Arena builds the multi-user BattleService ([14](14-battle-system-and-showdown.md)). |
-| Trading, Wonder Trade, GTS | Moving Pokémon between owners atomically | Separate PokemonInstance collection + transactions ([13](13-characters-and-pokemon-instances.md), [15](15-persistence-caching-concurrency.md)) |
+| Wonder Trade, GTS, cross-region trades (player-to-player trading is MVP, see [13](13-characters-and-pokemon-instances.md#trading-decided-oct-2026-mvp-q35)) | Moving Pokémon between owners atomically | Separate PokemonInstance collection + transactions ([13](13-characters-and-pokemon-instances.md), [15](15-persistence-caching-concurrency.md)) |
 | Breeding (contained / server pool) | Pokémon storage outside party/box, egg instances | `storage.kind` union (`daycare`, `pool`) ([13](13-characters-and-pokemon-instances.md)) |
 | Quest engine v2 (active/passive, loaners, quiz, RP-hurdle stages) | Composable sequences, persistence, objective tracking | Script VM + mode machine + engine events ([07](07-scripts-triggers-and-events.md), [03](03-engine-boundary-and-game-loop.md)) |
 | Persistent dialogue choices | Choice storage readable everywhere | `choice` progression kind + Condition predicate ([04](04-progression-and-flags.md), [05](05-requirements.md)) |

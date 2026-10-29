@@ -22,7 +22,7 @@ PokeSandbox grew out of forum text-RPGs. Players narrated their adventures in th
 AdventureLogEntry {
   _id; characterId; regionId; at: Date; releaseVersion;
   kind: 'trainerBattle' | 'wildBattle' | 'catch' | 'travel' | 'scene' | 'milestone' | 'evolution' | 'moveLearned'
-      | 'gift' | 'pvp' | 'whiteout' | 'rollup';
+      | 'gift' | 'trade' | 'pvp' | 'whiteout' | 'rollup';
   location: ContentKey;
   summary: {                                   // version-independent, display-ready data
     opponent?: { trainerKey?; name; class?; party: { species; level }[] };

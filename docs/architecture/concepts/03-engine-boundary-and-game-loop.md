@@ -87,6 +87,8 @@ The engine exposes `availableActions(character)` with explanations (the conditio
 
 **4. Contention and retries.** If the lease is held, `dispatch` waits up to ~1s (after an early acknowledgement to Discord, which allows 3s), then returns `actionRejected: busy`. An optimistic-concurrency conflict is retried once **only for actions without a `rev`**. A view-dependent action is never silently re-applied on fresh state, because that is exactly how duplicates happen. Retries of the same request (network replays) are deduplicated by `actionId`.
 
+**5. Actions across two characters** (trades, see [13](13-characters-and-pokemon-instances.md#trading-decided-oct-2026-mvp-q35)) take both characters' leases in a fixed order (sorted by character ID), run every check for both characters, and commit in one transaction that bumps both revisions.
+
 ## Options
 
 | Option | Pros | Cons |

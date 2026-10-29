@@ -78,6 +78,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 | Trainer battles, rival, gyms, Elite 4 | ❌ | M5 |
 | EXP, level-ups, moves, evolution | ❌ | M5 |
 | Party management, summaries | ❌ | M5 |
+| Trading between players (same region) | ❌ | M5 |
 | PC boxes | ❌ | M5 |
 | Inventory/bag | ❌ | M5 |
 | Shops buy/sell; money from battles | ❌ | M5 |
@@ -238,14 +239,16 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Traversal requirements: location progress counters (lifetime/visit), one-time + permanent costs, compiled exit gates with explanations (M)
 - [ ] Wild battles: catch formula, run odds, bag in battle (via hook) (L)
 - [ ] Trainer battles: party variant selection, AI profile, payout, defeat flags, whiteout (M)
-- [ ] EXP and level-ups mid-battle (state injection), in-battle move-learn prompts, post-battle evolution (level/stone), Gen 1 traded-Pokémon EXP bonus and obedience by original trainer (L)
+- [ ] EXP and level-ups mid-battle (state injection), in-battle move-learn prompts, post-battle and post-trade evolution (level/stone/trade), Gen 1 traded-Pokémon EXP bonus and obedience by original trainer (L)
 - [ ] Party view/reorder/summary; full party → PC + "Swap into party?" offer for gifts and catches (M)
 - [ ] PC boxes: deposit/withdraw/release, overflow, access per `RegionRules.systems.storage.access` (M)
 - [ ] Bag: pockets, use/give/take outside battle; Escape Rope uses the `teleport: respawn` effect (M)
 - [ ] Shops buy/sell, including entries priced in a numeric progression (coins); money never below 0 (S)
 - [ ] Heal points + respawn (S)
 - [ ] Profile: badge case, milestones, visited, dex (M)
-- [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, wild rollups, milestones, evolutions, scenes) + webapp log view; ephemeral opponent Pokémon from recipes (M)
+- [ ] **Trading** (Q35): `Trade` record + shared trade message + private Pokémon pickers (reusing the M2 Arena surface patterns), confirm-reset on offer change, expiry (M)
+- [ ] Two-character engine action: ordered leases, re-checks, owner swap in one transaction, both revisions and Pokédexes updated; `trading.access` precondition; per-character rate limit (M)
+- [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, trades, wild rollups, milestones, evolutions, scenes) + webapp log view; ephemeral opponent Pokémon from recipes (M)
 
 ## M6: Kanto Classic & MVP Release 🚀
 

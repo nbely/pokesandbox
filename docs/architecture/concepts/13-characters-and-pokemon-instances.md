@@ -81,7 +81,7 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 ## Game-dev notes
 - **HP/status persist** between battles (heal at Centers). The fork's HP injection (or a battle construction hook) is needed. See [14](14-battle-system-and-showdown.md).
 - **EXP, levels, evolution, and move learning happen in the engine**, using DexEntry growth rates and Showdown learnsets. Evolution prompts ("What? Charmander is evolving!", cancelable) and move-replacement prompts are **script-like blocking interactions**, so reuse the mode machinery.
-- **Original Trainer/ID** drives Gen 1 rules once trading exists. Traded Pokémon (OT ≠ current owner) gain **1.5× EXP**, and **obey only up to a badge-based level cap**: 10 with no badges, 30 with Cascade, 50 with Rainbow, 70 with Marsh, all with Earth. Both are region rules (`formulas.exp` traded bonus, `systems.obedience`).
+- **Original Trainer/ID** drives Gen 1 rules for traded Pokémon (trading is MVP, see Trading below). Traded Pokémon (OT ≠ current owner) gain **1.5× EXP**, and **obey only up to a badge-based level cap**: 10 with no badges, 30 with Cascade, 50 with Rainbow, 70 with Marsh, all with Earth. Both are region rules (`formulas.exp` traded bonus, `systems.obedience`).
 
 ## Decisions (Oct 2026, Q22)
 - **Option C:** all owned Pokémon live in one `PokemonInstance` collection with an owner and a `storage` location. Battle results, trades, and swaps use transactions (Mongo replica set).
@@ -89,9 +89,29 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 - **Released Pokémon** are soft-deleted (`releasedAt`), kept for history and anti-abuse audits, then purged after **30 days**.
 - **Original trainer** is recorded from day one (character ID, name, trainer ID). It's needed for Gen 1's traded-Pokémon EXP bonus and obedience once trading exists.
 
+## Trading (decided Oct 2026, MVP, Q35)
+Low-fidelity player-to-player trading is in the MVP. Wonder Trade, GTS-style listings, and cross-region or cross-server trades are not.
+
+```ts
+Trade {
+  _id; regionId;                                  // both characters are in this region
+  sides: [{ characterId; offer?: PokemonInstanceId; confirmed: boolean }, { … }];
+  channelId; messageId;                           // the shared trade message
+  status: 'open' | 'completed' | 'cancelled' | 'expired';
+  expiresAt;
+}
+```
+
+- **Flow:** a player proposes a trade to another player in the same region. Each side picks one Pokémon privately (a prompt opened from the shared trade message, the same pattern as the Arena's private choice prompts in [14](14-battle-system-and-showdown.md#ownership)). Both confirm. **Changing an offer clears both confirmations**, so nobody is switched at the last second. Offers expire.
+- **Execution is one engine action across two characters.** `dispatch` takes both characters' leases in a fixed order (sorted by character ID) so concurrent trades can't deadlock, then re-checks everything against fresh state: both sides still own the offered Pokémon, neither character is in battle or a script, and neither trade leaves a party empty. It swaps `ownerCharacterId` (and storage) in one transaction, bumps both characters' `rev`, and updates both Pokédexes (seen/caught).
+- **Where:** `RegionRules.systems.trading.access: 'pcLocation' | 'anywhere'` ([18](18-rules-time-and-randomness.md)). Gen 1 Classic uses `'pcLocation'` (the Cable Club in every Pokémon Center), checked like any action precondition ([03](03-engine-boundary-and-game-loop.md#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026)).
+- **After the trade:** trade evolutions (Kadabra, Machoke, Graveler, Haunter) fire as the receiver's post-trade evolution prompt, the same interaction as post-battle evolution. The Gen 1 traded-Pokémon rules (EXP bonus, obedience caps) apply automatically because the original trainer differs. Both characters get an adventure log entry (`kind: 'trade'`).
+- **Abuse limits:** same-region only, a per-character rate limit, and every trade logged. Self-trading through alt accounts can't be fully prevented, but it's visible in the logs.
+
 ## MVP scope
 - Character, PokemonInstance (party + boxes), TeamPreset (arena), and conversion `PokemonInstance → PokemonSet + state`.
 - Box UI, deposit/withdraw/release.
+- Player trading (above).
 
 ## Open questions
 - ~~1 character per region? Restart?~~ **Decided (Q27):** 1 per region enforced in MVP (`charactersPerPlayer` kept for later). Restart archives the old character (soft delete) with a 24h cooldown. Admins can reset a player's character.

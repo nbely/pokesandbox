@@ -83,7 +83,8 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - `/play` hub (the only player command; ephemeral): location view, travel (with locked-edge explanations), Fly/transport. One active session per character, and a new one resumes wherever the character is, mid-battle included.
 - Explore: weighted outcomes (wild, trainer, hidden item) by method; traversal costs; Repel.
 - Battles: fight, switch, **bag items, catch, run** (needs the patch set's external choice hook); trainer battles; rival; gyms; Elite 4 gauntlet; whiteout → respawn.
-- EXP and level-ups applied mid-battle (authentic), move learning prompts, evolution after battle (level/stone).
+- EXP and level-ups applied mid-battle (authentic), move learning prompts, evolution after battle (level/stone) and after trades.
+- Player trading within a region (propose, pick privately, both confirm) at Pokémon Centers; trade evolutions; Gen 1 traded-Pokémon rules.
 - Party (reorder, summary), PC boxes (deposit/withdraw/release, overflow), bag (pockets, use/give/take).
 - Shops, money from battles, heal at centers.
 - Profile: badges/milestones, visited locations, dex seen/caught. Webapp profile and character pages with privacy settings.
@@ -104,7 +105,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Narrative | Persistent dialogue choices (choice kind is already MVP), quest-local choices as script locals | Conditions, scripts |
 | Effects++ | Teleport, start-script, new attach points (transport hops, quest stages) | Effect registry |
 | Custom content | Server content library (fakemon/forms/types/moves/items reusable across a server's regions) injected into isolated Showdown dexes | Catalog layering, isolated custom-data dexes |
-| Social | In-game PvP with adventure parties; trading; Wonder Trade; GTS-style listings | PokemonInstance collection, BattleService |
+| Social | In-game PvP with adventure parties; Wonder Trade; GTS-style listings; cross-region trades (player trading is MVP) | PokemonInstance collection, BattleService |
 | Breeding | Contained service + server pool; eggs; hatching | `storage.kind` |
 | Happiness | Friendship evolutions, move unlocks | PokemonInstance.friendship |
 | Rematches | Trainer/gym rematch variants (VS Seeker / phone) | Conditioned parties, `timer` kind |

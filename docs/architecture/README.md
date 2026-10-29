@@ -7,7 +7,7 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 2. The **big alternates** below.
 3. [`open-questions.md`](open-questions.md): every architecture question and its recorded decision.
 
-> **Status (Oct 2026):** all 34 architecture questions are decided. Decisions are recorded in [`open-questions.md`](open-questions.md) and in each concept doc's "Decisions" section, and they supersede the original proposals where they differ.
+> **Status (Oct 2026):** all 35 architecture questions are decided. Decisions are recorded in [`open-questions.md`](open-questions.md) and in each concept doc's "Decisions" section, and they supersede the original proposals where they differ.
 
 ## The big alternates (vs. the current plan)
 
