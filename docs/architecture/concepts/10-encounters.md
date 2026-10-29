@@ -105,4 +105,4 @@ Option B means **the trip itself can be interrupted**. You pick "Go to Viridian 
 
 ## Open questions
 - ~~Day/night time model?~~ **Decided (Q6):** none for the Kanto MVP (tables use `any`). The injected Clock defaults to real time in the server's timezone when Gen 2+ content needs it. See [18](18-rules-time-and-randomness.md).
-- Should **level scaling** exist (encounter levels relative to badges/party, like SV) as a region option?
+- ~~Level scaling?~~ **Decided (Oct 2026):** post-MVP. `RegionRules.systems.levelScaling` is reserved so it can be added later without reshaping data ([18](18-rules-time-and-randomness.md)).

@@ -220,4 +220,4 @@ The **DB catalog is the record** (see Layering above): canon data is imported fr
 ## Open questions
 - ~~What does `baseGeneration` control?~~ **Decided (Q26):** replaced by `RegionRules`; the default `10` is removed.
 - ~~Sprite hosting?~~ **Decided (Q32):** the existing Imgur-hosted set behind a sprite-URL resolver, with Showdown's CDN as fallback.
-- Do you want **regional forms/variants** (Alolan etc.) slot-able in MVP? The pokedex slot model supports forms already. (Kanto Classic doesn't need them.)
+- ~~Regional forms in MVP?~~ **Decided (Oct 2026):** the model supports them (pokedex slots already hold forms), but the builder doesn't offer them while a region's data rules are Gen 1. Kanto Classic doesn't need them, and many would fail Gen 1 type rules (no Dark, Steel, or Fairy).

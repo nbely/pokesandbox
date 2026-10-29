@@ -119,4 +119,4 @@ Option B was adopted: one Script + Trigger system, **on the condition that build
 ## Open questions
 - ~~Offered triggers vs People here?~~ See Decision 1.
 - ~~Cutscene presentation?~~ See Decision 2.
-- Should scripts support **timed waits** ("come back tomorrow") in MVP? That needs a `timer` progression kind.
+- ~~Timed waits in scripts?~~ **Decided (Oct 2026):** not MVP (RBY doesn't need them). They arrive with Gen 2+ time content as the reserved `timer` progression kind ([04](04-progression-and-flags.md)), read through the injected Clock.

@@ -45,6 +45,7 @@ RegionRules {
     bagCapacity?: number;                     // Gen 1: 20 item slots (optional authentic limit)
     nicknames: boolean; time: TimeRules;      // time unused in Gen 1 regions
     levelCap?: …;
+    levelScaling?: …;                         // reserved, post-MVP: encounter levels relative to badges/party
     obedience?: { traded: { capsByMilestone: { key: string; caps: [number, ...number[]] } } };   // Gen 1: traded Pokémon obey up to 10 / 30 (Cascade) / 50 (Rainbow) / 70 (Marsh) / all (Earth)
   };
 }
