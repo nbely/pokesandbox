@@ -162,10 +162,17 @@ The same original/linked scheme applies, but it's deferred until custom moves/ab
 - **Deleted entry:** blocked while any published release or instance references it. Archive instead.
 
 ### Mongo shape
-- `DexEntry` becomes `SpeciesDefinition`: `_id` stays an ObjectId per **(speciesId, version)** document, with a unique index on `{ speciesId, version }`.
-  - Canon docs use `speciesId = showdown id` and the data version.
-  - All references store `speciesId` (plus a definition ref where pinning matters), never the `_id`.
-- The existing `isCanon` / `isPublic` / `originServer` fields map onto `kind`, `visibility`, and `ownerServerId`.
+A species ID names what a Pokémon *is*. It is **not** a unique document key: a server library can hold several linked entries for `pikachu` (e.g. "Rebalanced Pikachu" for one region, "Hard-mode Pikachu" for another), and every server that imports Sparkitten holds an entry with the same ID.
+
+| Where | Unique key | Species ID unique? |
+|---|---|---|
+| Canon catalog (`DexEntry`, later `SpeciesDefinition`) | `speciesId` (renamed from `showdownName`), plus the data version if more than one canon import is kept | Yes, among canon entries only |
+| Server library | `entryId` (+ version) | No. Overrides and imports share IDs by design. |
+| Region release | Its species map: each species ID → exactly one `DefinitionRef` | Yes, enforced by the publish validator, not a DB index |
+
+- `_id` stays an ObjectId. All references store `speciesId` (plus a definition ref where pinning matters), never the `_id`.
+- A region's Pokédex slot picks the definition: `{ speciesId: 'pikachu', definition: { entryId, version } }`. Instances, encounter slots, and trainer parties store only `'pikachu'`.
+- The existing `isCanon` / `isPublic` / `originServer` fields map onto `kind`, `visibility`, and `ownerServerId`. Non-canon entries move to the library model instead of sharing the canon collection (the seed has none today).
 
 ## Items (the biggest catalog gap)
 Showdown knows that Leftovers heal in battle. It doesn't know:
@@ -205,7 +212,7 @@ Your roadmap wants "custom fakemon, forms, and types per server: predictable, si
 The **DB catalog is the record** (see Layering above): canon data is imported from a pinned Showdown version into Mongo, and the import is re-run and diffed on Showdown upgrades. Showdown stays the battle executor and receives the assembled data per battle context. The alternatives considered were "Showdown canonical, Mongo only enriches" (rejected: admins need overrides, custom learnsets, TM assignments, and readable move details) and a third-party API at runtime (latency, rate limits, no custom content).
 
 ## MVP scope
-- Reference species/moves/items by Showdown ID. Add `speciesId` to DexEntry.
+- Reference species/moves/items by Showdown ID. Rename DexEntry `showdownName` to `speciesId` and reference by it.
 - ItemDefinition for the Gen 1 item set (balls, medicine, repels, escape rope, stones, key items, TMs/HMs) with field/battle handlers.
 - Region TM list and learnset policy.
 - Not MVP: custom species UI and custom moves. The isolated custom-data dex (M1) is still built for the MVP because piecemeal Gen 1 data and Arena formats use it.

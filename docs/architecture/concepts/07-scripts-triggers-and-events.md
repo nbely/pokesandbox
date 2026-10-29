@@ -107,7 +107,7 @@ type Step =
 
 Option B was adopted: one Script + Trigger system, **on the condition that building scripts stays easy for users**.
 
-1. **NPC interaction:** a "People here" list, where each NPC has a talk (interact) trigger. Leaning this way; it can be cemented later. Underneath it's the same trigger either way, so this is a UI decision only.
+1. **NPC interaction:** a "People here" list, where each NPC has a talk (interact) trigger. Confirmed (Oct 2026). Underneath it's the same trigger as an offered trigger, so this is a UI decision only.
 2. **Presentation:** MVP renders plain paged dialogue. Rich presentation comes later (custom embeds, **Discord Components v2** layouts: containers, sections with portrait/sprite thumbnails, media galleries). **Design for it now:** `say` (and `choice`) steps keep content separate from presentation:
    ```ts
    { say: { speaker?: SpeakerRef; text: string; presentation?: { style?: PresentationStyleId; portraitUrl?; imageUrl?; accentColor? } } }

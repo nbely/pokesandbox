@@ -15,6 +15,7 @@
 - **Workload:** an always-on Discord gateway connection plus in-memory live battles. **Serverless doesn't fit.** The bot needs a long-running process.
 - **Data:** MongoDB replica set (transactions for battle results, trades, and publishing) and **real backups** (player saves).
 - **Existing accounts:** MongoDB only.
+- **Donations policy:** donations are tied transparently to hosting costs only, with no sales or paid perks, so the project stays clearly non-commercial. (Not legal advice.)
 
 ## Proposed setup
 
@@ -131,4 +132,3 @@ Start with dev + prod, and add staging before the Arena goes public (decided, Q3
 
 ## Open questions
 - ~~Self-managed VPS vs managed host?~~ **Decided (Q30):** managed host to start. Which one (the family host or Railway/Fly/Render) is decided in M2-01.
-- Do donations change anything legally? Not legal advice, but keep donations transparently tied to hosting costs only, and avoid anything resembling sales or paid perks, to stay clearly non-commercial.

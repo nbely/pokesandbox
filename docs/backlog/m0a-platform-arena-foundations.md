@@ -234,13 +234,19 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 
 **Refs:** [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
-### M0A-19 · Canon species IDs (`speciesId`) on DexEntry, and references by ID
+### M0A-19 · Rename DexEntry `showdownName` → `speciesId`, and reference species by ID
 `Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:shared-models` · `Blocked by: M0A-17` · `agent-ready: yes` · `Owner: agent`
 
+**Summary:** `showdownName` already holds the Showdown ID for all 1,371 seed entries. Rename it to `speciesId` (library entries will use the same ID type, so "Showdown name" stops being accurate) and make it the only way content refers to a species.
+
 **Acceptance criteria**
-- `DexEntry.speciesId` (Showdown `toID`) is unique and backfilled for all seed entries.
-- Encounter slots and pokedex slots reference `speciesId` (string), not ObjectId. Seeds and DTOs updated.
-- A migration script for existing databases.
+- `DexEntry.showdownName` renamed to `speciesId` in the model, Zod schema, DTOs, seed data, and `apps/bot/src/utils/searchPokemon.ts`.
+- A unique index on `speciesId`. Canon entries only: library overrides and imports share species IDs by design and live in the library model later ([12 § Mongo shape](../architecture/concepts/12-content-catalog-species-moves-items.md#mongo-shape)).
+- DexEntry's own links (`baseSpecies`, `prevo`, `evos`, `formes`) store `speciesId` strings instead of `{ id: ObjectId, name }`.
+- Encounter slots (`wildTable` `speciesId`, today an ObjectId) and region pokedex slots reference `speciesId` strings. DTOs updated.
+- Seed fix: `Unown-!` / `Unown-?` use Showdown's IDs `unownexclamation` / `unownquestion` (currently `unown!` / `unown?`). A test asserts every seed `speciesId` equals Showdown's `toID` of its Showdown name.
+- A migration script for existing databases (rename the field, convert ObjectId references to IDs).
+- `docs/erd.md` regenerated.
 
 **Refs:** [02](../architecture/concepts/02-identity-and-references.md), [12](../architecture/concepts/12-content-catalog-species-moves-items.md)
 

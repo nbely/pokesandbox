@@ -110,7 +110,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] docker-compose Mongo as a replica set (transactions) for local dev (S)
 - [ ] Cache policy: stop caching hydrated mutable docs. Use atomic `$set` for admin edits (M)
 - [ ] Indexes and unique constraints across models (S)
-- [ ] Reference species/items by Showdown ID. Add `speciesId` to DexEntry. Fix the 3 broken Gen 2 shiny sprite links (M)
+- [ ] Reference species/items by Showdown ID. Rename DexEntry `showdownName` → `speciesId`. Fix the 3 broken Gen 2 shiny sprite links (M)
 
 ## M0b: Content Foundations
 

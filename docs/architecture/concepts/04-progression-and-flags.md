@@ -64,4 +64,4 @@ Option B (two layers) adopted: curated **progressions** (displayable) + open **f
   - Conditions evaluate **current** state, so revoking genuinely removes access.
   - Gates that should stay open use `latch: true` ([05 §4](05-requirements.md)).
   - `sequential` checks the **current** holdings ("has N-1 now"). Revoking an earlier milestone does not cascade-revoke later ones.
-- **Staff flag tools** (view/edit a character's flags): not MVP. The MVP runs on the owner's server, and maintainers fix records directly.
+- ~~Staff flag tools?~~ **Decided: not MVP** (view/edit a character's flags). The MVP runs on the owner's server, and maintainers fix records directly.

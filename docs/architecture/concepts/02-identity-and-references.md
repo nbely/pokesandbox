@@ -83,8 +83,8 @@ Yes, for the **draft** (one doc per location/NPC/script keeps authoring writes s
 - ContentKey type and generator. Migrate Location to have a `key`. Species and item references become Showdown IDs. Remove the bidirectional arrays. Add indexes.
 
 ## Open questions
-- Will regions ever be **shared across servers** (a published "Kanto Classic" that many servers deploy)? If yes, Region needs `ownerServerId` plus a separate "installation" concept. If no, `Region.serverId` is enough.
-- Should DexEntry keep ObjectId `_id`s at all, or switch `_id` to the Showdown ID string? (Recommendation: `_id` can stay, but add a unique `speciesId` string field and reference by that.)
+- ~~Regions shared across servers?~~ **Decided (Q23):** no live sharing. Each region belongs to one server, and sharing means importing a copy, so `Region.serverId` is enough.
+- ~~DexEntry `_id` vs Showdown ID?~~ **Decided (Oct 2026):** `_id` stays an ObjectId. The existing `showdownName` field is **renamed `speciesId`** (it already holds the Showdown ID) and becomes the reference key everywhere, including DexEntry's own `baseSpecies`/`prevo`/`evos`/`formes` links. It's unique among canon entries only; library overrides and imports share species IDs by design (see [12 § Mongo shape](12-content-catalog-species-moves-items.md#mongo-shape)).
 
 ## Worked example: copying a template region to another server
 

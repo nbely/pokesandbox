@@ -45,7 +45,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 
 | Area | Deliverable |
 |---|---|
-| Catalog | Showdown dex as battle truth; DexEntry `speciesId`; ItemDefinition (battle-relevant subset) |
+| Catalog | Showdown dex as battle truth; DexEntry `speciesId` (renamed from `showdownName`); ItemDefinition (battle-relevant subset) |
 | Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats so the Arena works on a fresh server; `RegionRules` presets for adventure |
 | Teams | `TeamPreset` model; Showdown paste import/export; guided builder; TeamValidator against the format |
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers; forfeits; spectating |
