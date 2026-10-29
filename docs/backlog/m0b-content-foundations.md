@@ -239,7 +239,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 - `ContentProvider.getRelease(regionId, version?)` returns an immutable in-memory object (LRU). It keeps N and N-1 resident.
 - Retention: keep the last 10 releases plus any referenced (characters, clones, templates). Older ones are pruned by a job.
 - `compileRelease(regionId, { mode: 'preview' })` exists (unused yet) for future draft preview.
-- `Character.releaseVersion` plus a migration-rule hook (rules implemented in M5).
+- `Character.releaseVersion` plus a migration-rule hook (rules implemented in M5). The review diff lists rule changes (`RegionRules`) explicitly, with the affected character count; save-breaking rule changes are errors unless they ship with a fix-up rule ([18](../architecture/concepts/18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
 
 **Refs:** [01](../architecture/concepts/01-content-vs-state-and-publishing.md), [21 § Retention](../architecture/concepts/21-hosting-and-environments.md)
 
