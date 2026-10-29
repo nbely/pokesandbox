@@ -9,18 +9,37 @@ Refs: concept [21](../architecture/concepts/21-hosting-and-environments.md)
 ## External dependencies
 
 ### M2-00 · Tracking: FlowCord multi-user sessions (external)
-`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P0` · `Size: —` (work happens in the FlowCord repo) · `Labels: area:bot, blocked` · `Blocked by: existing FlowCord issue (FlowCord org; link to add)` · `agent-ready: no` · `Owner: owner`
+`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P0` · `Size: —` (work happens in FlowCord) · `Labels: area:bot, blocked` · `Blocked by: flowcord-dev/flowcord#55` · `agent-ready: no` · `Owner: owner`
 
-**Summary:** FlowCord menus are single-person actionable today. The Arena needs multi-person menu interactions. The work lives in FlowCord (its own org, independent of PokeSandbox) and is **already tracked by an existing FlowCord issue**. This issue links to it and blocks the Arena's challenge flow and battle UI issues (drafted with M1).
+**Summary:** FlowCord menus are single-person actionable today. The Arena needs multi-person menu interactions. The work is tracked in the FlowCord org by epic **[flowcord-dev/flowcord#55](https://github.com/flowcord-dev/flowcord/issues/55)** ("Multi-user session handling"; milestone v0.1.0-alpha.5; 0/7 sub-issues done as of Oct 2026). This issue blocks the Arena's challenge flow and battle UI issues (drafted with M1).
 
-**Capabilities PokeSandbox needs from FlowCord** (a checklist to compare against the existing FlowCord issue; anything missing can be added there as a comment):
-1. **Multi-participant sessions:** an initiator plus participants added by invitation (user select) or by joining (button), optionally time-limited sign-up.
-2. **Per-participant permissions:** components declare who may act (a specific participant, any participant, initiator only). Others get a polite ephemeral "not your turn/menu".
-3. **Shared public message + private sub-flows:** one shared message (e.g. the battle state in a public channel, viewable by spectators) plus **per-participant ephemeral sub-flows** (e.g. each player's move/switch prompt).
-4. **Externally driven updates:** the app can push a refresh into a live session from outside a user interaction (e.g. BattleService finished a turn, the opponent chose, a timer expired).
-5. **Session state holds IDs, not live objects:** e.g. `battleId`, with the battle owned by `libs/battle` (no cloning or serializing of streams in session state).
-6. **Concurrency:** interactions within one session are serialized, so simultaneous presses by two participants can't race.
-7. **Timeouts per participant and per session,** with a hook so the app can apply defaults (the Arena's 90s turn timer).
+**What the Arena needs, mapped to the FlowCord sub-issues**
+
+| Arena need | FlowCord coverage | Status |
+|---|---|---|
+| Shared public battle message, edited each turn, separate from any one interaction | [#56](https://github.com/flowcord-dev/flowcord/issues/56) shared adapter primitives (`acknowledgeInteraction`, `sendChannelMessage`, `editChannelMessage`) + [#57](https://github.com/flowcord-dev/flowcord/issues/57) Case 2 rolling shared render | ✅ Covered |
+| Only participants can press battle controls (others get "not your menu") | #57 collector policy (any / allowlist / role) + [#59](https://github.com/flowcord-dev/flowcord/issues/59) Case 6 server-side permission checks | ✅ Covered |
+| Each turn: both players choose privately, then the round resolves | [#60](https://github.com/flowcord-dev/flowcord/issues/60) Case 3 `ctx.diverge()`/`ctx.complete()` orchestrated rounds (its exit criterion is literally "a battle survives a dropout") | ✅ Covered (**core dependency**) |
+| Turn timer (90s) → default move; 3 timeouts → forfeit | #60 per-participant timeouts, dropout `forfeit`/`substitute`/`pause`, `onParticipantDropout` | ✅ Covered via hooks. A "default action on timeout" (vs dropout) is worth confirming. |
+| Challenge → accept/decline (direct challenge), or an open challenge anyone can take | [#58](https://github.com/flowcord-dev/flowcord/issues/58) Case 1 accumulate-then-act (approvals) · [#61](https://github.com/flowcord-dev/flowcord/issues/61) Case 7 first-response atomic claim | ✅ Covered |
+| Spectators | Public channel message is inherently visible. #61 Case 5 `ctx.broadcast()` if per-spectator renders are wanted. | ✅ Covered (optional) |
+| Tests without Discord | [#62](https://github.com/flowcord-dev/flowcord/issues/62) MenuHarness `asUser`, multi-session | ✅ Covered |
+| **Updates pushed from outside an interaction** (AI opponent finished thinking, battle resolved asynchronously, timer fired) | Not specified. #57 doesn't define a refresh trigger from app code. | ⚠️ **Gap.** Confirm the orchestrator loop covers it, or add `session.refresh()` / an external-update API. |
+| **Concurrent presses serialized within a session** | Not addressed in #57/#60. #61 Case 7 has atomic claim only. | ⚠️ **Gap.** Ask for per-session interaction serialization. |
+| **Resume after bot restart:** re-attach a session to an existing shared message (`battleId` → message ID) once BattleService recovers the battle | Not addressed | ⚠️ **Gap.** Needs a way to start or adopt a session bound to an existing channel message. |
+| Session state holds IDs (`battleId`), not live objects | Design guidance, not a FlowCord feature | ℹ️ PokeSandbox-side convention |
+| Cross-shard coordination | Explicitly out of scope in #55 | ℹ️ Fine for MVP (single bot process). Revisit with sharding. |
+
+**Minimum FlowCord set for the Arena:** #56, #57, #60 (core), plus #58 or #61-Case 7 for challenges. #59, #61-Case 5, and #62 are nice to have.
+
+**Suggested comments to add on FlowCord** (owner; this session can't comment there):
+- On #57/#60: "Can app code outside an interaction trigger a shared-message re-render or a round step (async AI turns, timers)? PokeSandbox's BattleService resolves turns asynchronously."
+- On #60: "Please serialize interactions per session (two participants pressing at once)" and "support a default action on timeout distinct from dropout (Arena: random/default move, forfeit after 3)."
+- On #55 (or a new sub-issue): "Session resume: adopt an existing channel message after a bot restart, so a recovered battle can continue in the same message."
+
+**Acceptance criteria (for closing this tracking issue)**
+- A released `@flowcord/core` includes #56, #57, #60, and #58 or #61-Case 7, with the gaps above resolved or explicitly worked around.
+- PokeSandbox is upgraded to that version with no regressions in the existing admin menus.
 
 **Fallback if FlowCord slips:** the challenge prompt and per-turn choice prompts can be built with plain discord.js interaction handlers on top of BattleService (same engine/battle ports), then migrated to FlowCord sessions later. It's less consistent UX code, but it unblocks the Arena.
 
