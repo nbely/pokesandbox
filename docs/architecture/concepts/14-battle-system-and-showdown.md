@@ -115,15 +115,14 @@ BattleService.recover()                                // on boot: rebuild live 
 
 ## Multiplayer boundary with FlowCord (decided Oct 2026, Q34)
 
-> **TL;DR:** **BattleService owns rounds and timers.** It runs the round loop from its own events, not from Discord interactions. The Arena's shared surfaces (the public battle message, challenge messages, participant checks) are **plain discord.js handlers with stable custom IDs**, driven by BattleService and DB records. **FlowCord stays single-user** and is used for the `/arena` hub and other one-person menus. The Arena does **not** depend on FlowCord epic [#55](https://github.com/flowcord-dev/flowcord/issues/55). A `BattleSurface` port keeps the option to move the shared surfaces onto FlowCord later without touching orchestration.
+> **TL;DR:** **BattleService owns rounds and timers.** It runs the round loop from its own events, not from Discord interactions. The Arena's shared surfaces (the public battle message, challenge messages, participant checks) are **plain discord.js handlers with stable custom IDs**, driven by BattleService and DB records. **FlowCord stays single-user** and is used for the `/arena` hub and other one-person menus. The Arena does **not** depend on FlowCord adding multi-user sessions. A `BattleSurface` port keeps the option to move the shared surfaces onto FlowCord later without touching orchestration.
 
 ### Why FlowCord can't own the round loop
-Verified against FlowCord `develop` (v0.1.0-alpha.2) and the #55–#62 issue text (Oct 2026):
+Verified against FlowCord `develop` (v0.1.0-alpha.2), Oct 2026:
 - **Sessions are in-memory and interaction-driven.** `MenuSession.processMenus()` renders, then blocks on one `awaitMessageComponent` filtered to the session's single user. Nothing outside a Discord interaction can make it render, and FlowCord's own docs say sessions die on restart ([session persistence](https://github.com/flowcord-dev/flowcord/blob/develop/packages/docs/docs/advanced/session-persistence.md)).
-- **Turns resolve outside interactions.** The AI picks in a worker thread, timers fire, and recovery replays the log. All of these happen without a button press. #60's `ctx.diverge()` is a `Promise.all` over live participant sessions, which can't survive a restart and doesn't wake on BattleService events.
-- **Timeout policy is a game rule** (Q13: default move, 3 in a row forfeits). #60 only proposes dropout behaviors (`forfeit | substitute | pause`). FlowCord timeouts are collector timers that reset on restart. Duplicating the rule in a UI library would split it from the battle record that recovery depends on.
+- **Turns resolve outside interactions.** The AI picks in a worker thread, timers fire, and recovery replays the log. All of these happen without a button press. A round loop built from live participant sessions can't survive a restart and doesn't wake on BattleService events.
+- **Timeout policy is a game rule** (Q13: default move, 3 in a row forfeits). FlowCord timeouts are collector timers that reset on restart. Duplicating the rule in a UI library would split it from the battle record that recovery depends on.
 - **Restart recovery needs stable IDs.** FlowCord custom IDs embed a random per-process session ID (`fc:{sessionId}:{menu}:{index}`), so buttons on a pre-restart message match nothing after a restart. A session can only start from a slash command and can't bind to an existing message.
-- **#55 isn't close.** All 7 sub-issues are open, with no comments and no code on any branch. They sit in milestone v0.1.0-alpha.5, after alpha.3 and alpha.4. Alpha.4 is a breaking component-model overhaul.
 
 ### Ownership
 
@@ -168,7 +167,7 @@ interface BattleSurface {
 **Caveat: 15-minute ephemeral edits.** FlowCord's `DiscordAdapter` edits ephemeral messages through the **entry** interaction's token, so an ephemeral session likely can't re-render 15 minutes after its slash command. This comes from reading the code and hasn't been reproduced. It affects long `/play` sessions (ephemeral is the Q2 default) more than the Arena. Filed as [flowcord#107](https://github.com/flowcord-dev/flowcord/issues/107) (`bug: unconfirmed`, milestone alpha.3).
 
 ### Migrating the shared surfaces to FlowCord later
-If FlowCord ships shared sessions (#56/#57), app-driven refresh, and message adoption, write a FlowCord-backed `BattleSurface` and the private-prompt menus against it. BattleService, timers, challenge records, and recovery stay as they are, because none of them live in the UI. The view builders port directly into the menus' render callbacks.
+If FlowCord ships shared sessions, app-driven refresh, and message adoption, write a FlowCord-backed `BattleSurface` and the private-prompt menus against it. BattleService, timers, challenge records, and recovery stay as they are, because none of them live in the UI. The view builders port directly into the menus' render callbacks.
 
 ## Arena formats (decided Oct 2026: server-scoped, not region-scoped)
 

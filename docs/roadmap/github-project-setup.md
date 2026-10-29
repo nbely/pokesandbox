@@ -7,7 +7,7 @@ A ready-to-apply proposal for when the repos move to the organization. Adjust na
 |---|---|
 | `pokesandbox` | Monorepo (bot, webapp, shared, `libs/core`, `libs/engine`, `libs/battle`, `libs/authoring`) |
 | `pokemon-showdown` → renamed `pokesandbox-showdown` after the move (Q20) | Fork: upstream + a small patch set, consumed as a versioned package. Monthly scheduled upstream-sync PR. |
-| `flowcord` (separate **FlowCord org**, not part of the PokeSandbox org) | An independent dependency (`@flowcord/core` on npm). Menus are single-person today. Its multi-user epic ([#55](https://github.com/flowcord-dev/flowcord/issues/55)) is **not** on the Arena's critical path under the decided boundary (Q34). Optional asks and drafts are tracked in M2-00 and [`flowcord-requests.md`](../backlog/flowcord-requests.md). |
+| `flowcord` (separate **FlowCord org**, not part of the PokeSandbox org) | An independent dependency (`@flowcord/core` on npm). Menus are single-person today, and the Arena doesn't depend on FlowCord multi-user support (Q34). The FlowCord issues PokeSandbox uses are listed in [M2 § FlowCord dependencies](../backlog/m2-launch-readiness.md#flowcord-dependencies). |
 
 ## Issue types (org-level)
 `Epic` · `Feature` · `Task` · `Bug` · `Spike` (time-boxed research with a written outcome) · `Decision` (for *new* architecture decisions only; links to the concept doc)

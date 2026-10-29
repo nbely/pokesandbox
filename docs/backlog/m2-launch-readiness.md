@@ -1,52 +1,21 @@
 # M2: Arena Release (backlog draft, partial)
 
-Drafted so far: the FlowCord dependency (M2-00), the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
+Drafted so far: the FlowCord dependencies and the M2-13 upgrade, the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
 
 **Sequencing:** E-M2-1 starts once the Arena works end to end in local development (late M1 / early M2). Hosting is the last step before going live, not a prerequisite for building. One optional exception: if you want private testers on the Arena before the public launch, pull M2-02 (containerize), M2-03 (Atlas), and M2-07 (staging) forward. Staging then doubles as the tester environment. E-M2-2 starts once BattleService (M1) can run a PvP battle headless.
 
 Refs: concepts [14](../architecture/concepts/14-battle-system-and-showdown.md), [21](../architecture/concepts/21-hosting-and-environments.md)
 
-## External dependencies
+## FlowCord dependencies
 
-### M2-00 · Tracking: FlowCord and the Arena (external, not blocking)
-`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P2` · `Size: —` (work happens in FlowCord) · `Labels: area:bot` · `Blocked by: —` · `agent-ready: no` · `Owner: owner`
+The Arena doesn't wait on FlowCord's multi-user work (Q34). Its shared surfaces are plain discord.js handlers behind `BattleSurface` (E-M2-2), and FlowCord runs the single-user `/arena` hub. The minimum FlowCord release is the one pinned today (`0.1.0-alpha.0`, or `alpha.2` after M2-13).
 
-**Summary:** FlowCord menus are single-person actionable. The earlier plan put the Arena's challenge flow and battle UI on FlowCord epic **[flowcord-dev/flowcord#55](https://github.com/flowcord-dev/flowcord/issues/55)** ("Multi-user session handling"). After reading the FlowCord code and the full text of #55–#62, the decision (Q34, Oct 2026) is that the Arena **doesn't depend on #55**. BattleService owns rounds and timers. The shared surfaces are plain discord.js handlers behind a `BattleSurface` port (E-M2-2). FlowCord stays single-user for the `/arena` hub. This issue tracks the optional FlowCord asks and the eventual move of the shared surfaces onto FlowCord.
+Three filed FlowCord issues would improve the Arena and `/play`. They're in milestone `v0.1.0-alpha.3`, the non-breaking release before the alpha.4 component overhaul:
+- [flowcord#105](https://github.com/flowcord-dev/flowcord/issues/105): start a session from a component interaction (button/select). Lets M2-11's private prompt be a FlowCord menu.
+- [flowcord#106](https://github.com/flowcord-dev/flowcord/issues/106): app-driven session refresh, to redraw an open menu without an interaction.
+- [flowcord#107](https://github.com/flowcord-dev/flowcord/issues/107) (`bug: unconfirmed`): ephemeral sessions likely can't re-render 15 minutes after the slash command. Matters most for long `/play` sessions (Q2: ephemeral default).
 
-**State of #55 (verified 2026-10-29)**
-- Epic and all 7 sub-issues (#56–#62) are open, with **0 comments** on any of them. Last updated 2026-06-10. Milestone `v0.1.0-alpha.5`.
-- **No multi-user code exists** on `develop` (v0.1.0-alpha.2) or any other branch. The bodies are short proposals, not specs.
-- Alpha.5 comes after `v0.1.0-alpha.3` (6 open, mostly tooling and docs) and `v0.1.0-alpha.4` (16 open, including the **breaking** component-model overhaul #43/#44 and the behavior suite #48). The `v0.1.0` milestone (due 2026-09-30) is still open.
-
-**Verified mapping** (FlowCord `develop` @ `8cae106` + full issue text)
-
-| Arena need | Earlier assumption | Verified | Verdict |
-|---|---|---|---|
-| Shared public message edited each turn | #56 + #57 Case 2: ✅ Covered | **Not implemented.** #56 is three adapter-internal method names (`DiscordAdapter`/`SimulatedAdapter`), not an app-facing API. #57 adds "a shared-message-ID concept on the session". Neither lets app code edit the message without an interaction: `processMenus()` renders only inside its loop, and `renderCurrentMenu()` is private. | ❌ Not covered. Arena: projector (M2-10). |
-| Only participants act; others get "not your battle" | #57 collector policy + #59: ✅ Covered | Today `DiscordAdapter.awaitComponent` filters to one `userId`. Other users' presses are never acknowledged, so Discord shows "This interaction failed", not "not your menu". #57 says "any/allowlist/role" with no rejection reply. #59 lists **both** options ("Either `renderFor` … or a `visible` predicate"). Neither has been chosen. | ❌ Not decided. Arena: stable-ID router (M2-08). |
-| Players choose privately, then the round resolves | #60 `diverge`/`complete`: ✅ Covered (**core**) | Proposal only. A `Promise.all` over in-memory participant sessions that resolves on button presses. It doesn't wake on BattleService events (AI worker, timers), can't survive a restart, and `ctx.complete(result)` already means "return from sub-menu" in today's API. | ❌ Wrong fit. Rounds belong to BattleService. Prompts in M2-11. |
-| 90s timeout → default move; 3 consecutive → forfeit | #60 dropout hooks: ✅ via hooks | #60 has per-participant timeouts with dropout `forfeit`/`substitute`/`pause` only. No default action, no consecutive count. FlowCord timeouts are collector timers that reset on restart. | ❌ Not covered. BattleService (M1 timer item, see 14 § Ownership). |
-| Direct challenge (only the challenged player responds) | #58 Case 1 approvals: ✅ Covered | #58 is **accumulate-then-render** (N responses / quorum / time window, "acknowledge but don't re-render yet"). That's for polls and votes. A direct challenge is one decision by one non-owner user, which needs #57's allowlist, not #58. | ❌ Mis-mapped. Arena: `Challenge` record (M2-09). |
-| Open challenge (first valid accepter wins) | #61 Case 7: ✅ Covered | One clause: "atomic claim + graceful reject". At best it's in-process. Not restart-safe, and it doesn't define "valid" (own challenge, no legal team, already battling, expired). | ⚠️ Thin. Arena: DB conditional update (M2-09). |
-| Spectators | Public message; #61 `ctx.broadcast` optional | Correct that the public message suffices. `ctx.broadcast(payload, userIds)` sends per-user read-only renders, which isn't needed. Spectator presses need an explicit reply (see row 2). | ✅ No FlowCord need. |
-| Tests without Discord | #62 MenuHarness `asUser`: ✅ Covered | #62 (`asUser`, session registry, `awaitConvergence`, `rendersFor`) tests *FlowCord* multi-user flows. With Q34, Arena multi-user logic is tested headless in PokeSandbox (BattleService + fake `Clock` + fake `BattleSurface`). Today's single-user `MenuHarness` covers the `/arena` hub. | ℹ️ Only needed if FlowCord multi-user is adopted. |
-| **Gap A:** updates pushed from outside an interaction | ⚠️ Gap | **Real.** No public render/refresh API. `getSession(id).hardRefresh()` only sets a flag for the next loop pass, and the loop is parked in `awaitMessageComponent`. Single-player battles can use the await-in-action pattern instead (see 14). | Real. Filed: [flowcord#106](https://github.com/flowcord-dev/flowcord/issues/106). Not blocking. |
-| **Gap B:** concurrent presses handled one at a time | ⚠️ Gap | **Half real.** A session is serial by construction (one collector armed at a time), so there's no double dispatch. But presses that land while an action runs, or between render and re-arm, are **dropped** (never acked → "interaction failed"). In a shared session that would lose choices. | Arena: BattleService per-battle queue + `rqid`. Draft comment on #57. |
-| **Gap C:** adopt an existing message after restart | ⚠️ Gap | **Real.** Sessions are process memory. Custom IDs embed a random session ID (`fc:{sessionId}:…`), so old buttons match nothing after a restart. Sessions can only start from a `ChatInputCommandInteraction`, with first render via `editReply`. #72 (snapshot/rehydrate, alpha.6) is for HMR, not restarts. | Arena: stable IDs + stored `messageId` (M2-10). Draft comment on #55. |
-| **Gap D (new):** start a session from a button press | Not listed | A private prompt must be opened from the player's press on the public message, because Discord can't push an ephemeral without that user's interaction. `handleInteraction`/`MenuSession` accept only `ChatInputCommandInteraction`. #69 widens entry to context-menu commands only. | Real. Filed: [flowcord#105](https://github.com/flowcord-dev/flowcord/issues/105). Not blocking (plain handler fallback). |
-| **Gap E (new):** ephemeral sessions past 15 minutes | Not listed | `DiscordAdapter` edits ephemerals with the **entry** interaction's token (`editReply` / webhook PATCH), even after a later component interaction. So an ephemeral session likely can't re-render 15 min after its slash command. Found by reading the code, not reproduced. Matters most for long `/play` sessions (Q2: ephemeral default). | Likely bug. Filed: [flowcord#107](https://github.com/flowcord-dev/flowcord/issues/107) (`bug: unconfirmed`). Reproduce first. |
-| Session state holds IDs, not live objects | ℹ️ Convention | Unchanged. | ℹ️ PokeSandbox convention. |
-| Cross-shard coordination | ℹ️ Out of scope in #55 | Unchanged (#79 documents it). | ℹ️ Fine for MVP. |
-
-**Minimum FlowCord release for the Arena:** none beyond what's pinned. The Arena ships on `0.1.0-alpha.0`, or on `alpha.2` after M2-13. Nice to have, in order: [#105](https://github.com/flowcord-dev/flowcord/issues/105) (component entry), [#106](https://github.com/flowcord-dev/flowcord/issues/106) (app-driven refresh), [#107](https://github.com/flowcord-dev/flowcord/issues/107) (ephemeral token fix). All three are in milestone `v0.1.0-alpha.3`, the non-breaking release before the alpha.4 component overhaul, which meets the sequencing constraint. To use them at launch, alpha.3 has to ship before M2-11 starts (mid-M2). If they slip past alpha.4, adopting them forces the alpha.4 migration first (see M2-13), so build M2-11 on plain handlers and revisit after launch.
-
-**FlowCord issues:** FR-1–FR-3 are filed as flowcord#105–#107 (2026-10-29). Comment drafts for #55, #57, #60 and #61 are still unposted in [`flowcord-requests.md`](flowcord-requests.md). The owner posts them.
-
-**Acceptance criteria (for closing this tracking issue)**
-- flowcord#105–#107 are each released, declined, or parked, and the outcome is noted here. The comment drafts are posted or dropped.
-- If the shared surfaces move to FlowCord: a FlowCord-backed `BattleSurface` passes the E-M2-2 scenario tests, with no changes to BattleService or challenge records.
-
-**The plan for shared surfaces (Q34):** plain discord.js handlers on top of BattleService. This works, and it migrates to FlowCord later without rewriting orchestration, because rounds, timers, challenges, and recovery live outside the UI and the surface sits behind `BattleSurface`. Only the surface implementation and the prompt handlers would be rewritten. The view builders carry over.
+To use them at launch, alpha.3 has to ship before M2-11 starts (mid-M2). If they slip past alpha.4, adopting them forces the alpha.4 migration first (see M2-13), so build M2-11 on plain handlers and revisit after launch.
 
 ### M2-13 · Upgrade `@flowcord/core` from `0.1.0-alpha.0` to `0.1.0-alpha.2`
 `Type: Task` · `Parent: —` (M2 milestone; can be pulled forward any time) · `Priority: P2` · `Size: S` · `Labels: area:bot, dependencies` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
@@ -188,7 +157,7 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 ### M2-11 · Private choice prompts
 `Type: Feature` · `Parent: E-M2-2` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: M2-08, M2-10` · `agent-ready: no` · `Owner: senior`
 
-**Summary:** A participant pressing **Choose** gets an ephemeral prompt for their current request (moves, switches). Built on plain handlers, unless flowcord#105 (and ideally #106/#107) has shipped in a release, planned for alpha.3, before this starts (see M2-00).
+**Summary:** A participant pressing **Choose** gets an ephemeral prompt for their current request (moves, switches). Built on plain handlers, unless flowcord#105 (and ideally #106/#107) has shipped in a release, planned for alpha.3, before this starts (see [FlowCord dependencies](#flowcord-dependencies)).
 
 **Acceptance criteria**
 - The prompt reads the side's current request from BattleService. Prompt custom IDs carry `rqid`. A lock-in calls `choose(…, rqid)` and updates the prompt in the same interaction ("Locked in: Thunderbolt. Waiting for opponent…").
