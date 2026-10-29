@@ -7,7 +7,7 @@
 ## Current shape
 `Region.shops: ObjectId[]` and `Region.currencyType: string` (default `'P'`). The original plan sketched `Shop { accessRequirements, tiers: [{ requirements, items }] }`.
 
-## Proposed shape
+## Design
 ```ts
 Region.currency: { name: 'Pokédollar'; symbol: '₽'; startingAmount: 3000 }
 
@@ -35,7 +35,7 @@ Shop {
 - The validator's Tier 3 can warn when early-route income can't afford the first mart's Poké Balls.
 
 ## MVP scope
-- Shop model, buy/sell UI, conditioned entries, region currency config, and the bag with pockets plus field use.
+- Shop model, buy/sell UI, conditioned entries, entries priced in a numeric progression, region currency config, and the bag with pockets plus field use.
 
 ## Open questions
 - ~~Multiple currencies?~~ **Decided (Oct 2026):** money is the only built-in currency. Anything else is a numeric progression that shop entries can be priced in (see above).

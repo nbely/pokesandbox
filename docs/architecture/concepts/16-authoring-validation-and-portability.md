@@ -51,7 +51,7 @@ These are **warnings**, never blockers, so creative non-standard games still pub
 - A **"Region Health"** button on `/region` shows validator output grouped by severity, with jump links into the relevant menu.
 - **Templates over raw editors** (Gym Leader, Route, Pokémon Center, Starter Gift) keep the "learn by building" goal while preventing 30-step setups.
 - **Preview/playtest:** "Play draft as test character". It's the fastest feedback loop for authors (later, but design the engine to support it: a release built from the draft, and a character flagged `isTest`).
-- Consider the **webapp as a builder** earlier than planned for graph editing and scripts. Discord is good for quick edits and poor for 200-node graphs.
+- Discord is good for quick edits and poor for 200-node graphs, which is why targeted webapp editors are in the MVP (see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026)).
 
 ## MVP scope
 - Tier 1 and basic Tier 2 (reachability ignoring conditions, plus "grants exist for required milestones/flags"), the Region Health view, delete-guard "used by", and JSON export/import of a region.

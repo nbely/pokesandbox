@@ -23,7 +23,7 @@ wildTables: {
 | No per-slot form/gender/shiny/held-item | Wild Pikachu holding a Light Ball. Alolan forms. |
 | Species by ObjectId | See [02](02-identity-and-references.md) |
 
-## Proposed shape
+## Design
 ```ts
 // Region-level registry (with canon defaults seeded)
 EncounterMethod { id: 'grass' | 'surf' | 'old-rod' | string; name; icon?; condition?: Condition; rate: number; repelAffected: boolean }
@@ -45,7 +45,7 @@ Options for how wild encounters trigger in a text game:
 2. **On traversal**: moving along a route rolls encounters (adds tension, slows travel).
 3. **Visible spawns**: show 3 Pokémon "in the grass" and the player picks one to engage (modern feel, reduces RNG frustration, great for Discord).
 
-Recommendation: (1) for MVP, plus a **Repel** status (N explores without encounters below the lead's level). Design the resolver so (3) is a later presentation over the same tables.
+**Decided (Q3):** (1) for MVP, plus a **Repel** status (N explores without encounters below the lead's level). Design the resolver so (3) is a later presentation over the same tables.
 
 ### Static & special encounters
 Snorlax, legendaries, Electrode "items", and Voltorb traps are **scripts** with `wildBattle` steps, gated by flags. They're not table entries.

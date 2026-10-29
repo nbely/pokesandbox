@@ -7,7 +7,7 @@
 ## Current shape
 `Region.transportationTypes: string[]` (placeholder). Hubs were agreed in the original plan but not built.
 
-## Proposed shape
+## Design
 ```ts
 TransportNetwork {
   key; regionId; name;                       // "Fly", "S.S. Anne Ferry", "Magnet Train"
@@ -27,14 +27,14 @@ TransportNetwork {
 **Templates:**
 - **Fly** = `{ condition: party has fly + badge, boardFrom: { tag: 'outdoors' }, defaultDestinationCondition: visited($target), hubs: [all towns] }`.
 - **Ferry** = `{ boardFrom: 'hubsOnly', hubs: [ports], fare: [item s.s.ticket ≥1 condition] }`.
-- **Teleport (move)** = `{ hubs: [], destination = character.respawn }`, which needs a special `destination: 'respawn'` option, or model it as an item/move overworld effect `teleport respawn` instead. (Recommendation: the latter. Not every travel mechanic needs to be a network.)
+- **Teleport, Dig, and Escape Rope** are not networks. They use the `teleport` effect with `location: 'respawn'` ([06](06-effects.md)), attached to the item or field move. Not every travel mechanic needs to be a network.
 
 ## Options
 
 | Option | Pros | Cons |
 |---|---|---|
 | A. Edges only (with fares) | Already exists | N² edges for Fly. Unmaintainable. |
-| **B. Hub networks + conditions** (recommended, agreed) | Scales. Content-defined. Covers Fly, ferries, trains, warps. | One more builder screen |
+| **B. Hub networks + conditions** (chosen) | Scales. Content-defined. Covers Fly, ferries, trains, warps. | One more builder screen |
 | C. Engine-special-cased Fly | Quick | Hardcodes a design opinion. You explicitly rejected this. |
 
 ## MVP scope

@@ -98,7 +98,7 @@ There is no hard lock on rules after publish: real balance fixes must stay possi
 | Option | Pros | Cons |
 |---|---|---|
 | A. Hardcode modern mechanics, add toggles ad hoc | Fast | Toggles sprawl. RBY authenticity is impossible later. |
-| **B. Rules object + presets** (recommended) | One place for game feel. Presets make onboarding fast. Unlocks "any Pokémon game". | Each formula needs 2–3 implementations (small, well-documented functions). |
+| **B. Rules object + presets** (chosen) | One place for game feel. Presets make onboarding fast. Unlocks "any Pokémon game". | Each formula needs 2–3 implementations (small, well-documented functions). |
 
 ## MVP scope
 - The piecemeal `RegionRules` model with Gen 1 implemented for every dimension and the "Classic Gen 1" preset, a Clock, an Rng, and a Mechanics menu to select a preset and edit the system toggles. Other generations and the "Modern" preset come after MVP.

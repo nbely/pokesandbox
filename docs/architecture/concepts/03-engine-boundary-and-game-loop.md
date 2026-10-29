@@ -14,7 +14,7 @@ Today the "domain logic" is inside FlowCord menu handlers. That works for admin 
 - **Testing.** "Can a level-5 Charmander beat Brock with the AI on hard?" and "is Route 3 reachable without Cut?" must run headless.
 - **AI trainers and playtesting bots** should drive the same engine that players do.
 
-## Proposed shape
+## Design
 
 ```
 apps/bot ─┐                     ┌─► repositories (Mongo)        ◄── state
@@ -93,7 +93,7 @@ The engine exposes `availableActions(character)` with explanations (the conditio
 |---|---|---|
 | **A. Logic in bot handlers** (status quo) | Fastest to start | Not testable headless. Can't share with webapp/AI. Restart-fragile. |
 | **B. Service functions in `shared/`** (called by handlers, but no action/event contract) | Small step | Rendering and rules stay entangled. Every handler re-implements validation and "what happened" messaging. |
-| **C. Engine package with action/event contract** (recommended) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
+| **C. Engine package with action/event contract** (chosen) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
 
 ## Process topology: should the engine be its own container? (decided Oct 2026: option C)
 
@@ -103,7 +103,7 @@ The engine exposes `availableActions(character)` with explanations (the conditio
 |---|---|---|---|
 | **A. Embedded library** | Bot and webapp both import `libs/engine` and call `dispatch` in-process against the same DB | Webapp actions keep working when the bot is down. No extra service, API, or cost. | Locks must work across processes (DB lease). Stateful parts (live battles, timers) can only live in one process. |
 | **B. Separate engine service** | Engine runs in its own container. Bot and webapp call it over an API (e.g. tRPC/HTTP), and it pushes events back (pub/sub) | One authority for locks, battles, timers. Bot crashes don't touch game state. Scales independently. | Another container (cost) and an API contract, auth between services, and event push to the bot. **The engine becomes a single point of failure for both clients**, which is the same blast radius moved, not removed. |
-| **C. Hybrid (recommended)** | A now, designed for B: `libs/engine` is embedded in both clients for **stateless, short actions** (box reorder, party order, profile settings). **Stateful runtime** (BattleService, turn timers, scheduled jobs) runs in exactly one **game host** process, which is the bot process for MVP. | The webapp is independent of the bot for QoL actions. There's no extra container yet. Extraction later is mechanical, because the boundary is already "action in, events out". | Two deployment shapes to keep in mind. The webapp must refuse actions that touch Pokémon in an active battle (the character's `mode` already says so). |
+| **C. Hybrid (chosen)** | A now, designed for B: `libs/engine` is embedded in both clients for **stateless, short actions** (box reorder, party order, profile settings). **Stateful runtime** (BattleService, turn timers, scheduled jobs) runs in exactly one **game host** process, which is the bot process for MVP. | The webapp is independent of the bot for QoL actions. There's no extra container yet. Extraction later is mechanical, because the boundary is already "action in, events out". | Two deployment shapes to keep in mind. The webapp must refuse actions that touch Pokémon in an active battle (the character's `mode` already says so). |
 
 **Notes on option C:**
 - **Failure isolation you actually get:** the webapp (box management, profiles, authoring) keeps working if the bot crashes. Discord play is down while the bot is down under *any* option, since Discord *is* that client. Live battles are persisted and recovered on restart, so a bot crash costs a few seconds, not game state.
@@ -150,8 +150,8 @@ Rules (enforced with Nx module-boundary tags + `@nx/enforce-module-boundaries` l
 
 ## Discord surface (game-dev perspective)
 
-- **One `/play` hub** per region with contextual buttons (Travel, Explore, Talk, Shop, Party, Bag, Map) instead of dozens of slash commands. FlowCord's menu graph is perfect for this. This also matches the UX lesson from your FlowCord "Street Dominion" chat.
-- **Where does play happen?** Ephemeral messages (private, clean, but invisible to the community) or public channel/thread per player (social and RP-friendly, but noisy). Probably a per-region choice. Battles in the PvP arena are public by design. See open questions.
+- **One `/play` hub** per region with contextual buttons (Travel, Explore, Talk, Shop, Party, Bag, Map) instead of dozens of slash commands. FlowCord's menu graph is perfect for this.
+- **Where does play happen?** Decided (Q2): server-configurable, ephemeral by default and the only mode in MVP, with per-player threads as the long-term favorite (see [Where adventure play is shown](#where-adventure-play-is-shown-decided-oct-2026-q2)). Arena PvP battles are public by design.
 - **Global commands.** Move from guild-folder registration to global registration. Gate features by per-server config instead.
 
 ## FlowCord implications
@@ -217,7 +217,7 @@ Both call the same commands, so either can be the "complete" one without duplica
 **Migration:** new builder features (connections, encounters, NPCs, scripts, shops) go through `libs/authoring` from day one. The existing pokedex, progression, and locations menus move over during M0/M3, which is also when they adopt content keys and conditions.
 
 ## MVP scope
-- `libs/engine` with the action/event contract, per-character lock, and mode state machine.
+- `libs/engine` with the action/event contract, per-character lock, state revisions, action preconditions, session claims, and the mode state machine.
 - Renderers for each event type in the bot.
 - `/play` hub.
 - Headless test harness (`engine.dispatch` against in-memory repos).

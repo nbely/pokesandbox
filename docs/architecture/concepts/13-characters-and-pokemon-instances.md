@@ -4,7 +4,7 @@
 
 **MVP impact:** Very high · **Cost to change later:** Very high
 
-## Proposed Character
+## Character
 ```ts
 Character {
   _id; userId; serverId; regionId; name; createdAt;
@@ -30,7 +30,7 @@ Character {
 // unique index: { userId, regionId } (1 per region per your roadmap. Make N configurable later.)
 ```
 
-## Proposed Pokémon instance
+## Pokémon instance
 ```ts
 PokemonInstance {
   _id; ownerCharacterId; originalTrainer: { characterId; name; idNo };
@@ -51,7 +51,7 @@ PokemonInstance {
 |---|---|---|
 | A. Embed party + boxes in Character | One doc, atomic writes, simple | Unbounded growth (boxes hold hundreds). Every bag change rewrites a big doc. **Trading, GTS, breeding pools, Wonder Trade, and PvP-with-adventure-party all need to move Pokémon *between* characters**, which with embedding means a cross-document dance anyway. |
 | B. Embed party, separate collection for boxes | Party reads are fast | Two storage models for the same entity. Moving party↔box changes collections. |
-| **C. All instances in one collection, `storage` field** (recommended) | Uniform. Trades are an `ownerCharacterId` update. GTS and breeding pools are queries. Easy box paging. | Party read = indexed query (`ownerCharacterId, storage.kind`) or a `partyOrder` lookup. Multi-doc writes (battle results touch 6 Pokémon + Character) want **transactions** (requires a Mongo replica set; see [15](15-persistence-caching-concurrency.md)). |
+| **C. All instances in one collection, `storage` field** (chosen) | Uniform. Trades are an `ownerCharacterId` update. GTS and breeding pools are queries. Easy box paging. | Party read = indexed query (`ownerCharacterId, storage.kind`) or a `partyOrder` lookup. Multi-doc writes (battle results touch 6 Pokémon + Character) want **transactions** (requires a Mongo replica set; see [15](15-persistence-caching-concurrency.md)). |
 
 ## PvP Arena teams (Pre-MVP)
 Arena teams aren't owned Pokémon. They're **TeamPresets**:

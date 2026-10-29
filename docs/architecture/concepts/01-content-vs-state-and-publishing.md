@@ -41,7 +41,7 @@ Edits apply live. Deletes become soft (`archivedAt`), and the engine tolerates m
 - ❌ Half-finished edits are visible to players (e.g. a new route that points nowhere).
 - ❌ "Tolerate missing references" spreads defensive code through every engine path.
 
-### C. Draft → Published Release (recommended)
+### C. Draft → Published Release (chosen)
 Authoring collections act as the **draft**. **Publish** runs the validator, then *compiles* the region's content into an immutable, versioned **`RegionRelease`**. The engine only reads releases.
 
 ```

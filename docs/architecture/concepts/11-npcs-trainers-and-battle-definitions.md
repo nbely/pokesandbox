@@ -7,7 +7,7 @@
 ## Current shape
 `Location.trainerIds` (refs a non-existent `Trainer`). The original plan agreed the rival is a Trainer with multiple teams. Your roadmap adds talkable and/or battleable NPCs, on-defeat effects, gym-leader-tier config, and party variants keyed off progressions.
 
-## Proposed shape
+## Design
 ```ts
 TrainerClass {                  // region registry, canon defaults seeded (Youngster, Bug Catcher, Gym Leader…)
   id; name; baseMoney;          // payout = baseMoney × level of last Pokémon (Gen 1–4 formula; rules may override)
@@ -52,7 +52,7 @@ In the games, line of sight forces battles. Options:
 | Option | Pros | Cons |
 |---|---|---|
 | A. Trainer only (talk text embedded in trainer) | Fewer models | Non-battling NPCs (Oak, nurse, item givers) don't fit. Dialogue gets duplicated. |
-| **B. NPC + Trainer split** (recommended) | Talkers, battlers, and both. Trainers are reusable (rival appears in 7 places with one definition). | Two builder screens (templates hide this: "Add Trainer NPC") |
+| **B. NPC + Trainer split** (chosen) | Talkers, battlers, and both. Trainers are reusable (rival appears in 7 places with one definition). | Two builder screens (templates hide this: "Add Trainer NPC") |
 | C. BattleDefinition as its own model (floated) | Reuse battle configs | Scripts' `battle` step already carries per-encounter config (canLose, healAfter). Not needed. |
 
 ## Gym leaders, Elite 4, rivals

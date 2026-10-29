@@ -1,6 +1,6 @@
 # GitHub Org & Project Setup
 
-A ready-to-apply proposal for when the repos move to the organization. Adjust names to taste.
+A ready-to-apply plan for when the repos move to the organization. Adjust names to taste.
 
 ## Repositories
 | Repo | Notes |

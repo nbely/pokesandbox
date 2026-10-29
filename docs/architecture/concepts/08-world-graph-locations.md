@@ -22,7 +22,7 @@ Agreed in the original plan but not built: buildings and sub-areas as their own 
 | Delete leaves dangling edges | Deleting a location must remove inbound edges (or the validator must block publish). |
 | No **edge metadata** | Labels ("North", "Through the gate", "Cycling Road"), hidden edges (secret passages), `hiddenWhenLocked` |
 
-## Proposed shape
+## Design
 ```ts
 Location {
   key: ContentKey; regionId; name; description?; imageUrl?; ordinal;
@@ -51,7 +51,7 @@ In a menu-driven text game, the risk is that travel feels like teleporting throu
 | Option | Pros | Cons |
 |---|---|---|
 | A. Flat graph only | Simplest | Unusable menus at scale. Map rendering is hard. |
-| **B. Flat graph + `parentKey` grouping** (recommended) | Traversal stays one mechanism, and the UI gets hierarchy | Must validate that grouping doesn't create cycles |
+| **B. Flat graph + `parentKey` grouping** (chosen) | Traversal stays one mechanism, and the UI gets hierarchy | Must validate that grouping doesn't create cycles |
 | C. Hierarchical locations with implicit traversal (child ↔ parent always connected) | Fewer edges to author | Implicit rules surprise admins and break one-way designs. The builder can *offer* "auto-connect to parent" instead. |
 
 ## MVP scope

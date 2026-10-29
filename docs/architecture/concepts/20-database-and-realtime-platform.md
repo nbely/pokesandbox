@@ -22,7 +22,7 @@ So the database requirements are: **transactions across a few documents, per-cha
 
 ## Options
 
-### A. MongoDB (status quo, done properly): recommended for MVP
+### A. MongoDB (status quo, done properly): chosen (Q33)
 - ✅ Content is **document-shaped**: condition trees, script step lists, encounter tables, and compiled release bundles. These are natural documents. In SQL they'd become JSONB anyway.
 - ✅ No migration. Existing models, DTO conventions, seed tooling, and `agents.md` all keep working. Zod remains the source of truth.
 - ✅ Multi-document **ACID transactions** (needs a replica set, even single-node) cover trades, battle results, and publish.

@@ -1,6 +1,6 @@
 # PokeSandbox Roadmap
 
-The full product roadmap from foundations to "Pie in the Sky". It's based on the owner's roadmap draft (Oct 2026), restructured around the architecture recommendations in [`../architecture/`](../architecture/README.md). The detailed MVP breakdown is in [`mvp.md`](mvp.md). The GitHub org and project setup is in [`github-project-setup.md`](github-project-setup.md).
+The full product roadmap from foundations to "Pie in the Sky". It's based on the owner's roadmap draft (Oct 2026), restructured around the architecture decisions in [`../architecture/`](../architecture/README.md). The detailed MVP breakdown is in [`mvp.md`](mvp.md). The GitHub org and project setup is in [`github-project-setup.md`](github-project-setup.md).
 
 ## Phase overview
 
@@ -26,7 +26,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 
 | Area | Deliverable | Concept |
 |---|---|---|
-| Engine | `libs/engine` package skeleton: `dispatch(action) → events`, per-character lock, injected Clock/Rng, in-memory test harness | [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [18](../architecture/concepts/18-rules-time-and-randomness.md) |
+| Engine | `libs/engine` package skeleton: `dispatch(action) → events`, per-character lock, state revisions, action preconditions, one active `/play` session per character, injected Clock/Rng, in-memory test harness | [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [18](../architecture/concepts/18-rules-time-and-randomness.md) |
 | Primitives | Condition tree + predicate registry (evaluate/explain/validate/references); Effect union + executor (atomic, idempotent) | [05](../architecture/concepts/05-requirements.md), [06](../architecture/concepts/06-effects.md) |
 | Identity | ContentKey type, Showdown-ID references, remove bidirectional arrays, indexes | [02](../architecture/concepts/02-identity-and-references.md) |
 | Persistence | Mongo replica set (transactions), cache policy (immutable only), OCC helpers | [15](../architecture/concepts/15-persistence-caching-concurrency.md) |
@@ -45,12 +45,12 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 
 | Area | Deliverable |
 |---|---|
-| Catalog | Showdown dex as battle truth; DexEntry `speciesId` (renamed from `showdownName`); ItemDefinition (battle-relevant subset) |
-| Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats so the Arena works on a fresh server; `RegionRules` presets for adventure |
-| Teams | `TeamPreset` model; Showdown paste import/export; guided builder; TeamValidator against the format |
-| Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers; forfeits; spectating |
+| Catalog | DB catalog imported from a pinned Showdown version (species, moves with per-gen data, learnsets) with Showdown as the battle executor; DexEntry `speciesId` (renamed from `showdownName`); ItemDefinition (battle-relevant subset) |
+| Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats (flat Lv50, Showdown standard clauses) so the Arena works on a fresh server; piecemeal `RegionRules` with the Classic Gen 1 preset for adventure |
+| Teams | `TeamPreset` model (user-owned across servers, cap 50); Showdown paste import/export + random legal team at launch; guided builder can follow the launch; TeamValidator against the format |
+| Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers (PvP 90s, default move on timeout, forfeit after 3); forfeits; spectating |
 | Multi-user | Challenge → accept → battle on BattleService-driven shared surfaces (plain discord.js handlers with stable IDs). FlowCord stays single-user for the `/arena` hub. Moving them onto FlowCord multi-user sessions is a later option, not a dependency. See [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34) (Q34) |
-| AI | AI profiles `random`, `basic`, `smart`; PvAI with "AI picks team" or "random by tier" |
+| AI | AI profiles `random`, `basic`, `smart` (trainer item use from `basic` up); PvAI against random legal teams generated from the format, difficulty via AI profile; admin-authored AI team sets later |
 | Ops | **Launch readiness:** hosting, Atlas + backups, deploy pipeline, monitoring, staging (the last step before going public). Battle history persistence. |
 
 **Exit criteria:**
@@ -68,24 +68,26 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - Regional pokedex (exists) + TM/HM list + learnset policy.
 - Locations: kinds, grouping, directional edges with conditions, services, two-way toggle.
 - Progression definitions (exists) + `choice` kind. Engine-managed flags.
-- Wild encounters: method registry, conditioned tables.
-- NPCs and Trainers: trainer classes, conditioned party variants (rival keyed off `starterChoice`), AI profiles, rewards, engagement modes.
+- Explore and encounters: method registry, conditioned tables, the explore outcome table (wild / trainer / hidden item), traversal requirements (one-time and permanent route costs). No day/night for Kanto.
+- NPCs and Trainers: trainer classes, conditioned party variants (rival keyed off `starterChoice`), default movesets (last 4 level-up moves), trainer items, AI profiles, rewards, engagement modes, generated gauntlets for multiple `onEnter` trainers.
 - **Scripts & Triggers** (one system): dialogue, choices, battles, effects, branches. Templates for Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, Gauntlet (Elite 4), Simple Talker.
-- Effects (primitive): items, money, Pokémon gifts, progression/milestone/choice/flag, heal, respawn.
+- Effects (primitive): items, money (never below 0), Pokémon gifts (PC + swap offer when the party is full), progression/milestone/choice/flag, heal, respawn.
 - Transportation networks: Fly and Ferry templates.
-- Shops: conditioned entries, buy/sell.
-- **Publish:** validator (Region Health) → immutable release. Undeploy/pause.
-- Region export/import (JSON bundle) → "Kanto Classic" template.
+- Shops: conditioned entries, buy/sell, entries priced in a numeric progression (e.g. Game Corner coins).
+- **Publish:** review (validator results + release diff, warnings shown before confirming) → immutable release. Rule changes on a live region are reviewed like any content. Pause/undeploy is separate from discovery. Release notes are opt-in.
+- **Targeted webapp editors** on the same authoring commands (Discord stays complete): script step editor, world graph canvas, encounter table grid, trainer party editor, shared condition builder, read-only Region Health.
+- Region export/import (JSON bundle) → the official "Kanto Classic" template (generator script for bulk data, builder tools for story, repo bundle as the source of truth).
 
 ### Playing
-- Character creation (1 per region), onboarding via a `characterCreated` script, starter pick, rival setup.
-- `/play` hub: location view, travel (with locked-edge explanations), Fly/transport.
-- Explore: wild encounters by method/time; Repel.
+- Character creation (1 per region; restart archives the old one with a 24h cooldown), onboarding via a `characterCreated` script, starter pick, rival setup.
+- `/play` hub (the only player command; ephemeral): location view, travel (with locked-edge explanations), Fly/transport. One active session per character, and a new one resumes wherever the character is, mid-battle included.
+- Explore: weighted outcomes (wild, trainer, hidden item) by method; traversal costs; Repel.
 - Battles: fight, switch, **bag items, catch, run** (needs the patch set's external choice hook); trainer battles; rival; gyms; Elite 4 gauntlet; whiteout → respawn.
-- EXP, level-ups, move learning, evolution (level/stone/trade-substitute).
+- EXP and level-ups applied mid-battle (authentic), move learning prompts, evolution after battle (level/stone).
 - Party (reorder, summary), PC boxes (deposit/withdraw/release, overflow), bag (pockets, use/give/take).
 - Shops, money from battles, heal at centers.
-- Profile: badges/milestones, visited locations, dex seen/caught.
+- Profile: badges/milestones, visited locations, dex seen/caught. Webapp profile and character pages with privacy settings.
+- Permanent adventure log (trainer battles with turn digests, catches, milestones), viewable on the webapp.
 
 **Exit criteria:**
 - The "Kanto Classic" template publishes with zero validator errors.
@@ -110,7 +112,10 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Community boss | Shared HP pool raid | State injection hook + WorldState |
 | World | Weather/terrain by location, swarms, visible-spawn UI | Encounter conditions |
 | Staff ops | Grant items/Pokémon/money/TMs with audit log | Effect executor |
-| Webapp | Character sheet, party viewer, battle replays, activity log; builder for graphs/scripts | Event log, battle logs, region bundles |
+| Webapp | Full builder beyond the MVP editors, battle replays, richer character and log views | MVP webapp editors, adventure log, region bundles |
+| Narration | Narration on adventure log entries by the owner, invited co-authors, and narration moderators; thread capture; AI drafts | Adventure log ([22](../architecture/concepts/22-adventure-log-and-narration.md)) |
+| Arena + adventure | Arena battles with copies of adventure Pokémon (format level scaling, stat-investment overrides) | PokemonInstance in Showdown set shape |
+| Systems | Shop purchase limits and restocking, timed script waits (`timer` kind), level scaling, regional forms for Gen 2+ regions, `/bag`/`/party` shortcuts | Reserved fields in shops and `RegionRules` |
 
 ## Phase 4: Pie in the Sky
 
@@ -119,7 +124,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Co-op (raids, 2-player doubles, co-op story) | `participants[]` on mode records; Showdown multi battles; 4+ players needs fork surgery |
 | Energy/pacing toggle | Action cost hook in `dispatch` |
 | Cross-region / cross-server travel | Character keyed by (user, region); portable Pokémon instances |
-| Player-editable RP prose on travel logs | Event log |
+| Configurable narration effects (approved roleplay boosts friendship or encounter odds) | Script approval step + adventure log |
 | Webapp as a full play surface | `libs/engine` |
 | Minigames at locations | Script steps / custom step types |
 | Custom moves/abilities/items via strict templates | Inherit an existing move's mechanics + overrides, loaded like dex data (Q28) |

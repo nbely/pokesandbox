@@ -27,7 +27,7 @@ requirement = {
 | No explanations | The UI can't tell the player *why* a path is locked |
 | Two schema definitions | Zod and a Mongoose `Mixed` map drift apart |
 
-## Proposed shape
+## Design
 
 ```ts
 type Condition =
@@ -74,7 +74,7 @@ registerPredicate('milestone', {
 |---|---|---|
 | A. Keep buckets, add more buckets | Familiar, simple builder | Still AND-only. Every new need is a schema change. |
 | B. Buckets + top-level `anyOf: Requirement[]` | Gives OR at one level | NOT and nesting are still missing. Grows awkward fast. |
-| **C. Condition tree + registry** (recommended) | Fully expressive, extensible, explainable | Builder UX needs care. Nested trees are hard to edit in Discord modals. |
+| **C. Condition tree + registry** (chosen) | Fully expressive, extensible, explainable | Builder UX needs care. Nested trees are hard to edit in Discord modals. |
 | D. Embedded expression language (`"badges >= 2 && !flag('x')"`) | Compact, power-user friendly | Parsing, error messages, injection surface. A poor fit for non-coders. Possible later as an *authoring syntax* that compiles to C. |
 
 ## Authoring UX (so option C stays friendly)
@@ -99,7 +99,7 @@ FactRef   = { kind: 'progression'; key } | { kind: 'milestoneCount'; key } | { k
           | { kind: 'visited'; location } | { kind: 'time.partOfDay' } | { kind: 'var'; scope: Scope; key } | …
 ```
 
-The registry then holds **fact resolvers** (how to read X, its value type, how to describe it, what it references), and operators are shared. A new mechanic is one new fact kind, and every operator, the explainer, and the builder work with it automatically. The builder still shows friendly templates ("Requires badge…"); they just generate fact + op + value. *This replaces the per-predicate list in "Proposed shape" above as the internal structure. The authoring surface is unchanged.*
+The registry then holds **fact resolvers** (how to read X, its value type, how to describe it, what it references), and operators are shared. A new mechanic is one new fact kind, and every operator, the explainer, and the builder work with it automatically. The builder still shows friendly templates ("Requires badge…"); they just generate fact + op + value. *This replaces the per-predicate list in "Design" above as the internal structure. The authoring surface is unchanged.*
 
 ### 2. Scoped facts make conditions work inside scripts and quests
 Conditions read through an **evaluation context** with scopes:

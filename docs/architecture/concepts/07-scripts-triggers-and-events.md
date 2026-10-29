@@ -22,7 +22,7 @@ The original plan modeled these as separate features:
 
 That's 5–7 runtimes, each with its own persistence ("where was the player when the bot restarted?"), its own builder UI, and its own bugs. Quest v2 then needs to compose them ("battle, then dialogue, then a choice, then a gauntlet"), which is where a rebuild happens.
 
-## Proposed model
+## Design
 
 ```ts
 // Content (in the region release)
@@ -84,14 +84,14 @@ type Step =
 | Option | Pros | Cons |
 |---|---|---|
 | A. Bespoke features (current trajectory) | Each builder UI is simple and specific | 5–7 runtimes and persistence models. Composition is impossible. Quest v2 rebuild. |
-| **B. Step-based Script VM + Triggers** (recommended) | One runtime, one persistence model, one test harness. Every MVP feature is content. Unlimited composition. Mirrors proven Pokémon engine design. | The builder needs a "script editor" (step list). Discord's UI is cramped for long scripts. |
+| **B. Step-based Script VM + Triggers** (chosen) | One runtime, one persistence model, one test harness. Every MVP feature is content. Unlimited composition. Mirrors proven Pokémon engine design. | The builder needs a "script editor" (step list). Discord's UI is cramped for long scripts. |
 | C. Node-graph dialogue system (Ink/Yarn-like) | Great for branching narrative | Heavier to author in Discord. Battles and effects become awkward custom nodes. |
 | D. Embedded scripting language (Lua/JS sandbox) | Ultimate power | Security, sandboxing, and support burden. Admins aren't programmers. Fails the "no coding required" promise. |
 
 ### Mitigating the authoring cost of option B
 1. **Templates** generate whole scripts from forms: "Gym Leader" (name, party, badge, TM, intro/defeat text), "Starter Gift" (N options), "Forced Rival Encounter", "Item Gift NPC", "Gauntlet". Most admins never see a raw step list, so the friendly builder UIs from option A survive *as templates over B*.
 2. A **step-list editor** in Discord for small edits: add/remove/reorder steps, edit a step via modal.
-3. **JSON/YAML import** for power users, and later a **webapp visual editor**. Consider pulling a basic webapp script editor into MVP if Discord editing proves painful.
+3. **JSON/YAML import** for power users, and later a **webapp visual editor**. A webapp script step editor is in the MVP (Q24).
 
 ## Guardrails
 - No arbitrary loops without a blocking step (the VM caps steps per dispatch to prevent infinite `goto`).

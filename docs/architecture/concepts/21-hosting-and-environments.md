@@ -17,7 +17,7 @@
 - **Existing accounts:** MongoDB only.
 - **Donations policy:** donations are tied transparently to hosting costs only, with no sales or paid perks, so the project stays clearly non-commercial. (Not legal advice.)
 
-## Proposed setup
+## Setup
 
 | Piece | Where | Cost |
 |---|---|---|
