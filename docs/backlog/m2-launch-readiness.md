@@ -1,6 +1,6 @@
 # M2: Arena Release (backlog draft, partial)
 
-Drafted so far: the FlowCord dependency (M2-00), the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
+Drafted so far: the FlowCord dependency (M2-00), the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
 
 **Sequencing:** E-M2-1 starts once the Arena works end to end in local development (late M1 / early M2). Hosting is the last step before going live, not a prerequisite for building. One optional exception: if you want private testers on the Arena before the public launch, pull M2-02 (containerize), M2-03 (Atlas), and M2-07 (staging) forward. Staging then doubles as the tester environment. E-M2-2 starts once BattleService (M1) can run a PvP battle headless.
 
@@ -11,7 +11,7 @@ Refs: concepts [14](../architecture/concepts/14-battle-system-and-showdown.md), 
 ### M2-00 · Tracking: FlowCord and the Arena (external, not blocking)
 `Type: Task` · `Parent: —` (M2 milestone) · `Priority: P2` · `Size: —` (work happens in FlowCord) · `Labels: area:bot` · `Blocked by: —` · `agent-ready: no` · `Owner: owner`
 
-**Summary:** FlowCord menus are single-person actionable. The earlier plan put the Arena's challenge flow and battle UI on FlowCord epic **[flowcord-dev/flowcord#55](https://github.com/flowcord-dev/flowcord/issues/55)** ("Multi-user session handling"). After reading the FlowCord code and the full text of #55–#62, the recommendation (Q34) is that the Arena **doesn't depend on #55**. BattleService owns rounds and timers. The shared surfaces are plain discord.js handlers behind a `BattleSurface` port (E-M2-2). FlowCord stays single-user for the `/arena` hub. This issue tracks the optional FlowCord asks and the eventual move of the shared surfaces onto FlowCord. If Q34 is rejected, it goes back to `P0`, `blocked`, and blocked by #55 plus the gaps below.
+**Summary:** FlowCord menus are single-person actionable. The earlier plan put the Arena's challenge flow and battle UI on FlowCord epic **[flowcord-dev/flowcord#55](https://github.com/flowcord-dev/flowcord/issues/55)** ("Multi-user session handling"). After reading the FlowCord code and the full text of #55–#62, the decision (Q34, Oct 2026) is that the Arena **doesn't depend on #55**. BattleService owns rounds and timers. The shared surfaces are plain discord.js handlers behind a `BattleSurface` port (E-M2-2). FlowCord stays single-user for the `/arena` hub. This issue tracks the optional FlowCord asks and the eventual move of the shared surfaces onto FlowCord.
 
 **State of #55 (verified 2026-10-29)**
 - Epic and all 7 sub-issues (#56–#62) are open, with **0 comments** on any of them. Last updated 2026-06-10. Milestone `v0.1.0-alpha.5`.
@@ -43,11 +43,10 @@ Refs: concepts [14](../architecture/concepts/14-battle-system-and-showdown.md), 
 **FlowCord issues:** FR-1–FR-3 are filed as flowcord#105–#107 (2026-10-29). Comment drafts for #55, #57, #60 and #61 are still unposted in [`flowcord-requests.md`](flowcord-requests.md). The owner posts them.
 
 **Acceptance criteria (for closing this tracking issue)**
-- Q34 is answered. If rejected, this issue is re-scoped to blocking, and the mapping above becomes the FlowCord requirements list.
 - flowcord#105–#107 are each released, declined, or parked, and the outcome is noted here. The comment drafts are posted or dropped.
 - If the shared surfaces move to FlowCord: a FlowCord-backed `BattleSurface` passes the E-M2-2 scenario tests, with no changes to BattleService or challenge records.
 
-**Fallback (now the primary plan for shared surfaces):** plain discord.js handlers on top of BattleService. This works, and it migrates to FlowCord later without rewriting orchestration, because rounds, timers, challenges, and recovery live outside the UI and the surface sits behind `BattleSurface`. Only the surface implementation and the prompt handlers would be rewritten. The view builders carry over.
+**The plan for shared surfaces (Q34):** plain discord.js handlers on top of BattleService. This works, and it migrates to FlowCord later without rewriting orchestration, because rounds, timers, challenges, and recovery live outside the UI and the surface sits behind `BattleSurface`. Only the surface implementation and the prompt handlers would be rewritten. The view builders carry over.
 
 ### M2-13 · Upgrade `@flowcord/core` from `0.1.0-alpha.0` to `0.1.0-alpha.2`
 `Type: Task` · `Parent: —` (M2 milestone; can be pulled forward any time) · `Priority: P2` · `Size: S` · `Labels: area:bot, dependencies` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
@@ -142,7 +141,7 @@ Everything needed to run the bot and webapp for real players: a managed host for
 ## E-M2-2 · Arena Multiplayer Surface
 `Type: Epic` · `Priority: P0`
 
-The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34). BattleService (M1) owns rounds, timers, and recovery. This epic owns challenges, the public battle message, participant checks, and private choice prompts, all restart-safe and behind a `BattleSurface` port. Scenario numbers below refer to the table in that section.
+The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). BattleService (M1) owns rounds, timers, and recovery. This epic owns challenges, the public battle message, participant checks, and private choice prompts, all restart-safe and behind a `BattleSurface` port. Scenario numbers below refer to the table in that section.
 
 **Depends on M1 BattleService items** (drafted with M1, contract in 14 § Ownership): `choose` with `rqid` validation and a per-battle queue; per-side persisted deadlines with default-on-timeout and a consecutive-timeout forfeit; `recover()` re-arming timers with a fresh window and emitting `battleRecovered`.
 

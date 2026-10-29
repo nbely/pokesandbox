@@ -1,6 +1,6 @@
 # FlowCord requests from PokeSandbox
 
-FlowCord issues and comment drafts for [flowcord-dev/flowcord](https://github.com/flowcord-dev/flowcord), written while verifying the Arena boundary ([M2-00](m2-launch-readiness.md#m2-00--tracking-flowcord-and-the-arena-external-not-blocking), [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34)). **FR-1–FR-3 are filed** (flowcord#105–#107, milestone `v0.1.0-alpha.3`, 2026-10-29). **The comment drafts (C-55, C-57, C-60, C-61) are not posted.** The owner decides whether to post them, then records the link in the table.
+FlowCord issues and comment drafts for [flowcord-dev/flowcord](https://github.com/flowcord-dev/flowcord), written while verifying the Arena boundary ([M2-00](m2-launch-readiness.md#m2-00--tracking-flowcord-and-the-arena-external-not-blocking), [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34)). **FR-1–FR-3 are filed** (flowcord#105–#107, milestone `v0.1.0-alpha.3`, 2026-10-29). **The comment drafts (C-55, C-57, C-60, C-61) are not posted.** The owner decides whether to post them, then records the link in the table.
 
 Code references are to `develop` @ `8cae106` (v0.1.0-alpha.2).
 
