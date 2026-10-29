@@ -1,8 +1,10 @@
 # M0a: Platform & Arena Foundations (backlog draft)
 
-**Outcome:** the org, CI, hosting, and environments exist. The library skeletons (`core`, `engine`, `battle`) and their enforced boundaries are in place. The data layer is safe for real player state. This milestone blocks M1 (Battle Core) → M2 (Arena).
+**Outcome:** the org and CI exist. The library skeletons (`core`, `engine`, `battle`) and their enforced boundaries are in place. The data layer is safe for real player state. This milestone blocks M1 (Battle Core) → M2 (Arena).
 
-Refs: [`mvp.md`](../roadmap/mvp.md) · [`github-project-setup.md`](../roadmap/github-project-setup.md) · concepts [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [14](../architecture/concepts/14-battle-system-and-showdown.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md), [21](../architecture/concepts/21-hosting-and-environments.md)
+**Hosting and production environments moved to M2** ("Launch Readiness", see [`m2-launch-readiness.md`](m2-launch-readiness.md)). Nothing in M0a/M1 needs a deployed environment. Development runs locally, and hosting is the last step before the bot and Arena go live.
+
+Refs: [`mvp.md`](../roadmap/mvp.md) · [`github-project-setup.md`](../roadmap/github-project-setup.md) · concepts [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [14](../architecture/concepts/14-battle-system-and-showdown.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
 ---
 
@@ -95,79 +97,13 @@ Move the repos to the org, get CI gating every PR, and give contributors and age
 
 ---
 
-## E-M0A-2 · Hosting & Environments
+## E-M0A-2 · Library Skeleton & Boundaries
 `Type: Epic` · `Priority: P0`
 
-A managed host for the always-on bot and the webapp, MongoDB Atlas with backups, deploy pipelines, monitoring, and a staging environment before the Arena goes public.
+Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and port-based construction, so the engine can run in both the bot and the webapp now and be extracted later.
 
-### M0A-08 · Choose the host and provision prod app services
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-09` · `agent-ready: no` · `Owner: owner`
-
-**Summary:** Decide between the offered family host and a managed host (Railway/Fly/Render class). Provision an always-on bot service and a webapp service.
-
-**Acceptance criteria**
-- The host supports always-on Node processes (Discord gateway + in-memory battles) and Docker images.
-- The prod bot and webapp run from images built in CI, with secrets in the host's secret store.
-- The webapp has a domain with TLS. The Discord OAuth redirect URIs are updated.
-- Cost and plan details are recorded in [21](../architecture/concepts/21-hosting-and-environments.md).
-
-**Refs:** [21](../architecture/concepts/21-hosting-and-environments.md)
-
-### M0A-09 · Containerize the bot and webapp
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:infra` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
-
-**Summary:** Production Dockerfiles for `apps/bot` and `apps/webapp` (multi-stage, Nx build), plus a `docker-compose.yml` profile that runs both locally against the dev Mongo.
-
-**Acceptance criteria**
-- `docker build` produces runnable images for both apps. Images run as non-root. Final images contain no dev dependencies.
-- The local compose profile starts Mongo (see M0A-23), the bot, and the webapp, using `.env`.
-- The README documents the commands.
-
-### M0A-10 · Atlas setup: prod, staging, and dev databases
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: S` · `Labels: area:infra` · `Blocked by: —` · `agent-ready: no` · `Owner: owner`
-
-**Acceptance criteria**
-- An Atlas free cluster with separate `prod` and `staging` databases. Developers use local Mongo.
-- A least-privilege DB user per environment. The network allowlist is restricted to the host egress where possible.
-- Connection strings are stored only in the host's secret store and GitHub secrets.
-
-### M0A-11 · Nightly backups with a tested restore
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-08, M0A-10` · `agent-ready: no` · `Owner: senior`
-
-**Summary:** Atlas Free has no backups, so run a scheduled `mongodump` of `prod` to free-tier object storage (e.g. R2), with retention.
-
-**Acceptance criteria**
-- Runs nightly with 14–30 day retention. Failures alert the owner.
-- A documented restore procedure, exercised once by restoring into `staging`.
-- Backup credentials are scoped to a single bucket.
-
-### M0A-12 · Deploy pipeline
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-04, M0A-08, M0A-09` · `agent-ready: no` · `Owner: senior`
-
-**Acceptance criteria**
-- Version tag `v*` → build, push images, deploy prod.
-- Merge to `master` → deploy staging, once M0A-14 exists. Until then, build only.
-- Rollback = redeploying the previous tag. Documented.
-- Slash-command registration runs as a deploy step (not on every bot boot).
-
-### M0A-13 · Error monitoring and uptime checks
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:infra` · `Blocked by: M0A-08` · `agent-ready: yes` · `Owner: agent`
-
-**Acceptance criteria**
-- Sentry (free tier) wired into the bot and webapp. Errors are tagged with environment, `characterId`/`actionId`/`battleId` where available, and release version.
-- An uptime check on the webapp plus a bot heartbeat (e.g. a health endpoint or a periodic ping), alerting the owner.
-
-### M0A-14 · Staging environment
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-08, M0A-10` · `agent-ready: no` · `Owner: owner`
-
-**Summary:** A second deployment of the bot and webapp with its own Discord application/bot token and test guild, using the `staging` database. Required before the Arena goes public.
-
-**Acceptance criteria**
-- The staging bot runs in a test guild and doesn't share tokens or DBs with prod.
-- A documented "migration rehearsal": restore last night's prod dump into staging, then deploy the candidate release.
-
-### M0A-15 · Structured logging; keep debug events out of Mongo
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:infra` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
+### M0A-08 · Structured logging; keep debug events out of Mongo
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:infra` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
 
 **Summary:** A structured JSON logger shared by the apps and libs (via an injected logger port), with correlation fields. Debug-level game events go to logs, never to Mongo collections.
 
@@ -178,25 +114,18 @@ A managed host for the always-on bot and the webapp, MongoDB Atlas with backups,
 
 **Refs:** [21 § Retention](../architecture/concepts/21-hosting-and-environments.md)
 
----
-
-## E-M0A-3 · Library Skeleton & Boundaries
-`Type: Epic` · `Priority: P0`
-
-Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and port-based construction, so the engine can run in both the bot and the webapp now and be extracted later.
-
-### M0A-16 · Scaffold `libs/core`
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: S` · `Labels: area:engine` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
+### M0A-09 · Scaffold `libs/core`
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: S` · `Labels: area:engine` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - An Nx library `libs/core` with a path alias `@core/*`, Jest, and lint.
 - Folders for `schemas/`, `registries/`, `formulas/`, `validation/`, and `ports/`, each with an `index.ts`.
-- No dependencies on mongoose, discord.js, or Showdown (enforced by M0A-17).
+- No dependencies on mongoose, discord.js, or Showdown (enforced by M0A-10).
 
 **Refs:** [03 § Package layout](../architecture/concepts/03-engine-boundary-and-game-loop.md#package-layout--encapsulation-rules-decided-oct-2026)
 
-### M0A-17 · Enforce module boundaries
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: S` · `Labels: area:infra` · `Blocked by: M0A-16, M0A-18, M0A-22` · `agent-ready: yes` · `Owner: agent`
+### M0A-10 · Enforce module boundaries
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: S` · `Labels: area:infra` · `Blocked by: M0A-09, M0A-11, M0A-15` · `agent-ready: yes` · `Owner: agent`
 
 **Summary:** Nx project tags plus the `@nx/enforce-module-boundaries` lint rule for the decided layering.
 
@@ -208,8 +137,8 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Refs:** [03 § Package layout](../architecture/concepts/03-engine-boundary-and-game-loop.md#package-layout--encapsulation-rules-decided-oct-2026)
 
-### M0A-18 · Scaffold `libs/engine` with ports and base action/event types
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-16` · `agent-ready: no` · `Owner: senior`
+### M0A-11 · Scaffold `libs/engine` with ports and base action/event types
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-09` · `agent-ready: no` · `Owner: senior`
 
 **Summary:** The engine package constructed entirely from injected ports: repositories, `ContentProvider`, `BattlePort`, `Clock`, `Rng`, `EventSink`, logger.
 
@@ -222,8 +151,8 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Refs:** [03](../architecture/concepts/03-engine-boundary-and-game-loop.md)
 
-### M0A-19 · `dispatch()` with a per-character DB lease and optimistic concurrency
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-18` · `agent-ready: no` · `Owner: senior`
+### M0A-12 · `dispatch()` with a per-character DB lease and optimistic concurrency
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-11` · `agent-ready: no` · `Owner: senior`
 
 **Acceptance criteria**
 - `dispatch(characterId, action)` acquires a short lease (`locks` collection with a TTL index, via a `LockPort`), runs the handler, and releases.
@@ -236,8 +165,8 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Refs:** [03 § Per-character serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
-### M0A-20 · `Clock` and seeded `Rng`
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P1` · `Size: S` · `Labels: area:engine` · `Blocked by: M0A-16` · `agent-ready: yes` · `Owner: agent`
+### M0A-13 · `Clock` and seeded `Rng`
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:engine` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `Clock` port: a system implementation and a fixed/test implementation.
@@ -246,16 +175,16 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Refs:** [18 § Randomness](../architecture/concepts/18-rules-time-and-randomness.md)
 
-### M0A-21 · In-memory test harness
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P1` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-18` · `agent-ready: yes` · `Owner: agent`
+### M0A-14 · In-memory test harness
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-11` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - In-memory implementations of every engine port, plus a `createTestEngine({ fixtures })` helper.
 - Fixture builders for a tiny region (2–3 locations) and a character.
 - An example test dispatches an action and asserts on the emitted events.
 
-### M0A-22 · Scaffold `libs/battle` with its interfaces
-`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: S` · `Labels: area:battle` · `Blocked by: M0A-16` · `agent-ready: yes` · `Owner: agent`
+### M0A-15 · Scaffold `libs/battle` with its interfaces
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: S` · `Labels: area:battle` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
 
 **Summary:** The package and types only. The Showdown implementation is M1.
 
@@ -268,21 +197,21 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 ---
 
-## E-M0A-4 · Persistence & Data Basics
+## E-M0A-3 · Persistence & Data Basics
 `Type: Epic` · `Priority: P0`
 
 Make the data layer safe for real player state: transactions, constraints, a safe cache, and canon IDs.
 
-### M0A-23 · Local Mongo as a single-node replica set
-`Type: Task` · `Parent: E-M0A-4` · `Priority: P0` · `Size: S` · `Labels: area:infra` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
+### M0A-16 · Local Mongo as a single-node replica set
+`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: S` · `Labels: area:infra` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `docker-compose.yml` starts Mongo with `--replSet` and auto-initiates the set.
 - `npm run setup` still works end to end. A test or script proves `session.withTransaction` succeeds locally.
 - `.env.example` connection string updated.
 
-### M0A-24 · Indexes and unique constraints
-`Type: Task` · `Parent: E-M0A-4` · `Priority: P0` · `Size: S` · `Labels: area:shared-models` · `Blocked by: M0A-23` · `agent-ready: yes` · `Owner: agent`
+### M0A-17 · Indexes and unique constraints
+`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: S` · `Labels: area:shared-models` · `Blocked by: M0A-16` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - Unique `Server.serverId` and `User.userId`. `Location { regionId, ordinal }`.
@@ -291,8 +220,8 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 
 **Refs:** [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
-### M0A-25 · Cache policy: no shared mutable documents
-`Type: Task` · `Parent: E-M0A-4` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: —` · `agent-ready: no` · `Owner: senior`
+### M0A-18 · Cache policy: no shared mutable documents
+`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: —` · `agent-ready: no` · `Owner: senior`
 
 **Acceptance criteria**
 - The cache stores only immutable/plain data (`lean()` objects, frozen in dev). No hydrated Mongoose documents in the cache.
@@ -301,8 +230,8 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 
 **Refs:** [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
-### M0A-26 · Canon species IDs (`speciesId`) on DexEntry, and references by ID
-`Type: Task` · `Parent: E-M0A-4` · `Priority: P0` · `Size: M` · `Labels: area:shared-models` · `Blocked by: M0A-24` · `agent-ready: yes` · `Owner: agent`
+### M0A-19 · Canon species IDs (`speciesId`) on DexEntry, and references by ID
+`Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:shared-models` · `Blocked by: M0A-17` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `DexEntry.speciesId` (Showdown `toID`) is unique and backfilled for all seed entries.
@@ -311,8 +240,8 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 
 **Refs:** [02](../architecture/concepts/02-identity-and-references.md), [12](../architecture/concepts/12-content-catalog-species-moves-items.md)
 
-### M0A-27 · Sprite URL resolver and broken link fixes
-`Type: Task` · `Parent: E-M0A-4` · `Priority: P2` · `Size: S` · `Labels: area:shared-models` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
+### M0A-20 · Sprite URL resolver and broken link fixes
+`Type: Task` · `Parent: E-M0A-3` · `Priority: P2` · `Size: S` · `Labels: area:shared-models` · `Blocked by: —` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `resolveSpriteUrl(species, { gen, game, palette, shiny, facing })` is the only way UI code gets sprite URLs. It falls back to the Showdown sprite CDN.

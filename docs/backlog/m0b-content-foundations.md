@@ -9,7 +9,7 @@
 
 Refs: [`mvp.md`](../roadmap/mvp.md) · concepts [01](../architecture/concepts/01-content-vs-state-and-publishing.md), [02](../architecture/concepts/02-identity-and-references.md), [04](../architecture/concepts/04-progression-and-flags.md), [05](../architecture/concepts/05-requirements.md), [06](../architecture/concepts/06-effects.md), [16](../architecture/concepts/16-authoring-validation-and-portability.md)
 
-Depends on M0a: `libs/core` (M0A-16), boundaries (M0A-17), the engine skeleton (M0A-18/19), the test harness (M0A-21), and the local replica set (M0A-23).
+Depends on M0a: `libs/core` (M0A-09), boundaries (M0A-10), the engine skeleton (M0A-11/19), the test harness (M0A-14), and the local replica set (M0A-16).
 
 ---
 
@@ -19,7 +19,7 @@ Depends on M0a: `libs/core` (M0A-16), boundaries (M0A-17), the engine skeleton (
 One gating primitive for everything: a condition tree of fact + operator + value predicates, evaluated with scopes, wrapped in a Gate envelope that the caller presents as hidden, locked, or attemptable.
 
 ### M0B-01 · Condition tree, fact registry, and evaluation context
-`Type: Task` · `Parent: E-M0B-1` · `Priority: P0` · `Size: M` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0A-16` · `agent-ready: no` · `Owner: senior`
+`Type: Task` · `Parent: E-M0B-1` · `Priority: P0` · `Size: M` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0A-09` · `agent-ready: no` · `Owner: senior`
 
 **Summary:** In `libs/core`, a recursive zod schema for `Condition` (`all`/`any`/`not`/predicate), where a predicate is `{ fact: FactRef, op, value?, subject? }`. Includes a fact-resolver registry and an evaluation context with scopes.
 
@@ -91,7 +91,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 Typed, declarative state changes, applied atomically and idempotently, which emit renderable events.
 
 ### M0B-07 · Effect registry and atomic executor
-`Type: Task` · `Parent: E-M0B-2` · `Priority: P0` · `Size: L` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0A-19` · `agent-ready: no` · `Owner: senior`
+`Type: Task` · `Parent: E-M0B-2` · `Priority: P0` · `Size: L` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0A-12` · `agent-ready: no` · `Owner: senior`
 
 **Acceptance criteria**
 - An `Effect` discriminated union plus `registerEffect(type, { schema, apply(draft, params, ctx), validate, references })`.
@@ -126,7 +126,7 @@ Typed, declarative state changes, applied atomically and idempotently, which emi
 Region-scoped content keys, one-directional references, and the progression/flag model the conditions and effects rely on.
 
 ### M0B-10 · Content keys
-`Type: Task` · `Parent: E-M0B-3` · `Priority: P0` · `Size: S` · `Labels: area:shared-models` · `Blocked by: M0A-16` · `agent-ready: yes` · `Owner: agent`
+`Type: Task` · `Parent: E-M0B-3` · `Priority: P0` · `Size: S` · `Labels: area:shared-models` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `ContentKey` zod type and generator (opaque ~10-char nanoid) in `libs/core`.
@@ -185,7 +185,7 @@ Region-scoped content keys, one-directional references, and the progression/flag
 All admin edits flow through `libs/authoring`, and players only ever play immutable published releases.
 
 ### M0B-16 · Scaffold `libs/authoring`
-`Type: Task` · `Parent: E-M0B-4` · `Priority: P0` · `Size: M` · `Labels: area:authoring` · `Blocked by: M0A-16, M0A-17` · `agent-ready: no` · `Owner: senior`
+`Type: Task` · `Parent: E-M0B-4` · `Priority: P0` · `Size: M` · `Labels: area:authoring` · `Blocked by: M0A-09, M0A-10` · `agent-ready: no` · `Owner: senior`
 
 **Acceptance criteria**
 - `createAuthoring(ports)` and `execute(actor, command) → { ok, changes, warnings, suggestions } | { ok: false, issues }`.
@@ -198,7 +198,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 **Refs:** [03 § Authoring](../architecture/concepts/03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)
 
 ### M0B-17 · Migrate the Pokédex builder to authoring commands
-`Type: Task` · `Parent: E-M0B-4` · `Priority: P1` · `Size: M` · `Labels: area:bot, area:authoring` · `Blocked by: M0B-16, M0A-26` · `agent-ready: yes` · `Owner: junior`
+`Type: Task` · `Parent: E-M0B-4` · `Priority: P1` · `Size: M` · `Labels: area:bot, area:authoring` · `Blocked by: M0B-16, M0A-19` · `agent-ready: yes` · `Owner: junior`
 
 **Acceptance criteria**
 - Pokédex menu actions (add slot, edit, swap, forms) call `authoring.execute`. No direct model writes in handlers.

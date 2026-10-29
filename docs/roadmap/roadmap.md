@@ -33,6 +33,8 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 | Showdown | Rebase fork onto upstream; move New Logora to a mod; define patch set (state injection, external choice hook); publish as a package the monorepo consumes | [14](../architecture/concepts/14-battle-system-and-showdown.md) |
 | Org | Move repos to the org, CI (lint, typecheck, unit tests), labels/project/milestones, global command registration | [github-project-setup](github-project-setup.md) |
 
+Hosting and production operations are **not** Phase 0. They're the launch-readiness step at the end of Phase 1.
+
 **Exit criteria:** an engine unit test can evaluate a condition tree and apply an effect list to an in-memory character. The fork builds from upstream plus patches, with a passing sim test for HP injection.
 
 ---
@@ -49,7 +51,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers; forfeits; spectating |
 | Multi-user | FlowCord multi-user flow capability (challenge → accept → battle) |
 | AI | AI profiles `random`, `basic`, `smart`; PvAI with "AI picks team" or "random by tier" |
-| Ops | Battle history persistence (replays later), basic telemetry, error reporting |
+| Ops | **Launch readiness:** hosting, Atlas + backups, deploy pipeline, monitoring, staging (the last step before going public). Battle history persistence. |
 
 **Exit criteria:**
 - Two users on a public test server can build teams by paste, challenge, battle to completion with spectators, and survive a bot restart mid-battle.

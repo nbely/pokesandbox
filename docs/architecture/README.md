@@ -49,7 +49,7 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 18 | [Region Rules, Time & Randomness](concepts/18-rules-time-and-randomness.md) | High |
 | 19 | [Multiplayer, Social & Future-Proofing](concepts/19-multiplayer-social-and-future-proofing.md) | Low now, high later |
 | 20 | [Database & Realtime Platform (MongoDB vs SpacetimeDB vs alternatives)](concepts/20-database-and-realtime-platform.md) | Medium |
-| 21 | [Hosting & Environments](concepts/21-hosting-and-environments.md) | High (M0a) |
+| 21 | [Hosting & Environments](concepts/21-hosting-and-environments.md) | High (M2 launch readiness) |
 | 22 | [Adventure Log & Narration](concepts/22-adventure-log-and-narration.md) | Medium (log from MVP; narration later) |
 
 Each concept doc follows the same outline: **TL;DR → current shape → gaps → options (pros/cons) → recommendation → MVP scope → open questions.** Follow-on sessions can take one concept at a time and turn it into a Decision issue plus model/schema specs.

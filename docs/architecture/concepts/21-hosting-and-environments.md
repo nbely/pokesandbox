@@ -9,7 +9,7 @@
 > - **GitHub Actions** deploys. **Sentry's free tier** catches errors.
 > - **Staging is a second, lightweight Compose stack on the same VPS** with its own test bot, not separate infrastructure.
 
-**MVP impact:** High (M0a) · **Cost to change later:** Low (everything is containerized and behind env config)
+**MVP impact:** High (M2 launch readiness; the last step before the Arena goes live) · **Cost to change later:** Low (everything is containerized and behind env config)
 
 ## Constraints
 - **Budget:** pay for hosting only. The project is non-commercial: donations are optional and not relied on, and it's not-for-profit because the content is Nintendo/Game Freak IP.

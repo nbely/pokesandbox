@@ -8,10 +8,10 @@ This doc breaks Phases 0–2 of [`roadmap.md`](roadmap.md) into **GitHub milesto
 
 | # | Milestone | Outcome | Depends on |
 |---|---|---|---|
-| M0a | **Platform & Arena Foundations** | Org/CI, hosting + environments, engine skeleton, persistence basics, species IDs | — |
+| M0a | **Platform & Arena Foundations** | Org/CI, library skeletons + boundaries, persistence basics, species IDs | — |
 | M0b | **Content Foundations** | Conditions/effects/gates, content keys + model cleanup, authoring layer, releases | M0a |
 | M1 | **Battle Core & Catalog** | BattleService + slim Showdown fork + catalog + team presets | M0a |
-| M2 | **Arena Release (Pre-MVP)** 🚀 | Public PvP/PvAI in Discord | M1 |
+| M2 | **Arena Release (Pre-MVP)** 🚀 | Public PvP/PvAI in Discord; hosting & operations (launch readiness) | M1 |
 | M3 | **World Authoring** | Locations, encounters, transport, shops, rules, validate | M0b (parallel with M1/M2) |
 | M4 | **Interaction Engine** | Scripts, triggers, NPCs, trainers, templates | M0b, M3 |
 | M5 | **Adventure Core** | Character, travel, explore, wild/trainer battles, party/PC/bag, progression | M1, M3, M4 |
@@ -30,7 +30,7 @@ With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, an
 
 | # | Milestone | Contents | Blocks |
 |---|---|---|---|
-| **M0a** | **Platform & Arena Foundations** | Org move, CI, **hosting + prod environment** (Q30), Mongo replica set, indexes, cache policy, `libs/engine` skeleton (dispatch, lock, Clock/Rng, test harness), `libs/core` skeleton | M1, M2 |
+| **M0a** | **Platform & Arena Foundations** | Org move, CI, Mongo replica set (local), indexes, cache policy, `libs/core`/`engine`/`battle` skeletons + boundaries | M1, M2 |
 | **M0b** | **Content Foundations** | Conditions + effects, content keys + model cleanup, `libs/authoring`, region releases/publish, progression `choice` kind, flags | M3, M4, M5 |
 
 ```
@@ -38,7 +38,7 @@ M0a ──► M1 ──► M2 🚀 (Arena)
   └──► M0b ──► M3 ──► M4 ──► M5 ──► M6 🚀 (MVP)
 ```
 - The battle track (M0a → M1 → M2) and the content track (M0b → M3…) can run in parallel. Seniors own the foundation-heavy work (engine, fork rebase/patches, BattleService, conditions/effects). Juniors take well-specified issues: catalog seed data, item definitions, renderers, builder menus, webapp editors, tests.
-- **Timeline honesty:** an end-of-year Arena (~9 weeks from late Oct) would need M0a + M1 + M2 done with this team while also standing up hosting/CI. That's possible only if the Arena scope stays tight: paste import, built-in formats, `basic` AI, timers, restart recovery. Plan for **end of year as a stretch, Q1 as realistic**, and re-estimate once M0a's issues are sized.
+- **Timeline honesty:** an end-of-year Arena (~9 weeks from late Oct) would need M0a + M1 + M2 done with this team while also standing up hosting/CI. That's possible only if the Arena scope stays tight: paste import, built-in formats, `basic` AI, timers, restart recovery. Hosting and operations sit at the end of M2 (launch readiness), not in front of development. Plan for **end of year as a stretch, Q1 as realistic**, and re-estimate once M0a's issues are sized.
 
 ---
 
@@ -107,15 +107,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Create labels (incl. `agent-ready`), issue types, milestones, and project board per [`github-project-setup.md`](github-project-setup.md) (S)
 - [ ] Switch slash commands to global registration with per-server feature gating (M)
 
-**Epic: Hosting & Environments** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md))
-- [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
-- [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
-- [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
-- [ ] Structured logging; debug events out of Mongo (S)
-- [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
-- [ ] Error monitoring (Sentry) + uptime check (S)
-
 **Epic: Engine Skeleton** (Q18)
+- [ ] Structured logging port; debug events out of Mongo (S)
 - [ ] Scaffold `libs/engine` (pure TS, no discord.js) with repository and ContentProvider interfaces (M)
 - [ ] `dispatch(characterId, action)` with per-character lock, action/event types, and error model (M)
 - [ ] Injected `Clock` and seeded `Rng` (S)
@@ -191,6 +184,15 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] `smart` profile (switching, status, items) (L)
 
 ## M2: Arena Release 🚀
+
+**Epic: Launch Readiness: Hosting & Operations** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md); drafts in [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md))
+Scheduled last on the Arena track. Development runs locally until then.
+- [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
+- [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
+- [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
+- [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
+- [ ] Error monitoring (Sentry) + uptime check (S)
+
 - [ ] FlowCord multi-user flows: challenge/accept/decline (L)
 - [ ] `/arena` hub: teams, challenge member, battle AI (M)
 - [ ] Public battle message + spectating (M)

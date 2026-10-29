@@ -49,10 +49,10 @@ case "$cmd" in
         gh api "repos/$repo/milestones" -f title="$title" -f description="$desc" >/dev/null && echo "created milestone: $title"
       fi
     done <<'MS'
-M0a: Platform & Arena Foundations|Org/CI, hosting + environments, library skeletons + boundaries, persistence basics
+M0a: Platform & Arena Foundations|Org/CI, library skeletons + boundaries, persistence basics
 M0b: Content Foundations|Conditions/gates, effects, content keys, authoring layer, region releases
 M1: Battle Core & Catalog|Showdown fork modernization, catalog import, team presets, BattleService, AI
-M2: Arena Release|Public PvP/PvAI in Discord
+M2: Arena Release|Public PvP/PvAI in Discord, plus launch readiness (hosting, backups, deploys, monitoring, staging)
 M3: World Authoring|Locations, encounters, transport, shops, rules, validation, webapp editors
 M4: Interaction Engine|Scripts, triggers, NPCs, trainers, templates
 M5: Adventure Core|Characters, travel, explore, battles, party/PC/bag, progression, adventure log
