@@ -9,11 +9,11 @@ Refs: concept [21](../architecture/concepts/21-hosting-and-environments.md)
 ## External dependencies
 
 ### M2-00 · Tracking: FlowCord multi-user sessions (external)
-`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P0` · `Size: —` (work happens in the FlowCord repo) · `Labels: area:bot, blocked` · `Blocked by: FlowCord issue (to be created)` · `agent-ready: no` · `Owner: owner`
+`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P0` · `Size: —` (work happens in the FlowCord repo) · `Labels: area:bot, blocked` · `Blocked by: existing FlowCord issue (FlowCord org; link to add)` · `agent-ready: no` · `Owner: owner`
 
-**Summary:** FlowCord menus are single-person actionable today. The Arena needs multi-person menu interactions. The work is built and released in the FlowCord repo. This issue tracks it and blocks the Arena's challenge flow and battle UI issues (drafted with M1).
+**Summary:** FlowCord menus are single-person actionable today. The Arena needs multi-person menu interactions. The work lives in FlowCord (its own org, independent of PokeSandbox) and is **already tracked by an existing FlowCord issue**. This issue links to it and blocks the Arena's challenge flow and battle UI issues (drafted with M1).
 
-**Capabilities PokeSandbox needs from FlowCord** (draft spec for the FlowCord issue):
+**Capabilities PokeSandbox needs from FlowCord** (a checklist to compare against the existing FlowCord issue; anything missing can be added there as a comment):
 1. **Multi-participant sessions:** an initiator plus participants added by invitation (user select) or by joining (button), optionally time-limited sign-up.
 2. **Per-participant permissions:** components declare who may act (a specific participant, any participant, initiator only). Others get a polite ephemeral "not your turn/menu".
 3. **Shared public message + private sub-flows:** one shared message (e.g. the battle state in a public channel, viewable by spectators) plus **per-participant ephemeral sub-flows** (e.g. each player's move/switch prompt).

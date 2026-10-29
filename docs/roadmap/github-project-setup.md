@@ -7,7 +7,7 @@ A ready-to-apply proposal for when the repos move to the organization. Adjust na
 |---|---|
 | `pokesandbox` | Monorepo (bot, webapp, shared, future `libs/engine`) |
 | `pokemon-showdown` → consider renaming to `pokesandbox-showdown` | Fork: upstream + patch set + mods. Track upstream with a scheduled sync PR. |
-| `flowcord` (already standalone) | **Multi-user sessions are on the Arena's critical path** (menus are single-person today). Track the work in the FlowCord repo, with a cross-linked tracking issue in `pokesandbox`. Consider moving it into the org too. |
+| `flowcord` (separate **FlowCord org**, not part of the PokeSandbox org) | An independent dependency (`@flowcord/core` on npm). **Multi-user sessions are on the Arena's critical path** (menus are single-person today). They're tracked by the existing FlowCord issue, referenced from the `pokesandbox` tracking issue M2-00. |
 
 ## Issue types (org-level)
 `Epic` · `Feature` · `Task` · `Bug` · `Spike` (time-boxed research with a written outcome) · `Decision` (records an architecture decision; links to the concept doc)

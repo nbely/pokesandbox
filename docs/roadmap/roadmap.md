@@ -49,7 +49,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats so the Arena works on a fresh server; `RegionRules` presets for adventure |
 | Teams | `TeamPreset` model; Showdown paste import/export; guided builder; TeamValidator against the format |
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers; forfeits; spectating |
-| Multi-user | **External dependency:** FlowCord multi-user sessions (menus are single-person today), built in the FlowCord repo, then the challenge → accept → battle flow on top |
+| Multi-user | **External dependency:** FlowCord multi-user sessions (menus are single-person today), built in FlowCord (separate org; existing issue), then the challenge → accept → battle flow on top |
 | AI | AI profiles `random`, `basic`, `smart`; PvAI with "AI picks team" or "random by tier" |
 | Ops | **Launch readiness:** hosting, Atlas + backups, deploy pipeline, monitoring, staging (the last step before going public). Battle history persistence. |
 

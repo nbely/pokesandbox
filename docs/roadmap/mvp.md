@@ -185,7 +185,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M2: Arena Release 🚀
 
-> **External dependency: FlowCord multi-user sessions.** FlowCord menus are currently single-person actionable. The Arena needs multi-person menu interactions, built in the FlowCord repo (released as a new `@flowcord/core` version) **before** the Arena's challenge flow and battle UI. Track it as an issue in the FlowCord repo, with a cross-linked tracking issue here (see [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md#external-dependencies)). It can be built in parallel with M0a/M1, but it's on the Arena's critical path.
+> **External dependency: FlowCord multi-user sessions.** FlowCord menus are currently single-person actionable. The Arena needs multi-person menu interactions, built in FlowCord (its own org; released as a new `@flowcord/core` version) **before** the Arena's challenge flow and battle UI. It's already tracked by an existing FlowCord issue, referenced from the tracking issue here (see [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md#external-dependencies)). It can be built in parallel with M0a/M1, but it's on the Arena's critical path.
 
 **Epic: Launch Readiness: Hosting & Operations** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md); drafts in [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md))
 Scheduled last on the Arena track. Development runs locally until then.
