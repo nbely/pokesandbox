@@ -52,11 +52,11 @@ One gating primitive for everything: a condition tree of fact + operator + value
 
 **Refs:** [05 § MVP scope](../architecture/concepts/05-requirements.md#mvp-scope), [04](../architecture/concepts/04-progression-and-flags.md)
 
-### M0B-04 · Facts batch 2: bag, visited, party move, dex count
+### M0B-04 · Facts batch 2: bag, visited, party move/species, dex count
 `Type: Task` · `Parent: E-M0B-1` · `Priority: P0` · `Size: M` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
-- Facts: `bag.count` (item ID), `visited` (location key **or `$target`**), `party.knowsMove` (move ID), `dex.caughtCount`.
+- Facts: `bag.count` (item ID), `visited` (location key **or `$target`**), `party.knowsMove` (move ID), `party.hasSpecies` (species ID), `dex.caughtCount`.
 - `$target` is resolved from the context's `target` scope. Tested with a Fly-style "destination must be visited" condition.
 - They read only from the `CharacterView` port (no Pokémon persistence needed yet; fakes in tests).
 

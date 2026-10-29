@@ -70,7 +70,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - Progression definitions (exists) + `choice` kind. Engine-managed flags.
 - Explore and encounters: method registry, conditioned tables, the explore outcome table (wild / trainer / hidden item), traversal requirements (one-time and permanent route costs). No day/night for Kanto.
 - NPCs and Trainers: trainer classes, conditioned party variants (rival keyed off `starterChoice`), default movesets (last 4 level-up moves), trainer items, AI profiles, rewards, engagement modes, generated gauntlets for multiple `onEnter` trainers.
-- **Scripts & Triggers** (one system): dialogue, choices, battles, effects, branches. Templates for Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, Gauntlet (Elite 4), Simple Talker.
+- **Scripts & Triggers** (one system): dialogue, choices, battles, effects, branches. Templates for Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet (Elite 4), Simple Talker.
 - Effects (primitive): items, money (never below 0), Pokémon gifts (PC + swap offer when the party is full), progression/milestone/choice/flag, heal, respawn.
 - Transportation networks: Fly and Ferry templates.
 - Shops: conditioned entries, buy/sell, entries priced in a numeric progression (e.g. Game Corner coins).
@@ -84,7 +84,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - Explore: weighted outcomes (wild, trainer, hidden item) by method; traversal costs; Repel.
 - Battles: fight, switch, **bag items, catch, run** (needs the patch set's external choice hook); trainer battles; rival; gyms; Elite 4 gauntlet; whiteout → respawn.
 - EXP and level-ups applied mid-battle (authentic), move learning prompts, evolution after battle (level/stone) and after trades.
-- Player trading within a region (propose, pick privately, both confirm) at Pokémon Centers; trade evolutions; Gen 1 traded-Pokémon rules.
+- Player trading within a region (propose, pick privately, both confirm) at Pokémon Centers, plus in-game NPC trades; trade evolutions; Gen 1 traded-Pokémon rules.
 - Party (reorder, summary), PC boxes (deposit/withdraw/release, overflow), bag (pockets, use/give/take).
 - Shops, money from battles, heal at centers.
 - Profile: badges/milestones, visited locations, dex seen/caught. Webapp profile and character pages with privacy settings.
@@ -116,7 +116,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Webapp | Full builder beyond the MVP editors, battle replays, richer character and log views | MVP webapp editors, adventure log, region bundles |
 | Narration | Narration on adventure log entries by the owner, invited co-authors, and narration moderators; thread capture; AI drafts | Adventure log ([22](../architecture/concepts/22-adventure-log-and-narration.md)) |
 | Arena + adventure | Arena battles with copies of adventure Pokémon (format level scaling, stat-investment overrides) | PokemonInstance in Showdown set shape |
-| Systems | Shop purchase limits and restocking, timed script waits (`timer` kind), level scaling, regional forms for Gen 2+ regions, `/bag`/`/party` shortcuts | Reserved fields in shops and `RegionRules` |
+| Systems | Shop purchase limits and restocking, timed script waits (`timer` kind), level scaling, configurable trade evolution without trading, regional forms for Gen 2+ regions, `/bag`/`/party` shortcuts | Reserved fields in shops and `RegionRules` |
 
 ## Phase 4: Pie in the Sky
 

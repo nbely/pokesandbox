@@ -119,7 +119,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 **Epic: Conditions & Effects** (Q17)
 - [ ] Condition tree (`all/any/not`) + fact/operator registry (evaluate/explain/validate/references) + scoped evaluation context (M)
-- [ ] MVP facts: `milestone.has`, `milestone.count`, `choice.value`, `flag`, `bag.count`, `visited` (incl. `$target`), `party.knowsMove`, `dex.caughtCount`, `progression.value`, `location.cleared`, `location.visit.*`, `location.trainersDefeated` (L)
+- [ ] MVP facts: `milestone.has`, `milestone.count`, `choice.value`, `flag`, `bag.count`, `visited` (incl. `$target`), `party.knowsMove`, `party.hasSpecies`, `dex.caughtCount`, `progression.value`, `location.cleared`, `location.visit.*`, `location.trainersDefeated` (L)
 - [ ] Gate envelope (`presentation`, `latch`, `cost`) + `checkGate` + `gateBlocked` event (M)
 - [ ] Effect union + registry + atomic executor with idempotency (L)
 - [ ] MVP effects: currency, item, progression, milestone (grant/revoke), choice, flag, setRespawn, random (L). `givePokemon` (PC + swap offer) and `heal` land in M5 with `PokemonInstance`.
@@ -221,13 +221,13 @@ Scheduled last on the Arena track. Development runs locally until then.
 
 ## M4: Interaction Engine (Q16)
 - [ ] Script + Trigger models (M)
-- [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/heal/shop/travel/goto/end` (L)
+- [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/heal/shop/travel/goto/end` (L)
 - [ ] Mode machine + persisted script cursor + resume on input (M)
 - [ ] Trigger dispatch: characterCreated, enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
 - [ ] NPC model (location, visibility, interact, trainer, engagement) (M)
 - [ ] Script step-list editor in Discord (L)
-- [ ] Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, Gauntlet, Simple Talker (L)
+- [ ] Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker (L)
 
 ## M5: Adventure Core
 - [ ] Character + PokemonInstance models, OCC, transactions (M)

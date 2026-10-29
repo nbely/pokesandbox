@@ -57,11 +57,13 @@ type Step =
   | { wildBattle: { spec: PokemonSpec; canRun?: boolean; onCatch?: Label; onDefeat?: Label; onRun?: Label } }
   | { effects: Effect[] }
   | { if: { condition: Condition; then: Label; else?: Label } }
+  | { npcTrade: { want: SpeciesId; give: { species: SpeciesId; nickname?: string; ot: { name: string; id: number }; moves?: MoveId[] };
+                onTrade?: Label; onDecline?: Label; onNoMatch?: Label } }   // in-game trade (MVP)
   | { shop: ContentKey } | { heal: {} } | { travel: LocationRef }
   | { label: Label } | { goto: Label } | { end: {} };
 ```
 
-**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`). It then persists `character.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`). It then persists `character.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
 
 ### How each MVP feature maps
 
@@ -73,6 +75,7 @@ type Step =
 | Gym leader | NPC Brock → `interact` trigger → `say` → `battle` → `onWin: effects[milestone boulder, item tm34, flag]` → `say` (TM explanation). Gym-leader tier is just the trainer's AI profile plus rewards. |
 | Elite 4 gauntlet | One script: `battle lorelei healAfter:false` → `battle bruno` → … `onLose: whiteout`. "No healing between" is the absence of a `heal` step. |
 | Fossils / Eevee | Same as starters, with a different trigger |
+| In-game trade (Mr. Mime for Abra, Farfetch'd for Spearow…) | NPC `interact` → `say` → `npcTrade { want: abra, give: { species: mrmime, nickname: 'Marcel', ot } }` → `say`. The player picks which party member of that species to send (`onNoMatch` if none). The received Pokémon gets the NPC's original trainer, so Gen 1 traded-Pokémon rules apply (EXP bonus, obedience), and trade evolutions fire after the trade. Gen 1: it arrives at the level of the Pokémon sent. The sent Pokémon is soft-deleted like a release (`reason: 'npcTrade'`). Trigger `once` makes it one-time. |
 | Conditional dialogue | `if` / conditioned `choice` options |
 | Snorlax / legendary static encounter | `explore` trigger → `wildBattle` → `onDefeat`/`onCatch` → `effects[flag]` |
 | Tutorial (Full roadmap) | Narrator `say` steps (speaker = narrator), the same machinery |
@@ -100,8 +103,8 @@ type Step =
 
 ## MVP scope
 - Trigger events: `characterCreated`, `enterLocation`, `interact`, `battleEnd`, `explore`.
-- Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `heal`, `shop`, `travel`, `goto/label/end`.
-- Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, Gauntlet, Simple Talker.
+- Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `heal`, `shop`, `travel`, `goto/label/end`.
+- Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker.
 
 ## Decisions (Oct 2026)
 

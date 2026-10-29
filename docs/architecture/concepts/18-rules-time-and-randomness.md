@@ -42,7 +42,8 @@ RegionRules {
     party: { size: 6; whenFull: 'toPc' | 'promptSwap' };   // 'promptSwap' (Q9)
     boxes: { count: number; size: number };   // Gen 1: 12 boxes × 20
     storage: { access: 'pcLocation' | 'anywhere' };
-    trading: { access: 'pcLocation' | 'anywhere' };   // Gen 1: 'pcLocation' (Cable Club)   // Gen 1: 'pcLocation' (locations with services: ['pc']); modern presets: 'anywhere'
+    trading: { access: 'pcLocation' | 'anywhere' };   // Gen 1: 'pcLocation' (Cable Club)
+    tradeEvolutions?: …;                      // reserved, post-MVP: configurable alternative to trading (item / level); default: trade only   // Gen 1: 'pcLocation' (locations with services: ['pc']); modern presets: 'anywhere'
     bagCapacity?: number;                     // Gen 1: 20 item slots (optional authentic limit)
     nicknames: boolean; time: TimeRules;      // time unused in Gen 1 regions
     levelCap?: …;

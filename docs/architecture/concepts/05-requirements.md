@@ -191,6 +191,7 @@ The condition is the same everywhere. What differs is how the caller uses the re
   | `bag.count` | S.S. Ticket, Bicycle, Silph Scope, Poké Flute, Card Key, Lift Key, Secret Key, gate drinks |
   | `visited` (incl. `$target`) | Fly destinations |
   | `party.knowsMove` | Cut / Surf / Strength / Flash obstacles, using Fly |
+  | `party.hasSpecies` | In-game trades ("Do you have an Abra?"), branching dialogue before an `npcTrade` step |
   | `dex.caughtCount` | Oak's aides (HM05 Flash at 10, Itemfinder at 30, Exp. All at 50) |
   | `progression.value` | Not required by RBY, but admins will gate on numeric and boolean progressions they define |
   | `location.cleared` / `location.visit.<counter>` | Traversal requirements: unavoidable route trainers, cave step costs (see [10](10-encounters.md#traversal-requirements-mvp-decided-oct-2026)) |
@@ -200,7 +201,6 @@ The condition is the same everywhere. What differs is how the caller uses the re
   - `money`: affordability is already handled by the cost check before effects apply.
   - `time.partOfDay`: RBY has no day/night, so encounter tables use `any`.
   - `currentLocation`: NPCs are already placed per location.
-  - `party.hasSpecies`: in-game trades, not MVP.
   - `party.size`: covered by the starter choice/flag.
   - Script `var`: MVP branching uses choice labels.
   - `dex.caught`; plus everything already listed as post-MVP (quest vars, world state, single-Pokémon facts, weekday, weather, `party.maxLevel`).
