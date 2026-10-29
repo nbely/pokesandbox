@@ -28,7 +28,7 @@
    - If caching documents for reads, cache `lean()` plain objects (frozen in dev) rather than hydrated docs.
 2. **Writes to player state**
    - Per-character lock in `engine.dispatch` as a **short DB lease** (`locks` collection with TTL index), because the bot and webapp both run the engine (see [03 § Process topology](03-engine-boundary-and-game-loop.md#process-topology-should-the-engine-be-its-own-container-decided-oct-2026-option-c)). Redis later if lock traffic grows.
-   - `optimisticConcurrency: true` on Character (Mongoose throws on a version mismatch, and the engine retries the action once).
+   - `optimisticConcurrency: true` on Character (Mongoose throws on a version mismatch). The engine retries once **only for actions that don't depend on the rendered view**; view-dependent actions carry the character `rev` and are re-rendered instead, so a duplicate press is never applied twice. Revisions, preconditions, and the one-active-session rule are in [03 § Per-character serialization](03-engine-boundary-and-game-loop.md#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026).
    - Prefer atomic operators for hot counters (`$inc` money with a `$gte` guard) where they fit.
 3. **Transactions**
    - Run Mongo as a single-node **replica set** in docker-compose (one flag plus init) so `session.withTransaction` works locally and in prod. Needed for battle results (Character + up to 6 PokemonInstances), trades, and publish.

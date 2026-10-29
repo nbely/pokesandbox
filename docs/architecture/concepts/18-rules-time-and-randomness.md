@@ -41,6 +41,7 @@ RegionRules {
   systems: {                                  // gameplay systems, mostly not generation-bound
     party: { size: 6; whenFull: 'toPc' | 'promptSwap' };   // 'promptSwap' (Q9)
     boxes: { count: number; size: number };   // Gen 1: 12 boxes × 20
+    storage: { access: 'pcLocation' | 'anywhere' };   // Gen 1: 'pcLocation' (locations with services: ['pc']); modern presets: 'anywhere'
     bagCapacity?: number;                     // Gen 1: 20 item slots (optional authentic limit)
     nicknames: boolean; time: TimeRules;      // time unused in Gen 1 regions
     levelCap?: …;

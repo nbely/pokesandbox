@@ -155,17 +155,22 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Refs:** [03](../architecture/concepts/03-engine-boundary-and-game-loop.md)
 
-### M0A-12 · `dispatch()` with a per-character DB lease and optimistic concurrency
-`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: M` · `Labels: area:engine` · `Blocked by: M0A-11` · `agent-ready: no` · `Owner: senior`
+### M0A-12 · `dispatch()` with a per-character DB lease, revisions, preconditions, and session claims
+`Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: L` · `Labels: area:engine` · `Blocked by: M0A-11` · `agent-ready: no` · `Owner: senior`
+
+**Summary:** The engine's write path, with all four checks from [03 § Per-character serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026). Consider splitting the session claim into its own PR.
 
 **Acceptance criteria**
 - `dispatch(characterId, action)` acquires a short lease (`locks` collection with a TTL index, via a `LockPort`), runs the handler, and releases.
-- Concurrent dispatches for the same character: the second gets `actionRejected: busy` (or waits briefly; document which).
-- An optimistic-concurrency conflict retries the action once.
+- Lease contention waits up to ~1s, then returns `actionRejected: busy`.
+- **Revisions:** `Character.rev` increments once per action that writes any of the character's game data (Character, PokemonInstances, bag, flags), in the same transaction. Actions declare whether they're view-dependent. A view-dependent action with a stale `rev` is not applied and returns a `staleView` result so the client re-renders.
+- **Preconditions:** each action declares its allowed modes. A precondition hook evaluates rules and content requirements (the first user is box access: `RegionRules.systems.storage.access` + location `services`). `availableActions(character)` returns each action's availability with an explanation.
+- **Session claim:** `claimSession(characterId, client)` sets `Character.activeSession` under the lease (newest wins). Session-bound actions with a non-active session ID are rejected as `sessionSuperseded`. Game-driven events and non-session clients are exempt.
+- An optimistic-concurrency conflict retries once, only for actions without a `rev`.
 - An action-cost step exists (always returns 0; reserved for pacing).
 - An idempotency hook: an `actionId` is recorded and replays are ignored.
 - A typed error model (`actionRejected` with an explanation vs internal errors).
-- Tests: double dispatch, conflict retry, lease expiry.
+- Tests: double dispatch (second press is stale, applied once), conflict retry (only for actions without a `rev`), lease expiry, a precondition rejection with its explanation, and a session takeover rejecting the old session.
 
 **Refs:** [03 § Per-character serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
