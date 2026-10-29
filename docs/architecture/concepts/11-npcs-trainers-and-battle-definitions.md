@@ -92,5 +92,5 @@ The condition uses a new MVP fact, `location.trainersDefeated` (distinct trainer
 - Later: rematches (VS Seeker / Gen 2 phone), double battles with two trainers, multi-battles (tag partners).
 
 ## Open questions
-- Should trainer Pokémon default to **canon-like movesets** (last 4 level-up moves) when admins don't specify moves? (Recommendation: yes, since it makes authoring fast.)
+- ~~Default trainer movesets?~~ **Decided (Oct 2026):** yes. A trainer Pokémon with no moves set gets the last 4 moves it would know at its level from the region's learnsets (Gen 1 for Kanto Classic), as RBY does. Moves the author sets always win.
 - Do you want **trainer bag items** (Full Restore spam) in MVP AI?

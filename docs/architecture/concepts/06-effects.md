@@ -5,7 +5,7 @@
 **MVP impact:** High · **Cost to change later:** Medium
 
 ## Current shape
-Not built. ChatGPT and your roadmap agree on the primitive: grant/take items, currency deltas, Pokémon gifts, progression set/increment, flag set. You'll attach these to triggers, NPC talk/defeat, and later transport hops and quests.
+Not built. The original plan and your roadmap agree on the primitive: grant/take items, currency deltas, Pokémon gifts, progression set/increment, flag set. You'll attach these to triggers, NPC talk/defeat, and later transport hops and quests.
 
 ## Proposed shape
 

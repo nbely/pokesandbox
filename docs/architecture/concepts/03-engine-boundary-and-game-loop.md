@@ -37,7 +37,7 @@ type GameAction =
   | …;
 
 type GameEvent =
-  | { type: 'enteredLocation'; location: ContentKey }
+  | { type: 'enteredLocation'; location: ContentKey; from?: ContentKey; via: 'walk' | TransportNetworkKey }
   | { type: 'dialogue'; speaker?: string; text: string; awaitsInput: boolean }
   | { type: 'choicePrompt'; options: …[] }
   | { type: 'battleStarted'; battleId: string; … }
@@ -155,8 +155,8 @@ Rules (enforced with Nx module-boundary tags + `@nx/enforce-module-boundaries` l
 - **Global commands.** Move from guild-folder registration to global registration. Gate features by per-server config instead.
 
 ## FlowCord implications
-- FlowCord sessions stay **UI-only**. Don't store engine objects (battle streams, character docs) in session state. Store IDs and re-fetch through the engine. This resolves the "how do I keep the Showdown stream in a `Record<string, unknown>` without cloning" problem from your Alpha-strategy chat. The stream lives in `BattleService`, keyed by `battleId`.
-- **Multi-user flows** (PvP, trades) are needed for Pre-MVP. The *turn loop* and timers live in BattleService, as you concluded in that chat. **Decided (Oct 2026, Q34):** for the Arena, the shared surfaces (public battle message, challenges, participant checks) are plain discord.js handlers with stable custom IDs behind a `BattleSurface` port. FlowCord stays single-user, so the Arena doesn't wait on FlowCord's multi-user epic. Generic multi-user support in FlowCord is still welcome, and the port lets the Arena adopt it later. See [14 § Multiplayer boundary](14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34).
+- FlowCord sessions stay **UI-only**. Don't store engine objects (battle streams, character docs) in session state. Store IDs and re-fetch through the engine. This resolves the "how do I keep the Showdown stream in a `Record<string, unknown>` without cloning" problem. The stream lives in `BattleService`, keyed by `battleId`.
+- **Multi-user flows** (PvP, trades) are needed for Pre-MVP. The *turn loop* and timers live in BattleService. **Decided (Oct 2026, Q34):** for the Arena, the shared surfaces (public battle message, challenges, participant checks) are plain discord.js handlers with stable custom IDs behind a `BattleSurface` port. FlowCord stays single-user, so the Arena doesn't wait on FlowCord's multi-user epic. Generic multi-user support in FlowCord is still welcome, and the port lets the Arena adopt it later. See [14 § Multiplayer boundary](14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34).
 
 ## Authoring: the same pattern for region building
 
@@ -226,4 +226,4 @@ Both call the same commands, so either can be the "complete" one without duplica
 ## Open questions
 - ~~Ephemeral or public adventure play?~~ **Decided (Q2):** server-configurable, ephemeral by default and the only mode in MVP (see [Where adventure play is shown](#where-adventure-play-is-shown-decided-oct-2026-q2)).
 - ~~Multiple Discord clients at once?~~ **Decided (Oct 2026):** one active `/play` session per character, newest wins, and the new session resumes whatever mode the character is in. See [Per-character serialization](#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026).
-- Should `/play` be the *only* player command, or do you want shortcuts (`/bag`, `/party`) too?
+- ~~`/play` only, or shortcuts?~~ **Decided (Oct 2026):** `/play` only in MVP. Shortcuts (`/bag`, `/party`, …) come later as deep links into the matching `/play` screen, and they claim the play session like `/play` does.

@@ -1,6 +1,6 @@
 # 09: Transportation Networks
 
-> **TL;DR:** Keep the hub model agreed with ChatGPT. Make every Fly/ferry/train/teleporter difference **pure content**: a network-level `condition` (can I use it at all), per-hub `boardCondition` / `destinationCondition` (evaluated with `$target`), and `fare` effects. Fly is a template, not engine code.
+> **TL;DR:** Keep the hub model from the original plan. Make every Fly/ferry/train/teleporter difference **pure content**: a network-level `condition` (can I use it at all), per-hub `boardCondition` / `destinationCondition` (evaluated with `$target`), and `fare` effects. Fly is a template, not engine code.
 
 **MVP impact:** Medium · **Cost to change later:** Low
 
@@ -42,4 +42,4 @@ TransportNetwork {
 
 ## Open questions
 - ~~Fly: move in party or unlockable service?~~ **Decided (Q17):** creator content, never engine logic. Kanto Classic uses the move-in-party version. Post-MVP builder shortcuts offer both as templates.
-- Should using a transport **trigger scripts** at the destination (e.g. arriving by ferry plays a cutscene)? Probably yes: the `enterLocation` trigger already fires. Confirm that arrival by any means counts as "entering".
+- ~~Does arriving by transport trigger scripts?~~ **Decided (Oct 2026):** yes, every arrival counts as entering. The `enteredLocation` event carries `from` and `via` (`walk` or the transport network), and an `enterLocation` trigger can filter on them. A script meant for walking in from specific locations (e.g. the Route 22 rival battle when coming from Viridian) sets `via: ['walk']` and/or `from: [...]`, so flying in skips it. With no filters, it fires on any arrival (e.g. a ferry cutscene).

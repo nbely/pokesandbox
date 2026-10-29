@@ -8,9 +8,9 @@
 
 Look at how real Pokémon games are built. In the pret decompilations (`pokered`, `pokeemerald`), almost every story beat is a **map script**: a list of commands (`msgbox`, `trainerbattle`, `checkflag`, `goto_if_set`, `giveitem`, `setflag`, `applymovement`) attached to an NPC, a tile trigger, or map entry. Gym leaders, rivals, starters, the Elite 4, gift Pokémon, and Snorlax are all scripts. The engine supplies a few dozen commands, and the game is content.
 
-The ChatGPT plan models these as separate features:
+The original plan modeled these as separate features:
 
-| Feature | ChatGPT direction | Runtime it implies |
+| Feature | Original direction | Runtime it implies |
 |---|---|---|
 | Location entry effects | `location.entryEffects` | entry executor |
 | NPC dialogue | NPC + DialogueTree (floated) | dialogue runner |
@@ -35,7 +35,7 @@ Script {
 Trigger {
   key: ContentKey;
   on:                          // the event that can start it
-    | { event: 'enterLocation'; location: ContentKey }
+    | { event: 'enterLocation'; location: ContentKey; from?: ContentKey[]; via?: ('walk' | TransportNetworkKey)[] }   // optional filters; any arrival counts by default
     | { event: 'interact'; npc: ContentKey }             // "Talk"
     | { event: 'battleEnd'; trainer: ContentKey; result: 'win' | 'lose' }
     | { event: 'characterCreated' }                      // onboarding

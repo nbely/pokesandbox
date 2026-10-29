@@ -83,7 +83,7 @@ registerPredicate('milestone', {
 - **Templates:** "Requires badge…", "Requires HM move…", "Only once", "Only before flag…", "Requires item…".
 
 ## Contextual targets (resolves the Fly debate)
-You were right in the ChatGPT discussion: `is_in_visited` is just another predicate over player state. The general form is a predicate that refers to `$target`. Transportation evaluates each hub's `destinationCondition` with `target = hub.location`, and Fly's template is `{ type: 'visited', location: '$target' }`. A ferry template simply omits it. No hardcoded Fly logic anywhere.
+You were right in the original design discussion: `is_in_visited` is just another predicate over player state. The general form is a predicate that refers to `$target`. Transportation evaluates each hub's `destinationCondition` with `target = hub.location`, and Fly's template is `{ type: 'visited', location: '$target' }`. A ferry template simply omits it. No hardcoded Fly logic anywhere.
 
 ## Is this the right pattern? (stress test against scripts, quests and every gate)
 
