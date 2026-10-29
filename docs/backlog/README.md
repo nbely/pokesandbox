@@ -30,6 +30,23 @@ Each issue is a `###` heading with a **stable draft ID** (`M0A-07`, `M0B-12`) fo
 
 Bodies use **Summary**, **Acceptance criteria**, and **Refs** (concept docs). Acceptance criteria are written so a reviewer can check them from the PR alone.
 
+## Drafting more issues (for new sessions)
+Everything needed to draft the remaining milestones is in the repo. Nothing depends on the conversations that produced these docs.
+
+**Still to draft:** M1 (Battle Core & Catalog), the rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test, release notes), and M3–M6. The candidate issues are the checklists in [`mvp.md`](../roadmap/mvp.md). Expand each into drafts in a new `<milestone>.md` file here, using the existing files as the style reference.
+
+**Read first, in this order:**
+1. [`open-questions.md`](../architecture/open-questions.md): Q1–Q35 and the "Smaller decisions" index. This is the decision record.
+2. The relevant concept docs' **Decisions** sections. Where a concept's Options or Design text differs from its Decisions, the Decisions win. Struck-through open questions are answered.
+3. [`mvp.md`](../roadmap/mvp.md) for milestone scope, the gap matrix, and the Kanto Classic adaptations (M6).
+
+**Rules:**
+- Every issue links its concept doc(s) and the Q-numbers it implements, and has checkable acceptance criteria.
+- Split anything bigger than `L`. Mark `agent-ready: yes` only when no design judgement is left.
+- Keep the Arena critical path (M0a → M1 → M2) lean. Hosting stays at the end of M2.
+- If drafting surfaces a question the docs don't answer, don't decide it inside an issue. Ask the owner, then record it as the next Q-number (or in the Smaller decisions index), update the concept doc's Decisions, and update `mvp.md`/`roadmap.md`.
+- **FlowCord** is a separate org (`flowcord-dev`). Never create or comment on its issues without the owner's approval. Current dependencies: flowcord#105–#107 (see [M2 § FlowCord dependencies](m2-launch-readiness.md#flowcord-dependencies)).
+
 ## Creating issues
 1. The owner reviews and edits these files (this PR).
 2. Org setup: transfer repos, install the Claude GitHub App on the org, create the project.
