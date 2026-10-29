@@ -68,6 +68,10 @@ Move the repos to the org, get CI gating every PR, and give contributors and age
 - Document "no new logic in Discord menu handlers; gameplay goes through `engine.dispatch`, authoring through `authoring.execute`".
 - Document conditions/effects/gates as the only gating and reward mechanisms.
 - Document the cache policy (no hydrated mutable docs).
+- Document the existing model code conventions, which live only in code today:
+  - Zod entity schema is the source of truth, named `fooSchema`. The mirroring Mongoose schema is named `fooDbSchema`.
+  - Embedded sub-schemas are standalone `Schema` consts with `{ _id: false }`.
+  - Map fields are parsed with `zMapHydrator`.
 - Each rule links its concept doc. Remove outdated guidance that contradicts the docs (e.g. "cache-first" for mutable docs).
 
 **Refs:** [architecture README](../architecture/README.md), [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [02](../architecture/concepts/02-identity-and-references.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)

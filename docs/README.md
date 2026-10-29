@@ -8,6 +8,5 @@
 | [`architecture/README.md`](architecture/README.md) | Architecture overview, the big alternates, concept index |
 | [`architecture/audit-current-state.md`](architecture/audit-current-state.md) | Audit of current models, commands, and the Showdown fork |
 | [`architecture/open-questions.md`](architecture/open-questions.md) | Decisions needed from the owner |
-| [`architecture/decision-log.md`](architecture/decision-log.md) | Decisions from the ChatGPT architecture sessions |
 | [`architecture/concepts/`](architecture/concepts/) | One doc per domain concept (current shape, alternates, pros/cons) |
 | [`erd.md`](erd.md) | Generated ERD of current models (`npm run erd:generate`) |
