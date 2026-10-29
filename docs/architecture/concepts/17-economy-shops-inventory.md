@@ -13,7 +13,8 @@ Region.currency: { name: 'Pokédollar'; symbol: '₽'; startingAmount: 3000 }
 
 Shop {
   key; regionId; name; locations: ContentKey[]; condition?: Condition;
-  entries: { item: ItemId; price?: number; currency?: ProgressionKey; condition?: Condition; stock?: number /* later: limited stock */ }[];   // no currency = money
+  entries: { key: ContentKey; item: ItemId; price?: number; currency?: ProgressionKey; condition?: Condition;   // no currency = money
+             limit?: { count: number; per: 'character' } }[];   // MVP: per-character purchase limit, never restocks. Later: per: 'server', restock schedules
   buyback: { enabled: boolean; rate: number /* default 0.5 */ };
   clerk?: ContentKey;   // optional NPC for flavor dialogue
 }
@@ -38,4 +39,4 @@ Shop {
 
 ## Open questions
 - ~~Multiple currencies?~~ **Decided (Oct 2026):** money is the only built-in currency. Anything else is a numeric progression that shop entries can be priced in (see above).
-- Should shop stock be **limited or restocking** (daily specials)? Later.
+- ~~Limited or restocking stock?~~ **Decided (Oct 2026):** **per-character purchase limits are MVP** (`limit: { count, per: 'character' }`, e.g. a TM sold once, a one-time special offer). Each entry has a stable key, and purchases are counted in a reserved flag (`shop:<shopKey>:<entryKey>:bought`), so limits survive republishes. A sold-out entry shows as "Sold out". **Restocking** (daily specials) and **server-wide stock** come later as more `limit` options. Note: in RBY itself, TMs are single-use and the Celadon Department Store sells them without limit, so Kanto Classic leaves its TMs unlimited; limits are for creators who want modern-style one-time purchases.

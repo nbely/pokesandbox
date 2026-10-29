@@ -183,7 +183,8 @@ ArenaFormat {
     include?: SpeciesId[]; exclude?: SpeciesId[];    // bans
   };
   bans?: { moves?: MoveId[]; abilities?: string[]; items?: ItemId[] };
-  rules: { mechanicsGen; level: 'as-built' | 50 | 100 | { max: number }; gameType: 'singles' | 'doubles'; clauses: string[]; teamSize; pickN?; timer };
+  rules: { mechanicsGen; level: 'as-built' | 50 | 100 | { max: number }; gameType: 'singles' | 'doubles'; clauses: string[]; teamSize; pickN?; timer;
+          statInvestment?: 'as-built' | 'max' | { ivs?: …; evs?: … } };   // Phase 3: applied to adventure Pokémon copies (see 13)
 }
 ```
 

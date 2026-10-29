@@ -127,6 +127,6 @@ Region.discovery: {
 - Test characters are excluded from discovery stats, leaderboards, trading, and PvP.
 
 ## Open questions
-- Should admins be able to **hot-fix** a typo in a published release without a full publish? (Recommendation: no. Publish is cheap; keep one path.)
+- ~~Hot-fix a published release?~~ **Decided (Oct 2026):** no. Every change, typo fixes included, goes live only through a publish (with its review step, see [16](16-authoring-validation-and-portability.md)). One path means one set of validation and one change history.
 - ~~Announce releases to players?~~ Decided: opt-in, configurable channel (see above).
 - ~~Undeploy semantics?~~ Decided: pause play. Discovery is a separate axis (see above).

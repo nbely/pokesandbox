@@ -46,13 +46,13 @@ TurnDigest { turn: number; actions: { side; pokemon; action: 'move' | 'switch' |
 ```ts
 Narration {
   _id; entryId; turn?: number;                 // attach to a whole entry or one turn of a battle
-  authorUserId; role: 'player' | 'moderator' | 'gm' | 'ai';
+  authorUserId; role: 'player' | 'coauthor' | 'narrationModerator' | 'ai';
   text: string; createdAt; editedAt?;
   visibility: 'public' | 'private';           // respects character privacy (13)
 }
 ```
 - **During play or after the fact.** A player can narrate a battle live in their thread or return a week later and write it up. Entries are permanent and have stable IDs, so narration can always attach.
-- **Multiple voices** per entry: the player's prose, a moderator or GM response, later AI narration (BYO key) as a draft the player can accept or edit.
+- **Multiple voices** per entry: the player's prose, co-authors' prose, a narration moderator's (GM-style) response, later AI narration (BYO key) as a draft the player can accept or edit.
 - **Discord threads mode (Q2) is the forum thread reborn:** the bot posts log entries into the player's adventure thread, the player's replies in that thread can be captured as narration on the latest entry, and the webapp renders the whole adventure as a readable story page.
 
 ## Future: narrated battle mode (the forum model, with the engine as calculator)
@@ -79,5 +79,5 @@ The original forum flow (player narrates a move, moderator resolves it with a ca
 - Later: Narration model + UI (webapp first, then thread capture), AI narration drafts, narrated battle mode.
 
 ## Open questions (post-MVP)
-- Who can narrate on a character's entries: owner only, owner + server moderators, or invited co-authors (co-op)?
-- Should narration be able to **feed back into the game** (e.g. RP-hurdle approvals unlocking rewards), or stay purely cosmetic until RP quests exist?
+- ~~Who can narrate?~~ **Decided (Oct 2026, post-MVP):** the character's owner and co-authors they invite. A dedicated server role, **narration moderator**, can write, edit, and hide narration on *anyone's* story in that server (GM-style). Regular moderators can only hide entries.
+- **Narration feeding back into the game: not locked in.** Cosmetic until roleplay quests exist, but this isn't a permanent assumption. A far-future direction is **configurable narration effects**: a server or region chooses what approved roleplay can do, e.g. friendship rises faster, or a wild Pokémon the player is searching for becomes easier to find. Approval would use the script approval step ([19](19-multiplayer-social-and-future-proofing.md)). Nothing in the MVP model should assume narration is cosmetic forever.

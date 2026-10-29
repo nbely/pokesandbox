@@ -95,4 +95,4 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 
 ## Open questions
 - ~~1 character per region? Restart?~~ **Decided (Q27):** 1 per region enforced in MVP (`charactersPerPlayer` kept for later). Restart archives the old character (soft delete) with a 24h cooldown. Admins can reset a player's character.
-- Should the arena allow using **adventure Pokémon** later (Full roadmap says "in-game PvP" with adventure parties)? With option C that's a query, not a migration.
+- ~~Adventure Pokémon in the Arena?~~ **Decided (Oct 2026):** yes, in Phase 3. The Arena battles a **copy** in Showdown set shape, never the instance itself (no EXP, HP loss, or level changes carry back). The format adjusts the copy: level scaling to the format's level (Lv50 etc.) and **stat-investment overrides** (e.g. max IVs/EVs, or max DVs/Stat Exp under Gen 1 rules) so adventure Pokémon match how the format treats built teams. Format legality (species, moves, clauses) is validated as for any team.
