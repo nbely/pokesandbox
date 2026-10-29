@@ -141,7 +141,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 **Epic: Showdown Fork Modernization** (Q20, decided)
 - [ ] Preserve the 10 custom moves on an archive branch. Remove them from `master` and restore the 3 commented-out upstream tests (S)
 - [ ] Rebase onto current upstream (fallback: fresh from upstream + re-apply kept patches as new commits) (M)
-- [ ] Patch: generalized state injection (any side; HP/status/PP; level/stats/move slots mid-battle for authentic level-ups) with sim tests (M)
+- [ ] Patch: generalized state injection (any side; HP/status/PP/fainted state; level/stats/move slots mid-battle for authentic level-ups), every injection recorded in the input log so recovery replays it, with sim tests (M)
 - [ ] Patch: external choice hook (bag/catch/run consume turn) + `caught`/`ran` end reasons (L)
 - [ ] Patch: isolated custom-data dexes (per content hash) for `Battle` + `TeamValidator`, evolved from `dynamic-dex-data` (L)
 - [ ] Remove debug code (`pause`/`resume`/`sendToJSON`) (S)
@@ -152,7 +152,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Catalog read service + move detail display (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
 - [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
-- [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp. "Classic Gen 1" preset (L)
+- [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp, the four Gen 1 growth curves (floored). Reference: pret/pokered, with test vectors ([18](../architecture/concepts/18-rules-time-and-randomness.md#reference-test-vectors)). "Classic Gen 1" preset (L)
 - [ ] Assemble per-release data mixes from Showdown gen mods into isolated custom-data dexes (M)
 
 **Epic: Teams**
@@ -165,7 +165,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 **Epic: BattleService**
 - [ ] BattleService start/choose/events API, in-process (L)
 - [ ] Battle persistence (seed + input log), recovery on boot, compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
-- [ ] Protocol → GameEvent translation (M)
+- [ ] Protocol → GameEvent translation; battle text from Showdown's text data, not hand-written strings (M)
 - [ ] Discord battle view builders (pure `BattleView` → Components v2: turn state, HP bars, choice prompts). The Arena wiring is in M2 E-M2-2 (L)
 - [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)
 
@@ -234,7 +234,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Character creation (1 per region) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
 - [ ] `/play` hub renderer (mode-aware): claims the session (newest wins), resumes any mode incl. mid-battle requests and pending prompts, and shuts down superseded sessions cleanly (L)
 - [ ] Travel action (conditions, locked explanations, enter triggers, visited tracking) (M)
-- [ ] Transport action (Fly menu) (S)
+- [ ] Transport action (Fly menu): destinations grouped by area, fares shown, unaffordable options locked with the reason (S)
 - [ ] Explore action: weighted outcome table (wild/trainer/hidden item), Repel safe steps, trainer engagement (M)
 - [ ] Traversal requirements: location progress counters (lifetime/visit), one-time + permanent costs, compiled exit gates with explanations (M)
 - [ ] Wild battles: catch formula, run odds, bag in battle (via hook) (L)
@@ -244,7 +244,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] PC boxes: deposit/withdraw/release, overflow, access per `RegionRules.systems.storage.access` (M)
 - [ ] Bag: pockets, use/give/take outside battle; Escape Rope uses the `teleport: respawn` effect (M)
 - [ ] Shops buy/sell, including entries priced in a numeric progression (coins); money never below 0 (S)
-- [ ] Heal points + respawn (S)
+- [ ] Heal points (restore HP, status, and PP) + respawn (S)
 - [ ] Profile: badge case, milestones, visited, dex (M)
 - [ ] **Trading** (Q35): `Trade` record + shared trade message + private Pokémon pickers (reusing the M2 Arena surface patterns), confirm-reset on offer change, expiry (M)
 - [ ] Two-character engine action: ordered leases, re-checks, owner swap in one transaction, both revisions and Pokédexes updated; `trading.access` precondition; per-character rate limit (M)

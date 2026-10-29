@@ -105,4 +105,5 @@ Option B means **the trip itself can be interrupted**. You pick "Go to Viridian 
 
 ## Open questions
 - ~~Day/night time model?~~ **Decided (Q6):** none for the Kanto MVP (tables use `any`). The injected Clock defaults to real time in the server's timezone when Gen 2+ content needs it. See [18](18-rules-time-and-randomness.md).
-- ~~Level scaling?~~ **Decided (Oct 2026):** post-MVP. `RegionRules.systems.levelScaling` is reserved so it can be added later without reshaping data ([18](18-rules-time-and-randomness.md)).
+- ~~Level scaling?~~ **Decided (Oct 2026):** post-MVP. `RegionRules.systems.levelScaling` is reserved so it can be added later without reshaping data ([18](18-rules-time-and-randomness.md)). A candidate rule: wild levels drawn from just below the party's highest level ([18 § Candidate options](18-rules-time-and-randomness.md#candidate-post-mvp-options-not-decided)).
+- Level-banded slots? (post-MVP idea, not decided) A slot names an evolution line instead of one species, and the rolled level picks the stage (e.g. stage 1 below L18, stage 2 from L18). Tables stay short, and it pairs well with level scaling, where a fixed species per slot would show under-evolved Pokémon at high levels.

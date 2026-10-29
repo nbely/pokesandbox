@@ -18,7 +18,7 @@ type Effect =
   | { type: 'milestone';    key: string; milestone: string; grant: boolean }
   | { type: 'choice';       key: string; option: string | null }
   | { type: 'flag';         flag: string; set: boolean }
-  | { type: 'heal';         scope: 'party' }
+  | { type: 'heal';         scope: 'party' }                                  // restores HP, status, and PP
   | { type: 'setRespawn';   location: LocationRef }
   | { type: 'teleport';     location: LocationRef | 'respawn' }               // 'respawn' = Escape Rope / Teleport / Dig
   | { type: 'random';       table: { weight: number; effects: Effect[] }[] }  // loot tables, mystery gifts

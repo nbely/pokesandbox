@@ -140,6 +140,7 @@ Gate = {
 | `locked` | the option, disabled, with the explanation / `lockedText` | n/a | shop items, Fly destinations, badge-gated doors you want to tease |
 | `attemptable` | the option, enabled | blocked: shows the rationale **and emits a `gateBlocked` trigger event**, so a script can react (a guard's dialogue, a forced battle, starting a quest) | "The road is blocked by a sleeping Snorlax", "You need a Card Key", tutorial nudges |
 
+- **Locked options in Discord menus** stay in the list with a 🔒 marker, and the explanation is always reachable: shown inline (option description or text under the list), or the option stays pressable and replies with it. A disabled Discord button can't be pressed, so on its own it gives the player no way to learn why.
 - Each attach point declares its **default** presentation (e.g. shop entries default to `locked`, edges and NPCs to `hidden`), and authors can override per gate.
 - Reacting to a blocked attempt is **not** part of the condition or the gate. It's an ordinary trigger (`{ event: 'gateBlocked', gate: <owner ref> }`, see [07](07-scripts-triggers-and-events.md)). The builder can offer "on blocked, run script…" as sugar that creates the trigger.
 - Locations, edges, shops and shop entries, transport hubs, NPC interactions, and quest starts all take a `Gate`. There's one builder component and one engine function: `checkGate` → `{ allowed, presentation, explanation, cost }`.

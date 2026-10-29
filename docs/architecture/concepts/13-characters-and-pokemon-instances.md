@@ -81,6 +81,7 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 ## Game-dev notes
 - **HP/status persist** between battles (heal at Centers). The fork's HP injection (or a battle construction hook) is needed. See [14](14-battle-system-and-showdown.md).
 - **EXP, levels, evolution, and move learning happen in the engine**, using DexEntry growth rates and Showdown learnsets. Evolution prompts ("What? Charmander is evolving!", cancelable) and move-replacement prompts are **script-like blocking interactions**, so reuse the mode machinery.
+- **Evolution triggers:** Gen 1 needs only level, stone, and trade (MVP). Post-MVP, an evolution can carry a `Condition` ([05](05-requirements.md)) evaluated when it would fire, e.g. "at L30 while in a location tagged `forest`". This covers Gen 4+ place-based evolutions and lets one species branch by terrain or location without new trigger types.
 - **Original Trainer/ID** drives Gen 1 rules for traded Pokémon (trading is MVP, see Trading below). Traded Pokémon (OT ≠ current owner) gain **1.5× EXP**, and **obey only up to a badge-based level cap**: 10 with no badges, 30 with Cascade, 50 with Rainbow, 70 with Marsh, all with Earth. Both are region rules (`formulas.exp` traded bonus, `systems.obedience`).
 
 ## Decisions (Oct 2026, Q22)
@@ -116,5 +117,6 @@ Trade {
 - Player trading (above).
 
 ## Open questions
+- Rival naming and character profile details? (idea, not decided) RBY has the player name the rival. An onboarding step could ask for the rival's name (stored as a string progression that dialogue and the rival trainer's display name read) and optional roleplay details for the character (age, gender, a short bio) shown on the profile. Asked one at a time, with a confirm step and a way to skip optional fields.
 - ~~1 character per region? Restart?~~ **Decided (Q27):** 1 per region enforced in MVP (`charactersPerPlayer` kept for later). Restart archives the old character (soft delete) with a 24h cooldown. Admins can reset a player's character.
 - ~~Adventure Pokémon in the Arena?~~ **Decided (Oct 2026):** yes, in Phase 3. The Arena battles a **copy** in Showdown set shape, never the instance itself (no EXP, HP loss, or level changes carry back). The format adjusts the copy: level scaling to the format's level (Lv50 etc.) and **stat-investment overrides** (e.g. max IVs/EVs, or max DVs/Stat Exp under Gen 1 rules) so adventure Pokémon match how the format treats built teams. Format legality (species, moves, clauses) is validated as for any team.

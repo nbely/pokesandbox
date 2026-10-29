@@ -79,8 +79,37 @@ There is no hard lock on rules after publish: real balance fixes must stay possi
 - Original Gen 1 learnsets and move data (e.g. Bite is Normal-type).
 - Gen 1 EXP, catch, escape, and payout formulas.
 - **Original Gen 1 sprites.** DexEntry already stores `g1` sprite sets (`rb`, `rg`, `y`; normal/gray/color).
+- **Formula reference:** every Gen 1 formula follows the [pret/pokered](https://github.com/pret/pokered) disassembly (e.g. `ItemUseBall` for catching, `TryRunningFromBattle` for escape), with unit tests against values worked from it.
+- **Growth rates:** Gen 1 has four curves, computed from their formulas and floored to integers: Fast `4n³/5`, Medium Fast `n³`, Medium Slow `6n³/5 − 15n² + 100n − 140`, Slow `5n³/4`. Medium Slow is negative at level 1 (Gen 1 underflows there), so level 1 is clamped to 0 EXP.
 
 **Presets** become saved combinations ("Classic Gen 1", later "RSE", "Modern"). The MVP ships only **Classic Gen 1**. Admins can still change any dimension once more generations are implemented.
+
+### Candidate post-MVP options (not decided)
+Opt-in rules that suit slower or narrated play, where battles are fewer and each one matters more ([22](22-adventure-log-and-narration.md#future-narrated-battle-mode-the-forum-model-with-the-engine-as-calculator)). Canon stays the default. Each would be added as a new option on an existing dimension, without schema changes.
+
+| Option | Rule | Dimension |
+|---|---|---|
+| Stat investment preset | Every Pokémon gets fixed investment (e.g. maximum HP, minimum elsewhere) instead of rolled DVs/IVs and earned Stat Exp/EVs. Bulkier Pokémon make battles last longer. | `systems` (new) |
+| Party-relative wild levels | Wild levels drawn from `maxPartyLevel − 7 … maxPartyLevel − 1`, then clamped to the slot's range | `systems.levelScaling` (reserved) |
+| Payout level basis | Trainer payout uses the opposing party's highest level instead of its last Pokémon's level | `formulas.payout` variant |
+| Non-participant EXP | Party members that didn't battle get half EXP, with no item needed | `formulas.expShare` (new value) |
+| Shiny rate | A configurable rate (e.g. 1/500) instead of the generation's | `graphics.shinies` → rate |
+| Catch modifiers from battle effects | Moves or effects multiply the catch rate while active (e.g. ×2 while the target is bound). Needs the catch resolver to see the target's active effects. | `formulas.catch` + custom moves ([12](12-content-catalog-species-moves-items.md)) |
+| Percentage EXP | EXP measured as a percentage of a level per win instead of points, for narrated play | `formulas.exp` variant |
+
+### Reference test vectors
+Unit-test vectors for formula implementations. Gen 1 vectors are worked from pokered as each formula is implemented.
+
+| Formula | Input | Expected |
+|---|---|---|
+| Growth, Medium Slow | L2 / L3 / L4 / L5 / L10 | 9 / 57 / 96 / 135 / 560 |
+| Growth, Fast / Medium Fast / Slow | L10 | 800 / 1000 / 1250 |
+| EXP, Gen 5 scaled: `floor((a·b·L / (5·s)) · ((2L+10)/(L+Lp+10))^2.5 + 1) · t` | `b`=64, `L`=5, `Lp`=5, wild, one participant | 65 |
+| EXP, Gen 5 scaled | `b`=64, `L`=10, `Lp`=5, wild | 202 |
+| EXP, Gen 5 scaled | same, trainer battle (`a`=1.5) | 303 |
+| EXP, Gen 5 scaled | same, wild, traded (`t`=1.5) | 304 |
+| Whiteout, Gen 4+: `base(badges) × highest party level`, capped at money; bases for 0–8 badges 8, 16, 24, 36, 48, 64, 80, 100, 120 | 2 badges, highest level 20, money ≥ 480 | lose 480 |
+| Whiteout, Gen 4+ | 8 badges, highest level 50, money 3000 | lose 3000 (capped) |
 
 ## Time
 - **Real-time in the server's timezone** is the most "Pokémon" option (Gen 2+ day/night, weekly NPCs) and the easiest to reason about for a community.

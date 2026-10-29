@@ -57,7 +57,7 @@ In a menu-driven text game, the risk is that travel feels like teleporting throu
 ## MVP scope
 - `kind`, `parentKey`, `description`, `imageUrl`, `services`, `tags`, edge labels, the two-way builder toggle, inbound-edge cleanup on delete, `Region.startingLocationKey`, and `defaultRespawnKey`.
 - Builder: connections editor, entry rules (conditions), services.
-- Later: coordinate-based map markers, auto-generated map images, weather per location.
+- Later: coordinate-based map markers, auto-generated map images, a "you are here" overlay on the static region map (the current location highlighted, from a per-location marker image or coordinates), weather per location.
 
 ## Open questions
 - ~~Visual map?~~ **Decided (Q7):** text navigation plus an optional static region map image (`graphicSettings.mapImageLink`). Interactive map later, on the webapp.

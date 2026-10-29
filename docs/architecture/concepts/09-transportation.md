@@ -39,6 +39,7 @@ TransportNetwork {
 
 ## MVP scope
 - The `TransportNetwork` model, the Fly and Ferry templates, a "Travel ▸ Fly" UI listing eligible destinations (with locked ones explained), and fares via effects.
+- Destination lists are grouped by area (`parentKey` or a region area) and paginated when long, so a late-game Fly list stays one screen per area. Each option shows its fare ("Ferry to Vermilion · ₽500"), and one the player can't afford is shown locked with the preflight explanation ("You need ₽500", [06](06-effects.md)).
 
 ## Open questions
 - ~~Fly: move in party or unlockable service?~~ **Decided (Q17):** creator content, never engine logic. Kanto Classic uses the move-in-party version. Post-MVP builder shortcuts offer both as templates.

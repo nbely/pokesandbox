@@ -66,6 +66,7 @@ The original forum flow (player narrates a move, moderator resolves it with a ca
 - Showdown is the calculator. **BattleService gets a turn-gating hook:** a battle can be configured to **hold each turn's resolution until required narration and/or approval arrives** (player narration, GM ruling).
 - GM/approver roles reuse the **pluggable RP adjudication** design (participant vs approver; mod, AI, or both).
 - Reserve the hook now (`BattleSpec.turnGate?: { requireNarration?: Role[]; requireApproval?: Role }`). Build it with RP quests.
+- Narrated regions may want slower-paced progression rules, such as percentage EXP, fixed stat investment, or catch modifiers from battle effects. These are candidate `RegionRules` options ([18 § Candidate options](18-rules-time-and-randomness.md#candidate-post-mvp-options-not-decided)).
 
 ## Storage impact (estimates)
 - Log entries: ~0.5–2 KB (trainer battles with digests are at the top end). With wild-battle rollups, an active player writes ~5–15 KB/day. That's ~100 active players ≈ **0.2–0.5 GB/year**: Free tier for the MVP period, Flex/DO-managed (~$15) for the first public year.
