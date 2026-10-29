@@ -96,13 +96,14 @@ npm run start:app
 
 After running `npm run env-setup` (or `npm run setup`), open `.env` and fill in:
 
-| Variable              | Description                                                                   |
-| --------------------- | ----------------------------------------------------------------------------- |
-| `DATABASE_URI`        | MongoDB connection string. Pre-filled with the local Docker URI.              |
-| `DISCORD_BOT_TOKEN`   | Bot token from the Discord Developer Portal                                   |
-| `AUTH_DISCORD_ID`     | Application ID of your Discord Bot                                            |
-| `AUTH_DISCORD_SECRET` | OAuth2 Client Secret                                                          |
-| `AUTH_SECRET`         | Random secret for NextAuth session encryption (run `openssl rand -base64 32`) |
+| Variable              | Description                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URI`        | MongoDB connection string. Pre-filled with the local Docker URI.                                            |
+| `DISCORD_BOT_TOKEN`   | Bot token from the Discord Developer Portal                                                                 |
+| `DEV_GUILD_ID`        | Your test server's ID. In Discord, enable Developer Mode, then right-click the server icon → Copy Server ID |
+| `AUTH_DISCORD_ID`     | Application ID of your Discord Bot                                                                          |
+| `AUTH_DISCORD_SECRET` | OAuth2 Client Secret                                                                                        |
+| `AUTH_SECRET`         | Random secret for NextAuth session encryption (run `openssl rand -base64 32`)                               |
 
 ## Database Scripts
 
