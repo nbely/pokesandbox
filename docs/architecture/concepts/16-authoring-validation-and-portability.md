@@ -41,7 +41,7 @@ These are **warnings**, never blockers, so creative non-standard games still pub
 - The compiled release (see [01](01-content-vs-state-and-publishing.md)) serializes to a versioned JSON (or YAML) bundle with content keys (see [02](02-identity-and-references.md)).
 - **Import** creates a new draft region from a bundle (rekeying is optional, since keys are region-scoped).
 - This gives you:
-  - **Template regions** ("Start from Kanto Classic") via the clone-wholesale approach you described in the chat.
+  - **Template regions** ("Start from Kanto Classic") via the clone-wholesale approach you described in the original plan.
   - **Seed data** and **test fixtures** (the engine test harness loads a bundle).
   - **Backups** and moving regions between servers.
   - Power-user authoring in a text editor, and later community sharing.

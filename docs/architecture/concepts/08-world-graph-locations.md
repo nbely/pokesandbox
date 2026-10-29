@@ -8,7 +8,7 @@
 ```ts
 Location { name, regionId, ordinal, requirements?, connections: { toLocationId, requirements? }[], trainerIds[], wildTables[] }
 ```
-Agreed in the chat but not built: buildings and sub-areas as their own nodes, two-way toggle in the builder, `Region.startingLocationId`.
+Agreed in the original plan but not built: buildings and sub-areas as their own nodes, two-way toggle in the builder, `Region.startingLocationId`.
 
 ## Gaps (game-dev lens)
 
@@ -38,7 +38,7 @@ Region { startingLocationKey; defaultRespawnKey?; … }
 ```
 
 ### Points of interest: inside the node or separate nodes?
-- **Separate nodes** for places with their own NPCs, encounters, or gates (gyms, centers, caves, houses with events). This was agreed in the chat. It's cheap and keeps everything uniform.
+- **Separate nodes** for places with their own NPCs, encounters, or gates (gyms, centers, caves, houses with events). This was agreed in the original plan. It's cheap and keeps everything uniform.
 - **Inside the node** for "things you can interact with here" (NPCs, items on the ground, signs). These are NPC/trigger content that references the location key.
 
 ### Travel UX (game-dev)

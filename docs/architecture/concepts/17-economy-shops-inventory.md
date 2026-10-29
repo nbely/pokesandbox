@@ -13,14 +13,15 @@ Region.currency: { name: 'Pokédollar'; symbol: '₽'; startingAmount: 3000 }
 
 Shop {
   key; regionId; name; locations: ContentKey[]; condition?: Condition;
-  entries: { item: ItemId; price?: number; condition?: Condition; stock?: number /* later: limited stock */ }[];
+  entries: { item: ItemId; price?: number; currency?: ProgressionKey; condition?: Condition; stock?: number /* later: limited stock */ }[];   // no currency = money
   buyback: { enabled: boolean; rate: number /* default 0.5 */ };
   clerk?: ContentKey;   // optional NPC for flavor dialogue
 }
 ```
 - **Tiers** = entries with conditions (Gen 4+ marts add Great Balls at 3 badges). This is more flexible than tier buckets, and the builder can still present "tiers" as a grouping by condition.
 - **Department stores** = multiple shops on one location (or one shop per floor node).
-- **Special vendors** (the Magikarp salesman, the Game Corner prize exchange) are scripts with `choice` + `effects`, or shops priced in another currency (later: `currency: ItemId` for coins/BP).
+- **Other currencies are numeric progressions (decided Oct 2026).** Money is the one built-in currency. A shop entry with `currency: <progression key>` is priced in that counter: Game Corner coins, Battle Points, event tokens. Buying checks the counter ≥ price and decrements it in the same atomic effect list (preflight, like money). Earning them is ordinary content: a script that sells coins for money, or a progression effect on a reward. The Game Corner prize counter (Porygon, TMs) works this way in MVP; the slot machines come later.
+- **Special vendors** (the Magikarp salesman) are scripts with `choice` + `effects`.
 
 ## Inventory
 - `Character.bag: Record<ItemId, number>`. Pockets come from ItemDefinition. Key items are capped at 1 and can't be sold or tossed.
@@ -36,5 +37,5 @@ Shop {
 - Shop model, buy/sell UI, conditioned entries, region currency config, and the bag with pockets plus field use.
 
 ## Open questions
-- **Multiple currencies** per region (Game Corner coins, Battle Points) in MVP? (Recommendation: no, but keep `currency` as a field on shop entries so it's additive.)
+- ~~Multiple currencies?~~ **Decided (Oct 2026):** money is the only built-in currency. Anything else is a numeric progression that shop entries can be priced in (see above).
 - Should shop stock be **limited or restocking** (daily specials)? Later.

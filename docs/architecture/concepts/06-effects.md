@@ -51,6 +51,6 @@ type Effect =
 "Choose 1 of 3 starters" needs UI (show the options, wait for the player) and then branching. That's a script `choice` step whose branches contain effects (`givePokemon` + `choice` progression set). This keeps effects synchronous and UI-free. See [07](07-scripts-triggers-and-events.md).
 
 ## Open questions
-- Can money go **negative** (debt mechanics)? Default no.
+- ~~Negative money?~~ **Decided (Oct 2026):** no. Money never drops below 0. A `currency` effect that would push it negative fails preflight with an explanation ("You need ₽500"). Penalties that take a share (Gen 1 whiteout halves money) can't go negative by construction.
 - ~~Full party on receiving a Pokémon?~~ **Decided (Q9): prompt to swap in MVP.** The `givePokemon` effect stays atomic and non-interactive: it places the Pokémon in the PC when the party is full and emits `pokemonGranted { to: 'pc', canSwapIn: true }`. The renderer then offers a **non-blocking "Swap into party?"** follow-up action (pick a party member to send to the PC). Catches use the same flow. If the player ignores it, the Pokémon simply stays in the PC.
-- Do effects need **conditions inline** (`{ if: Condition, then: Effect[] }`)? Recommendation: no. Branching belongs in scripts. Keep effects dumb.
+- ~~Conditions inside effects?~~ **Decided (Oct 2026):** no. Branching belongs in scripts. Effects stay plain lists, so they remain atomic, idempotent, and easy to render ("You received 3 Potions").

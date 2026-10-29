@@ -5,7 +5,7 @@
 **MVP impact:** Medium · **Cost to change later:** Low
 
 ## Current shape
-`Region.transportationTypes: string[]` (placeholder). Hubs were agreed in the chat but not built.
+`Region.transportationTypes: string[]` (placeholder). Hubs were agreed in the original plan but not built.
 
 ## Proposed shape
 ```ts
