@@ -57,13 +57,14 @@ type Step =
   | { wildBattle: { spec: PokemonSpec; canRun?: boolean; onCatch?: Label; onDefeat?: Label; onRun?: Label } }
   | { effects: Effect[] }
   | { if: { condition: Condition; then: Label; else?: Label } }
+  | { askName: { slot: string; prompt: string; default?: string } }   // fills Character.names[slot] (confirm step; default offered), e.g. naming the rival
   | { npcTrade: { want: SpeciesId; give: { species: SpeciesId; nickname?: string; ot: { name: string; id: number }; moves?: MoveId[] };
                 onTrade?: Label; onDecline?: Label; onNoMatch?: Label } }   // in-game trade (MVP)
   | { shop: ContentKey } | { heal: {} } | { travel: LocationRef }
   | { label: Label } | { goto: Label } | { end: {} };
 ```
 
-**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`). It then persists `character.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in `say`, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Character.names`. It then persists `character.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
 
 ### How each MVP feature maps
 
@@ -103,7 +104,7 @@ type Step =
 
 ## MVP scope
 - Trigger events: `characterCreated`, `enterLocation`, `interact`, `battleEnd`, `explore`.
-- Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `heal`, `shop`, `travel`, `goto/label/end`.
+- Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `askName`, `heal`, `shop`, `travel`, `goto/label/end`. `{name:<slot>}` text placeholders.
 - Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker.
 
 ## Decisions (Oct 2026)

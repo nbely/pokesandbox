@@ -63,8 +63,8 @@ Narration {
 
 ## Future: narrated battle mode (the forum model, with the engine as calculator)
 The original forum flow (player narrates a move, moderator resolves it with a calculator and posts the outcome) maps onto existing pieces:
-- Showdown is the calculator. **BattleService gets a turn-gating hook:** a battle can be configured to **hold each turn's resolution until required narration and/or approval arrives** (player narration, GM ruling).
-- GM/approver roles reuse the **pluggable RP adjudication** design (participant vs approver; mod, AI, or both).
+- Showdown is the calculator. **BattleService gets a turn-gating hook:** a battle can be configured to **hold each turn's resolution until required narration and/or approval arrives** (player narration, a narration moderator's ruling).
+- Narration moderator / approver roles reuse the **pluggable RP adjudication** design (participant vs approver; mod, AI, or both).
 - Reserve the hook now (`BattleSpec.turnGate?: { requireNarration?: Role[]; requireApproval?: Role }`). Build it with RP quests.
 - Narrated regions may want slower-paced progression rules, such as percentage EXP, fixed stat investment, or catch modifiers from battle effects. These are candidate `RegionRules` options ([18 § Candidate options](18-rules-time-and-randomness.md#candidate-post-mvp-options-not-decided)).
 

@@ -73,6 +73,8 @@ Each option declares its constraints (`requires`, `incompatibleWith`), and the v
 
 There is no hard lock on rules after publish: real balance fixes must stay possible, and the review step stops accidents.
 
+**Classic means intended behavior, not glitches (decided Oct 2026).** Rules reproduce how a generation was designed to play, not its exploitable bugs: no MissingNo., Mew glitch, item duplication, or level-1 EXP underflow. Engine-side formulas guard against them (clamping, validation). In-battle mechanics are whatever Showdown's gen mod implements.
+
 **Gen 1 specifics the MVP must handle (no modern mechanics):**
 - No abilities, held items, natures, genders, shinies, or breeding.
 - DVs (0–15) and Stat Experience instead of IVs/EVs. Pokémon instances store values in Showdown's set shape, which encodes Gen 1/2 DVs and Stat Exp; the rules decide valid ranges.
@@ -80,7 +82,7 @@ There is no hard lock on rules after publish: real balance fixes must stay possi
 - Gen 1 EXP, catch, escape, and payout formulas.
 - **Original Gen 1 sprites.** DexEntry already stores `g1` sprite sets (`rb`, `rg`, `y`; normal/gray/color).
 - **Formula reference:** every Gen 1 formula follows the [pret/pokered](https://github.com/pret/pokered) disassembly (e.g. `ItemUseBall` for catching, `TryRunningFromBattle` for escape), with unit tests against values worked from it.
-- **Growth rates:** Gen 1 has four curves, computed from their formulas and floored to integers: Fast `4n³/5`, Medium Fast `n³`, Medium Slow `6n³/5 − 15n² + 100n − 140`, Slow `5n³/4`. Medium Slow is negative at level 1 (Gen 1 underflows there), so level 1 is clamped to 0 EXP.
+- **Growth rates:** Gen 1 has four curves, computed from their formulas and floored to integers: Fast `4n³/5`, Medium Fast `n³`, Medium Slow `6n³/5 − 15n² + 100n − 140`, Slow `5n³/4`. Medium Slow is negative at level 1. The cartridge underflows there (the source of the level-1 → level-100 glitch); we clamp level 1 to 0 EXP instead.
 
 **Presets** become saved combinations ("Classic Gen 1", later "RSE", "Modern"). The MVP ships only **Classic Gen 1**. Admins can still change any dimension once more generations are implemented.
 
@@ -107,7 +109,7 @@ Unit-test vectors for formula implementations. Gen 1 vectors are worked from pok
 | EXP, Gen 5 scaled: `floor((a·b·L / (5·s)) · ((2L+10)/(L+Lp+10))^2.5 + 1) · t` | `b`=64, `L`=5, `Lp`=5, wild, one participant | 65 |
 | EXP, Gen 5 scaled | `b`=64, `L`=10, `Lp`=5, wild | 202 |
 | EXP, Gen 5 scaled | same, trainer battle (`a`=1.5) | 303 |
-| EXP, Gen 5 scaled | same, wild, traded (`t`=1.5) | 304 |
+| EXP, Gen 5 scaled | same, wild, traded (`t`=1.5) | 304 ⚠️ verify: the formula as written floors before `· t` (giving 303), and 304 needs the multiply first. Check the game's order before using this row. |
 | Whiteout, Gen 4+: `base(badges) × highest party level`, capped at money; bases for 0–8 badges 8, 16, 24, 36, 48, 64, 80, 100, 120 | 2 badges, highest level 20, money ≥ 480 | lose 480 |
 | Whiteout, Gen 4+ | 8 badges, highest level 50, money 3000 | lose 3000 (capped) |
 

@@ -166,7 +166,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] BattleService start/choose/events API, in-process (L)
 - [ ] Battle persistence (seed + input log), recovery on boot, compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
 - [ ] Protocol → GameEvent translation; battle text from Showdown's text data, not hand-written strings (M)
-- [ ] Discord battle view builders (pure `BattleView` → Components v2: turn state, HP bars, choice prompts). The Arena wiring is in M2 E-M2-2 (L)
+- [ ] Discord battle view builders (pure `BattleView` → Components v2: turn messages, both actives with level/HP/status, the two sprites as separate images, choice prompts; a composed side-by-side image is post-MVP). The Arena wiring is in M2 E-M2-2 (L)
 - [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)
 
 **Epic: AI Players**
@@ -221,7 +221,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 
 ## M4: Interaction Engine (Q16)
 - [ ] Script + Trigger models (M)
-- [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/heal/shop/travel/goto/end` (L)
+- [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/askName/heal/shop/travel/goto/end`, `{name:<slot>}` placeholders (L)
 - [ ] Mode machine + persisted script cursor + resume on input (M)
 - [ ] Trigger dispatch: characterCreated, enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
@@ -231,7 +231,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 
 ## M5: Adventure Core
 - [ ] Character + PokemonInstance models, OCC, transactions (M)
-- [ ] Character creation (1 per region) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
+- [ ] Character creation (1 per region) + name slots (`Character.names`; Kanto Classic names the rival) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
 - [ ] `/play` hub renderer (mode-aware): claims the session (newest wins), resumes any mode incl. mid-battle requests and pending prompts, and shuts down superseded sessions cleanly (L)
 - [ ] Travel action (conditions, locked explanations, enter triggers, visited tracking) (M)
 - [ ] Transport action (Fly menu): destinations grouped by area, fares shown, unaffordable options locked with the reason (S)
