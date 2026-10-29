@@ -32,9 +32,9 @@ Bodies use **Summary**, **Acceptance criteria**, and **Refs** (concept docs). Ac
 ## Creating issues
 1. The owner reviews and edits these files (this PR).
 2. Org setup: transfer repos, install the Claude GitHub App on the org, create the project.
-3. The owner runs `scripts/github/bootstrap.sh` (labels, milestones) *(to be added)*.
+3. The owner runs [`scripts/github/bootstrap.sh`](../../scripts/github/bootstrap.sh): `labels`, `milestones`, and `project`.
 4. Claude creates epics, then child issues (types, milestones, labels, sub-issue links, blockers) and fills in the mapping below.
-5. The owner runs the bootstrap script's "add to project" step and sets the Priority/Size/Status fields.
+5. The owner runs `bootstrap.sh add-issues` with the created issue numbers, then sets the Priority/Size/Status fields (or asks Claude to list them per issue).
 
 ## Mapping (draft ID → GitHub issue)
 | Draft ID | Issue |
