@@ -242,7 +242,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Party view/reorder/summary (M)
 - [ ] PC boxes: deposit/withdraw/release, overflow, access per `RegionRules.systems.storage.access` (M)
 - [ ] Bag: pockets, use/give/take outside battle (M)
-- [ ] Shops buy/sell, including entries priced in a numeric progression (coins) and per-character purchase limits ("Sold out"); money never below 0 (M)
+- [ ] Shops buy/sell, including entries priced in a numeric progression (coins); money never below 0 (S)
 - [ ] Heal points + respawn (S)
 - [ ] Profile: badge case, milestones, visited, dex (M)
 - [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, wild rollups, milestones, evolutions, scenes) + webapp log view; ephemeral opponent Pokémon from recipes (M)
