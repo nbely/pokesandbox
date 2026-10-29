@@ -185,6 +185,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M2: Arena Release 🚀
 
+> **External dependency: FlowCord multi-user sessions.** FlowCord menus are currently single-person actionable. The Arena needs multi-person menu interactions, built in the FlowCord repo (released as a new `@flowcord/core` version) **before** the Arena's challenge flow and battle UI. Track it as an issue in the FlowCord repo, with a cross-linked tracking issue here (see [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md#external-dependencies)). It can be built in parallel with M0a/M1, but it's on the Arena's critical path.
+
 **Epic: Launch Readiness: Hosting & Operations** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md); drafts in [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md))
 Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
@@ -193,7 +195,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
 
-- [ ] FlowCord multi-user flows: challenge/accept/decline (L)
+- [ ] Challenge/accept/decline flow on FlowCord multi-user sessions (M). **Blocked by the external FlowCord dependency below.**
 - [ ] `/arena` hub: teams, challenge member, battle AI (M)
 - [ ] Public battle message + spectating (M)
 - [ ] PvAI: "AI picks team" / "random by tier" (M)

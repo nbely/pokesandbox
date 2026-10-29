@@ -6,6 +6,29 @@ Only the **launch-readiness** epic is drafted so far. The rest of M2 (multi-user
 
 Refs: concept [21](../architecture/concepts/21-hosting-and-environments.md)
 
+## External dependencies
+
+### M2-00 · Tracking: FlowCord multi-user sessions (external)
+`Type: Task` · `Parent: —` (M2 milestone) · `Priority: P0` · `Size: —` (work happens in the FlowCord repo) · `Labels: area:bot, blocked` · `Blocked by: FlowCord issue (to be created)` · `agent-ready: no` · `Owner: owner`
+
+**Summary:** FlowCord menus are single-person actionable today. The Arena needs multi-person menu interactions. The work is built and released in the FlowCord repo. This issue tracks it and blocks the Arena's challenge flow and battle UI issues (drafted with M1).
+
+**Capabilities PokeSandbox needs from FlowCord** (draft spec for the FlowCord issue):
+1. **Multi-participant sessions:** an initiator plus participants added by invitation (user select) or by joining (button), optionally time-limited sign-up.
+2. **Per-participant permissions:** components declare who may act (a specific participant, any participant, initiator only). Others get a polite ephemeral "not your turn/menu".
+3. **Shared public message + private sub-flows:** one shared message (e.g. the battle state in a public channel, viewable by spectators) plus **per-participant ephemeral sub-flows** (e.g. each player's move/switch prompt).
+4. **Externally driven updates:** the app can push a refresh into a live session from outside a user interaction (e.g. BattleService finished a turn, the opponent chose, a timer expired).
+5. **Session state holds IDs, not live objects:** e.g. `battleId`, with the battle owned by `libs/battle` (no cloning or serializing of streams in session state).
+6. **Concurrency:** interactions within one session are serialized, so simultaneous presses by two participants can't race.
+7. **Timeouts per participant and per session,** with a hook so the app can apply defaults (the Arena's 90s turn timer).
+
+**Fallback if FlowCord slips:** the challenge prompt and per-turn choice prompts can be built with plain discord.js interaction handlers on top of BattleService (same engine/battle ports), then migrated to FlowCord sessions later. It's less consistent UX code, but it unblocks the Arena.
+
+**Acceptance criteria (for closing this tracking issue)**
+- A released `@flowcord/core` version provides capabilities 1–7 (or an agreed subset), with docs/examples.
+- PokeSandbox is upgraded to that version with no regressions in the existing admin menus.
+
+
 ---
 
 ## E-M2-1 · Launch Readiness: Hosting & Operations
