@@ -183,8 +183,9 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
 - [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
 - [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
-- [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
+- [ ] GitHub Actions deploy: version tag → prod; `master` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
+- [ ] Dependency security: clear Dependabot alerts (critical/high fixed or justified), enable Dependabot updates, CI audit gate (M2-14) (M)
 
 - [ ] Challenge/accept/decline: direct + open challenges, atomic claim, 5-min expiry (M2-09) (M)
 - [ ] Arena interaction router with stable custom IDs (M2-08) + private choice prompts (M2-11) (M)
@@ -262,5 +263,6 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Headless engine playthrough test to badge 2 (M)
 - [ ] Human playtest Pallet → Champion; balance pass (L)
 - [ ] Load test: N concurrent players + battles on target hosting (M)
+- [ ] Dependency security re-check: no open critical/high Dependabot alerts before release (S)
 - [ ] Admin guide + player guide + template walkthrough (M)
 - [ ] Public release + discovery listing (S)

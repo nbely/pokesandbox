@@ -38,6 +38,7 @@ case "$cmd" in
     label "$repo" "blocked"             "b60205" "Blocked by another issue or external factor"
     label "$repo" "breaking-change"     "e99695" "Changes stored data or public contracts"
     label "$repo" "agent-ready"         "0e8a16" "Clear acceptance criteria; eligible for the scheduled agent"
+    label "$repo" "dependencies"        "0366d6" "Dependency upgrades and security updates"
     ;;
 
   milestones)
