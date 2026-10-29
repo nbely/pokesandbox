@@ -7,7 +7,7 @@ Issue drafts reviewed here before they're created in GitHub. Once created, the i
 | [`m0a-platform-arena-foundations.md`](m0a-platform-arena-foundations.md) | M0a: Platform & Arena Foundations |
 | [`m0b-content-foundations.md`](m0b-content-foundations.md) | M0b: Content Foundations |
 | [`m2-launch-readiness.md`](m2-launch-readiness.md) | M2: Arena Release (FlowCord tracking, launch readiness, and the Arena multiplayer surface, so far) |
-| [`flowcord-requests.md`](flowcord-requests.md) | Not a milestone: draft FlowCord issues/comments for the owner to post (linked from M2-00) |
+| [`flowcord-requests.md`](flowcord-requests.md) | Not a milestone: FlowCord issues filed for PokeSandbox (flowcord#105–#107) and unposted comment drafts (linked from M2-00) |
 | *(M1, the rest of M2, and M3–M6 drafted once M0a is underway)* | |
 
 ## Format

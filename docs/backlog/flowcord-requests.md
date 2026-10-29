@@ -1,14 +1,14 @@
-# FlowCord requests from PokeSandbox (drafts, not posted)
+# FlowCord requests from PokeSandbox
 
-Draft issues and comments for [flowcord-dev/flowcord](https://github.com/flowcord-dev/flowcord), written while verifying the Arena boundary ([M2-00](m2-launch-readiness.md#m2-00--tracking-flowcord-and-the-arena-external-not-blocking), [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34)). **Nothing here has been posted.** The owner decides what to post, then records the link in the table.
+FlowCord issues and comment drafts for [flowcord-dev/flowcord](https://github.com/flowcord-dev/flowcord), written while verifying the Arena boundary ([M2-00](m2-launch-readiness.md#m2-00--tracking-flowcord-and-the-arena-external-not-blocking), [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-recommended-oct-2026-pending-sign-off-q34)). **FR-1–FR-3 are filed** (flowcord#105–#107, milestone `v0.1.0-alpha.3`, 2026-10-29). **The comment drafts (C-55, C-57, C-60, C-61) are not posted.** The owner decides whether to post them, then records the link in the table.
 
-Bodies follow FlowCord's issue forms (feature: *What problem / Proposed solution / Exit criteria*; bug: *What happened / Expected / Reproduce / Version / Anything else*). Code references are to `develop` @ `8cae106` (v0.1.0-alpha.2).
+Code references are to `develop` @ `8cae106` (v0.1.0-alpha.2).
 
-| Draft | Kind | Target | For PokeSandbox | Posted |
+| Item | Kind | Milestone | For PokeSandbox | Posted |
 |---|---|---|---|---|
-| FR-1 | Feature (new) | Phase 3, non-breaking | Nice to have (M2-11) | — |
-| FR-2 | Feature (new) | Phase 3, non-breaking | Nice to have (M2-11, `/play`) | — |
-| FR-3 | Bug (new) | Next patch | Matters for `/play` (ephemeral default) | — |
+| FR-1 | Feature (`feature: proposed`) | `v0.1.0-alpha.3` | Nice to have (M2-11) | [#105](https://github.com/flowcord-dev/flowcord/issues/105) |
+| FR-2 | Feature (`feature: proposed`) | `v0.1.0-alpha.3` | Nice to have (M2-11, `/play`) | [#106](https://github.com/flowcord-dev/flowcord/issues/106) |
+| FR-3 | Bug (`bug: unconfirmed`) | `v0.1.0-alpha.3` | Matters for `/play` (ephemeral default) | [#107](https://github.com/flowcord-dev/flowcord/issues/107) |
 | C-55 | Comment on #55 | — | Context + Gap C | — |
 | C-57 | Comment on #57 | — | Gap B + rejection reply | — |
 | C-60 | Comment on #60 | — | Design notes | — |
@@ -16,54 +16,21 @@ Bodies follow FlowCord's issue forms (feature: *What problem / Proposed solution
 
 ---
 
-## FR-1 · Start a session from a component interaction (button/select)
+## Filed issues (source of truth)
 
-### What problem does this solve?
-Sessions can only start from a slash command: `FlowCord.handleInteraction`, `MenuEngine.createSession`, `MenuSession`, and `DiscordAdapter` all take a `ChatInputCommandInteraction`. A common multi-user pattern is a public message with a button like "Make your move" or "Join" that opens a private, per-user menu. Discord only allows an ephemeral message in reply to that user's own interaction, so the press itself has to be the session's entry point. #69 widens entry to context-menu commands but not to components.
+FR-1–FR-3 were filed on 2026-10-29 with the fix designs from the boundary review. The issues are the source of truth. The drafts that used to be here were removed to avoid drift.
 
-### Proposed solution
-Accept `ButtonInteraction` / `AnySelectMenuInteraction` as an entry interaction (an overload or `handleComponentEntry(interaction, menuName, options?, interactionOptions?)`). The interaction has to be a non-FlowCord custom ID, or one the app has claimed. `DiscordAdapter` already uses only `deferReply`/`editReply`/`followUp` on the entry interaction, and component interactions support all three, so most of this is type widening (`_commandInteraction` → a `RepliableEntryInteraction` union) plus tests. `ctx.interaction` is already typed `Interaction`. Expose the triggering custom ID and message on `ctx`, as #69 proposes for context-menu targets.
-
-**Exit criteria:** a button press on a non-session message opens an ephemeral FlowCord session for the presser. Covered in `DiscordAdapter` and `SimulatedAdapter` tests. Roadmap: Phase 3 (independent of Cases 1–8).
-
-## FR-2 · App-driven refresh and end for active sessions
-
-### What problem does this solve?
-A session re-renders only inside its own loop, after an interaction (`processMenus()` → `renderCurrentMenu()`, which is private). App code that learns about a change outside an interaction has no way to update an open menu. Examples: a background job finishing, a game turn resolving, a timer firing, a DB change. `getSession(id).hardRefresh()` only sets a flag for the next loop pass, and the loop is parked in `awaitMessageComponent`. Ending a session from outside isn't possible either (#49 proposes `ctx.end(reason)`, which needs a `ctx`). #57's shared menus fed by external state need the same primitive.
-
-### Proposed solution
-- `session.refresh({ hard?: boolean })`: re-run the render cycle for the current menu (re-running the factory first if `hard`) and edit the active message. Safe to call while the loop is waiting for input, because the collector is bound to the message and survives an edit. Serialized with in-flight actions by a per-session mutex, so it never interleaves with a dispatch.
-- `session.end(reason)`: the #49 terminal path, callable from app code.
-- Reachable via `flowcord.getSession(id)`. Apps store the session ID (or get it from a `ctx.session.id` they recorded) and call it from their event handlers.
-
-**Exit criteria:** an external call re-renders an idle session and ends a session, with no interaction. A refresh during an action runs after the action. Roadmap: Phase 3 (foundation for #57).
-
-## FR-3 · Ephemeral sessions likely can't re-render 15 minutes after the slash command
-
-### What happened?
-Found by reading the code; **not yet reproduced against Discord.** `DiscordAdapter._editEphemeralMessage()` always edits with the **entry** interaction's token: `this._commandInteraction.editReply(...)`, or a webhook PATCH with `this._commandInteraction.token` for follow-ups. `MenuSession.handleComponentInteraction()` calls `deferUpdate()` on every non-modal component interaction, so `sendPayload()` never takes the `_lastComponentInteraction.update()` path after an action. Every later ephemeral render goes through the entry token. Discord interaction tokens expire after 15 minutes, so an ephemeral session that's still in use after 15 minutes should fail to render, even though the user just pressed a button.
-
-### What did you expect?
-Renders after a component interaction use that interaction's token (`interaction.editReply()` after `deferUpdate()` edits the message the component is on), so a session stays usable as long as the user keeps interacting.
-
-### How can we reproduce it?
-An ephemeral menu with a button that increments a counter. Press it every few minutes. After 15 minutes from the slash command, the next press should fail to update the message (expect a `50027 Invalid Webhook Token` from the REST call).
-
-### FlowCord version
-0.1.0-alpha.2
-
-### Anything else?
-Non-ephemeral messages are unaffected (`message.edit` uses the bot token). Suggested fix: track the latest repliable interaction in `DiscordAdapter` (set in `awaitComponent`/`awaitModal`) and use it for `editReply` and follow-up edits, falling back to the entry interaction. `sendTerminalPayload()`'s ephemeral path has the same issue.
-
----
+- **FR-1 → [flowcord#105](https://github.com/flowcord-dev/flowcord/issues/105)** "Start a session from a component interaction (button/select)". Accept a button or select press as a session's entry point, via one entry-interaction type that #69 and #65 can extend.
+- **FR-2 → [flowcord#106](https://github.com/flowcord-dev/flowcord/issues/106)** "App-driven session refresh: redraw an open menu without an interaction". `session.refresh({ hard? })` wakes the parked loop through a cancellable wait (the first half of #51). It adds a render revision in custom IDs against stale presses and doesn't extend the inactivity timeout. `end()` is either deferred to #49 or shipped minimally. Overlaps #32 / PR #104.
+- **FR-3 → [flowcord#107](https://github.com/flowcord-dev/flowcord/issues/107)** "Ephemeral sessions likely can't re-render 15 minutes after the slash command". Use the freshest interaction token for ephemeral edits and follow-ups, and end the session cleanly when none is valid. Labelled `bug: unconfirmed`, to be reproduced before fixing.
 
 ## C-55 · Comment on #55 (epic)
 
 > Context from PokeSandbox, which is a likely first consumer. After reading the code and #56–#62, we're **not** putting the Arena's battle rounds on `diverge()`. Our battle service owns rounds and timers, because turns resolve outside interactions (AI workers, timers, restart recovery), and the timeout policy is a persisted game rule. Our shared surfaces (public battle message, challenges) will be plain discord.js handlers behind a port, so we can move onto FlowCord multi-user later.
 >
 > What would make that later move possible, roughly in order:
-> 1. Start a session from a component interaction (FR-1 link).
-> 2. App-driven `session.refresh()` / `session.end()` (FR-2 link).
+> 1. Start a session from a component interaction (#105).
+> 2. App-driven `session.refresh()` (#106).
 > 3. **Session adoption after restart:** start a session bound to an existing channel message (`{ channelId, messageId }`, no interaction) that re-renders immediately with fresh component IDs. Today IDs embed a per-process session ID, so a restarted bot can't take over its own shared messages. This depends on #56's channel-message primitives, and #72's serializable snapshot could be reused for it. Restart recovery is out of FlowCord's stated scope (session-persistence doc), so this could be documented as an app responsibility instead. Either answer is fine, but it would help to say which.
 >
 > Not needed by us: per-participant dropout policies for battles, or `ctx.broadcast`.
