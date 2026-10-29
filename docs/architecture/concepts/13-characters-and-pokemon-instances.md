@@ -86,7 +86,7 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 ## Decisions (Oct 2026, Q22)
 - **Option C:** all owned Pokémon live in one `PokemonInstance` collection with an owner and a `storage` location. Battle results, trades, and swaps use transactions (Mongo replica set).
 - **Party order** is an ordered list of ≤ 6 instance IDs on Character (`partyOrder`). Box contents come from each instance's `storage` field.
-- **Released Pokémon** are soft-deleted (`releasedAt`), kept for history and anti-abuse audits, then purged after **30 days**.
+- **Released Pokémon** are soft-deleted (`releasedAt`), kept for history and anti-abuse audits, then purged after **30 days**. The same applies to a Pokémon sent away in an in-game NPC trade (`reason: 'npcTrade'`). The permanent record is the adventure log: a `release` entry, and Pokémon stored as snapshots in every entry, so nothing in the log breaks after the purge ([22](22-adventure-log-and-narration.md)).
 - **Original trainer** is recorded from day one (character ID, name, trainer ID). It's needed for Gen 1's traded-Pokémon EXP bonus and obedience once trading exists.
 
 ## Trading (decided Oct 2026, MVP, Q35)

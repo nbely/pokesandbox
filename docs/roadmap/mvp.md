@@ -248,7 +248,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Profile: badge case, milestones, visited, dex (M)
 - [ ] **Trading** (Q35): `Trade` record + shared trade message + private Pokémon pickers (reusing the M2 Arena surface patterns), confirm-reset on offer change, expiry (M)
 - [ ] Two-character engine action: ordered leases, re-checks, owner swap in one transaction, both revisions and Pokédexes updated; `trading.access` precondition; per-character rate limit (M)
-- [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, trades, wild rollups, milestones, evolutions, scenes) + webapp log view; ephemeral opponent Pokémon from recipes (M)
+- [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, trades, releases, wild rollups, milestones, evolutions, scenes; Pokémon stored as snapshots so entries survive the 30-day release purge) + webapp log view; ephemeral opponent Pokémon from recipes (M)
 
 ## M6: Kanto Classic & MVP Release 🚀
 

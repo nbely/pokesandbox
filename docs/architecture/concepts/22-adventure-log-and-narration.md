@@ -22,12 +22,13 @@ PokeSandbox grew out of forum text-RPGs. Players narrated their adventures in th
 AdventureLogEntry {
   _id; characterId; regionId; at: Date; releaseVersion;
   kind: 'trainerBattle' | 'wildBattle' | 'catch' | 'travel' | 'scene' | 'milestone' | 'evolution' | 'moveLearned'
-      | 'gift' | 'trade' | 'pvp' | 'whiteout' | 'rollup';
+      | 'gift' | 'trade' | 'release' | 'pvp' | 'whiteout' | 'rollup';
   location: ContentKey;
   summary: {                                   // version-independent, display-ready data
     opponent?: { trainerKey?; name; class?; party: { species; level }[] };
     outcome?: 'win' | 'loss' | 'caught' | 'ran' | 'draw';
-    participants?: PokemonInstanceId[];        // the player's Pokémon involved
+    participants?: PokemonSnapshot[];          // the player's Pokémon involved (snapshots, not bare IDs)
+    pokemon?: PokemonSnapshot[];               // release/trade/gift/catch/evolution: the Pokémon the entry is about
     turns?: TurnDigest[];                      // trainer battles: per-turn digest (see below)
     highlights?: string[];                     // generated: "Pikachu landed a critical hit", "Charmander grew to Lv. 16"
     rewards?: { money?; items?; milestones? };
@@ -36,8 +37,13 @@ AdventureLogEntry {
   narrationCount: number;
 }
 
+PokemonSnapshot { instanceId?: PokemonInstanceId; species: SpeciesId; nickname?: string; level: number; form?: string; shiny?: boolean }
+// Display data captured when the entry is written. instanceId is only a link: it may point at nothing once a released Pokémon is purged.
+
 TurnDigest { turn: number; actions: { side; pokemon; action: 'move' | 'switch' | 'item' | 'catch' | 'run'; detail; result: { damagePct?; ko?; crit?; effectiveness?; status? } }[] }
 ```
+- **Entries never depend on live Pokémon data.** Every Pokémon an entry mentions is stored as a `PokemonSnapshot` taken at write time, so the log stays complete after a released Pokémon is purged (30 days, [13](13-characters-and-pokemon-instances.md#decisions-oct-2026-q22)) or after a trade moves it to another owner.
+- **Releases** get their own entry ("Released Pidgey (Lv. 12), caught on Route 1"). The Pokémon sent away in an in-game NPC trade appears in that `trade` entry.
 - **Trainer battles, PvP, catches, story scenes, milestones, evolutions:** one entry each. **Turn digests** (~100–300 bytes/turn) are kept for trainer battles, **catches** (the whole wild battle that ended in the catch), and other notable wild battles: scripted/static encounters (Snorlax, legendaries) and battles where the player's Pokémon fainted or the player whited out. That's enough to narrate turn by turn after the fact.
 - **Ordinary defeated wild Pokémon:** **rolled up** per visit ("Defeated 6 wild Pokémon on Route 1: Pidgey ×4, Rattata ×2") to keep volume sane. Catches always get their own entry.
 - Written by the engine from domain events, inside the same transaction as the state change, so the log never disagrees with the game.
@@ -73,7 +79,7 @@ The original forum flow (player narrates a move, moderator resolves it with a ca
 
 ## MVP scope
 - Ephemeral opponent Pokémon (recipes → battle-only; catch → PokemonInstance).
-- `AdventureLogEntry` written by the engine (trainer battles with turn digests, catches, wild rollups, milestones, evolutions, scenes).
+- `AdventureLogEntry` written by the engine (trainer battles with turn digests, catches, trades, releases, wild rollups, milestones, evolutions, scenes), with Pokémon stored as snapshots.
 - Compressed battle records for live recovery + a 7-day support window (Arena replays per policy).
 - A basic adventure log view on the webapp character page.
 - Later: Narration model + UI (webapp first, then thread capture), AI narration drafts, narrated battle mode.
