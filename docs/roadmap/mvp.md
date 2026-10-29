@@ -99,6 +99,8 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M0a: Platform & Arena Foundations
 
+> Issue-level drafts: [`../backlog/m0a-platform-arena-foundations.md`](../backlog/m0a-platform-arena-foundations.md)
+
 **Epic: Org & Delivery Setup**
 - [ ] Move `pokesandbox` and `pokemon-showdown` (→ `pokesandbox-showdown`) to the org; update README links, CODEOWNERS, agents.md (S)
 - [ ] CI: lint + typecheck + unit tests on PR (M)
@@ -109,7 +111,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Choose and set up a managed app host (or the offered family host): always-on bot service + webapp, env secrets, custom domain/TLS (M)
 - [ ] Atlas: prod database on the free cluster, separate staging/dev databases, IP allowlist, least-privilege users (S)
 - [ ] Nightly `mongodump` backups to object storage with retention + a tested restore (M)
-- [ ] Data retention: compressed battle records with a retention window, debug events out of Mongo, compressed + pruned region releases (M)
+- [ ] Structured logging; debug events out of Mongo (S)
 - [ ] GitHub Actions deploy: version tag → prod; `main` → staging (staging added before the Arena goes public) (M)
 - [ ] Error monitoring (Sentry) + uptime check (S)
 
@@ -129,12 +131,14 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M0b: Content Foundations
 
+> Issue-level drafts: [`../backlog/m0b-content-foundations.md`](../backlog/m0b-content-foundations.md)
+
 **Epic: Conditions & Effects** (Q17)
 - [ ] Condition tree (`all/any/not`) + fact/operator registry (evaluate/explain/validate/references) + scoped evaluation context (M)
 - [ ] MVP facts: `milestone.has`, `milestone.count`, `choice.value`, `flag`, `bag.count`, `visited` (incl. `$target`), `party.knowsMove`, `dex.caughtCount`, `progression.value`, `location.cleared`, `location.visit.*`, `location.trainersDefeated` (L)
 - [ ] Gate envelope (`presentation`, `latch`, `cost`) + `checkGate` + `gateBlocked` event (M)
 - [ ] Effect union + registry + atomic executor with idempotency (L)
-- [ ] MVP effects: currency, item, givePokemon (PC + swap offer), progression, milestone (grant/revoke), choice, flag, heal, setRespawn, random (L)
+- [ ] MVP effects: currency, item, progression, milestone (grant/revoke), choice, flag, setRespawn, random (L). `givePokemon` (PC + swap offer) and `heal` land in M5 with `PokemonInstance`.
 
 **Epic: Model Cleanup & Identity** (Q19, Q21)
 - [ ] ContentKey type + generator. Add `key` to Location with `{ regionId, key }` unique index (S)
@@ -176,7 +180,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 **Epic: BattleService**
 - [ ] BattleService start/choose/events API, in-process (L)
-- [ ] Battle persistence (seed + input log) and recovery on boot (M)
+- [ ] Battle persistence (seed + input log), recovery on boot, compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
 - [ ] Protocol → GameEvent translation (M)
 - [ ] Discord battle renderer (turn embed, HP bars, ephemeral choice prompts) (L)
 - [ ] Turn timers and timeout policy (M)

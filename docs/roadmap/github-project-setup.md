@@ -42,10 +42,10 @@ Create M0a, M0b, and M1–M6 exactly as in [`mvp.md`](mvp.md). Phase 3/4 items g
 - "Decisions" (type = Decision, open first).
 
 ## Seeding order
-1. Create **Decision** issues for Q15–Q22 in [`../architecture/open-questions.md`](../architecture/open-questions.md), each linking its concept doc. Close each with the decision.
-2. Create **Epics** from `mvp.md` (one per bold "Epic:" heading, plus one per M2–M6 milestone).
-3. Create child issues from the checklists. Use the existing issue templates (`data_model_request.yml` fits the model issues; `bot_feature_request.yml` fits menu work).
-4. Tag `good first issue` on small, well-specified items (indexes, labels, predicates once the registry exists, item seed data, templates).
+1. Review the issue drafts in [`../backlog/`](../backlog/README.md). No Decision issues: the decided questions live in [`open-questions.md`](../architecture/open-questions.md) and the concept docs, and the issues themselves carry the outcomes.
+2. Run the bootstrap script for labels and milestones.
+3. Create the epics, then the child issues (types, milestones, labels, sub-issue links, "blocked by" dependencies), and record the mapping in the backlog README.
+4. Add everything to the project and set Priority, Size, and Status.
 
 ## Team & workflow (decided Oct 2026, Q29)
 - **Team:** owner (senior), possibly a second senior (commitment TBD), 2 junior-to-mid devs, plus AI agents.
@@ -58,5 +58,5 @@ Create M0a, M0b, and M1–M6 exactly as in [`mvp.md`](mvp.md). Phase 3/4 items g
   - Agent PRs follow `agents.md` + `copilot-instructions.md`, updated with the architecture rules from these docs. They go through the same owner review.
 
 ## Issue template additions (suggested)
-- `decision.yml`: Context, Options (with pros/cons), Recommendation, Decision, Consequences. Mirrors the concept-doc format so ADRs stay lightweight.
+- `decision.yml` (for *future* decisions only): Context, Options (with pros/cons), Recommendation, Decision, Consequences. Mirrors the concept-doc format so ADRs stay lightweight.
 - `spike.yml`: Question, Time box, Findings, Recommendation, Follow-up issues.
