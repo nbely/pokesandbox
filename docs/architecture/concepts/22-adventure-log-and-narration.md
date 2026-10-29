@@ -1,6 +1,6 @@
 # 22: Adventure Log & Narration
 
-> **TL;DR (proposed Oct 2026):** Make the **adventure log a first-class, permanent record** of a character's journey, not a disposable activity feed. The engine writes compact log entries (battles with a turn-by-turn digest, catches, travel, story scenes, milestones). **Narration** (player prose, moderator or GM posts, later AI) attaches to entries, either during play or after the fact. Opponent Pokémon are **ephemeral**: they're created from authored recipes for the battle and discarded unless caught. Only player-owned Pokémon persist. This is the project's roots in forum text-RPGs, built into the data model from day one.
+> **TL;DR (decided Oct 2026):** Make the **adventure log a first-class, permanent record** of a character's journey, not a disposable activity feed. The engine writes compact log entries (battles with a turn-by-turn digest, catches, travel, story scenes, milestones). **Narration** (player prose, moderator or GM posts, later AI) attaches to entries, either during play or after the fact. Opponent Pokémon are **ephemeral**: they're created from authored recipes for the battle and discarded unless caught. Only player-owned Pokémon persist. This is the project's roots in forum text-RPGs, built into the data model from day one.
 
 **MVP impact:** Medium (the log is written from MVP; the narration UI comes later) · **Cost to change later:** High (history that wasn't recorded can't be recovered)
 

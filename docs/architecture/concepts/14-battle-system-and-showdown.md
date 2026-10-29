@@ -57,7 +57,7 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 | Option | Pros | Cons |
 |---|---|---|
 | A. Keep the current fork as is | No work now | 3 years stale and growing. Base-data edits make every rebase painful. Custom fakemon block upstream fixes. |
-| **B. Rebase onto upstream + thin patch set + content as mod** (recommended) | Easy future rebases (patches are small and localized). Custom species live in `data/mods/…`. You can track upstream monthly. | One-time rebase effort. Need to define the custom choice hooks well. |
+| **B. Rebase onto upstream + thin patch set + injected content** (chosen) | Easy future rebases (patches are small and localized). Custom content is injected into isolated dexes at battle start, never written into base data. You can track upstream monthly. | One-time rebase effort. Need to define the custom choice hooks well. |
 | C. Use the upstream npm package + `patch-package` | No fork repo at all | Patches against compiled `dist/` are brittle. Mods inside node_modules are awkward. |
 | D. Upstream package, no patches (construct `Battle` directly and mutate state; implement bag/catch/run by intercepting choices and calling sim internals) | Zero fork | Leans on private internals, so upgrades break silently. Bag/catch need turn consumption, which is hard without a sim hook. |
 
@@ -68,8 +68,7 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 4. **Isolated custom-data dexes:** evolve the `dynamic-dex-data` POC into per-content-set isolated `ModdedDex` instances (cached by content hash) used by both `Battle` and `TeamValidator`. This is how server library content, overrides, and Arena formats reach Showdown ([12](12-content-catalog-species-moves-items.md)).
 5. **Clean-up:**
    - Remove the debug code.
-   - Move the 10 hardcoded custom moves out of base data (into injected custom data, i.e. a library), or drop them. Then restore the 3 commented-out upstream tests.
-   - Keep `secondaryChanceCallback` only if those moves stay.
+   - Move the 10 hardcoded custom moves to a preservation branch and remove them from `master`, then restore the 3 commented-out upstream tests (see Decisions).
 
 ## Decisions (Oct 2026)
 - **Strategy:** rebase onto current upstream and apply the revised patch set above. **Fallback:** if the rebase is painful, start fresh from upstream `master` and re-apply only the patches we keep, as new, clean commits. Either way, the end state is upstream + a small, named patch set.
@@ -191,7 +190,7 @@ ArenaFormat {
 
 - **Built-in formats** (e.g. National Dex Lv50, a Gen 1 151 format) ship by default, so the Arena works on a fresh server with zero setup.
 - Admins can create server formats that mix canon and **server library** content (see [12](12-content-catalog-species-moves-items.md#server-content-library-decided-oct-2026)). `fromRegionDex` is just a convenience source. A format never depends on a region being deployed.
-- Compiles to its own Showdown mod + custom format (canon + selected library entries + overrides), so `TeamValidator` enforces it. See [12 § Species identity](12-content-catalog-species-moves-items.md#species-identity-canon-custom-species-variants-overrides--sharing-proposed-oct-2026).
+- Compiles to a custom format whose data (canon + selected library entries + overrides) is injected into its own isolated dex, so `TeamValidator` enforces it. See [12 § Species identity](12-content-catalog-species-moves-items.md#species-identity-canon-custom-species-variants-overrides--sharing-decided-oct-2026-q19).
 - Pausing a region has **no effect** on Arena battles. (Only Phase 3 in-game PvP with *adventure parties* is region-bound.)
 
 ## AI trainers
@@ -214,8 +213,8 @@ On end, BattleService emits `battleEnded { result, sides[].pokemon[].{hp,status,
 4. On loss with `canLose: false`: **whiteout** (lose money per rule, heal, move to respawn).
 
 ## Open questions
-- **Mechanics generation:** RBY content with *modern* mechanics (Fairy type, physical/special split, Gen 9 moves), or authentic Gen 1 mechanics (Showdown has a `gen1` mod)? Per-region rule? (This is the biggest battle-related decision.)
+- ~~Mechanics generation?~~ **Decided (Q1):** authentic Gen 1 for MVP, a per-region `RegionRules.battle.mechanicsGen` (see [18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
 - ~~Mid-battle vs post-battle level-ups?~~ **Decided: mid-battle (authentic).** Stats, max HP (current HP raised by the gain), and new-move prompts apply immediately during the battle. Evolution is evaluated post-battle by the engine, never in the sim.
 - ~~Is the Arena per-region or server-wide?~~ Decided: server-scoped formats (see Arena formats above); Arena works before any region exists.
-- Level normalization for Arena (all level 50/100?) and **clauses** (species, sleep, OHKO)?
-- Who owns the fork after the org move? Same org, renamed `pokesandbox-showdown`?
+- ~~Arena level normalization and clauses?~~ **Decided (Q11):** built-in formats are flat Lv50 with Showdown standard clauses; server formats configure their own.
+- ~~Fork ownership?~~ **Decided (Q20):** same org, renamed `pokesandbox-showdown`.

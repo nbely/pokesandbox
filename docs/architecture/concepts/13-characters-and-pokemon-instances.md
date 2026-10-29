@@ -94,6 +94,5 @@ Character.visibility: 'public' | 'private' | 'inherit'                  // 'inhe
 - Box UI, deposit/withdraw/release.
 
 ## Open questions
-- Is **1 character per region** firm for MVP? `Region.charactersPerPlayer` suggests N. (Recommendation: enforce 1 now, keep the field.)
-- Can a user **delete/restart** a character? Does the old one get archived?
+- ~~1 character per region? Restart?~~ **Decided (Q27):** 1 per region enforced in MVP (`charactersPerPlayer` kept for later). Restart archives the old character (soft delete) with a 24h cooldown. Admins can reset a player's character.
 - Should the arena allow using **adventure Pokémon** later (Full roadmap says "in-game PvP" with adventure parties)? With option C that's a query, not a migration.

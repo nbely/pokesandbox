@@ -90,8 +90,8 @@ Why it's a poor fit here:
 
 ## Open questions
 - ~~Do you foresee many simultaneous real-time viewers in a webapp?~~ Answered: no. Live PvP and spectating stay in Discord, and a webapp-first move is ~1–2% likely.
-- Hosting preference: managed (Atlas / Neon) or self-hosted on a VM? It affects the backup story more than the engine choice.
-- Comfort with SQL vs document modeling for contributors joining after the org move?
+- ~~Hosting preference?~~ **Decided (Q30):** managed Atlas (Free → Flex) on a managed app host. See [21](21-hosting-and-environments.md).
+- ~~SQL vs document modeling?~~ **Decided (Q33):** stay on MongoDB. Managed Postgres costs about the same at this size, so cost doesn't reopen it.
 
 ## Sources
 - [SpacetimeDB GitHub (license, module languages)](https://github.com/clockworklabs/SpacetimeDB)

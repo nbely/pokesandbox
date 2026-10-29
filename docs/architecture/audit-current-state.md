@@ -63,7 +63,7 @@ No player-facing commands exist yet. Automated tests are e2e scaffolds only, wit
 | 🟠 | **Content is referenced by ObjectId** (`speciesId`, `itemId`, `toLocationId`). | `wildTable.ts`, `requirement.ts` | ObjectIds aren't portable. Region templates, import/export, cloning, and re-seeding all need ID remapping. Showdown keys everything by string ID (`bulbasaur`, `potion`). | [02](concepts/02-identity-and-references.md), [12](concepts/12-content-catalog-species-moves-items.md) |
 | 🟠 | **No referential integrity on delete.** Deleting a location leaves inbound `connections` dangling. Deleting a progression leaves requirements referencing its key. | `location.ts`, `progressionEdit.ts` | Silent soft-locks in shipped regions. | [16](concepts/16-authoring-validation-and-portability.md) |
 | 🟠 | **Placeholder fields bake in premature structure.** `quests.active/passive` arrays, `transportationTypes: string[]`, `shops[]`, `currencyType: string`, `trainerIds` on Location. | `region.model.ts`, `location.model.ts` | These encode decisions the roadmap has since moved past (e.g. quest type is a property of the quest). Remove them before they get data. | various |
-| 🟠 | `itemRequirement.itemId` refs an `Item` model that doesn't exist. | `requirement.ts` | The item catalog strategy is undecided. | [12](concepts/12-content-catalog-species-moves-items.md) |
+| 🟠 | `itemRequirement.itemId` refs an `Item` model that doesn't exist. | `requirement.ts` | No item catalog exists yet (now planned as `ItemDefinition` in the DB catalog). | [12](concepts/12-content-catalog-species-moves-items.md) |
 | 🟢 | Commands are registered per-guild under a hardcoded dev guild folder. | `interactions/guilds/1010726453974925402` | Fine for dev. A public bot needs global registration plus per-guild enablement. | [03](concepts/03-engine-boundary-and-game-loop.md) |
 | 🟢 | Zod-first models, DTO boundary, tRPC-only webapp, `PopulatedQuery` typing, and the cache-first helper pattern. | — | Solid conventions. Keep them. | — |
 
@@ -100,6 +100,6 @@ No player-facing commands exist yet. Automated tests are e2e scaffolds only, wit
 4. Use **string content keys** (Showdown IDs for canon content, opaque region-scoped keys for authored content) instead of cross-content ObjectIds.
 5. Create a **`libs/engine`** package: a pure domain layer (actions in, events out) that the bot and webapp both call.
 6. Pokémon instances get **their own collection**. Character stays a compact save-state document.
-7. Slim the Showdown fork to a **thin patch set + mod**, rebased on current upstream.
+7. Slim the Showdown fork to a **thin patch set**, rebased on current upstream, with custom content injected into isolated dexes.
 
 Each is detailed, with alternatives and pros/cons, in the concept docs.

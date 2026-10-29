@@ -7,7 +7,7 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 2. The **big alternates** below.
 3. [`open-questions.md`](open-questions.md): every architecture question and its recorded decision.
 
-> **Status (Oct 2026):** all 33 open questions are answered. Decisions are recorded in [`open-questions.md`](open-questions.md) and in each concept doc's "Decisions" section, and they supersede the original proposals where they differ.
+> **Status (Oct 2026):** Q1–Q33 are decided, and Q34 (the Arena multiplayer boundary) is awaiting sign-off. Decisions are recorded in [`open-questions.md`](open-questions.md) and in each concept doc's "Decisions" section, and they supersede the original proposals where they differ.
 
 ## The big alternates (vs. the current plan)
 
@@ -18,7 +18,7 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 3 | Requirements = AND-only buckets (`progressions`, `items`, `capabilities`) | **Condition tree** (`all/any/not`) + predicate registry (evaluate/explain/validate/references) | OR/NOT/choice/time/visited are everywhere in Pokémon gating. "Why is this locked" UX. Feeds the soft-lock validator. | [05](concepts/05-requirements.md) |
 | 4 | Logic inside Discord menu handlers | **`libs/engine`**: actions in, events out, per-character lock, persisted "mode" (overworld/script/battle) | Restart-safe, testable headless, shareable with the webapp/AI, no double-click dupes | [03](concepts/03-engine-boundary-and-game-loop.md) |
 | 5 | ObjectId cross-references for content (`speciesId`, `itemId`, `toLocationId`) and bidirectional arrays | **Showdown IDs** for canon content, **content keys** for authored content, one-directional ownership | Portability (templates, import/export), zero translation on the battle hot path, no drift | [02](concepts/02-identity-and-references.md) |
-| 6 | Fork with custom data in base files, 3 years stale, HP injection only | **Rebased fork + thin patch set** (state injection, external choice hook for bag/catch/run) + content as **mods**; BattleService with persistence/recovery and AI profiles | Showdown has no catching/running/bag. Upstream fixes keep flowing. Custom fakemon path proven early. | [14](concepts/14-battle-system-and-showdown.md) |
+| 6 | Fork with custom data in base files, 3 years stale, HP injection only | **Rebased fork + thin patch set** (state injection, external choice hook for bag/catch/run, caught/ran endings) + content injected into **isolated custom-data dexes**; BattleService with persistence/recovery and AI profiles | Showdown has no catching/running/bag. Upstream fixes keep flowing. Custom fakemon path proven early. | [14](concepts/14-battle-system-and-showdown.md) |
 | 7 | (Unbuilt) Character holding party/boxes | **PokemonInstance collection** with `storage` union, in Showdown set shape; TeamPresets for the Arena | Trading, GTS, breeding pools, and adventure PvP become queries, not migrations | [13](concepts/13-characters-and-pokemon-instances.md) |
 | 8 | Boolean progressions for every event | **Engine-managed flags** (trainer defeated, script done, item picked up) separate from curated progressions; add `choice` kind | Real games have thousands of flags. Admins shouldn't define each. | [04](concepts/04-progression-and-flags.md) |
 | 9 | `baseGeneration` + scattered defaults | **`RegionRules`** with presets (Classic Gen 1, Modern) + injected Clock/Rng | "Recreate RBY" and "modern game" become the same engine with different rules | [18](concepts/18-rules-time-and-randomness.md) |
@@ -51,4 +51,4 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 21 | [Hosting & Environments](concepts/21-hosting-and-environments.md) | High (M2 launch readiness) |
 | 22 | [Adventure Log & Narration](concepts/22-adventure-log-and-narration.md) | Medium (log from MVP; narration later) |
 
-Each concept doc follows the same outline: **TL;DR → current shape → gaps → options (pros/cons) → recommendation → MVP scope → open questions.** Follow-on sessions can take one concept at a time and turn it into a Decision issue plus model/schema specs.
+Each concept doc follows roughly the same outline: **TL;DR → current shape → gaps → options (pros/cons) → recommendation → decisions → MVP scope → open questions.** Struck-through open questions are answered, with a pointer to the Q-number. The remaining ones are smaller and can be settled while the related issue is worked.

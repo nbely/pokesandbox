@@ -103,5 +103,5 @@ Every authoring capability must be usable from Discord. The webapp builder is a 
 
 ## Open questions
 - Should **publish be blocked by errors only**, with warnings allowed? (Recommendation: yes.)
-- Is a **Kanto template** an official artifact you'll maintain (it doubles as the MVP acceptance test)?
-- Webapp builder: in MVP, or strictly post-MVP?
+- ~~Official Kanto template?~~ **Decided (Q25):** yes, see [Official templates](#official-templates-decided-oct-2026).
+- ~~Webapp builder in MVP?~~ **Decided (Q24):** targeted editors, see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026).

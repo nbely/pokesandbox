@@ -7,32 +7,11 @@
 ## Current shape
 `Region.baseGeneration` (code default `10`), `charactersPerPlayer`, `graphicSettings`, `currencyType`. "Mechanics" is a placeholder menu.
 
-## Proposed shape
-```ts
-RegionRules {
-  mechanicsGen: 1 | 2 | … | 9;             // Showdown format/mod (gen1 vs gen9); affects battle only
-  learnsetGen: number;                      // which learnsets/TM compat to use
-  dexScope?: 'regional' | 'national';       // what can exist/be traded in
-  exp: { formula: 'gen1-4' | 'gen5-scaled' | 'gen6+' ; expShare: 'item' | 'always-on' | 'off'; tradedBonus: boolean };
-  catch: { formula: 'gen1' | 'gen3-4' | 'gen5+' ; criticalCapture: boolean };
-  party: { size: 6; whenFull: 'toPc' | 'promptSwap' };   // default 'promptSwap' (Q9): PC first, then a non-blocking swap offer
-  boxes: { count: number; size: number };
-  whiteout: { moneyLoss: 'half' | 'badgeFormula' | 'none'; respawn: 'lastHeal' | 'start' };
-  levelCap?: { by: 'milestoneCount'; key: string; caps: number[] };   // Nuzlocke-style or modern-style obedience
-  obedience?: { traded: boolean; byMilestone?: … };
-  time: { mode: 'realTime' | 'accelerated' | 'fixed'; timezone: string; dayParts: { morning: [4, 10], … } };
-  nicknames: boolean; bagCapacity?: number; runFromWild: 'formula' | 'always';
-  battle: { defaultFormat: 'singles' | 'doubles'; setMode: boolean; clauses?: string[] };
-}
-```
-
-Rules are part of the release, so changing them is a publish. *(Superseded by the piecemeal design in "Decisions" below; the shape above is kept for history.)*
-
 ## Decisions (Oct 2026): piecemeal rules, Gen 1 first
 
 **Principle:** a region's rules are chosen **dimension by dimension**, each from any generation that implements it (e.g. Gen 1 catch formula + Gen 3 learnsets + Gen 6 type chart). **Only battle mechanics are holistic.** They're a single Showdown mechanics generation, because the simulator implements them as one coherent unit. Gimmicks (Mega Evolution, Z-Moves, Dynamax, Terastallization) are **separate toggles**, independent of the generation choice, and **not MVP**.
 
-**MVP:** every dimension defaults to **Gen 1 (Classic)**, and Gen 1 is the only implemented option. The model supports all dimensions and generations from day one. Other generations' implementations are follow-up work, added per dimension without schema changes.
+**MVP:** every dimension defaults to **Gen 1 (Classic)**, and Gen 1 is the only implemented option. The model supports all dimensions and generations from day one. Other generations' implementations are follow-up work, added per dimension without schema changes. Rules are part of the release, so changing them is a publish.
 
 ```ts
 RegionRules {
@@ -110,8 +89,8 @@ Each option declares its constraints (`requires`, `incompatibleWith`), and the v
 | **B. Rules object + presets** (recommended) | One place for game feel. Presets make onboarding fast. Unlocks "any Pokémon game". | Each formula needs 2–3 implementations (small, well-documented functions). |
 
 ## MVP scope
-- RegionRules with the "Modern" and "Classic Gen 1" presets (implement the formulas those need), a Clock, an Rng, and a Mechanics menu to select a preset and edit a few key toggles.
+- The piecemeal `RegionRules` model with Gen 1 implemented for every dimension and the "Classic Gen 1" preset, a Clock, an Rng, and a Mechanics menu to select a preset and edit the system toggles. Other generations and the "Modern" preset come after MVP.
 
 ## Open questions
-- For "Recreate Red/Blue/Yellow": **authentic Gen 1 mechanics** (no abilities, no held items, Special stat, 1/256 misses) or **RBY content on modern mechanics** (closer to Let's Go / FRLG)? This decides what MVP must implement.
+- ~~Authentic Gen 1 or RBY content on modern mechanics?~~ **Decided (Q1):** authentic Gen 1, see Decisions above.
 - Should rules be **lockable after publish** (to avoid mid-game formula changes) or freely editable?

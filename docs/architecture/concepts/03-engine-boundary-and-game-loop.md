@@ -199,6 +199,6 @@ Both call the same commands, so either can be the "complete" one without duplica
 - `libs/core` + `libs/authoring` with commands for the M3/M4 builder features. Existing admin menus migrate onto them.
 
 ## Open questions
-- Is adventure play **ephemeral (private)** or **in public channels/threads**? Can the server choose?
+- ~~Ephemeral or public adventure play?~~ **Decided (Q2):** server-configurable, ephemeral by default and the only mode in MVP (see [Where adventure play is shown](#where-adventure-play-is-shown-decided-oct-2026-q2)).
 - Can a character act from **multiple Discord clients at once** (phone and desktop)? (The lock handles it, but UX should show "session moved".)
 - Should `/play` be the *only* player command, or do you want shortcuts (`/bag`, `/party`) too?

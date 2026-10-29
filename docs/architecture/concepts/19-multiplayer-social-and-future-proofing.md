@@ -12,7 +12,7 @@
 | Server events, giveaways, plot NPC chance encounters | Server-scoped state, scheduled publishes, triggers with chance | `WorldState` per region (later), `chance` predicate, triggers ([07](07-scripts-triggers-and-events.md)) |
 | Community boss (shared HP pool) | HP injection mid-battle, server-scoped counter | Patch set's state-injection hook ([14](14-battle-system-and-showdown.md)) + WorldState |
 | Weather/terrain by location | Conditions on encounters, battle field state at start | Encounter conditions ([10](10-encounters.md)), battle start options in BattleService |
-| Custom fakemon/types/moves | Showdown mod compiler | New Logora → mod refactor as the spike ([12](12-content-catalog-species-moves-items.md)) |
+| Custom fakemon/types/moves | Custom data reaching Showdown without forking base files | Isolated custom-data dexes (fork patch 4), built in M1 for Gen 1 data and Arena formats ([12](12-content-catalog-species-moves-items.md), [14](14-battle-system-and-showdown.md)) |
 | Staff ops (grant items/Pokémon/money) | Audited state mutations | "Staff applies effects to character" = Effect executor + audit log ([06](06-effects.md)) |
 | Webapp character sheet, battle/RP history, activity log | Event history | Permanent **adventure log** with turn digests ([22](22-adventure-log-and-narration.md)) |
 | Webapp as play surface | Client-agnostic rules | `libs/engine` ([03](03-engine-boundary-and-game-loop.md)) |

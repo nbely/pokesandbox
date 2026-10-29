@@ -30,7 +30,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 | Primitives | Condition tree + predicate registry (evaluate/explain/validate/references); Effect union + executor (atomic, idempotent) | [05](../architecture/concepts/05-requirements.md), [06](../architecture/concepts/06-effects.md) |
 | Identity | ContentKey type, Showdown-ID references, remove bidirectional arrays, indexes | [02](../architecture/concepts/02-identity-and-references.md) |
 | Persistence | Mongo replica set (transactions), cache policy (immutable only), OCC helpers | [15](../architecture/concepts/15-persistence-caching-concurrency.md) |
-| Showdown | Rebase fork onto upstream; move New Logora to a mod; define patch set (state injection, external choice hook); publish as a package the monorepo consumes | [14](../architecture/concepts/14-battle-system-and-showdown.md) |
+| Showdown | Rebase fork onto upstream; archive the 10 New Logora custom moves off `master` (Q28); patch set (state injection, external choice hook, caught/ran endings, isolated custom-data dexes); publish as a package the monorepo consumes | [14](../architecture/concepts/14-battle-system-and-showdown.md) |
 | Org | Move repos to the org, CI (lint, typecheck, unit tests), labels/project/milestones, global command registration | [github-project-setup](github-project-setup.md) |
 
 Hosting and production operations are **not** Phase 0. They're the launch-readiness step at the end of Phase 1.
@@ -101,7 +101,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Quests v2 | Active quests (scripts + quest log), passive objectives (event listeners), loaner Pokémon, quiz stages, repeatable quests, passive-slot limits, tutorial-as-quest | Script VM, engine events |
 | Narrative | Persistent dialogue choices (choice kind is already MVP), quest-local choices as script locals | Conditions, scripts |
 | Effects++ | Teleport, start-script, new attach points (transport hops, quest stages) | Effect registry |
-| Custom content | Server content library (fakemon/forms/types/moves/items reusable across a server's regions) via the Showdown **mod compiler** | Catalog layering, fork mod |
+| Custom content | Server content library (fakemon/forms/types/moves/items reusable across a server's regions) injected into isolated Showdown dexes | Catalog layering, isolated custom-data dexes |
 | Social | In-game PvP with adventure parties; trading; Wonder Trade; GTS-style listings | PokemonInstance collection, BattleService |
 | Breeding | Contained service + server pool; eggs; hatching | `storage.kind` |
 | Happiness | Friendship evolutions, move unlocks | PokemonInstance.friendship |
@@ -122,7 +122,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Player-editable RP prose on travel logs | Event log |
 | Webapp as a full play surface | `libs/engine` |
 | Minigames at locations | Script steps / custom step types |
-| Custom moves/abilities/items via strict templates | Mod compiler with `inherit` + overrides |
+| Custom moves/abilities/items via strict templates | Inherit an existing move's mechanics + overrides, loaded like dex data (Q28) |
 | RP quests + pluggable adjudication (mod queue / AI judge; participant vs approver roles) | Script `await: approval` step |
 | AI enrichments (BYO key): narrative responses, battle commentary, NPC personalities, bonding sessions | Event renderers + optional narrator decorator |
 

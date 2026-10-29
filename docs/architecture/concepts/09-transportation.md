@@ -41,5 +41,5 @@ TransportNetwork {
 - The `TransportNetwork` model, the Fly and Ferry templates, a "Travel ▸ Fly" UI listing eligible destinations (with locked ones explained), and fares via effects.
 
 ## Open questions
-- Does Fly require the **move in the party** (Gen 1–7) or is it an **unlockable service** (Gen 8+ Flying Taxi, Gen 9 any time)? Both are content, but pick the default template.
+- ~~Fly: move in party or unlockable service?~~ **Decided (Q17):** creator content, never engine logic. Kanto Classic uses the move-in-party version. Post-MVP builder shortcuts offer both as templates.
 - Should using a transport **trigger scripts** at the destination (e.g. arriving by ferry plays a cutscene)? Probably yes: the `enterLocation` trigger already fires. Confirm that arrival by any means counts as "entering".

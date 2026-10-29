@@ -2,7 +2,7 @@
 
 This doc breaks Phases 0–2 of [`roadmap.md`](roadmap.md) into **GitHub milestones → epics → candidate issues**, plus a gap matrix against the owner's MVP feature list. Issue titles are written so they can be pasted directly into issues. Sizes: S (≤1 day), M (2–4 days), L (1–2 weeks), XL (split further).
 
-> Sequencing assumes the recommendations in [`../architecture/open-questions.md`](../architecture/open-questions.md) Q15–Q22 are accepted. If one is rejected, the affected epics are marked with its Q-number.
+> Sequencing follows the decisions in [`../architecture/open-questions.md`](../architecture/open-questions.md). Epics name the Q-numbers they implement.
 
 ## Milestones at a glance
 
@@ -26,17 +26,7 @@ M0a ──► M1 ──► M2 🚀 (Arena)
 The battle track (M0a → M1 → M2) and the content track (M0b → M3 → M4) run in parallel.
 
 ### Re-sequencing: Arena critical path (decided Oct 2026, after Q29)
-With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, and every PR reviewed by the owner, M0 as written is too big to sit in front of the Arena. **The Arena doesn't need most of M0.** It needs no conditions/effects, scripts, content keys, releases, or authoring layer. Decision: split M0.
-
-| # | Milestone | Contents | Blocks |
-|---|---|---|---|
-| **M0a** | **Platform & Arena Foundations** | Org move, CI, Mongo replica set (local), indexes, cache policy, `libs/core`/`engine`/`battle` skeletons + boundaries | M1, M2 |
-| **M0b** | **Content Foundations** | Conditions + effects, content keys + model cleanup, `libs/authoring`, region releases/publish, progression `choice` kind, flags | M3, M4, M5 |
-
-```
-M0a ──► M1 ──► M2 🚀 (Arena)
-  └──► M0b ──► M3 ──► M4 ──► M5 ──► M6 🚀 (MVP)
-```
+With ~1 senior full-time-ish, possibly a second senior, 2 junior-to-mid devs, and every PR reviewed by the owner, M0 as written is too big to sit in front of the Arena. **The Arena doesn't need most of M0.** It needs no conditions/effects, scripts, content keys, releases, or authoring layer. Decision: split M0 into M0a and M0b, as in the table above.
 - The battle track (M0a → M1 → M2) and the content track (M0b → M3…) can run in parallel. Seniors own the foundation-heavy work (engine, fork rebase/patches, BattleService, conditions/effects). Juniors take well-specified issues: catalog seed data, item definitions, renderers, builder menus, webapp editors, tests.
 - **Timeline honesty:** an end-of-year Arena (~9 weeks from late Oct) would need M0a + M1 + M2 done with this team while also standing up hosting/CI. That's possible only if the Arena scope stays tight: paste import, built-in formats, `basic` AI, timers, restart recovery. Hosting and operations sit at the end of M2 (launch readiness), not in front of development. Plan for **end of year as a stretch, Q1 as realistic**, and re-estimate once M0a's issues are sized.
 

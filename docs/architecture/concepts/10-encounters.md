@@ -104,5 +104,5 @@ Option B means **the trip itself can be interrupted**. You pick "Go to Viridian 
 - A wild battle that hands off to the battle system with catch/run/bag (see [14](14-battle-system-and-showdown.md)).
 
 ## Open questions
-- What's the **time model** for day/night? Real-world clock in the server's timezone, a per-character clock, or an accelerated in-game clock? See [18](18-rules-time-and-randomness.md).
+- ~~Day/night time model?~~ **Decided (Q6):** none for the Kanto MVP (tables use `any`). The injected Clock defaults to real time in the server's timezone when Gen 2+ content needs it. See [18](18-rules-time-and-randomness.md).
 - Should **level scaling** exist (encounter levels relative to badges/party, like SV) as a region option?

@@ -60,5 +60,5 @@ In a menu-driven text game, the risk is that travel feels like teleporting throu
 - Later: coordinate-based map markers, auto-generated map images, weather per location.
 
 ## Open questions
-- Do you want a **visual map** in MVP (static uploaded region map image with markers), or text-only navigation?
-- Is moving between nodes **instant**, or does a route take "time/steps" (encounter chances while traversing, like walking through tall grass)? This is a big feel decision. Options: (a) travel is instant and encounters happen only via "Explore"; (b) traversing a route rolls encounters/trainers on the way; (c) routes must be "cleared" (walk N steps) before the exit edge unlocks.
+- ~~Visual map?~~ **Decided (Q7):** text navigation plus an optional static region map image (`graphicSettings.mapImageLink`). Interactive map later, on the webapp.
+- ~~Instant travel?~~ **Decided (Q5):** moving between locations is instant. Route friction comes from author-defined **traversal requirements** paid via Explore (a mix of options a and c), not from travel time. See [10 § Traversal requirements](10-encounters.md#traversal-requirements-mvp-decided-oct-2026).

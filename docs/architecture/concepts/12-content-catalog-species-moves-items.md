@@ -8,7 +8,7 @@
 - `DexEntry` (Mongo, ~global): mirrors many Showdown species fields plus `catchRate`, `expYield`, `evYields`, `expGrowth`, `baseHappiness`, `hatchCycles`, `sprites`, `isCanon`, `isPublic`, `originServer`, and ref-ified evo links (`{id, name}`).
 - `Region.pokedex` slots reference DexEntry ObjectIds plus included forms.
 - No items, moves, or TM models. The Region menu has "Moves" as a placeholder.
-- The Showdown fork carries New Logora fakemon in base data files.
+- The Showdown fork still carries 10 New Logora custom moves in base data files (the species were already reverted; see [14](14-battle-system-and-showdown.md#what-master-changes-vs-upstream-13-files-52793)).
 
 ## Layering (revised Oct 2026)
 
@@ -47,10 +47,10 @@ Custom content belongs to the **server**, not to a region. A region is one game,
 
 Consequences:
 - Region releases **reference** library entries by ID. They don't copy them. Publishing a region validates that every referenced library entry exists. Editing a library entry (e.g. rebalancing a fakemon's stats) affects every region that uses it at that region's next publish. The release pins a **library snapshot version**, so live play doesn't change under players until the admin republishes.
-- The **mod compiler** builds one Showdown data set per **battle context**: each region release and each Arena format. Preferred delivery is **runtime injection into an isolated dex** (evolving the fork's `dynamic-dex-data` POC, see [14](14-battle-system-and-showdown.md#current-state-of-the-fork-branch-inventory-oct-2026)), not generated mod files. A server-wide mod can't work, because two regions on the same server may use different overrides of the same species (see below).
+- The engine assembles one Showdown data set per **battle context**: each region release and each Arena format. Preferred delivery is **runtime injection into an isolated dex** (evolving the fork's `dynamic-dex-data` POC, see [14](14-battle-system-and-showdown.md#current-state-of-the-fork-branch-inventory-oct-2026)), not generated mod files. A server-wide mod can't work, because two regions on the same server may use different overrides of the same species (see below).
 - Library content can also be **published for other servers to import** (private by default). See "Species identity" below.
 
-## Species identity: canon, custom species, variants, overrides & sharing (proposed Oct 2026)
+## Species identity: canon, custom species, variants, overrides & sharing (decided Oct 2026, Q19)
 
 Requirements from the owner:
 - Global canon species.
@@ -195,28 +195,22 @@ ItemDefinition {
 Showdown learnsets are keyed by generation-specific sources (`8L15`, `7M`). A Region needs a **learnset policy**: "use Gen N learnsets" plus optional per-species overrides. Without it, "recreate RBY" vs "Gen 9 content" is ambiguous. This ties into the rules profile ([18](18-rules-time-and-randomness.md)).
 
 ## Custom content (Full / Pie-in-sky)
-Your roadmap wants "custom fakemon, forms, and types per server: predictable, simple descriptor-field-fed data". Showdown loads mods from `data/mods/<id>` at startup, and custom species need entries in pokedex, learnsets, formats-data, and (for types) the typechart. Path:
-1. Custom species are stored in Mongo (Layer 2) with the same descriptor fields.
-2. A **mod compiler** generates a Showdown mod (`data/mods/ps_<server>/…`) from Mongo on publish, or injects into a ModdedDex at runtime (`dex.loadData()` cache patching). Generated files are safer. Battle workers reload mods on publish.
-3. Custom *moves/abilities* are limited to retuning existing behaviors (your "strict dynamic templates" idea). That works naturally: a custom move is `inherit` from an existing move plus overrides.
+Your roadmap wants "custom fakemon, forms, and types per server: predictable, simple descriptor-field-fed data". Custom species need entries in pokedex, learnsets, formats-data, and (for types) the typechart. Path:
+1. Custom content is stored in Mongo as server library entries (Layer 2) with the same descriptor fields.
+2. At battle start, BattleService injects the release's or format's assembled data into an **isolated custom-data dex** (patch 4 in [14](14-battle-system-and-showdown.md#fork-strategy-options)). No mod files are generated, and nothing restarts on publish.
+3. Custom *moves/abilities* are limited to retuning existing behaviors (your "strict dynamic templates" idea): a custom move inherits an existing move's mechanics plus overrides. Designing this is post-MVP (Q28).
 
-This is why **New Logora content should move out of base data files into a mod** now (see [14](14-battle-system-and-showdown.md)). It proves the path.
+## Where canon data lives (decided Oct 2026)
 
-## Options: where canon data lives
-
-| Option | Pros | Cons |
-|---|---|---|
-| A. Mongo is canonical (seeded from Showdown) | Queryable, editable | Two sources of truth for battle data. Drifts on Showdown upgrades. |
-| **B. Showdown canonical; Mongo enriches** (recommended) | One battle truth. Upgrades are a version bump plus an enrichment backfill. | Some fields (catch rate, EXP yield) need a separate data source (PokeAPI/Bulbapedia-derived seed). That data already exists in DexEntry. |
-| C. Third-party API at runtime (PokeAPI) | No data to host | Latency, rate limits, availability. Custom content impossible. |
+The **DB catalog is the record** (see Layering above): canon data is imported from a pinned Showdown version into Mongo, and the import is re-run and diffed on Showdown upgrades. Showdown stays the battle executor and receives the assembled data per battle context. The alternatives considered were "Showdown canonical, Mongo only enriches" (rejected: admins need overrides, custom learnsets, TM assignments, and readable move details) and a third-party API at runtime (latency, rate limits, no custom content).
 
 ## MVP scope
 - Reference species/moves/items by Showdown ID. Add `speciesId` to DexEntry.
 - ItemDefinition for the Gen 1 item set (balls, medicine, repels, escape rope, stones, key items, TMs/HMs) with field/battle handlers.
 - Region TM list and learnset policy.
-- Not MVP: custom species UI, mod compiler (but do the New Logora → mod refactor as the spike that proves it).
+- Not MVP: custom species UI and custom moves. The isolated custom-data dex (M1) is still built for the MVP because piecemeal Gen 1 data and Arena formats use it.
 
 ## Open questions
-- What's **`baseGeneration`** meant to control: dex scope, learnsets, mechanics, or sprites? (The code defaults it to `10`.)
-- Do you want **regional forms/variants** (Alolan etc.) slot-able in MVP? The pokedex slot model supports forms already.
-- Sprite hosting: Showdown's sprite CDN (`play.pokemonshowdown.com/sprites`) vs self-hosted? (Legal and availability considerations.)
+- ~~What does `baseGeneration` control?~~ **Decided (Q26):** replaced by `RegionRules`; the default `10` is removed.
+- ~~Sprite hosting?~~ **Decided (Q32):** the existing Imgur-hosted set behind a sprite-URL resolver, with Showdown's CDN as fallback.
+- Do you want **regional forms/variants** (Alolan etc.) slot-able in MVP? The pokedex slot model supports forms already. (Kanto Classic doesn't need them.)

@@ -1,13 +1,12 @@
 # 21: Hosting & Environments
 
-> **Update (Oct 2026):** the owner prefers a **managed host to start** (Railway/Fly/Render class), and may get discounted or free hosting through a developer's family host. The VPS notes below remain as the self-managed alternative.
->
-> **TL;DR (original proposal):** Keep cost near zero apart from one small VPS.
-> - **VPS** (self-managed, Docker Compose) runs the bot, engine, battle service, and webapp behind Caddy.
-> - **MongoDB Atlas free cluster** stores data. It's a replica set, so transactions work.
+> **TL;DR (decided Oct 2026, Q30):** Pay for hosting only.
+> - A **managed app host** (Railway/Fly/Render class, or a discounted/free host through a developer's family) runs the always-on bot (with the engine and BattleService) and the webapp as containers.
+> - **MongoDB Atlas Free** stores data for the MVP. It's a replica set, so transactions work. Move to **Atlas Flex or DigitalOcean Managed MongoDB (~$15, daily backups)** before opening to other servers.
 > - **Nightly `mongodump`** goes to free-tier object storage.
 > - **GitHub Actions** deploys. **Sentry's free tier** catches errors.
-> - **Staging is a second, lightweight Compose stack on the same VPS** with its own test bot, not separate infrastructure.
+> - **Data retention rules** keep storage inside the free tier.
+> - **Staging** is a second, small deployment with its own test bot, added before the Arena goes public.
 
 **MVP impact:** High (M2 launch readiness; the last step before the Arena goes live) · **Cost to change later:** Low (everything is containerized and behind env config)
 
@@ -21,12 +20,12 @@
 
 | Piece | Where | Cost |
 |---|---|---|
-| Bot + engine + BattleService | VPS, Docker container | VPS cost (one small instance) |
-| Next.js webapp | Same VPS, Docker container | — |
-| Reverse proxy + TLS | Caddy (automatic HTTPS) on the VPS | free |
+| Bot + engine + BattleService | Managed host, always-on container service | ~$5–15 (see below) |
+| Next.js webapp | Managed host, second service | included or a few $ |
+| TLS + routing | The host's built-in HTTPS and domains | free |
 | Database | **Atlas free cluster** (a replica set, 512 MB). Databases: `prod`, `staging`. | free |
-| Backups | Nightly `mongodump` from the VPS → object storage free tier (e.g. Cloudflare R2), with 14–30 day retention | free tier |
-| CI/CD | GitHub Actions: tests on PR; `main` → staging stack; version tag → prod stack (SSH + `docker compose pull && up -d`) | free for public repos |
+| Backups | Nightly `mongodump` (scheduled job or GitHub Action) → object storage free tier (e.g. Cloudflare R2), with 14–30 day retention | free tier |
+| CI/CD | GitHub Actions: tests on PR; `master` → staging; version tag → prod (deploy via the host's CLI or image pull) | free for public repos |
 | Errors / uptime | Sentry free tier + a free uptime monitor | free |
 | Later | Sprite mirror on object storage; Redis when sharding | — |
 
@@ -67,10 +66,10 @@ Check current pricing and plan terms before committing. Free-tier limits change,
 **Revised database path:** Atlas Free (MVP, your server, plus nightly dumps) → **Atlas Flex or DigitalOcean Managed MongoDB (~$15)** before opening to other servers → a 3-node replica / M10 only if growth demands it.
 
 
-**Proposed path:**
-1. **MVP (your server only):** VPS (~$5–20) + Atlas Free + nightly `mongodump` to free object storage. Roughly **$5–20/month total.**
-2. **Before opening to other servers:** move to **Atlas Flex** for managed daily snapshots (keep the nightly dump as a second copy). Roughly **$15–50/month total.**
-3. **Only if growth demands it:** M10 (~$60–85).
+**Decided path (Q30):**
+1. **MVP (your server only):** managed app host (~$5–15) + Atlas Free + nightly `mongodump` to free object storage. Roughly **$5–15/month total**, less if the family host works out.
+2. **Before opening to other servers:** move to **Atlas Flex or DigitalOcean Managed MongoDB** for managed daily backups (keep the nightly dump as a second copy). Roughly **$20–45/month total.**
+3. **Only if growth demands it:** a 3-node replica or M10 (~$60–85).
 
 ## Storage sizing & data retention (estimates, Oct 2026)
 Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default storage (2 GB RAM, ~$57–60/month plus backup storage). Storage counts data **and indexes**. Free and Flex also cap **throughput** (ops/sec), which may bind before storage does.
@@ -101,7 +100,7 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 
 **Without** the retention rules, battle and event logs alone could fill the free tier within weeks, even on one server.
 
-## Self-managed VPS: what you take on
+## Alternative: a self-managed VPS (what you would take on)
 | Area | What it means in practice | Mitigation |
 |---|---|---|
 | **Security** | You own OS patching, SSH, and firewall. An unpatched box is the main real-world risk. | Key-only SSH (no root/password login), `ufw` allowing 22/80/443 only, `unattended-upgrades`, fail2ban. Never expose Mongo or app ports publicly. |
@@ -120,16 +119,16 @@ Keeping the **database managed (Atlas)** removes the hardest self-hosting parts 
 | Env | Purpose | Infra |
 |---|---|---|
 | **dev** | Each developer locally | Docker Compose (Mongo replica set container), personal dev bot token + test guild |
-| **staging** | Integration check of `main` before prod; release-migration rehearsals | **Second Compose stack on the same VPS**, its own test Discord bot + test guild, Atlas `staging` database |
-| **prod** | Your server's real players | Prod Compose stack, prod bot token, Atlas `prod` database |
+| **staging** | Integration check of `master` before prod; release-migration rehearsals | **A second, smallest-size deployment** on the same host, its own test Discord bot + test guild, Atlas `staging` database |
+| **prod** | Your server's real players | Prod deployment, prod bot token, Atlas `prod` database |
 
-**Is staging necessary?** Not as separate infrastructure. As a second stack on the same box it costs nothing extra and earns its keep for three things:
+**Is staging necessary?** Not as heavyweight infrastructure. A second small deployment costs a few dollars at most and earns its keep for three things:
 1. **Data migrations:** restore last night's prod dump into staging and run the new release against it before tagging. This is where breaking a live save gets caught.
 2. **Discord-specific behavior** (command registration, permissions, Components v2 layouts) that local dev can miss.
-3. **Agent PRs:** merged `main` lands somewhere real before your prod tag.
+3. **Agent PRs:** merged `master` lands somewhere real before your prod tag.
 
-If even that feels heavy for the first weeks, start with dev + prod, and add the staging stack before the Arena goes public.
+Start with dev + prod, and add staging before the Arena goes public (decided, Q30).
 
 ## Open questions
-- Self-managed VPS vs a managed container host (Railway/Fly/Render): see the trade-offs above. Recommendation: VPS, given the low budget and your interest, with Atlas keeping the hard data parts managed.
+- ~~Self-managed VPS vs managed host?~~ **Decided (Q30):** managed host to start. Which one (the family host or Railway/Fly/Render) is decided in M2-01.
 - Do donations change anything legally? Not legal advice, but keep donations transparently tied to hosting costs only, and avoid anything resembling sales or paid perks, to stay clearly non-commercial.
