@@ -60,6 +60,33 @@ Journey {
 - **Content never writes to characters or users.** Effects write to the journey, region or server state, and claim records only ([06](06-effects.md#what-effects-may-write-decided-oct-2026)). Character- and user-level achievements ("completed Kanto", a badge case across regions) are derived from journeys, so archiving or deleting a region can't leave broken references in a persona.
 - **Creating a character is a platform action**, not a content trigger. Regions react to `journeyStarted` ([07](07-scripts-triggers-and-events.md)), whose payload says whether the character is new and how many Pokémon were carried.
 
+## What lives on users and characters (decided Oct 2026)
+Region content can't write to users or characters, but the player, the platform, and engine bookkeeping can. Everything that lives at these levels:
+
+**User**
+
+| State | Written by | When |
+|---|---|---|
+| Profile privacy, account settings and preferences | The player | MVP |
+| Arena teams (`TeamPreset`, cap 50) | The player | MVP (M1, [25](25-arena.md)) |
+| Server list favorites and layout (Q19) | The player | MVP (webapp, [02](02-identity-and-references.md)) |
+| Restart cooldown (24h per region), trade rate limits | Platform | MVP |
+| `user`-scoped claim records (e.g. "first 100" rewards) | Engine, as part of a claim | Post-MVP ([24](24-shared-state-region-and-server.md#claims-decided-oct-2026)) |
+| `user`-scoped pacing energy | Engine (action costs) | Post-MVP ([19](19-multiplayer-social-and-future-proofing.md)) |
+| Moderation state (bans, the narration moderator role) | Staff | Later ([22](22-adventure-log-and-narration.md)) |
+
+**Character**
+
+| State | Written by | When |
+|---|---|---|
+| Name, ID number, privacy | The player at creation; a later rename is a player action | MVP |
+| Appearance, roleplay profile details | The player | Post-MVP |
+| `character`-scoped claim records (e.g. one event ribbon per persona) | Engine, as part of a claim | Post-MVP |
+| `character`-scoped pacing energy | Engine (action costs) | Post-MVP |
+| Achievements across journeys ("Kanto Champion", a badge case across regions) | **Derived** from journeys; may be cached, never authored | Post-MVP |
+
+Cross-region recognition is therefore either **derived** (computed from journeys, e.g. a champion title shown in every region) or a **claim record** (written by the claim mechanism under a known key). Neither leaves region-specific data inside a persona when a region is reworked or deleted.
+
 ## Scopes (decided Oct 2026)
 Whenever something needs to know "whose is this?" or "who counts as one player?", it uses one of the three levels. One definition, used everywhere:
 
