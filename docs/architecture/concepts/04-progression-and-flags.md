@@ -84,7 +84,22 @@ Conditions name their scope (`region.counter` vs `server.counter`), so a region 
 
 **Design notes**
 - **Facts and effects:** shared-state facts (`region.counter`, `region.flag`, `region.stage`, `region.claimed`, and the same under `server.*`) join the condition registry ([05](05-requirements.md)), and shared-state effects (`regionIncrement`, `regionClaim`, `serverIncrement`, `serverClaim`) join the effect registry ([06](06-effects.md)). Encounter tables, party variants, dialogue, and gates read them like any other fact.
-- **"First X" claims are atomic and per user:** a conditional increment that only succeeds while the count is below X, plus a per-user claim record (one claim per player, however many characters or journeys they have), so double presses and races can't over-grant (the same idempotency rules as effects).
+- **Claims (decided Oct 2026).** A claim is needed only when there's a **shared cap or count** (first X players, limited region-wide stock, a one-of-a-kind legendary). Personal one-time rewards ("each playthrough can get the Eevee gift once") aren't claims: they're ordinary journey flags written by `once` triggers. Each claim declares who counts as one claimant:
+
+  ```ts
+  RegionClaim / ServerClaim { key; cap?: number; scope: 'user' | 'character' | 'journey' }   // default 'user'
+  ```
+
+  | Scope | One claimant is | Use for | Risk |
+  |---|---|---|---|
+  | **`user`** (default) | The player, across all characters and journeys | Scarce rewards: first-X gifts, the one-of-a-kind legendary, limited stock | None; strictest and fairest for scarcity |
+  | **`character`** | Each persona | Event rewards each character may earn (Red and Gold each get the ribbon) | A player with several characters gets several claims; fine for generous or no caps |
+  | **`journey`** | Each playthrough | Uncapped "every journey counts" goals, or caps that are deliberately per playthrough | Restart abuse: archiving a journey and starting again gives a fresh claim (only the 24h restart cooldown slows it), so **the validator warns when `journey` scope is combined with a cap** |
+
+  - **Atomic:** a conditional increment that only succeeds while the count is below the cap, plus a claim record keyed by the scope, so double presses and races can't over-grant.
+  - **Claim records outlive journeys:** `user` and `character` claims stay after a journey is archived or restarted, which is what makes them restart-proof.
+  - **Contributions to shared goals** ("5,000 catches on Cinnabar") aren't claims: every action increments the counter. A per-player contribution limit, if wanted, is a claim-scoped cap on contributions.
+  - **Test journeys never claim.**
 - **Region state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current region state, and region-state migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test journeys never count toward it ([01](01-content-vs-state-and-publishing.md)).
 - **Players see live numbers** where it adds tension ("37 of 100 claimed", "4,212 / 5,000 caught").
 - **Trainer ghosts** store a team snapshot, the same `PokemonSnapshot` pattern as the adventure log ([22](22-adventure-log-and-narration.md)), so they don't depend on the original Pokémon still existing.

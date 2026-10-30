@@ -79,7 +79,7 @@ Content for a server event that isn't specific to one region (e.g. every player 
 - **While away:** the journey keeps its party, bag, and money. `Journey.away` records where it is and where to return, separate from `location`, so MVP code reading `location` never changes. Progress and flags earned on the island go into a per-journey record for that event region, not into the home region's flags.
 - **Coming home:** by script, or automatically on the next action once the event ends (a migration rule, like a deleted location). Rewards come home with the journey.
 - **Compatibility:** the event region declares fixed rules. The validator lists the eligible regions (compatible mechanics, reward species and moves allowed there), and entry checks the party's legality, like an Arena format.
-- **Everyone shares one island:** shared counters, NPCs, and trainer ghosts span all regions, and limited claims count per user, so several characters can't farm them.
+- **Everyone shares one island:** shared counters, NPCs, and trainer ghosts span all regions, and limited claims default to the `user` scope, so several characters can't farm them ([04 § Claims](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)).
 
 ## Pokémon instance
 ```ts
