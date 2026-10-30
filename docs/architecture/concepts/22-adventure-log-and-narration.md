@@ -42,7 +42,7 @@ PokemonSnapshot { instanceId?: PokemonInstanceId; species: SpeciesId; nickname?:
 
 TurnDigest { turn: number; actions: { side; pokemon; action: 'move' | 'switch' | 'item' | 'catch' | 'run'; detail; result: { damagePct?; ko?; crit?; effectiveness?; status? } }[] }
 ```
-- **Entries never depend on live Pokémon data.** Every Pokémon an entry mentions is stored as a `PokemonSnapshot` taken at write time, so the log stays complete after a released Pokémon is purged (30 days, [13](13-characters-and-pokemon-instances.md#decisions-oct-2026-q22)) or after a trade moves it to another owner.
+- **Entries never depend on live Pokémon data.** Every Pokémon an entry mentions is stored as a `PokemonSnapshot` taken at write time, so the log stays complete after a released Pokémon is purged (30 days, [13](13-pokemon-instances-and-trading.md#decisions-oct-2026-q22)) or after a trade moves it to another owner.
 - **Releases** get their own entry ("Released Pidgey (Lv. 12), caught on Route 1"). The Pokémon sent away in an in-game NPC trade appears in that `trade` entry.
 - **Trainer battles, PvP, catches, story scenes, milestones, evolutions:** one entry each. **Turn digests** (~100–300 bytes/turn) are kept for trainer battles, **catches** (the whole wild battle that ended in the catch), and other notable wild battles: scripted/static encounters (Snorlax, legendaries) and battles where the player's Pokémon fainted or the player whited out. That's enough to narrate turn by turn after the fact.
 - **Ordinary defeated wild Pokémon:** **rolled up** per visit ("Defeated 6 wild Pokémon on Route 1: Pidgey ×4, Rattata ×2") to keep volume sane. Catches always get their own entry.
@@ -54,7 +54,7 @@ Narration {
   _id; entryId; turn?: number;                 // attach to a whole entry or one turn of a battle
   authorUserId; role: 'player' | 'coauthor' | 'narrationModerator' | 'ai';
   text: string; createdAt; editedAt?;
-  visibility: 'public' | 'private';           // respects character privacy (13)
+  visibility: 'public' | 'private';           // respects character privacy (23)
 }
 ```
 - **During play or after the fact.** A player can narrate a battle live in their thread or return a week later and write it up. Entries are permanent and have stable IDs, so narration can always attach.

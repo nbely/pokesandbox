@@ -41,7 +41,7 @@ type Effect =
 | C. Effects as script steps only (no standalone lists) | Even more uniform | Overkill for "trainer pays money on defeat". Lists remain useful as the atomic payload *inside* a script step. |
 
 ## What effects may write (decided Oct 2026)
-Effects write only to the **current journey**, **region state**, **server state**, and claim records ([04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)). They never write to the character or user. Character- and user-level achievements ("completed Kanto", a profile badge case across regions) are **derived** from journeys, so region content never leaves references inside a persona, and archiving or deleting a region can't break one.
+Effects write only to the **current journey**, **region state**, **server state**, and claim records ([24](24-shared-state-region-and-server.md)). They never write to the character or user. Character- and user-level achievements ("completed Kanto", a profile badge case across regions) are **derived** from journeys, so region content never leaves references inside a persona, and archiving or deleting a region can't break one.
 
 ## Where effects attach (MVP)
 - Script `effects` step (covers NPC talk, gifts, gym rewards, triggers).

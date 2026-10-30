@@ -107,12 +107,12 @@ Conditions read through an **evaluation context** with scopes:
 | Scope | Lives on | Used by |
 |---|---|---|
 | `journey` | the current Journey (progress, flags, bag, money, visited) | everything |
-| `character` | the persona's **other** journeys, read-only (reserved, post-MVP) | sequel gates and callbacks: "must have completed Kanto Classic" for `Region.entry`, "you sided with Team X in Kanto" dialogue ([13](13-characters-and-pokemon-instances.md#playing-more-than-one-region-post-mvp)) |
+| `character` | the persona's **other** journeys, read-only (reserved, post-MVP) | sequel gates and callbacks: "must have completed Kanto Classic" for `Region.entry`, "you sided with Team X in Kanto" dialogue ([23](23-players-characters-journeys-and-scopes.md#playing-more-than-one-region-post-mvp)) |
 | `user` | account-level facts, read-only (reserved, post-MVP) | event eligibility ("any journey on this server has beaten a Champion") |
 | `party` / `pokemon` | Pokémon instances | HM gates, evolution conditions, NPC reactions ("show me a Pikachu") |
 | `script` | the running script's locals | branching inside a script (`if local.choice == 'fight'`) |
 | `quest` | a quest instance's variables | quest stage gates and completion checks |
-| `region` | the region's shared `RegionState` (post-MVP) | first-X claims, shared goals, story chapters ([04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)) |
+| `region` | the region's shared `RegionState` (post-MVP) | first-X claims, shared goals, story chapters ([24](24-shared-state-region-and-server.md)) |
 | `server` | the server's shared `ServerState` (post-MVP) | server events across regions, community boss ("boss defeated") |
 | `target` / `subject` | whatever the caller is evaluating against | Fly destinations (`$target`), "the Pokémon being used on" for items |
 | `clock` | injected Clock | time of day, weekday |
@@ -143,7 +143,7 @@ Gate = {
 | `locked` | the option, disabled, with the explanation / `lockedText` | n/a | shop items, Fly destinations, badge-gated doors you want to tease |
 | `attemptable` | the option, enabled | blocked: shows the rationale **and emits a `gateBlocked` trigger event**, so a script can react (a guard's dialogue, a forced battle, starting a quest) | "The road is blocked by a sleeping Snorlax", "You need a Card Key", tutorial nudges |
 
-- **Locked options in Discord menus** stay in the list with a 🔒 marker, and the explanation is always reachable: shown inline (option description or text under the list), or the option stays pressable and replies with it. A disabled Discord button can't be pressed, so on its own it gives the player no way to learn why.
+- **Locked options always explain themselves** in Discord menus: a 🔒 marker plus a reachable explanation, never a bare disabled button ([26](26-discord-surface-and-ux-patterns.md#menus-and-feedback)).
 - Each attach point declares its **default** presentation (e.g. shop entries default to `locked`, edges and NPCs to `hidden`), and authors can override per gate.
 - Reacting to a blocked attempt is **not** part of the condition or the gate. It's an ordinary trigger (`{ event: 'gateBlocked', gate: <owner ref> }`, see [07](07-scripts-triggers-and-events.md)). The builder can offer "on blocked, run script…" as sugar that creates the trigger.
 - Locations, edges, shops and shop entries, transport hubs, NPC interactions, and quest starts all take a `Gate`. There's one builder component and one engine function: `checkGate` → `{ allowed, presentation, explanation, cost }`.
@@ -213,5 +213,5 @@ The condition is the same everywhere. What differs is how the caller uses the re
 
 ## Open questions
 - ~~Hide or show locked?~~ Decided: caller-owned `presentation` on the Gate (`hidden` default, `locked`, `attemptable` with a `gateBlocked` trigger event). See §4.
-- ~~HM gating rules?~~ Decided: creator-defined content, never engine logic. **Post-MVP builder shortcuts:** common gate templates ("Requires HM move", "Requires badge + HM"), plus contextual suggestions. For example, adding HM02 Fly to the region's TM/HM list prompts "Enable traditional Fly travel?" and creates the Fly transport network with its conditions. Design hook for now: authoring command results include `suggestions: Suggestion[]` (see [03 § Authoring](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)) that any client can offer; MVP returns none.
+- ~~HM gating rules?~~ Decided: creator-defined content, never engine logic. **Post-MVP builder shortcuts:** common gate templates ("Requires HM move", "Requires badge + HM"), plus contextual suggestions. For example, adding HM02 Fly to the region's TM/HM list prompts "Enable traditional Fly travel?" and creates the Fly transport network with its conditions. Design hook for now: authoring command results include `suggestions: Suggestion[]` (see [16 § Authoring](16-authoring-validation-and-portability.md#authoring-the-same-pattern-for-region-building)) that any client can offer; MVP returns none.
 - ~~Power-user text syntax?~~ **Decided:** a later, very low priority enhancement (e.g. `badges.count >= 2 and not flag(rival_r22)` compiling into the tree).

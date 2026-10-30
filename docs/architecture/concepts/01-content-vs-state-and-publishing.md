@@ -18,7 +18,7 @@ Today catalog and content live in Mongo docs that are edited in place, and `Regi
 
 - An admin renaming a milestone, deleting a location, or rewriting a trainer team **changes the region under live players**, sometimes mid-battle or mid-script.
 - `deployable` is stored, but it should be the *output of a validator* run at publish time.
-- The runtime hot path (every button press) reads many small docs through a mutable cache (see [15](15-persistence-caching-concurrency.md)).
+- The runtime hot path (every button press) reads many small docs through a mutable cache (see [15](15-persistence-concurrency-and-runtime.md)).
 
 ## Current shape
 
@@ -117,7 +117,7 @@ Region.discovery: {
   showStatus: boolean;                   // show "In development" / "Live" / "Paused" badge on the discovery page
 }
 ```
-- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Journeys are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. Arena PvP is server-scoped and **unaffected** by pausing a region (see [14](14-battle-system-and-showdown.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped)). Only Phase 3 in-game PvP with adventure parties is region-bound, and those battles are frozen like any other battle.
+- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Journeys are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. Arena PvP is server-scoped and **unaffected** by pausing a region (see [25](25-arena.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped)). Only Phase 3 in-game PvP with adventure parties is region-bound, and those battles are frozen like any other battle.
 - `Server.discovery` stays as the *server-level* listing. `Region.discovery` is the per-region listing within it. The discovery page shows a region only if both are enabled.
 - This replaces the old `deployed` / `deployable` booleans. "Deployable" is the computed validator result.
 
@@ -128,15 +128,7 @@ Region.discovery: {
 
 **4. Publish checks state, not just content.** The publish review ([16](16-authoring-validation-and-portability.md)) checks what the new release would do to existing state, and migration rules handle what it changes:
 - **Journey saves (MVP):** the migration rules above run lazily when a journey loads on a newer release. Rule changes that would break saves need a fix-up rule ([18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
-- **Region state (post-MVP, with the living region in [04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)):** checked against the region's current `RegionState` at review time. Region-state migrations run **once, at publish, inside the publish transaction**, not lazily, because the state is shared. Server state (`ServerState`) is never migrated by a region publish.
-
-  | Change in the release | Review result |
-  |---|---|
-  | Content that region state references is removed (a counter or claims for a deleted NPC or gift) | Warning. The data is kept, not deleted, and comes back if the key returns. Admins can purge it explicitly. |
-  | A "first X" cap is lowered below the claims already made | Warning: "73 already claimed, new limit 50: no new claims." Existing claims are never revoked. |
-  | A threshold that's already met (a community unlock) | Warning: "already satisfied, activates on publish." |
-  | The story stage the region is currently on is removed or renamed | **Error**, unless the publish includes a stage mapping (a region-state migration rule). |
-  | A counter's meaning changes (it now counts something different) | Warning, with an option to reset that counter at publish. |
+- **Shared state (post-MVP):** each publish review also checks the release against the region's `RegionState`, and region-state migrations run once, at publish, inside the publish transaction, because the state is shared. The rules are in [24 § Publishing](24-shared-state-region-and-server.md#publishing-decided-oct-2026).
 
 ## Open questions
 - ~~Hot-fix a published release?~~ **Decided (Oct 2026):** no. Every change, typo fixes included, goes live only through a publish (with its review step, see [16](16-authoring-validation-and-portability.md)). One path means one set of validation and one change history.

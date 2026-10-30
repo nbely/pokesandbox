@@ -1,6 +1,6 @@
 # M2: Arena Release (backlog draft, partial)
 
-Drafted so far: the FlowCord dependencies and the M2-13 upgrade, the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
+Drafted so far: the FlowCord dependencies and the M2-13 upgrade, the **launch-readiness** epic (E-M2-1), and the **Arena multiplayer surface** epic (E-M2-2) that follows from the boundary in [25 § Multiplayer boundary](../architecture/concepts/25-arena.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). The rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test) gets drafted with M1.
 
 **Sequencing:** E-M2-1 starts once the Arena works end to end in local development (late M1 / early M2). Hosting is the last step before going live, not a prerequisite for building. One optional exception: if you want private testers on the Arena before the public launch, pull M2-02 (containerize), M2-03 (Atlas), and M2-07 (staging) forward. Staging then doubles as the tester environment. E-M2-2 starts once BattleService (M1) can run a PvP battle headless.
 
@@ -46,7 +46,7 @@ Everything needed to run the bot and webapp for real players: a managed host for
 
 **Acceptance criteria**
 - The host supports always-on Node processes (Discord gateway + in-memory battles) and Docker images.
-- The bot service is configured for **no deploy overlap** (stop old, then start new) and one replica, where the host allows it ([03 § Sharding](../architecture/concepts/03-engine-boundary-and-game-loop.md#sharding-deploys-and-who-owns-live-state-decided-oct-2026)). If it doesn't, document that battle leases cover the overlap.
+- The bot service is configured for **no deploy overlap** (stop old, then start new) and one replica, where the host allows it ([15 § Sharding](../architecture/concepts/15-persistence-concurrency-and-runtime.md#sharding-deploys-and-who-owns-live-state-decided-oct-2026)). If it doesn't, document that battle leases cover the overlap.
 - The prod bot and webapp run from images built in CI, with secrets in the host's secret store.
 - The webapp has a domain with TLS. The Discord OAuth redirect URIs are updated.
 - Cost and plan details are recorded in [21](../architecture/concepts/21-hosting-and-environments.md).
@@ -125,7 +125,7 @@ Everything needed to run the bot and webapp for real players: a managed host for
 ## E-M2-2 · Arena Multiplayer Surface
 `Type: Epic` · `Priority: P0`
 
-The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). BattleService (M1) owns rounds, timers, and recovery. This epic owns challenges, the public battle message, participant checks, and private choice prompts, all restart-safe and behind a `BattleSurface` port. Scenario numbers below refer to the table in that section.
+The Discord side of PvP and PvAI, following [25 § Multiplayer boundary](../architecture/concepts/25-arena.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34). BattleService (M1) owns rounds, timers, and recovery. This epic owns challenges, the public battle message, participant checks, and private choice prompts, all restart-safe and behind a `BattleSurface` port. Scenario numbers below refer to the table in that section.
 
 **Depends on M1 BattleService items** (drafted with M1, contract in 14 § Ownership): `choose` with `rqid` validation and a per-battle queue; per-side persisted deadlines with default-on-timeout and a consecutive-timeout forfeit; `recover()` re-arming timers with a fresh window and emitting `battleRecovered`.
 
@@ -139,7 +139,7 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - The router loads the `Challenge`/`ArenaMatch` record and checks that the presser may act. Everyone else gets an ephemeral reply ("This isn't your battle" / "This challenge isn't for you") within 3s. No press is ever left unacknowledged.
 - Unknown or stale records get an ephemeral "This battle has ended" reply, and the message's components are stripped.
 
-**Refs:** [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)
+**Refs:** [25 § Ownership](../architecture/concepts/25-arena.md#ownership)
 
 ### M2-09 · Challenges: direct and open, atomic claim, expiry
 `Type: Feature` · `Parent: E-M2-2` · `Priority: P0` · `Size: M` · `Labels: area:bot, area:shared-models` · `Blocked by: M2-08` · `agent-ready: yes` · `Owner: junior`
@@ -153,7 +153,7 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - Decline (direct only) and cancel (challenger only) work. A deleted challenge message doesn't crash the expiry job.
 - A claimed challenge starts the battle through `BattlePort.start` and hands off to M2-10.
 
-**Refs:** [14 § Acceptance scenarios](../architecture/concepts/14-battle-system-and-showdown.md#acceptance-scenarios) (1, 2)
+**Refs:** [25 § Acceptance scenarios](../architecture/concepts/25-arena.md#acceptance-scenarios) (1, 2)
 
 ### M2-10 · Public battle message projector (`BattleSurface`)
 `Type: Feature` · `Parent: E-M2-2` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: M2-08` · `agent-ready: no` · `Owner: senior`
@@ -167,7 +167,7 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - View builders are pure functions with snapshot tests. A fake `BattleSurface` lets scenario tests run without Discord.
 - Rate-limit errors back off and retry without dropping the final state.
 
-**Refs:** [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership) (scenarios 3, 6, 8)
+**Refs:** [25 § Ownership](../architecture/concepts/25-arena.md#ownership) (scenarios 3, 6, 8)
 
 ### M2-11 · Private choice prompts
 `Type: Feature` · `Parent: E-M2-2` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: M2-08, M2-10` · `agent-ready: no` · `Owner: senior`
@@ -180,7 +180,7 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - Best effort: when the next request arrives, the player's last prompt is edited to the new options using that interaction's token (in memory, < 15 min). Pressing **Choose** on the public message always works as a fallback, including after a restart.
 - PvAI uses the same prompt, with no timer. The prompt updates when the AI's turn resolves (scenario 5).
 
-**Refs:** [14 § Acceptance scenarios](../architecture/concepts/14-battle-system-and-showdown.md#acceptance-scenarios) (3, 5, 7)
+**Refs:** [25 § Acceptance scenarios](../architecture/concepts/25-arena.md#acceptance-scenarios) (3, 5, 7)
 
 ### M2-12 · Arena scenario tests and a restart drill
 `Type: Task` · `Parent: E-M2-2` · `Priority: P1` · `Size: S` · `Labels: area:bot, area:battle` · `Blocked by: M2-09, M2-10, M2-11` · `agent-ready: yes` · `Owner: agent`
@@ -191,4 +191,4 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - A manual drill on the dev server, documented in the PR: kill the bot mid-battle, restart, and finish the battle in the same message.
 - An overlap test: start a second game host while the first is mid-battle, and assert each battle runs in exactly one process (one turn resolution, one timer, one reward), with the second taking over only after the first releases or its lease expires.
 
-**Refs:** [14 § Acceptance scenarios](../architecture/concepts/14-battle-system-and-showdown.md#acceptance-scenarios)
+**Refs:** [25 § Acceptance scenarios](../architecture/concepts/25-arena.md#acceptance-scenarios)

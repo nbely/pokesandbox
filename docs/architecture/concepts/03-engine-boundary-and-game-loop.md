@@ -69,7 +69,7 @@ The lock only stops two actions writing at once. Four more rules decide *whether
 | **Session claim** | Is this the journey's active `/play` session? | Actions from a play session |
 | **Revision** | Did the player act on what they actually saw? | Actions that depend on the rendered view |
 | **Preconditions** | Is this action allowed right now? | Every action |
-| **Request ID** (battles) | Is this choice for the current battle request? | `battleChoice` (see [14 § Ownership](14-battle-system-and-showdown.md#ownership)) |
+| **Request ID** (battles) | Is this choice for the current battle request? | `battleChoice` (see [25 § Ownership](25-arena.md#ownership)) |
 
 **1. Revisions.** The Journey carries `rev`, and **every engine action that writes any of the journey's game data** (Journey, its PokemonInstances, bag, flags) increments it in the same transaction: one action, one bump, even when the Journey document itself didn't change. Each rendered view records the `rev` it was drawn from: in custom IDs for plain handlers (`play:explore:<charId>:<rev>`), in session state for FlowCord menus, and in the request for the webapp. A **view-dependent** action (explore, travel, script input, shop, anything the player chose from a rendered menu) with a stale `rev` is not applied. The player gets a fresh render with "Updated: that menu was out of date". This is what turns a double-click into one explore, not two.
 
@@ -83,11 +83,11 @@ The engine exposes `availableActions(journey)` with explanations (the condition 
 **3. One active `/play` session per journey, newest wins.** Opening `/play` atomically sets `Journey.activeSession = { id, client, openedAt }` (under the lock, so it can't interleave with an in-flight action). The session ID travels with the session (FlowCord session state, or custom IDs). `dispatch` rejects actions from any other session ID, and the old session shows "This game was continued in another session" and strips its buttons. Newest wins rather than blocking the new session, because ephemeral messages can be dismissed and never reopened, and the old session may be on another device. A player can always get back in with `/play`.
 - **Resuming:** the new session renders whatever mode the journey is in, the same path as after a restart. A battle resumes at the current request (with the last turn's summary), a submitted choice stands while the turn resolves, and pending prompts (learn a move, evolution, swap into party) and script dialogue resume where they were. Adventure battles have no turn timer, so switching sessions never costs a turn.
 - **Old sessions shut down cleanly:** an old session still awaiting BattleService (the await-in-action pattern in [14](14-battle-system-and-showdown.md)) must check the claim before rendering, and ends silently if it's no longer active. Old battle buttons fail both the session check and the request-ID check.
-- **Not session-bound:** webapp management actions (they aren't a play session; if the webapp becomes a play surface in Phase 3 it claims the same slot), game-driven events (battle turns resolving, timers), and Arena battles (participant checks in [14](14-battle-system-and-showdown.md#ownership); the **Choose** button reopens a prompt on any device).
+- **Not session-bound:** webapp management actions (they aren't a play session; if the webapp becomes a play surface in Phase 3 it claims the same slot), game-driven events (battle turns resolving, timers), and Arena battles (participant checks in [25](25-arena.md#ownership); the **Choose** button reopens a prompt on any device).
 
 **4. Contention and retries.** If the lease is held, `dispatch` waits up to ~1s (after an early acknowledgement to Discord, which allows 3s), then returns `actionRejected: busy`. An optimistic-concurrency conflict is retried once **only for actions without a `rev`**. A view-dependent action is never silently re-applied on fresh state, because that is exactly how duplicates happen. Retries of the same request (network replays) are deduplicated by `actionId`.
 
-**5. Actions across two journeys** (trades, see [13](13-characters-and-pokemon-instances.md#trading-decided-oct-2026-mvp-q35)) take both journeys' leases in a fixed order (sorted by journey ID), run every check for both journeys, and commit in one transaction that bumps both revisions.
+**5. Actions across two journeys** (trades, see [13](13-pokemon-instances-and-trading.md#trading-decided-oct-2026-mvp-q35)) take both journeys' leases in a fixed order (sorted by journey ID), run every check for both journeys, and commit in one transaction that bumps both revisions.
 
 ## Options
 
@@ -97,39 +97,10 @@ The engine exposes `availableActions(journey)` with explanations (the condition 
 | **B. Service functions in `shared/`** (called by handlers, but no action/event contract) | Small step | Rendering and rules stay entangled. Every handler re-implements validation and "what happened" messaging. |
 | **C. Engine package with action/event contract** (chosen) | Testable. Multi-client. Replay/debug logs ("show me the last 50 actions"). Natural fit for AI and playtest bots. | Upfront design work. Events need renderers. |
 
-## Process topology: should the engine be its own container? (decided Oct 2026: option C)
+## Process topology
+Where the engine and battles run (embedded in the bot and webapp, with one game host for stateful runtime), sharding, deploy overlap, and live-state ownership are in [15](15-persistence-concurrency-and-runtime.md#process-topology-should-the-engine-be-its-own-container-decided-oct-2026-option-c).
 
-**Concern:** if game actions also run from the webapp (e.g. box reordering), they shouldn't depend on the Discord bot process being up.
-
-| Option | How | For | Against |
-|---|---|---|---|
-| **A. Embedded library** | Bot and webapp both import `libs/engine` and call `dispatch` in-process against the same DB | Webapp actions keep working when the bot is down. No extra service, API, or cost. | Locks must work across processes (DB lease). Stateful parts (live battles, timers) can only live in one process. |
-| **B. Separate engine service** | Engine runs in its own container. Bot and webapp call it over an API (e.g. tRPC/HTTP), and it pushes events back (pub/sub) | One authority for locks, battles, timers. Bot crashes don't touch game state. Scales independently. | Another container (cost) and an API contract, auth between services, and event push to the bot. **The engine becomes a single point of failure for both clients**, which is the same blast radius moved, not removed. |
-| **C. Hybrid (chosen)** | A now, designed for B: `libs/engine` is embedded in both clients for **stateless, short actions** (box reorder, party order, profile settings). **Stateful runtime** (BattleService, turn timers, scheduled jobs) runs in exactly one **game host** process, which is the bot process for MVP. | The webapp is independent of the bot for QoL actions. There's no extra container yet. Extraction later is mechanical, because the boundary is already "action in, events out". | Two deployment shapes to keep in mind. The webapp must refuse actions that touch Pokémon in an active battle (the journey's `mode` already says so). |
-
-**Notes on option C:**
-- **Failure isolation you actually get:** the webapp (box management, profiles, authoring) keeps working if the bot crashes. Discord play is down while the bot is down under *any* option, since Discord *is* that client. Live battles are persisted and recovered on restart, so a bot crash costs a few seconds, not game state.
-- **Correctness across processes** comes from the DB: lease-based per-journey locks, optimistic concurrency on Journey/Pokémon documents, and transactions for multi-document changes. Nothing relies on in-memory state shared between processes.
-- **CPU isolation inside the game host:** AI turn search and battle simulation run in **worker threads**, so heavy AI can't stall the bot's Discord event loop.
-- **When to extract the engine/game host into its own container (option B):**
-  - The bot shards into multiple processes (battles need one authority).
-  - A second client needs real-time gameplay (e.g. a webapp battle UI).
-  - Engine CPU or memory starts hurting bot responsiveness despite workers.
-
-  The extraction is: wrap `dispatch` and BattleService in an API, move the battle host into the new container, and have the bot subscribe to events. No game logic changes.
-
-### Sharding, deploys, and who owns live state (decided Oct 2026)
-**When Discord forces sharding:** one gateway connection (shard) serves at most **2,500 servers**; beyond that Discord refuses to connect without sharding (`/gateway/bot` recommends a count, roughly one shard per 1,000 servers). Each server's events, interactions included, go to exactly one shard: `(guildId >> 22) % shardCount`. Sharding doesn't require multiple processes: discord.js **internal sharding** (`shards: 'auto'`) runs several shards in one process, which typically holds well past 2,500 servers. Expected timeline: no sharding through the MVP and early public use → internal sharding at 2,500 servers (nothing else changes) → multiple processes only if one process runs out of CPU or memory.
-
-**The nearer risk is deploys.** Managed hosts often start the new instance before stopping the old one. For a Discord bot that's two live processes for a moment, both receiving events and both recovering battles on boot, which would duplicate turns, timers, and rewards. One design covers deploy overlap and multi-process sharding alike:
-1. **Every live record carries its server:** battles, turn timers, challenges, and trades have a `guildId`. Everything stateful already lives within one server (Arena, trades, journeys, even event regions).
-2. **Ownership follows the shard:** a single `ownsGuild(guildId)` function decides whether this process is responsible for a server. One process returns `true` for everything; multiple processes apply Discord's shard formula. A battle stays with the process that receives its server's button presses, so nothing needs routing between processes.
-3. **Battle leases:** a process runs a battle only while it holds that battle's lease (`ownerInstance`, renewed by heartbeat), the same DB lease mechanism as journey locks. On boot it recovers only battles of servers it owns whose lease it can take. During a deploy overlap the old process keeps its leases until it stops, and the new one takes over as they expire, so each battle runs in exactly one place.
-4. **Resharding is a restart:** a new shard count changes the server-to-shard mapping, and every battle (seed + input log, injections included) and timer (a stored deadline) is recovered by its new owner, the same path as after any restart ([14](14-battle-system-and-showdown.md)).
-5. **Deploy setting:** the bot's service is configured for **no overlap** (stop the old instance, then start the new) where the host allows it, with one replica until multi-process sharding is real. The leases are the safety net if an overlap happens anyway.
-6. **The webapp never runs battles or timers**, so none of this affects it.
-
-### Package layout & encapsulation rules (decided Oct 2026)
+## Package layout & encapsulation rules (decided Oct 2026)
 Option C is only safe if the boundaries are enforced, so the engine (and the battle host) can be pulled into their own containers later without untangling code.
 
 ```
@@ -150,84 +121,11 @@ Rules (enforced with Nx module-boundary tags + `@nx/enforce-module-boundaries` l
 3. Engine and battle are **constructed from injected ports** (repositories, BattlePort, Clock, Rng, event sink). No module-level singletons and no direct Mongoose/discord.js imports inside libs. Swapping an in-process port for a network client is how either one moves into its own container.
 4. Everything crossing a port is **serializable data** (actions, events, battle specs, results), so the in-process call can become an API/queue message unchanged.
 
-## Where adventure play is shown (decided Oct 2026, Q2)
-- **Server-configurable display mode, ephemeral by default.** MVP implements only ephemeral. **Per-player threads** are the long-term favorite. A designated play channel is the third option.
-  ```ts
-  Server.settings.play: { mode: 'ephemeral' | 'thread' | 'channel'; channelId?: string; threadVisibility?: 'private' | 'public' }
-  Region.settings.playOverride?: same shape   // optional per-region override
-  ```
-  Because the engine emits events and renderers draw them, each mode is a different *renderer target*, not different game logic.
-- **Highlights channel** (opt-in posts for badges, rare catches, champion clears): a nice follow-up, not MVP. It reuses the opt-in, configurable-channel pattern from release notes.
-- **Viewing other players:** on the webapp in MVP. Discord lookup commands come later.
-- **Privacy:** players control who can see their profile and each character (see [13](13-characters-and-pokemon-instances.md#privacy-decided-oct-2026)).
+## Rendering and the Discord surface
+The engine returns events; how they look in Discord (where play is shown (Q2), the `/play` hub, locked-option explanations, battle rendering, and FlowCord patterns) is in [26](26-discord-surface-and-ux-patterns.md).
 
-## Discord surface (game-dev perspective)
-
-- **One `/play` hub** per region with contextual buttons (Travel, Explore, Talk, Shop, Party, Bag, Map) instead of dozens of slash commands. FlowCord's menu graph is perfect for this.
-- **Where does play happen?** Decided (Q2): server-configurable, ephemeral by default and the only mode in MVP, with per-player threads as the long-term favorite (see [Where adventure play is shown](#where-adventure-play-is-shown-decided-oct-2026-q2)). Arena PvP battles are public by design.
-- **Global commands.** Move from guild-folder registration to global registration. Gate features by per-server config instead.
-
-## FlowCord implications
-- FlowCord sessions stay **UI-only**. Don't store engine objects (battle streams, journey docs) in session state. Store IDs and re-fetch through the engine. This resolves the "how do I keep the Showdown stream in a `Record<string, unknown>` without cloning" problem. The stream lives in `BattleService`, keyed by `battleId`.
-- **Multi-user flows** (PvP, trades) are needed for Pre-MVP. The *turn loop* and timers live in BattleService. **Decided (Oct 2026, Q34):** for the Arena, the shared surfaces (public battle message, challenges, participant checks) are plain discord.js handlers with stable custom IDs behind a `BattleSurface` port. FlowCord stays single-user, so the Arena doesn't wait on FlowCord's multi-user epic. Generic multi-user support in FlowCord is still welcome, and the port lets the Arena adopt it later. See [14 § Multiplayer boundary](14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34).
-
-## Authoring: the same pattern for region building
-
-> **Decision (Oct 2026):** Option C was adopted for gameplay. Because a webapp builder is likely (more screen space, custom controls such as graph and script editors), admin authoring follows the same pattern.
-
-Once two clients (FlowCord admin menus and the webapp) can both edit a region, any rule that lives in a client gets duplicated and drifts. Examples:
-- Delete a location → remove inbound edges.
-- The two-way connection toggle.
-- Content key generation.
-- "Used by" checks before delete.
-- Condition and effect validation.
-- Permission checks.
-
-```
-FlowCord admin menus ─┐
-                      ├─► libs/authoring ─► draft content repos (Mongo)
-Webapp builder (tRPC) ┘    commands in        │
-                           results out        └─► publish ─► validator ─► RegionRelease
-```
-
-```ts
-type AuthoringCommand =
-  | { type: 'location.create'; regionId; name; kind; parentKey? }
-  | { type: 'location.connect'; regionId; from; to; twoWay: boolean; condition? }
-  | { type: 'location.delete'; regionId; key }   // cascades inbound edges, or refuses with "used by"
-  | { type: 'progression.upsert'; regionId; key?; definition }
-  | { type: 'script.update'; regionId; key; steps }
-  | { type: 'region.publish'; regionId }
-  | …;
-
-authoring.execute(actor, command) → { ok: true; changes: ContentChange[]; warnings: Issue[]; suggestions: Suggestion[] } | { ok: false; issues: Issue[] }
-// suggestions: follow-up commands a client may offer (e.g. after adding HM Fly: "Enable traditional Fly travel?"). Empty in MVP; the hook exists so builder shortcuts are additive later.
-```
-
-**How it differs from the gameplay engine:**
-
-| | `libs/engine` (play) | `libs/authoring` (build) |
-|---|---|---|
-| Operates on | Journey state + a published release | Draft content documents |
-| Concurrency | Per-journey lock, optimistic concurrency on Journey | Per-entity optimistic concurrency (`version` per location/script/etc.). On conflict, return "this was changed by X, reload" instead of a silent overwrite. |
-| Validation | Conditions evaluated at runtime | Schema validation per command + Region Health (the full validator) on demand and at publish |
-| Output | `GameEvent[]` for renderers | `ContentChange[]` (for the audit log, cache invalidation, and the webapp's live refresh) |
-| Auth | Journey owner | `actor` = Discord user + server role check (admin/mod role IDs). The webapp resolves roles through the bot or the Discord API, never trusting the browser. |
-
-**Shared foundation.** Both packages build on one core of content schemas, the condition/effect registries, and the validator. The validator needs the registries' `validate()` and `references()`, and the engine needs `evaluate()`. Suggested layout:
-- `libs/core`: content schemas, ContentKey, registries, validator.
-- `libs/engine`: runtime.
-- `libs/authoring`: admin commands.
-
-Zod command schemas double as form schemas in the webapp and modal validation in Discord.
-
-**What each client is good for:**
-- **Discord builder:** quick edits, mobile, templates ("Add Gym Leader"), Region Health checks, publishing.
-- **Webapp builder:** the location graph canvas, script step editor, encounter-table grids, bulk edits, and JSON import/export.
-
-Both call the same commands, so either can be the "complete" one without duplicating rules.
-
-**Migration:** new builder features (connections, encounters, NPCs, scripts, shops) go through `libs/authoring` from day one. The existing pokedex, progression, and locations menus move over during M0/M3, which is also when they adopt content keys and conditions.
+## Authoring
+Admin authoring follows the same pattern (`libs/authoring`, commands in, results out): see [16](16-authoring-validation-and-portability.md#authoring-the-same-pattern-for-region-building).
 
 ## MVP scope
 - `libs/engine` with the action/event contract, per-journey lock, state revisions, action preconditions, session claims, and the mode state machine.
@@ -237,6 +135,6 @@ Both call the same commands, so either can be the "complete" one without duplica
 - `libs/core` + `libs/authoring` with commands for the M3/M4 builder features. Existing admin menus migrate onto them.
 
 ## Open questions
-- ~~Ephemeral or public adventure play?~~ **Decided (Q2):** server-configurable, ephemeral by default and the only mode in MVP (see [Where adventure play is shown](#where-adventure-play-is-shown-decided-oct-2026-q2)).
+- ~~Ephemeral or public adventure play?~~ **Decided (Q2):** server-configurable, ephemeral by default and the only mode in MVP (see [26](26-discord-surface-and-ux-patterns.md#where-adventure-play-is-shown-decided-oct-2026-q2)).
 - ~~Multiple Discord clients at once?~~ **Decided (Oct 2026):** one active `/play` session per journey, newest wins, and the new session resumes whatever mode the journey is in. See [Per-journey serialization](#per-journey-serialization-revisions-preconditions-and-sessions-decided-oct-2026).
 - ~~`/play` only, or shortcuts?~~ **Decided (Oct 2026):** `/play` only in MVP. Shortcuts (`/bag`, `/party`, …) come later as deep links into the matching `/play` screen, and they claim the play session like `/play` does.

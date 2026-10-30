@@ -167,7 +167,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Battle persistence (seed + input log, `guildId`), battle leases (`ownerInstance` + heartbeat) and `ownsGuild` ownership, recovery on boot of owned unleased battles only (test: two overlapping processes run each battle once), compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
 - [ ] Protocol → GameEvent translation; battle text from Showdown's text data, not hand-written strings (M)
 - [ ] Discord battle view builders (pure `BattleView` → Components v2: turn messages, both actives with level/HP/status, the two sprites as separate images, choice prompts; a composed side-by-side image is post-MVP). The Arena wiring is in M2 E-M2-2 (L)
-- [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)
+- [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [25 § Ownership](../architecture/concepts/25-arena.md#ownership)
 
 **Epic: AI Players**
 - [ ] AI player interface + `random` profile (S)
@@ -176,7 +176,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 ## M2: Arena Release 🚀
 
-> **FlowCord is no longer on the critical path (decided Oct 2026, Q34).** FlowCord menus are single-person actionable. BattleService owns rounds and timers. The Arena's shared surfaces (challenges, public battle message, participant checks, private prompts) are plain discord.js handlers behind a `BattleSurface` port (E-M2-2), and FlowCord runs the single-user `/arena` hub. The FlowCord issues that would help (flowcord#105–#107) are listed in [M2 § FlowCord dependencies](../backlog/m2-launch-readiness.md#flowcord-dependencies). See [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34).
+> **FlowCord is no longer on the critical path (decided Oct 2026, Q34).** FlowCord menus are single-person actionable. BattleService owns rounds and timers. The Arena's shared surfaces (challenges, public battle message, participant checks, private prompts) are plain discord.js handlers behind a `BattleSurface` port (E-M2-2), and FlowCord runs the single-user `/arena` hub. The FlowCord issues that would help (flowcord#105–#107) are listed in [M2 § FlowCord dependencies](../backlog/m2-launch-readiness.md#flowcord-dependencies). See [25 § Multiplayer boundary](../architecture/concepts/25-arena.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34).
 
 **Epic: Launch Readiness: Hosting & Operations** (Q30, see [21](../architecture/concepts/21-hosting-and-environments.md); drafts in [`../backlog/m2-launch-readiness.md`](../backlog/m2-launch-readiness.md))
 Scheduled last on the Arena track. Development runs locally until then.

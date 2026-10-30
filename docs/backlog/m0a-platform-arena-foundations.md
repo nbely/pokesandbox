@@ -4,7 +4,7 @@
 
 **Hosting and production environments moved to M2** ("Launch Readiness", see [`m2-launch-readiness.md`](m2-launch-readiness.md)). Nothing in M0a/M1 needs a deployed environment. Development runs locally, and hosting is the last step before the bot and Arena go live.
 
-Refs: [`mvp.md`](../roadmap/mvp.md) · [`github-project-setup.md`](../roadmap/github-project-setup.md) · concepts [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [14](../architecture/concepts/14-battle-system-and-showdown.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+Refs: [`mvp.md`](../roadmap/mvp.md) · [`github-project-setup.md`](../roadmap/github-project-setup.md) · concepts [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [14](../architecture/concepts/14-battle-system-and-showdown.md), [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ---
 
@@ -74,7 +74,7 @@ Move the repos to the org, get CI gating every PR, and give contributors and age
   - Map fields are parsed with `zMapHydrator`.
 - Each rule links its concept doc. Remove outdated guidance that contradicts the docs (e.g. "cache-first" for mutable docs).
 
-**Refs:** [architecture README](../architecture/README.md), [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [02](../architecture/concepts/02-identity-and-references.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+**Refs:** [architecture README](../architecture/README.md), [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [02](../architecture/concepts/02-identity-and-references.md), [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ### M0A-06 · Scheduled agent pickup workflow
 `Type: Task` · `Parent: E-M0A-1` · `Priority: P2` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-03, M0A-04` · `agent-ready: no` · `Owner: owner`
@@ -172,7 +172,7 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 - A typed error model (`actionRejected` with an explanation vs internal errors).
 - Tests: double dispatch (second press is stale, applied once), conflict retry (only for actions without a `rev`), lease expiry, a precondition rejection with its explanation, and a session takeover rejecting the old session.
 
-**Refs:** [03 § Per-journey serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+**Refs:** [03 § Per-journey serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ### M0A-13 · `Clock` and seeded `Rng`
 `Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:engine` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
@@ -227,7 +227,7 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 - Indexes are declared in the schemas and created on startup (`autoIndex` in dev) or by a migration script (prod). Documented.
 - `ensureServerInitialized` no longer creates duplicates under concurrent first use (test or reasoning in the PR).
 
-**Refs:** [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+**Refs:** [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ### M0A-18 · Cache policy: no shared mutable documents
 `Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: —` · `agent-ready: no` · `Owner: senior`
@@ -237,7 +237,7 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 - Admin edits use targeted atomic updates (`$set` on paths) instead of mutate-cached-doc-then-`save()`.
 - Existing admin menus keep working (manual test list in the PR).
 
-**Refs:** [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+**Refs:** [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ### M0A-19 · Rename DexEntry `showdownName` → `speciesId`, and reference species by ID
 `Type: Task` · `Parent: E-M0A-3` · `Priority: P0` · `Size: M` · `Labels: area:shared-models` · `Blocked by: M0A-17` · `agent-ready: yes` · `Owner: agent`

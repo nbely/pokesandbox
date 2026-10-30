@@ -19,10 +19,10 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 4 | Logic inside Discord menu handlers | **`libs/engine`**: actions in, events out, per-journey lock, persisted "mode" (overworld/script/battle) | Restart-safe, testable headless, shareable with the webapp/AI, no double-click dupes | [03](concepts/03-engine-boundary-and-game-loop.md) |
 | 5 | ObjectId cross-references for content (`speciesId`, `itemId`, `toLocationId`) and bidirectional arrays | **Showdown IDs** for canon content, **content keys** for authored content, one-directional ownership | Portability (templates, import/export), zero translation on the battle hot path, no drift | [02](concepts/02-identity-and-references.md) |
 | 6 | Fork with custom data in base files, 3 years stale, HP injection only | **Rebased fork + thin patch set** (state injection, external choice hook for bag/catch/run, caught/ran endings) + content injected into **isolated custom-data dexes**; BattleService with persistence/recovery and AI profiles | Showdown has no catching/running/bag. Upstream fixes keep flowing. Custom fakemon path proven early. | [14](concepts/14-battle-system-and-showdown.md) |
-| 7 | (Unbuilt) Journey holding party/boxes | **PokemonInstance collection** with `storage` union, in Showdown set shape; TeamPresets for the Arena | Trading, GTS, breeding pools, and adventure PvP become queries, not migrations | [13](concepts/13-characters-and-pokemon-instances.md) |
+| 7 | (Unbuilt) Journey holding party/boxes | **PokemonInstance collection** with `storage` union, in Showdown set shape; TeamPresets for the Arena | Trading, GTS, breeding pools, and adventure PvP become queries, not migrations | [13](concepts/13-pokemon-instances-and-trading.md) |
 | 8 | Boolean progressions for every event | **Engine-managed flags** (trainer defeated, script done, item picked up) separate from curated progressions; add `choice` kind | Real games have thousands of flags. Admins shouldn't define each. | [04](concepts/04-progression-and-flags.md) |
 | 9 | `baseGeneration` + scattered defaults | **`RegionRules`** with presets (Classic Gen 1, Modern) + injected Clock/Rng | "Recreate RBY" and "modern game" become the same engine with different rules | [18](concepts/18-rules-time-and-randomness.md) |
-| 10 | Shared mutable cached Mongoose docs, no indexes, no transactions | Cache immutable data only; per-journey lock + OCC; replica-set transactions; unique indexes | Prevents dupes and lost progress once players exist | [15](concepts/15-persistence-caching-concurrency.md) |
+| 10 | Shared mutable cached Mongoose docs, no indexes, no transactions | Cache immutable data only; per-journey lock + OCC; replica-set transactions; unique indexes | Prevents dupes and lost progress once players exist | [15](concepts/15-persistence-concurrency-and-runtime.md) |
 
 ## Concept index
 
@@ -40,9 +40,9 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 10 | [Wild Encounters](concepts/10-encounters.md) | High |
 | 11 | [NPCs, Trainers & Battle Definitions](concepts/11-npcs-trainers-and-battle-definitions.md) | High |
 | 12 | [Content Catalog: Species, Moves, Items, TMs](concepts/12-content-catalog-species-moves-items.md) | High |
-| 13 | [Characters, Journeys & Pokémon Instances](concepts/13-characters-and-pokemon-instances.md) | Very high |
+| 13 | [Pokémon Instances & Trading](concepts/13-pokemon-instances-and-trading.md) | Very high |
 | 14 | [Battle System & the Showdown Fork](concepts/14-battle-system-and-showdown.md) | Very high |
-| 15 | [Persistence, Caching & Concurrency](concepts/15-persistence-caching-concurrency.md) | High |
+| 15 | [Persistence, Concurrency & Runtime Topology](concepts/15-persistence-concurrency-and-runtime.md) | High |
 | 16 | [Authoring, Validation & Portability](concepts/16-authoring-validation-and-portability.md) | High |
 | 17 | [Economy, Shops & Inventory](concepts/17-economy-shops-inventory.md) | Medium |
 | 18 | [Region Rules, Time & Randomness](concepts/18-rules-time-and-randomness.md) | High |
@@ -50,5 +50,9 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 20 | [Database & Realtime Platform (MongoDB vs SpacetimeDB vs alternatives)](concepts/20-database-and-realtime-platform.md) | Medium |
 | 21 | [Hosting & Environments](concepts/21-hosting-and-environments.md) | High (M2 launch readiness) |
 | 22 | [Adventure Log & Narration](concepts/22-adventure-log-and-narration.md) | Medium (log from MVP; narration later) |
+| 23 | [Players: Characters, Journeys & Scopes](concepts/23-players-characters-journeys-and-scopes.md) | High |
+| 24 | [Shared State: Region & Server](concepts/24-shared-state-region-and-server.md) | None now (post-MVP) |
+| 25 | [Arena](concepts/25-arena.md) | Very high (public release #1) |
+| 26 | [Discord Surface & UX Patterns](concepts/26-discord-surface-and-ux-patterns.md) | High |
 
-Each concept doc follows roughly the same outline: **TL;DR → current shape → gaps → options (pros/cons) → recommendation → decisions → MVP scope → open questions.** Struck-through open questions are answered, with a pointer to the Q-number. The remaining ones are smaller and can be settled while the related issue is worked.
+Each concept doc follows roughly the same outline: **TL;DR → current shape → gaps → options (pros/cons) → recommendation → decisions → MVP scope → open questions.** Struck-through open questions are answered, with a pointer to the Q-number. Concepts 23–26 were split out of earlier docs (Oct 2026) so each doc covers one topic; the source docs keep a one-line pointer where content moved. The remaining ones are smaller and can be settled while the related issue is worked.

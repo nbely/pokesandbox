@@ -29,7 +29,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 | Engine | `libs/engine` package skeleton: `dispatch(action) → events`, per-journey lock, state revisions, action preconditions, one active `/play` session per journey, injected Clock/Rng, in-memory test harness | [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [18](../architecture/concepts/18-rules-time-and-randomness.md) |
 | Primitives | Condition tree + predicate registry (evaluate/explain/validate/references); Effect union + executor (atomic, idempotent) | [05](../architecture/concepts/05-requirements.md), [06](../architecture/concepts/06-effects.md) |
 | Identity | ContentKey type, Showdown-ID references, remove bidirectional arrays, indexes | [02](../architecture/concepts/02-identity-and-references.md) |
-| Persistence | Mongo replica set (transactions), cache policy (immutable only), OCC helpers | [15](../architecture/concepts/15-persistence-caching-concurrency.md) |
+| Persistence | Mongo replica set (transactions), cache policy (immutable only), OCC helpers | [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md) |
 | Showdown | Rebase fork onto upstream; archive the 10 New Logora custom moves off `master` (Q28); patch set (state injection, external choice hook, caught/ran endings, isolated custom-data dexes); publish as a package the monorepo consumes | [14](../architecture/concepts/14-battle-system-and-showdown.md) |
 | Org | Move repos to the org, CI (lint, typecheck, unit tests), labels/project/milestones, global command registration | [github-project-setup](github-project-setup.md) |
 
@@ -49,7 +49,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Formats | `ArenaFormat` (server-scoped: species pool from canon / server library / optional region dex, bans, rules); built-in canon formats (flat Lv50, Showdown standard clauses) so the Arena works on a fresh server; piecemeal `RegionRules` with the Classic Gen 1 preset for adventure |
 | Teams | `TeamPreset` model (user-owned across servers, cap 50); Showdown paste import/export + random legal team at launch; guided builder can follow the launch; TeamValidator against the format |
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers (PvP 90s, default move on timeout, forfeit after 3); forfeits; spectating |
-| Multi-user | Challenge → accept → battle on BattleService-driven shared surfaces (plain discord.js handlers with stable IDs). FlowCord stays single-user for the `/arena` hub. Moving them onto FlowCord multi-user sessions is a later option, not a dependency. See [14 § Multiplayer boundary](../architecture/concepts/14-battle-system-and-showdown.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34) (Q34) |
+| Multi-user | Challenge → accept → battle on BattleService-driven shared surfaces (plain discord.js handlers with stable IDs). FlowCord stays single-user for the `/arena` hub. Moving them onto FlowCord multi-user sessions is a later option, not a dependency. See [25 § Multiplayer boundary](../architecture/concepts/25-arena.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34) (Q34) |
 | AI | AI profiles `random`, `basic`, `smart` (trainer item use from `basic` up); PvAI against random legal teams generated from the format, difficulty via AI profile; admin-authored AI team sets later |
 | Ops | **Launch readiness:** hosting, Atlas + backups, deploy pipeline, monitoring, staging (the last step before going public). Battle history persistence. |
 
@@ -111,7 +111,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Rematches | Trainer/gym rematch variants (VS Seeker / phone) | Conditioned parties, `timer` kind |
 | Server events | Server-wide events, giveaways, event quests, plot-NPC chance encounters, forced-loss/survival battles | `ServerState`, `chance` predicate, battle win-conditions |
 | Community boss | Shared HP pool raid | State injection hook + `ServerState`/`RegionState` |
-| Living region | Region state players shape together: first-X NPCs and gifts, NPCs that remember, shared goals, story chapters, trainer ghosts | `RegionState`, region facts/effects ([04](../architecture/concepts/04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)) |
+| Living region | Region state players shape together: first-X NPCs and gifts, NPCs that remember, shared goals, story chapters, trainer ghosts | `RegionState`, region facts/effects ([24](../architecture/concepts/24-shared-state-region-and-server.md)) |
 | Environment | Weather/terrain by location, swarms, visible-spawn UI | Encounter conditions |
 | Staff ops | Grant items/Pokémon/money/TMs with audit log | Effect executor |
 | Webapp | Full builder beyond the MVP editors, battle replays, richer journey and log views | MVP webapp editors, adventure log, region bundles |

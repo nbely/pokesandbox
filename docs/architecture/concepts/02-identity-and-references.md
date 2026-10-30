@@ -80,7 +80,7 @@ UserNavLayout {             // one doc per user (or embedded on User; it's bound
 Yes, for the **draft** (one doc per location/NPC/script keeps authoring writes small and concurrent-safe). The **release** compiles them into a keyed bundle (see [01](01-content-vs-state-and-publishing.md)). The engine resolves references against the bundle's in-memory maps, never with populates.
 
 ### Event regions (post-MVP)
-Server event content that isn't specific to one region (e.g. an event island every player visits) lives in an **event region**: a server-owned region of kind `event`. Its content keys are its own, so the identity rules above apply unchanged: nothing about events needs server-global content keys. Journeys visit it temporarily (see [13 § Event regions and visiting](13-characters-and-pokemon-instances.md#event-regions-and-visiting-post-mvp)).
+Server event content that isn't specific to one region (e.g. an event island every player visits) lives in an **event region**: a server-owned region of kind `event`. Its content keys are its own, so the identity rules above apply unchanged: nothing about events needs server-global content keys. Journeys visit it temporarily (see [23 § Event regions and visiting](23-players-characters-journeys-and-scopes.md#event-regions-and-visiting-post-mvp)).
 
 ## MVP scope
 - ContentKey type and generator. Migrate Location to have a `key`. Species and item references become Showdown IDs. Remove the bidirectional arrays. Add indexes.

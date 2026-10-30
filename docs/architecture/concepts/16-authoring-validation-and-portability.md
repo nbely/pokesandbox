@@ -46,6 +46,64 @@ These are **warnings**, never blockers, so creative non-standard games still pub
   - **Backups** and moving regions between servers.
   - Power-user authoring in a text editor, and later community sharing.
 
+## Authoring: the same pattern for region building
+
+> **Decision (Oct 2026):** Option C was adopted for gameplay. Because a webapp builder is likely (more screen space, custom controls such as graph and script editors), admin authoring follows the same pattern.
+
+Once two clients (FlowCord admin menus and the webapp) can both edit a region, any rule that lives in a client gets duplicated and drifts. Examples:
+- Delete a location → remove inbound edges.
+- The two-way connection toggle.
+- Content key generation.
+- "Used by" checks before delete.
+- Condition and effect validation.
+- Permission checks.
+
+```
+FlowCord admin menus ─┐
+                      ├─► libs/authoring ─► draft content repos (Mongo)
+Webapp builder (tRPC) ┘    commands in        │
+                           results out        └─► publish ─► validator ─► RegionRelease
+```
+
+```ts
+type AuthoringCommand =
+  | { type: 'location.create'; regionId; name; kind; parentKey? }
+  | { type: 'location.connect'; regionId; from; to; twoWay: boolean; condition? }
+  | { type: 'location.delete'; regionId; key }   // cascades inbound edges, or refuses with "used by"
+  | { type: 'progression.upsert'; regionId; key?; definition }
+  | { type: 'script.update'; regionId; key; steps }
+  | { type: 'region.publish'; regionId }
+  | …;
+
+authoring.execute(actor, command) → { ok: true; changes: ContentChange[]; warnings: Issue[]; suggestions: Suggestion[] } | { ok: false; issues: Issue[] }
+// suggestions: follow-up commands a client may offer (e.g. after adding HM Fly: "Enable traditional Fly travel?"). Empty in MVP; the hook exists so builder shortcuts are additive later.
+```
+
+**How it differs from the gameplay engine:**
+
+| | `libs/engine` (play) | `libs/authoring` (build) |
+|---|---|---|
+| Operates on | Journey state + a published release | Draft content documents |
+| Concurrency | Per-journey lock, optimistic concurrency on Journey | Per-entity optimistic concurrency (`version` per location/script/etc.). On conflict, return "this was changed by X, reload" instead of a silent overwrite. |
+| Validation | Conditions evaluated at runtime | Schema validation per command + Region Health (the full validator) on demand and at publish |
+| Output | `GameEvent[]` for renderers | `ContentChange[]` (for the audit log, cache invalidation, and the webapp's live refresh) |
+| Auth | Journey owner | `actor` = Discord user + server role check (admin/mod role IDs). The webapp resolves roles through the bot or the Discord API, never trusting the browser. |
+
+**Shared foundation.** Both packages build on one core of content schemas, the condition/effect registries, and the validator. The validator needs the registries' `validate()` and `references()`, and the engine needs `evaluate()`. Suggested layout:
+- `libs/core`: content schemas, ContentKey, registries, validator.
+- `libs/engine`: runtime.
+- `libs/authoring`: admin commands.
+
+Zod command schemas double as form schemas in the webapp and modal validation in Discord.
+
+**What each client is good for:**
+- **Discord builder:** quick edits, mobile, templates ("Add Gym Leader"), Region Health checks, publishing.
+- **Webapp builder:** the location graph canvas, script step editor, encounter-table grids, bulk edits, and JSON import/export.
+
+Both call the same commands, so either can be the "complete" one without duplicating rules.
+
+**Migration:** new builder features (connections, encounters, NPCs, scripts, shops) go through `libs/authoring` from day one. The existing pokedex, progression, and locations menus move over during M0/M3, which is also when they adopt content keys and conditions.
+
 ## Builder UX notes (Discord)
 - The builder should surface **"used by"** before deletes ("Badges is used by 4 conditions. Delete anyway?").
 - A **"Region Health"** button on `/region` shows validator output grouped by severity, with jump links into the relevant menu.
@@ -99,7 +157,7 @@ Targeted webapp editors for the authoring tasks that are **most painful in Disco
 Stays Discord-first (small, form-like): region settings and rules, progression definitions, Pokédex slotting (exists), shops, transport networks, NPC basics. They get webapp forms later as needed.
 
 ## Principle: Discord-complete authoring (decided Oct 2026)
-Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands ([03](03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
+Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands (see [Authoring](#authoring-the-same-pattern-for-region-building) above), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
 
 ## Open questions
 - ~~Block publish on errors only?~~ **Decided (Oct 2026):** yes. Errors block. Warnings and info never block, but they are **shown before the publish button is pressed**: publishing is two steps, a review (validation results plus the release diff) and then a confirm. The confirm is tied to the reviewed draft, so if the draft changes in between, the review runs again.

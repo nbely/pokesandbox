@@ -15,7 +15,7 @@ TrainerClass {                  // region registry, canon defaults seeded (Young
 }
 
 Trainer {
-  key; regionId; name; class: TrainerClassId; spriteUrl?;   // name may be a placeholder, e.g. '{name:rival}' (see 13)
+  key; regionId; name; class: TrainerClassId; spriteUrl?;   // name may be a placeholder, e.g. '{name:rival}' (see 23)
   format: 'singles' | 'doubles';
   parties: {                    // ordered: first variant whose condition passes is used
     condition?: Condition;      // e.g. choice starterChoice in ['bulbasaur'] ∧ milestone badges ≥ 3

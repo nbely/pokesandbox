@@ -195,7 +195,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 - `suggestions` is always empty for now (reserved).
 - Zod command schemas are exported for reuse in Discord modals and webapp forms.
 
-**Refs:** [03 § Authoring](../architecture/concepts/03-engine-boundary-and-game-loop.md#authoring-the-same-pattern-for-region-building)
+**Refs:** [16 § Authoring](../architecture/concepts/16-authoring-validation-and-portability.md#authoring-the-same-pattern-for-region-building)
 
 ### M0B-17 · Migrate the Pokédex builder to authoring commands
 `Type: Task` · `Parent: E-M0B-4` · `Priority: P1` · `Size: M` · `Labels: area:bot, area:authoring` · `Blocked by: M0B-16, M0A-19` · `agent-ready: yes` · `Owner: junior`
@@ -227,7 +227,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 - `Server.settings`: `releaseNotes { enabled; channelId?; mentionRoleId? }` and `play { mode: 'ephemeral' | 'thread' | 'channel'; channelId?; threadVisibility? }` (only `ephemeral` is implemented). Optional `Region.settings.playOverride`.
 - The Region menu's Deploy toggle becomes Pause/Resume (publishing comes in M0B-21). Migration from the old booleans.
 
-**Refs:** [01 § Decisions](../architecture/concepts/01-content-vs-state-and-publishing.md), [03 § Where play is shown](../architecture/concepts/03-engine-boundary-and-game-loop.md#where-adventure-play-is-shown-decided-oct-2026-q2)
+**Refs:** [01 § Decisions](../architecture/concepts/01-content-vs-state-and-publishing.md), [26 § Where play is shown](../architecture/concepts/26-discord-surface-and-ux-patterns.md#where-adventure-play-is-shown-decided-oct-2026-q2)
 
 ### M0B-21 · Region releases: compile, publish, serve
 `Type: Feature` · `Parent: E-M0B-4` · `Priority: P0` · `Size: L` · `Labels: area:authoring, area:engine` · `Blocked by: M0B-16, M0B-20, M0B-22` · `agent-ready: no` · `Owner: senior`
