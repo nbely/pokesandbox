@@ -70,13 +70,13 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 **Acceptance criteria**
 - `Learnset { speciesId; moves: Record<MoveId, string[]>; source: { showdownVersion } }` with the model conventions above; unique index on `speciesId`.
 - Imported through the resolved Dex like M1-02 (base learnsets plus any old-generation mod learnset files, e.g. `data/mods/gen2/learnsets.ts`), deterministic output to `scripts/seed/data/learnsets.json`.
-- Helpers: `movesFor(learnset, gen, method?)` and `canLearnByMachine(learnset, moveId, gen)`.
+- `resolveLearnset(learnset, gen) → ResolvedLearnset` (`levelUp` sorted by level, `machine`, `tutor`, `egg`, `event`), the shape every consumer uses ([12 § Learnsets](../architecture/concepts/12-content-catalog-species-moves-items.md#learnsets--generation-decided-oct-2026)). Nothing outside the catalog reads raw source codes. Override patches are post-MVP, but the resolved shape is what they'll patch.
 - Every species ID matches an existing `DexEntry` (a test fails on orphans). Coordinate with M0A-19 if it lands at the same time.
-- Tests (verify each against the source): Pikachu learns Thunderbolt by machine in Gen 1 (`1M`); Bulbasaur's Gen 1 level-up list includes Vine Whip; a move that only exists from Gen 2 never appears in Gen 1 results.
+- Tests (verify each against the source): Pikachu's Gen 1 resolved learnset has Thunderbolt in `machine`; Bulbasaur's Gen 1 `levelUp` includes Vine Whip; a move that only exists from Gen 2 never appears in Gen 1 results.
 
 **Changes later:** moves to `libs/core` (M0A-09/M0A-10); re-point to the fork package; the orphan test follows the M0A-19 rename.
 
-**Refs:** [12 § Layering](../architecture/concepts/12-content-catalog-species-moves-items.md#layering-revised-oct-2026)
+**Refs:** [12 § Learnsets](../architecture/concepts/12-content-catalog-species-moves-items.md#learnsets--generation-decided-oct-2026)
 
 ### M1-04 · Move details in the Pokédex builder (read-only)
 `Type: Feature` · `Parent: E-M1-2` · `Priority: P1` · `Size: M` · `Labels: area:bot, domain:catalog` · `Blocked by: M1-02, M1-03` · `agent-ready: yes` · `Owner: junior`
@@ -85,6 +85,7 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 
 **Acceptance criteria**
 - From a Pokédex entry in the builder: a paginated move list for a chosen generation (default: Gen 1 until regions have rules), grouped by method (level-up with levels, TM/HM, other).
+- Reads the species' `ResolvedLearnset` for the chosen generation.
 - Selecting a move shows its details for that generation: type, category, power, accuracy, PP, priority, and the short description (the generation's text block when there is one).
 - Reads through a small catalog read service (`getMove(moveId, gen)`, `getLearnset(speciesId, gen)`) in `shared/`, not direct queries from the menu.
 - Locked or unavailable options follow [26 § Menus and feedback](../architecture/concepts/26-discord-surface-and-ux-patterns.md#menus-and-feedback).

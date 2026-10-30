@@ -53,7 +53,7 @@ Using a TM from the bag (teaching it to a Pokémon) belongs to the M5 bag work, 
 **Summary:** "Which species can learn this machine?" and the publish-time checks for the list.
 
 **Acceptance criteria**
-- `compatibleSpecies(region, label)` and `canLearnMachine(region, speciesId, label)`, using the region's learnset generation and machine sources (Gen 1: `1M`). Until `RegionRules` exists (M1), the learnset generation defaults to Gen 1.
+- `compatibleSpecies(region, label)` and `canLearnMachine(region, speciesId, label)`, using the species' `ResolvedLearnset` for the region's learnset generation (its `machine` list; later, after any learnset override). Until `RegionRules` exists (M1), the learnset generation defaults to Gen 1.
 - Validator checks registered with the M0B-22 registry: duplicate labels (error), a move that doesn't exist or isn't available in the region's move generation (error), a machine no species in the regional dex can learn (warning).
 - Tests with the Gen 1 preset: Pikachu can learn TM24 Thunderbolt; a species without a `1M` source for a machine can't.
 

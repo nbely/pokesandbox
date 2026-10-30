@@ -250,8 +250,42 @@ ItemDefinition {
 
 Machines (TMs/HMs) are region content resolved through `machine:<label>` item IDs, not items with a fixed move (see TM/HM lists above).
 
-## Learnsets & generation
-Showdown learnsets are keyed by generation-specific sources (`8L15`, `7M`). A Region needs a **learnset policy**: "use Gen N learnsets" plus optional per-species overrides. Without it, "recreate RBY" vs "Gen 9 content" is ambiguous. This ties into the rules profile ([18](18-rules-time-and-randomness.md)).
+## Learnsets & generation (decided Oct 2026)
+
+### Canon: Showdown's source codes, one document per species
+```ts
+Learnset { speciesId: 'pikachu'; moves: Record<MoveId, string[]>;     // e.g. thunderbolt: ['9M', …, '1M'], thundershock: ['9L1', …, '1L1']
+           source: { showdownVersion } }
+```
+Each code is `<gen><method><detail>`: `1L15` = Gen 1 level-up at 15, `1M` = Gen 1 TM/HM, `2T` = Gen 2 tutor, `3E` = Gen 3 egg move, `4S0` = Gen 4 event (index into the species' event data), `7V` = Virtual Console transfer. One document holds every generation; the region's learnset policy (`RegionRules.data.learnsets`, [18](18-rules-time-and-randomness.md)) picks which one applies.
+
+### Resolved learnsets: the shape everything else uses
+Nothing outside the catalog reads raw codes. A learnset is first **resolved** for one generation into a simple, generation-free shape:
+```ts
+ResolvedLearnset {
+  levelUp: { level: number; move: MoveId }[];   // sorted by level; a move can appear at several levels
+  machine: MoveId[];                            // TMs/HMs
+  tutor: MoveId[]; egg: MoveId[]; event: MoveId[];
+}
+resolveLearnset(learnset, gen) → ResolvedLearnset
+```
+Move display, trainer default movesets ([11](11-npcs-trainers-and-battle-definitions.md)), level-up move prompts, and TM/HM compatibility ([TM/HM lists](#tmhm-lists-decided-oct-2026)) all read the resolved form.
+
+### Overrides and custom learnsets (post-MVP)
+- **A canon override** is a *linked* library entry ([Species identity](#species-identity-canon-custom-species-variants-overrides--sharing-decided-oct-2026-q19)): a pinned base (the canon learnset at a catalog version, resolved for a generation) plus a **patch on the resolved form**:
+  ```ts
+  LearnsetPatch {
+    add?:     { move: MoveId; method: 'levelUp' | 'machine' | 'tutor' | 'egg'; level?: number }[];
+    remove?:  { move: MoveId; method?: 'levelUp' | 'machine' | 'tutor' | 'egg' }[];   // no method = remove entirely
+    relevel?: { move: MoveId; from: number; to: number }[];
+  }
+  effective = applyPatch(resolveLearnset(base, gen), patch)
+  ```
+- **Why patch the resolved form, not codes:** it matches how authors think ("Charmander learns Flamethrower at 30", "remove Fly from Charizard's TMs"); a region only ever uses one generation, so per-gen codes would be noise; and it keeps the builder simple.
+- **Upgrades** use the same three-way merge as species overrides: changes only the base made are taken, local changes stay, and conflicts are shown. The base records which generation it was resolved for, so changing a region's learnset generation re-resolves the base and re-applies the patch.
+- **Custom species** (originals, `<ns>:<slug>`) author a `ResolvedLearnset` directly, with no codes or generations.
+- **One definition per species per region,** like species overrides: a server can hold several learnset overrides for `pikachu`, and each region picks one.
+- **TM compatibility follows automatically:** a patch adding Surf to `machine` makes that species compatible with the region's Surf machine.
 
 ## Custom content (Full / Pie-in-sky)
 Your roadmap wants "custom fakemon, forms, and types per server: predictable, simple descriptor-field-fed data". Custom species need entries in pokedex, learnsets, formats-data, and (for types) the typechart. Path:
