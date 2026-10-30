@@ -75,7 +75,7 @@ A region that remembers what happens in it. Like server events, but scoped to on
 **Design notes**
 - **Facts and effects:** world facts (`world.counter`, `world.flag`, `world.stage`, `world.claimed`) join the condition registry ([05](05-requirements.md)), and world effects (`worldIncrement`, `worldClaim`) join the effect registry ([06](06-effects.md)). Encounter tables, party variants, dialogue, and gates read them like any other fact.
 - **"First X" claims are atomic and per character:** a conditional increment that only succeeds while the count is below X, plus a per-character claim record, so double presses and races can't over-grant (the same idempotency rules as effects).
-- **World state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Test characters never count toward it ([01](01-content-vs-state-and-publishing.md)).
+- **World state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current world state, and world migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test characters never count toward it ([01](01-content-vs-state-and-publishing.md)).
 - **Players see live numbers** where it adds tension ("37 of 100 claimed", "4,212 / 5,000 caught").
 - **Trainer ghosts** store a team snapshot, the same `PokemonSnapshot` pattern as the adventure log ([22](22-adventure-log-and-narration.md)), so they don't depend on the original Pokémon still existing.
 - **Contention:** hot world counters (a popular route's catch count) should use atomic `$inc` and can be batched or sharded if they ever bottleneck. That's not a concern at MVP scale.

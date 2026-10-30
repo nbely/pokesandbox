@@ -126,6 +126,18 @@ Region.discovery: {
 - `Character.isTest: boolean` plus `Character.releaseRef: { kind: 'published', version } | { kind: 'preview', id }`.
 - Test characters are excluded from discovery stats, leaderboards, trading, and PvP.
 
+**4. Publish checks state, not just content.** The publish review ([16](16-authoring-validation-and-portability.md)) checks what the new release would do to existing state, and migration rules handle what it changes:
+- **Character saves (MVP):** the migration rules above run lazily when a character loads on a newer release. Rule changes that would break saves need a fix-up rule ([18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
+- **World state (post-MVP, with the living world in [04](04-progression-and-flags.md#living-world-region-wide-state-post-mvp-direction-oct-2026)):** checked against the region's current `WorldState` at review time. World migrations run **once, at publish, inside the publish transaction**, not lazily, because world state is shared.
+
+  | Change in the release | Review result |
+  |---|---|
+  | Content that world state references is removed (a counter or claims for a deleted NPC or gift) | Warning. The data is kept, not deleted, and comes back if the key returns. Admins can purge it explicitly. |
+  | A "first X" cap is lowered below the claims already made | Warning: "73 already claimed, new limit 50: no new claims." Existing claims are never revoked. |
+  | A threshold that's already met (a community unlock) | Warning: "already satisfied, activates on publish." |
+  | The story stage the world is currently on is removed or renamed | **Error**, unless the publish includes a stage mapping (a world migration rule). |
+  | A counter's meaning changes (it now counts something different) | Warning, with an option to reset that counter at publish. |
+
 ## Open questions
 - ~~Hot-fix a published release?~~ **Decided (Oct 2026):** no. Every change, typo fixes included, goes live only through a publish (with its review step, see [16](16-authoring-validation-and-portability.md)). One path means one set of validation and one change history.
 - ~~Announce releases to players?~~ Decided: opt-in, configurable channel (see above).
