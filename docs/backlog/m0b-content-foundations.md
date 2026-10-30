@@ -98,9 +98,10 @@ Typed, declarative state changes, applied atomically and idempotently, which emi
 - `applyEffects(list, ctx)` works on an in-memory **journey draft**: all-or-nothing, with post-validation (no negative counts or money, definition clamps). Commits through the repository port in one write (or a transaction when several documents are involved).
 - Idempotent per `executionId` (recent-executions ring buffer on the journey).
 - Emits `GameEvent`s per effect (`itemsChanged`, `progressChanged`, …) for renderers.
+- Effects may write only to the current journey (and, post-MVP, region/server state and claim records). The registry rejects effect definitions that target characters or users ([06 § What effects may write](../architecture/concepts/06-effects.md#what-effects-may-write-decided-oct-2026)).
 - Tests: rollback on a failing effect, idempotent replay, event emission.
 
-**Refs:** [06](../architecture/concepts/06-effects.md)
+**Refs:** [06](../architecture/concepts/06-effects.md), [23](../architecture/concepts/23-players-characters-journeys-and-scopes.md)
 
 ### M0B-08 · Effects batch 1: currency, item, flag, progression, milestone, choice
 `Type: Task` · `Parent: E-M0B-2` · `Priority: P0` · `Size: M` · `Labels: area:engine, domain:progression` · `Blocked by: M0B-07, M0B-13` · `agent-ready: yes` · `Owner: agent`
@@ -141,6 +142,7 @@ Region-scoped content keys, one-directional references, and the progression/flag
 
 **Acceptance criteria**
 - Remove `Region.locations`, `Region.characterList`, `Region.shops`, `Region.quests`, `Region.transportationTypes`, `Server.playerList`, `User.servers`. Add `Region.serverId` (indexed).
+- Rename `Region.charactersPerPlayer` → `journeysPerUser` (Q27: one active journey per user per region; the field is kept for later).
 - Bot menus, DTOs, tRPC routers, seeds, and the ERD are updated to query by parent ID.
 - Migration script for existing DBs. The webapp "my servers" list temporarily uses whatever works (the derived Discord-membership list is a later webapp issue).
 

@@ -68,13 +68,16 @@ Move the repos to the org, get CI gating every PR, and give contributors and age
 - Document "no new logic in Discord menu handlers; gameplay goes through `engine.dispatch`, authoring through `authoring.execute`".
 - Document conditions/effects/gates as the only gating and reward mechanisms.
 - Document the cache policy (no hydrated mutable docs).
+- Document the player terms and scopes: a **character** is the persona (original trainer of its Pokémon), a **journey** is one region's playthrough and holds engine state, and `user` / `character` / `journey` are the only scopes. Never call the player a "trainer" in code (that's NPC trainers). Effects never write to characters or users.
+- Document the Discord rules: pure view builders, locked options always explain themselves, stable custom IDs for anything that must survive a restart, and the fixed engine-response wording.
+- Document live-state ownership: battles and timers carry `guildId`, run only under a battle lease, and are never assumed to live in a single process.
 - Document the existing model code conventions, which live only in code today:
   - Zod entity schema is the source of truth, named `fooSchema`. The mirroring Mongoose schema is named `fooDbSchema`.
   - Embedded sub-schemas are standalone `Schema` consts with `{ _id: false }`.
   - Map fields are parsed with `zMapHydrator`.
 - Each rule links its concept doc. Remove outdated guidance that contradicts the docs (e.g. "cache-first" for mutable docs).
 
-**Refs:** [architecture README](../architecture/README.md), [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [02](../architecture/concepts/02-identity-and-references.md), [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
+**Refs:** [architecture README](../architecture/README.md), [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [23](../architecture/concepts/23-players-characters-journeys-and-scopes.md), [26](../architecture/concepts/26-discord-surface-and-ux-patterns.md), [02](../architecture/concepts/02-identity-and-references.md), [15](../architecture/concepts/15-persistence-concurrency-and-runtime.md)
 
 ### M0A-06 · Scheduled agent pickup workflow
 `Type: Task` · `Parent: E-M0A-1` · `Priority: P2` · `Size: M` · `Labels: area:infra` · `Blocked by: M0A-03, M0A-04` · `agent-ready: no` · `Owner: owner`

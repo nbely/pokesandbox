@@ -45,6 +45,7 @@ Everything needed to draft the remaining milestones is in the repo. Nothing depe
 - Split anything bigger than `L`. Mark `agent-ready: yes` only when no design judgement is left.
 - Keep the Arena critical path (M0a → M1 → M2) lean. Hosting stays at the end of M2.
 - If drafting surfaces a question the docs don't answer, don't decide it inside an issue. Ask the owner, then record it as the next Q-number (or in the Smaller decisions index), update the concept doc's Decisions, and update `mvp.md`/`roadmap.md`.
+- Use the player terms from [23](../architecture/concepts/23-players-characters-journeys-and-scopes.md) (character, journey, and the `user` / `character` / `journey` scopes). Issues that render anything in Discord follow [26](../architecture/concepts/26-discord-surface-and-ux-patterns.md).
 - **FlowCord** is a separate org (`flowcord-dev`). Never create or comment on its issues without the owner's approval. Current dependencies: flowcord#105–#107 (see [M2 § FlowCord dependencies](m2-launch-readiness.md#flowcord-dependencies)).
 
 ## Creating issues

@@ -51,7 +51,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Battles | `BattleService` (start/choose/events/persist/recover); Discord renderer (public turn message + ephemeral choice prompts); timers (PvP 90s, default move on timeout, forfeit after 3); forfeits; spectating |
 | Multi-user | Challenge → accept → battle on BattleService-driven shared surfaces (plain discord.js handlers with stable IDs). FlowCord stays single-user for the `/arena` hub. Moving them onto FlowCord multi-user sessions is a later option, not a dependency. See [25 § Multiplayer boundary](../architecture/concepts/25-arena.md#multiplayer-boundary-with-flowcord-decided-oct-2026-q34) (Q34) |
 | AI | AI profiles `random`, `basic`, `smart` (trainer item use from `basic` up); PvAI against random legal teams generated from the format, difficulty via AI profile; admin-authored AI team sets later |
-| Ops | **Launch readiness:** hosting, Atlas + backups, deploy pipeline, monitoring, staging (the last step before going public). Battle history persistence. |
+| Ops | **Launch readiness:** hosting (no-overlap deploys), Atlas + backups, deploy pipeline, monitoring, staging, dependency security (the last step before going public). Battle persistence with leases, so restarts and deploys never duplicate a battle. Battle history. |
 
 **Exit criteria:**
 - Two users on a public test server can build teams by paste, challenge, battle to completion with spectators, and survive a bot restart mid-battle.

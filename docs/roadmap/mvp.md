@@ -152,7 +152,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Catalog read service + move detail display (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
 - [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
-- [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp, the four Gen 1 growth curves (floored). Reference: pret/pokered, with test vectors ([18](../architecture/concepts/18-rules-time-and-randomness.md#reference-test-vectors)). "Classic Gen 1" preset (L)
+- [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp, the four Gen 1 growth curves (floored, level 1 clamped: intended behavior, no glitches). Reference: pret/pokered, with test vectors ([18](../architecture/concepts/18-rules-time-and-randomness.md#reference-test-vectors)). "Classic Gen 1" preset (L)
 - [ ] Assemble per-release data mixes from Showdown gen mods into isolated custom-data dexes (M)
 
 **Epic: Teams**
@@ -224,7 +224,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Script + Trigger models (M)
 - [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/askName/heal/shop/travel/goto/end`, `{name:<slot>}` placeholders (L)
 - [ ] Mode machine + persisted script cursor + resume on input (M)
-- [ ] Trigger dispatch: journeyStarted, enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
+- [ ] Trigger dispatch: journeyStarted (payload: `newCharacter`, `carriedPokemon`), enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
 - [ ] NPC model (location, visibility, interact, trainer, engagement) (M)
 - [ ] Script step-list editor in Discord (L)

@@ -167,7 +167,7 @@ The Discord side of PvP and PvAI, following [25 § Multiplayer boundary](../arch
 - View builders are pure functions with snapshot tests. A fake `BattleSurface` lets scenario tests run without Discord.
 - Rate-limit errors back off and retry without dropping the final state.
 
-**Refs:** [25 § Ownership](../architecture/concepts/25-arena.md#ownership) (scenarios 3, 6, 8)
+**Refs:** [25 § Ownership](../architecture/concepts/25-arena.md#ownership) (scenarios 3, 6, 8), [26 § Battles](../architecture/concepts/26-discord-surface-and-ux-patterns.md#battles)
 
 ### M2-11 · Private choice prompts
 `Type: Feature` · `Parent: E-M2-2` · `Priority: P0` · `Size: M` · `Labels: area:bot` · `Blocked by: M2-08, M2-10` · `agent-ready: no` · `Owner: senior`
@@ -180,7 +180,7 @@ The Discord side of PvP and PvAI, following [25 § Multiplayer boundary](../arch
 - Best effort: when the next request arrives, the player's last prompt is edited to the new options using that interaction's token (in memory, < 15 min). Pressing **Choose** on the public message always works as a fallback, including after a restart.
 - PvAI uses the same prompt, with no timer. The prompt updates when the AI's turn resolves (scenario 5).
 
-**Refs:** [25 § Acceptance scenarios](../architecture/concepts/25-arena.md#acceptance-scenarios) (3, 5, 7)
+**Refs:** [25 § Acceptance scenarios](../architecture/concepts/25-arena.md#acceptance-scenarios) (3, 5, 7), [26 § FlowCord patterns](../architecture/concepts/26-discord-surface-and-ux-patterns.md#flowcord-patterns)
 
 ### M2-12 · Arena scenario tests and a restart drill
 `Type: Task` · `Parent: E-M2-2` · `Priority: P1` · `Size: S` · `Labels: area:bot, area:battle` · `Blocked by: M2-09, M2-10, M2-11` · `agent-ready: yes` · `Owner: agent`
