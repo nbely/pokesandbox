@@ -13,7 +13,7 @@
 | Clients | **1–N bot processes + a Next.js app** (Discord users never talk to the DB) | Thousands of game clients holding open connections |
 | Tick rate | None. Event-driven, human-paced (button press every few seconds; battle turns every 10–90 s) | 10–60 Hz simulation |
 | Latency floor | **Discord API rate limits** and interaction round-trips (hundreds of ms) | Network RTT (tens of ms) |
-| Shared mutable state | Small: trades, GTS listings, breeding pool, PvP battles, server events / boss HP | Large: positions, physics, world state |
+| Shared mutable state | Small: trades, GTS listings, breeding pool, PvP battles, server events / boss HP | Large: positions, physics, continuous simulation state |
 | Hard concurrency problem | **Correctness**: no dupes, no lost progress, atomic multi-entity changes (trade = 2 characters + 2 Pokémon) | **Throughput and fan-out** of state updates |
 
 Rough peak load: 200 servers × 50 concurrently active players × 1 action per 5 s ≈ **2,000 actions/s** in an optimistic future. A single modest MongoDB or Postgres node handles that with room to spare. The bottleneck will be Discord, not the database.

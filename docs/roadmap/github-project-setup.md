@@ -18,7 +18,7 @@ Use **sub-issues** for Epic → Feature/Task.
 | Group | Labels |
 |---|---|
 | Area | `area:engine`, `area:bot`, `area:webapp`, `area:shared-models`, `area:battle`, `area:showdown-fork`, `area:authoring`, `area:infra`, `area:docs` |
-| Domain | `domain:world`, `domain:scripts`, `domain:conditions-effects`, `domain:progression`, `domain:encounters`, `domain:npcs-trainers`, `domain:catalog`, `domain:character`, `domain:economy`, `domain:transport`, `domain:rules` |
+| Domain | `domain:map`, `domain:scripts`, `domain:conditions-effects`, `domain:progression`, `domain:encounters`, `domain:npcs-trainers`, `domain:catalog`, `domain:character`, `domain:economy`, `domain:transport`, `domain:rules` |
 | Phase | `phase:0-foundations`, `phase:1-arena`, `phase:2-mvp`, `phase:3-full`, `phase:4-sky` |
 | Flags | `good first issue`, `help wanted`, `needs-decision`, `blocked`, `breaking-change`, `agent-ready`, `dependencies` |
 

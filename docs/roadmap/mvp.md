@@ -12,7 +12,7 @@ This doc breaks Phases 0–2 of [`roadmap.md`](roadmap.md) into **GitHub milesto
 | M0b | **Content Foundations** | Conditions/effects/gates, content keys + model cleanup, authoring layer, releases | M0a |
 | M1 | **Battle Core & Catalog** | BattleService + slim Showdown fork + catalog + team presets | M0a |
 | M2 | **Arena Release (Pre-MVP)** 🚀 | Public PvP/PvAI in Discord; hosting & operations (launch readiness) | M1 |
-| M3 | **World Authoring** | Locations, encounters, transport, shops, rules, validate | M0b (parallel with M1/M2) |
+| M3 | **Region Authoring** | Locations, encounters, transport, shops, rules, validate | M0b (parallel with M1/M2) |
 | M4 | **Interaction Engine** | Scripts, triggers, NPCs, trainers, templates | M0b, M3 |
 | M5 | **Adventure Core** | Character, travel, explore, wild/trainer battles, party/PC/bag, progression | M1, M3, M4 |
 | M6 | **Kanto Classic & MVP Release** 🚀 | Kanto built with the tools, playtested, released | M5 |
@@ -197,7 +197,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Alpha test on the community server; feedback triage (M)
 - [ ] Release notes + admin/player docs (S)
 
-## M3: World Authoring
+## M3: Region Authoring
 - [ ] Region config menu: currency object, starting location, respawn, rules preset (M)
 - [ ] Location kinds, grouping (`parentKey`), description/image, services, tags (M)
 - [ ] Connections editor with two-way toggle and labels (M)
@@ -213,7 +213,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 **Epic: Webapp Authoring (Q24)** (can run in parallel with M3/M4 once the matching `libs/authoring` commands exist)
 - [ ] Webapp authoring shell: Discord-role-checked access to a region's draft, entity-level conflict handling (M)
 - [ ] Shared condition builder component (M)
-- [ ] World graph canvas (locations, directional/two-way edges, grouping, gate badges) (L)
+- [ ] Region map canvas (locations, directional/two-way edges, grouping, gate badges) (L)
 - [ ] Encounter table grid (M)
 - [ ] Trainer party editor with conditioned variants; unset moves default to the last 4 level-up moves from the region's learnsets (M)
 - [ ] Script step editor (L)

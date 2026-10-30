@@ -66,7 +66,7 @@ Location.explore: {
 }
 ```
 - Exhausted outcomes drop out and the remaining weights renormalize. Once all trainers are beaten and all items found, Explore yields wild encounters only.
-- **Asides (post-MVP):** short one-time scripts in place of "nothing happened". A description of the area, a cute or eerie moment, a fleeting NPC. Ordinary scripts with `once`, authored per location. They make the world feel alive without wasting the player's time.
+- **Asides (post-MVP):** short one-time scripts in place of "nothing happened". A description of the area, a cute or eerie moment, a fleeting NPC. Ordinary scripts with `once`, authored per location. They make the region feel alive without wasting the player's time.
 - Repel suppresses only `wild` outcomes below the lead's level.
 
 ### Traversal requirements (MVP, decided Oct 2026)

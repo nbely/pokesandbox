@@ -78,7 +78,7 @@ No player-facing commands exist yet. Automated tests are e2e scaffolds only, wit
 | 🟠 | **No "rules" profile.** `baseGeneration: 10` is a magic default. EXP formula, catch formula, mechanics generation, time model, whiteout penalty, and party/box limits are all undefined. | "Recreate RBY" vs "any modern game" depends on per-region rules, not hardcoded engine choices. | [18](concepts/18-rules-time-and-randomness.md) |
 | 🟠 | **Wild encounter methods are a hardcoded enum** (and include `gift`, which isn't a wild method). There's no encounter rate, and slots can't carry conditions (post-game, swarms, flags). | Gen 2+ games need headbutt, Rock Smash, swarms, radio, weather. | [10](concepts/10-encounters.md) |
 | 🟢 | The progression system (kinds, visibility, generated keys, sequential milestones) is well designed. | Needs `choice` and an engine-managed flag namespace. | [04](concepts/04-progression-and-flags.md) |
-| 🟢 | Directional edges with location- and edge-level gates are the right world model. | Add node kinds, grouping, and services (heal/PC/shop). | [08](concepts/08-world-graph-locations.md) |
+| 🟢 | Directional edges with location- and edge-level gates are the right region map model. | Add node kinds, grouping, and services (heal/PC/shop). | [08](concepts/08-region-map-and-locations.md) |
 
 ---
 

@@ -1,6 +1,6 @@
 # M0b: Content Foundations (backlog draft)
 
-**Outcome:** the content-side primitives exist and are tested: conditions, gates, effects, content keys, the authoring layer, and draft → published region releases. The existing admin menus run on the authoring layer. This milestone blocks M3 (World Authoring) → M4 → M5 → M6, and runs in parallel with the battle track (M1 → M2).
+**Outcome:** the content-side primitives exist and are tested: conditions, gates, effects, content keys, the authoring layer, and draft → published region releases. The existing admin menus run on the authoring layer. This milestone blocks M3 (Region Authoring) → M4 → M5 → M6, and runs in parallel with the battle track (M1 → M2).
 
 **Out of scope here (deliberately):**
 - `givePokemon` and `heal` effects (need `PokemonInstance`, M5).
@@ -26,7 +26,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 **Acceptance criteria**
 - `registerFact(kind, { schema, resolve(ctx, params), valueType, describe, validate, references })`.
 - Shared operators: `eq`, `neq`, `gte`, `lte`, `in`, `has`, `exists`, type-checked against the fact's `valueType`.
-- `EvaluationContext` scopes: `character`, `party`, `script`, `quest` (reserved), `world` (reserved), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
+- `EvaluationContext` scopes: `character`, `party`, `script`, `quest` (reserved), `region` and `server` (reserved, shared state), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
 - `evaluate(condition, ctx) → boolean`. Pure, no I/O (facts read from a `CharacterView`).
 - A single zod schema is used for both validation and Mongo storage (stored as validated `Mixed`).
 - Unit tests for nesting, short-circuiting, and type errors.
@@ -61,7 +61,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 - They read only from the `CharacterView` port (no Pokémon persistence needed yet; fakes in tests).
 
 ### M0B-05 · Facts batch 3: location progress
-`Type: Task` · `Parent: E-M0B-1` · `Priority: P1` · `Size: M` · `Labels: area:engine, domain:world` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
+`Type: Task` · `Parent: E-M0B-1` · `Priority: P1` · `Size: M` · `Labels: area:engine, domain:map` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
 
 **Summary:** Define the `LocationProgress` state shape in `libs/core` (`{ cleared; lifetime: Counters; visit: Counters }`, where counters cover explores, wild battles, trainer battles, and distinct trainers defeated) and its facts. The engine updates it in M5.
 

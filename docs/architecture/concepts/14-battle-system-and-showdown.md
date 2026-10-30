@@ -82,7 +82,7 @@ Upstream base: `2557b66` (smogon/pokemon-showdown, **2023-08-04**). The custom c
 The Showdown integration is a **separate library from the game engine**:
 - **Dependencies:** it's the only code that needs the Showdown fork and `@smogon/calc`, both heavy. The webapp embeds `libs/engine` for QoL actions and must not bundle a battle simulator.
 - **Different lifecycle:** battles are stateful and long-lived, run in worker threads, and exist in exactly one game host process. Engine actions are short and stateless.
-- **The Arena doesn't need the adventure engine:** PvP/PvAI with team presets uses `libs/battle` plus a thin Arena module, with no world state.
+- **The Arena doesn't need the adventure engine:** PvP/PvAI with team presets uses `libs/battle` plus a thin Arena module, with no region state.
 - **Most likely future split:** if anything moves into its own container first, it's the battle host (sharding, CPU-heavy AI).
 
 **How the engine and battles talk** (ports, serializable data, both directions):

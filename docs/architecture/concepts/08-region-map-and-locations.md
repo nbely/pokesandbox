@@ -1,4 +1,4 @@
-# 08: World Graph & Locations
+# 08: Region Map & Locations
 
 > **TL;DR:** The directional graph with node- and edge-level gates is right. Add a node **`kind`**, an optional **`parentKey`** for grouping (Mt. Moon floors, buildings in a city), **services** (heal / PC / shop), and **actions** (what the player can *do* here). Let NPCs, triggers, and shops point *at* locations instead of locations listing them. Fix delete integrity.
 

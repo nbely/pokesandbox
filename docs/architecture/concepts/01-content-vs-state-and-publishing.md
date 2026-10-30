@@ -16,7 +16,7 @@ A game engine has three kinds of data with very different lifecycles:
 
 Today catalog and content live in Mongo docs that are edited in place, and `Region.deployed` decides whether players can see them. That means:
 
-- An admin renaming a milestone, deleting a location, or rewriting a trainer team **mutates the world under live players**, sometimes mid-battle or mid-script.
+- An admin renaming a milestone, deleting a location, or rewriting a trainer team **changes the region under live players**, sometimes mid-battle or mid-script.
 - `deployable` is stored, but it should be the *output of a validator* run at publish time.
 - The runtime hot path (every button press) reads many small docs through a mutable cache (see [15](15-persistence-caching-concurrency.md)).
 
@@ -128,14 +128,14 @@ Region.discovery: {
 
 **4. Publish checks state, not just content.** The publish review ([16](16-authoring-validation-and-portability.md)) checks what the new release would do to existing state, and migration rules handle what it changes:
 - **Character saves (MVP):** the migration rules above run lazily when a character loads on a newer release. Rule changes that would break saves need a fix-up rule ([18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
-- **World state (post-MVP, with the living world in [04](04-progression-and-flags.md#living-world-region-wide-state-post-mvp-direction-oct-2026)):** checked against the region's current `WorldState` at review time. World migrations run **once, at publish, inside the publish transaction**, not lazily, because world state is shared.
+- **Region state (post-MVP, with the living region in [04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)):** checked against the region's current `RegionState` at review time. Region-state migrations run **once, at publish, inside the publish transaction**, not lazily, because the state is shared. Server state (`ServerState`) is never migrated by a region publish.
 
   | Change in the release | Review result |
   |---|---|
-  | Content that world state references is removed (a counter or claims for a deleted NPC or gift) | Warning. The data is kept, not deleted, and comes back if the key returns. Admins can purge it explicitly. |
+  | Content that region state references is removed (a counter or claims for a deleted NPC or gift) | Warning. The data is kept, not deleted, and comes back if the key returns. Admins can purge it explicitly. |
   | A "first X" cap is lowered below the claims already made | Warning: "73 already claimed, new limit 50: no new claims." Existing claims are never revoked. |
   | A threshold that's already met (a community unlock) | Warning: "already satisfied, activates on publish." |
-  | The story stage the world is currently on is removed or renamed | **Error**, unless the publish includes a stage mapping (a world migration rule). |
+  | The story stage the region is currently on is removed or renamed | **Error**, unless the publish includes a stage mapping (a region-state migration rule). |
   | A counter's meaning changes (it now counts something different) | Warning, with an option to reset that counter at publish. |
 
 ## Open questions

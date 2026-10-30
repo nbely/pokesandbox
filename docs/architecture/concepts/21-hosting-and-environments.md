@@ -104,7 +104,7 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 ## Alternative: a self-managed VPS (what you would take on)
 | Area | What it means in practice | Mitigation |
 |---|---|---|
-| **Security** | You own OS patching, SSH, and firewall. An unpatched box is the main real-world risk. | Key-only SSH (no root/password login), `ufw` allowing 22/80/443 only, `unattended-upgrades`, fail2ban. Never expose Mongo or app ports publicly. |
+| **Security** | You own OS patching, SSH, and firewall. An unpatched box is the main practical risk. | Key-only SSH (no root/password login), `ufw` allowing 22/80/443 only, `unattended-upgrades`, fail2ban. Never expose Mongo or app ports publicly. |
 | **TLS & proxy** | Certificates, renewals, routing | Caddy does automatic HTTPS with one small config file |
 | **Process supervision** | Restarting crashed services, starting on reboot | Docker `restart: unless-stopped`. The engine is restart-safe by design (persisted modes, battle recovery). |
 | **Deploys** | Repeatable, rollback-able releases | Images built in CI, pushed to GitHub Container Registry, pulled by tag. Rollback = deploy the previous tag. |

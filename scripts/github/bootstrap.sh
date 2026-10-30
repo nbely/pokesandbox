@@ -24,7 +24,7 @@ case "$cmd" in
     for a in engine bot webapp shared-models battle showdown-fork authoring infra docs; do
       label "$repo" "area:$a" "1d76db" "Area: $a"
     done
-    for d in world scripts conditions-effects progression encounters npcs-trainers catalog character economy transport rules; do
+    for d in map scripts conditions-effects progression encounters npcs-trainers catalog character economy transport rules; do
       label "$repo" "domain:$d" "5319e7" "Domain: $d"
     done
     label "$repo" "phase:0-foundations" "c5def5" "Phase 0: foundations"
@@ -54,7 +54,7 @@ M0a: Platform & Arena Foundations|Org/CI, library skeletons + boundaries, persis
 M0b: Content Foundations|Conditions/gates, effects, content keys, authoring layer, region releases
 M1: Battle Core & Catalog|Showdown fork modernization, catalog import, team presets, BattleService, AI
 M2: Arena Release|Public PvP/PvAI in Discord, plus launch readiness (hosting, backups, deploys, monitoring, staging)
-M3: World Authoring|Locations, encounters, transport, shops, rules, validation, webapp editors
+M3: Region Authoring|Locations, encounters, transport, shops, rules, validation, webapp editors
 M4: Interaction Engine|Scripts, triggers, NPCs, trainers, templates
 M5: Adventure Core|Characters, travel, explore, battles, party/PC/bag, progression, adventure log
 M6: Kanto Classic & MVP Release|Kanto Classic template, playtest, release

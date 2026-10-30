@@ -76,7 +76,7 @@ The lock only stops two actions writing at once. Four more rules decide *whether
 **2. Preconditions.** Every action declares three layers of "may this run now?":
 - **Mode** (engine, fixed in code): the modes the action is valid in. Party reorder, box management, and bag use are `overworld` only. In battle, switching is a battle choice, not a party edit.
 - **Rules** (region config): game-feel settings, e.g. `RegionRules.systems.storage.access: 'pcLocation' | 'anywhere'` (Gen 1 Classic: `'pcLocation'`; modern presets: `'anywhere'`). See [18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first).
-- **Content** (location/author): `'pcLocation'` is satisfied when the current location has `services: ['pc']` ([08](08-world-graph-locations.md)). Authors can put a Gate on a service ("the PC is down during the takeover").
+- **Content** (location/author): `'pcLocation'` is satisfied when the current location has `services: ['pc']` ([08](08-region-map-and-locations.md)). Authors can put a Gate on a service ("the PC is down during the takeover").
 
 The engine exposes `availableActions(character)` with explanations (the condition explainer from [05](05-requirements.md)), so Discord hides or disables buttons with a reason and the webapp shows views read-only. `dispatch` re-checks regardless, so a stale UI can never bypass a precondition. **View-independent** actions (a webapp party reorder) skip the revision check but never the preconditions: a reorder that lands just after a battle starts is rejected with "You're in a battle". Reading state (party, boxes, profile) is a query, not an action, and needs none of this.
 

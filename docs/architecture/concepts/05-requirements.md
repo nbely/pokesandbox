@@ -110,7 +110,8 @@ Conditions read through an **evaluation context** with scopes:
 | `party` / `pokemon` | Pokémon instances | HM gates, evolution conditions, NPC reactions ("show me a Pikachu") |
 | `script` | the running script's locals | branching inside a script (`if local.choice == 'fight'`) |
 | `quest` | a quest instance's variables | quest stage gates and completion checks |
-| `world` | per-region/server `WorldState` | server events, community boss ("boss defeated") |
+| `region` | the region's shared `RegionState` (post-MVP) | first-X claims, shared goals, story chapters ([04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)) |
+| `server` | the server's shared `ServerState` (post-MVP) | server events across regions, community boss ("boss defeated") |
 | `target` / `subject` | whatever the caller is evaluating against | Fly destinations (`$target`), "the Pokémon being used on" for items |
 | `clock` | injected Clock | time of day, weekday |
 
@@ -204,7 +205,7 @@ The condition is the same everywhere. What differs is how the caller uses the re
   - `currentLocation`: NPCs are already placed per location.
   - `party.size`: covered by the starter choice/flag.
   - Script `var`: MVP branching uses choice labels.
-  - `dex.caught`; plus everything already listed as post-MVP (quest vars, world state, single-Pokémon facts, weekday, weather, `party.maxLevel`).
+  - `dex.caught`; plus everything already listed as post-MVP (quest vars, region/server state, single-Pokémon facts, weekday, weather, `party.maxLevel`).
 - **Not a fact: the blackout/respawn point.** It's character *state* (`Character.location.respawn`), written by the `setRespawn` effect and automatically by using a `heal` service. The engine reads it directly on whiteout, per `RegionRules.whiteout`. It only becomes a fact if some condition ever needs to ask "where is my respawn?", which no known content does.
 - Evaluator, explainer, validator, and builder (flat list + one nesting level).
 

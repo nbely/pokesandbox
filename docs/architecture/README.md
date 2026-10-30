@@ -35,7 +35,7 @@ An audit of the current models and commands, plus concept-by-concept proposals f
 | 05 | [Requirements → Conditions](concepts/05-requirements.md) | Very high |
 | 06 | [Effects](concepts/06-effects.md) | High |
 | 07 | [Scripts, Triggers & Events](concepts/07-scripts-triggers-and-events.md) | Very high |
-| 08 | [World Graph & Locations](concepts/08-world-graph-locations.md) | High |
+| 08 | [Region Map & Locations](concepts/08-region-map-and-locations.md) | High |
 | 09 | [Transportation Networks](concepts/09-transportation.md) | Medium |
 | 10 | [Wild Encounters](concepts/10-encounters.md) | High |
 | 11 | [NPCs, Trainers & Battle Definitions](concepts/11-npcs-trainers-and-battle-definitions.md) | High |

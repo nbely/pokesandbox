@@ -90,7 +90,7 @@ Targeted webapp editors for the authoring tasks that are **most painful in Disco
 | Editor | Why Discord struggles | Webapp shape |
 |---|---|---|
 | **Script step editor** | Long ordered step lists, labels/branches, multi-paragraph dialogue | Step list with drag-reorder, inline dialogue editing, branch/label visualization, template insertion |
-| **World graph canvas** | Hundreds of locations and directional edges, grouping, traversal gates | Node-edge canvas (e.g. React Flow) with two-way edge drawing, parent grouping, gate badges on edges |
+| **Region map canvas** | Hundreds of locations and directional edges, grouping, traversal gates | Node-edge canvas (e.g. React Flow) with two-way edge drawing, parent grouping, gate badges on edges |
 | **Encounter table grid** | Species × level range × weight × method × condition | Spreadsheet-style grid with species search, weight-percentage preview, condition column |
 | **Trainer party editor** | Up to 6 Pokémon × moves/levels × conditioned party variants | Variant tabs, each with a party table; learnset-aware move pickers; condition per variant |
 | **Condition builder** (shared component) | Nested any/all/not trees | Tree editor used inside every editor above |

@@ -9,7 +9,7 @@ Phase 0  Foundations ─────────┐   engine package, conditions
                               ▼
 Phase 1  Pre-MVP: Arena ──────┤   catalog, team presets, BattleService, multi-user battles, AI   ► PUBLIC RELEASE #1
                               ▼
-Phase 2  MVP: "Recreate RBY" ─┤   authoring (world, NPCs, scripts, publish) + adventure play       ► PUBLIC RELEASE #2
+Phase 2  MVP: "Recreate RBY" ─┤   authoring (region map, NPCs, scripts, publish) + adventure play       ► PUBLIC RELEASE #2
                               ▼
 Phase 3  Full-Feature Build ──┤   quests v2, custom content, trading, breeding, events, webapp
                               ▼
@@ -75,7 +75,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - Transportation networks: Fly and Ferry templates.
 - Shops: conditioned entries, buy/sell, entries priced in a numeric progression (e.g. Game Corner coins).
 - **Publish:** review (validator results + release diff, warnings shown before confirming) → immutable release. Rule changes on a live region are reviewed like any content. Pause/undeploy is separate from discovery. Release notes are opt-in.
-- **Targeted webapp editors** on the same authoring commands (Discord stays complete): script step editor, world graph canvas, encounter table grid, trainer party editor, shared condition builder, read-only Region Health.
+- **Targeted webapp editors** on the same authoring commands (Discord stays complete): script step editor, region map canvas, encounter table grid, trainer party editor, shared condition builder, read-only Region Health.
 - Region export/import (JSON bundle) → the official "Kanto Classic" template (generator script for bulk data, builder tools for story, repo bundle as the source of truth).
 
 ### Playing
@@ -109,9 +109,10 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Breeding | Contained service + server pool; eggs; hatching | `storage.kind` |
 | Happiness | Friendship evolutions, move unlocks | PokemonInstance.friendship |
 | Rematches | Trainer/gym rematch variants (VS Seeker / phone) | Conditioned parties, `timer` kind |
-| Server events | Server-wide events, giveaways, event quests, plot-NPC chance encounters, forced-loss/survival battles | WorldState, `chance` predicate, battle win-conditions |
-| Community boss | Shared HP pool raid | State injection hook + WorldState |
-| World | Weather/terrain by location, swarms, visible-spawn UI | Encounter conditions |
+| Server events | Server-wide events, giveaways, event quests, plot-NPC chance encounters, forced-loss/survival battles | `ServerState`, `chance` predicate, battle win-conditions |
+| Community boss | Shared HP pool raid | State injection hook + `ServerState`/`RegionState` |
+| Living region | Region state players shape together: first-X NPCs and gifts, NPCs that remember, shared goals, story chapters, trainer ghosts | `RegionState`, region facts/effects ([04](../architecture/concepts/04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)) |
+| Environment | Weather/terrain by location, swarms, visible-spawn UI | Encounter conditions |
 | Staff ops | Grant items/Pokémon/money/TMs with audit log | Effect executor |
 | Webapp | Full builder beyond the MVP editors, battle replays, richer character and log views | MVP webapp editors, adventure log, region bundles |
 | Narration | Narration on adventure log entries by the owner, invited co-authors, and narration moderators; thread capture; AI drafts | Adventure log ([22](../architecture/concepts/22-adventure-log-and-narration.md)) |

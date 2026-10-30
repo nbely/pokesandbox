@@ -58,9 +58,19 @@ Admin-authored flags are free-form (`rocket_hideout_cleared`). Conditions can te
 ## Decisions (Oct 2026, Q21)
 Option B (two layers) adopted: curated **progressions** (displayable) + open **flags** (engine-reserved prefixes `trainer:`, `script:`, `pickup:`, `gift:`, `gate:`, plus author flags created inline). The builder offers a dropdown of every flag used in the region, and a "Promote to progression" action for flags that turn out to matter to players.
 
-## Living world: region-wide state (post-MVP direction, Oct 2026)
+## Living region: shared state (post-MVP direction, Oct 2026)
 
-A region that remembers what happens in it. Like server events, but scoped to one region and driven by what players collectively do. It builds on the reserved per-region **`WorldState`** document (see Open questions below), so it's additive: nothing in the MVP needs to change.
+A region that remembers what happens in it, driven by what players collectively do. It's additive: nothing in the MVP needs to change.
+
+**Three scopes of shared state (decided Oct 2026).** Each has one owner and its own keys:
+
+| Scope | For | Examples | Keyed by |
+|---|---|---|---|
+| **Region** (`RegionState`, one doc per region) | The living region inside one game | First-X NPCs and gifts, shared goals, story chapters, trainer ghosts | Region content keys. Checked and migrated by that region's publishes ([01](01-content-vs-state-and-publishing.md#decisions-oct-2026)). |
+| **Server** (`ServerState`, one doc per server) | What the community does across all its regions | Server events and giveaways spanning regions, server-wide goals ("10,000 catches across all our regions"), a server Hall of Fame, Arena records and leaderboards | Server-scoped keys, defined with server events or the server library. Region publishes never migrate it; the publish review only warns about references to server keys that don't exist. |
+| **Player across regions** (later, Phase 3–4) | One player's history carrying between regions | Sequels: "beat Kanto Classic" unlocks something in Kanto 2; carrying a Pokémon or title over (like Gen 3 → Gen 4 transfers) | User ID + server-scoped keys |
+
+Conditions name their scope (`region.counter` vs `server.counter`), so a region can gate on a server event ("during the Halloween event, Gengar appears in Lavender"), and regions can write to server state through effects (a catch counting toward a server-wide goal). Test characters count toward neither. The rest of this section is about region state.
 
 **Examples**
 
@@ -69,19 +79,19 @@ A region that remembers what happens in it. Like server events, but scoped to on
 | **Scarcity and firsts** | An NPC who only appears for the first 100 players. A gift Pokémon for the first X who find it. A one-of-a-kind roaming legendary: after the first catch, the cave is empty for everyone else. A Hall of Fame wall for the first N champions; the first full Pokédex honored in the professor's lab. A travelling merchant with limited stock for the whole region (the reserved shop `limit: { per: 'server' }`, [17](17-economy-shops-inventory.md)). |
 | **NPCs that remember** | Dialogue that shifts the more times an NPC has been beaten region-wide, eventually with a stronger party variant. A gym leader who quotes their record ("Only 12 challengers have beaten me"), optionally with difficulty tuned by it. **Trainer ghosts:** NPC trainers built from real players' teams (like Gen 3 Secret Bases or the Battle Tower), a form of asynchronous PvP inside adventure play. |
 | **Shared goals** | Community unlocks ("5,000 Pokémon caught on Cinnabar rebuilds the lab"). Donation drives (money or items to an NPC's fund; at the target a bridge opens). Collective bounties (enough Rocket grunts beaten region-wide opens the hideout raid). Population triggers ("once 100 Magikarp are fished out, something stirs" adds Gyarados to the table). |
-| **A world that changes** | Story chapters an admin advances ("the Silph takeover begins Saturday"), changing NPCs, gates, and dialogue for everyone. Daily world rolls shared by every player ("today's swarm: Pikachu in Viridian Forest"), from a per-day region seed. Community votes deciding a story fork (which fossil the museum revives). |
-| **Marks players leave** | Moderated signboards or guestbooks with short notes for other players at a location. Region records shown by an in-world NPC ("fastest to the 8th badge"). |
+| **A region that changes** | Story chapters an admin advances ("the Silph takeover begins Saturday"), changing NPCs, gates, and dialogue for everyone. Daily region rolls shared by every player ("today's swarm: Pikachu in Viridian Forest"), from a per-day region seed. Community votes deciding a story fork (which fossil the museum revives). |
+| **Marks players leave** | Moderated signboards or guestbooks with short notes for other players at a location. Region records shown by an in-game NPC ("fastest to the 8th badge"). |
 
 **Design notes**
-- **Facts and effects:** world facts (`world.counter`, `world.flag`, `world.stage`, `world.claimed`) join the condition registry ([05](05-requirements.md)), and world effects (`worldIncrement`, `worldClaim`) join the effect registry ([06](06-effects.md)). Encounter tables, party variants, dialogue, and gates read them like any other fact.
+- **Facts and effects:** shared-state facts (`region.counter`, `region.flag`, `region.stage`, `region.claimed`, and the same under `server.*`) join the condition registry ([05](05-requirements.md)), and shared-state effects (`regionIncrement`, `regionClaim`, `serverIncrement`, `serverClaim`) join the effect registry ([06](06-effects.md)). Encounter tables, party variants, dialogue, and gates read them like any other fact.
 - **"First X" claims are atomic and per character:** a conditional increment that only succeeds while the count is below X, plus a per-character claim record, so double presses and races can't over-grant (the same idempotency rules as effects).
-- **World state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current world state, and world migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test characters never count toward it ([01](01-content-vs-state-and-publishing.md)).
+- **Region state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current region state, and region-state migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test characters never count toward it ([01](01-content-vs-state-and-publishing.md)).
 - **Players see live numbers** where it adds tension ("37 of 100 claimed", "4,212 / 5,000 caught").
 - **Trainer ghosts** store a team snapshot, the same `PokemonSnapshot` pattern as the adventure log ([22](22-adventure-log-and-narration.md)), so they don't depend on the original Pokémon still existing.
-- **Contention:** hot world counters (a popular route's catch count) should use atomic `$inc` and can be batched or sharded if they ever bottleneck. That's not a concern at MVP scale.
+- **Contention:** hot shared counters (a popular route's catch count) should use atomic `$inc` and can be batched or sharded if they ever bottleneck. That's not a concern at MVP scale.
 
 ## Open questions
-- ~~Region-scoped flags?~~ **Decided:** character flags are per character, per region. Server-wide state lives in a separate `WorldState` doc per region (arrives with server events).
+- ~~Region-scoped flags?~~ **Decided:** character flags are per character, per region. Shared state lives outside characters: `RegionState` per region and `ServerState` per server (see Living region above, post-MVP).
 - ~~Can a player lose a milestone?~~ **Decided: yes**, as numeric progressions can decrease. Milestones are revoked with the `milestone` effect (`grant: false`).
   - Conditions evaluate **current** state, so revoking genuinely removes access.
   - Gates that should stay open use `latch: true` ([05 §4](05-requirements.md)).
