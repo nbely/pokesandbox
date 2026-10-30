@@ -9,5 +9,5 @@
 | [`architecture/audit-current-state.md`](architecture/audit-current-state.md) | Audit of current models, commands, and the Showdown fork |
 | [`architecture/open-questions.md`](architecture/open-questions.md) | The decision record: Q1–Q35 plus the smaller decisions index |
 | [`architecture/concepts/`](architecture/concepts/) | One doc per domain concept (current shape, options, decisions, MVP scope) |
-| [`backlog/`](backlog/README.md) | Issue drafts (M0a, M0b, M2 so far) and the guide for drafting the rest |
+| [`backlog/`](backlog/README.md) | Issue drafts (M0a, M0b, M2, and parts of M1 and M3 so far) and the guide for drafting the rest |
 | [`erd.md`](erd.md) | Generated ERD of current models (`npm run erd:generate`) |

@@ -6,7 +6,9 @@ Issue drafts reviewed here before they're created in GitHub. Once created, the i
 |---|---|
 | [`m0a-platform-arena-foundations.md`](m0a-platform-arena-foundations.md) | M0a: Platform & Arena Foundations |
 | [`m0b-content-foundations.md`](m0b-content-foundations.md) | M0b: Content Foundations |
+| [`m1-battle-core-and-catalog.md`](m1-battle-core-and-catalog.md) | M1: Battle Core & Catalog (moves and learnsets catalog, so far) |
 | [`m2-launch-readiness.md`](m2-launch-readiness.md) | M2: Arena Release (FlowCord dependencies, launch readiness, and the Arena multiplayer surface, so far) |
+| [`m3-region-authoring.md`](m3-region-authoring.md) | M3: Region Authoring (TM/HM lists, so far) |
 | *(M1, the rest of M2, and M3–M6 drafted once M0a is underway)* | |
 
 ## Format
@@ -33,7 +35,7 @@ Bodies use **Summary**, **Acceptance criteria**, and **Refs** (concept docs). Ac
 ## Drafting more issues (for new sessions)
 Everything needed to draft the remaining milestones is in the repo. Nothing depends on the conversations that produced these docs.
 
-**Still to draft:** M1 (Battle Core & Catalog), the rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test, release notes), and M3–M6. The candidate issues are the checklists in [`mvp.md`](../roadmap/mvp.md). Expand each into drafts in a new `<milestone>.md` file here, using the existing files as the style reference.
+**Still to draft:** the rest of M1 (fork modernization, BattleService, items, rules, teams, AI; the moves and learnsets catalog is drafted), the rest of M2 (`/arena` hub, PvAI setup, battle history, alpha test, release notes), the rest of M3 (TM/HM lists are drafted), and M4–M6. The candidate issues are the checklists in [`mvp.md`](../roadmap/mvp.md). Expand each into drafts in a new `<milestone>.md` file here, using the existing files as the style reference.
 
 **Read first, in this order:**
 1. [`open-questions.md`](../architecture/open-questions.md): Q1–Q35 and the "Smaller decisions" index. This is the decision record.

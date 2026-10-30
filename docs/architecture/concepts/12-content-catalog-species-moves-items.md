@@ -174,7 +174,60 @@ A species ID names what a Pokémon *is*. It is **not** a unique document key: a 
 - A region's Pokédex slot picks the definition: `{ speciesId: 'pikachu', definition: { entryId, version } }`. Instances, encounter slots, and trainer parties store only `'pikachu'`.
 - The existing `isCanon` / `isPublic` / `originServer` fields map onto `kind`, `visibility`, and `ownerServerId`. Non-canon entries move to the library model instead of sharing the canon collection (the seed has none today).
 
-## Items (the biggest catalog gap)
+## Moves: import, overrides, and Showdown callbacks (decided Oct 2026)
+
+### How Showdown stores per-generation moves
+- Each generation is a **mod** (`data/mods/gen1` … `gen8`; base `data/` is Gen 9), chained through `scripts.ts`: `gen1` inherits `gen2`, which inherits `gen3`, up to base.
+- A mod's data files hold only differences. When the Dex loads a mod (`ModdedDex.loadData()`), a **missing** entry is taken from the parent, an entry with **`inherit: true`** is merged with the parent's (child keys win), and **`null`** removes it.
+- A mod's `scripts.ts` can also change data in code through `init()`. Gen 3's re-derives every move's category from its type (the pre-Gen 4 physical/special rule).
+- Entries can contain **functions** (`onHit`, `basePowerCallback`, `onModifyType`, …). That's behavior, not data.
+- Text lives in `data/text/moves.ts`, with per-gen blocks (`gen1: { desc, shortDesc }`).
+
+### Import (M1)
+1. Load the pinned Showdown version and, for each generation 1–9, its **resolved** Dex (`Dex.mod('genN')`, base for Gen 9). Never parse the raw files: resolution applies the inheritance merge and `init()`, so per-gen values (Gen 1 Bite is Normal; Gen 3 Shadow Ball is Physical) come out correct with no display-time logic.
+2. Keep data fields only (type, category, base power, accuracy, PP, priority, target, flags, secondary effects, crit ratio, multi-hit, recoil/drain, …) and drop functions.
+3. Store the Gen 9 record as `base` and each older generation's **differences** as `genOverrides[gen]`. Record per-gen availability from `isNonstandard` (`Past`, `Future`).
+4. Record **`hooks`** per generation: the names of the move's behavior callbacks (`['basePowerCallback', 'onModifyType']`). Just names, no code. The builder uses them to explain which fields an override can't change.
+5. Text from `data/text/moves.ts`, with per-gen blocks as text overrides.
+6. Main-series mods only (`gen1`–`gen8` + base). Side mods (`gen1stadium`, `gen7letsgo`, `gen8bdsp`, …) are skipped for now; they're candidates for later rule presets. Output is deterministic (sorted keys) so a re-import after a Showdown upgrade is a readable diff.
+
+```ts
+MoveDefinition {
+  moveId: MoveId;                 // unique; Showdown toID
+  num: number; name: string; introducedGen: number;
+  base: MoveData;                 // resolved Gen 9 data
+  genOverrides: Partial<Record<GenId, Partial<MoveData>>>;
+  availability: Partial<Record<GenId, 'available' | 'Past' | 'Future'>>;
+  hooks: Partial<Record<GenId, string[]>>;          // callback names only
+  text: { short: string; long?: string; perGen?: Partial<Record<GenId, { short?: string; long?: string }>> };
+  source: { showdownVersion: string };
+}
+```
+
+### Behavior stays in Showdown
+The catalog never replicates callbacks. At battle time the isolated custom-data dex is a child of the region's mechanics-gen mod, so canon moves keep Showdown's own callbacks, including that generation's versions.
+
+### Overrides (post-MVP)
+A region's override of a canon move (a *linked* library entry) is injected as `{ inherit: true, …changedFields }`. Showdown's merge keeps every key the override doesn't set, **callbacks included**, so "Thunderbolt at 95 power" behaves normally. Some fields are **controlled by callbacks** (power for Low Kick, Return, Gyro Ball, Eruption via `basePowerCallback`; type for Weather Ball and Hidden Power via `onModifyType`/`onModifyMove`; hit counts). The builder reads `hooks` and blocks or explains those fields ("this move's power is calculated, so a power override has no effect").
+
+### Custom moves (post-MVP, Q28)
+- A custom move (`<ns>:<slug>`) **borrows an existing move's mechanics and changes data only**. At battle time its dex entry is built from the template move's entry (functions included) with the overrides applied, under the new ID.
+- **Store a recipe, not functions:** `{ template: MoveId; overrides: Partial<MoveData> }`. Battles are persisted as seed + input log and replayed on recovery, so everything crossing into a battle must be serializable; functions are re-attached when the dex is built.
+- **Templates come from a curated list of archetypes**, not any move: plain damage; damage + secondary effect (status, flinch, stat drop); stat changes; multi-hit; recoil; drain; priority; status-only. Some Showdown behavior is keyed by move ID elsewhere (Gust hitting targets mid-Fly, Metronome's exclusion lists), so a copy of an arbitrary move could silently lose interactions. Each archetype gets a sim test.
+
+## TM/HM lists (decided Oct 2026)
+Machine numbering is per generation (Gen 1 TM01 is Mega Punch; Gen 2 TM01 is DynamicPunch), so a machine's move can't live on a global item. Machines are **region content** (Layer 3):
+
+```ts
+Region.moveMachines: { label: string;               // 'TM01', 'HM02'; unique within the region
+                       kind: 'tm' | 'hm';
+                       move: MoveId;
+                       reusable: boolean }[]        // Gen 1: TMs single-use, HMs reusable
+```
+- **Bag items** for machines use a reserved item namespace, `machine:<label>` (e.g. `machine:tm24`), resolved through the region's list for display ("TM24 Thunderbolt") and use. One generic machine `ItemDefinition` (pocket `tms`, field use "teach") covers them all, so there are no per-region item documents.
+- **Compatibility** ("can this Pokémon learn TM24?") comes from the region's learnset generation: Showdown's machine sources (`1M` = a TM/HM in Gen 1), plus additions in custom learnsets. The Kanto Classic list (numbering) comes from the template generator, since Showdown doesn't store TM numbers.
+- **Validation:** labels unique, every move exists and is available in the region's move generation, and each machine has at least one compatible species in the regional dex (warning).
+
 Showdown knows that Leftovers heal in battle. It doesn't know:
 - what bag pocket an item belongs in
 - what it costs or sells for
@@ -192,11 +245,10 @@ ItemDefinition {
   fieldUse?: Effect[] | FieldUseHandlerId;   // potion → heal target 20; rarecandy → levelUp; firestone → evolve
   battleUse?: BattleUseHandlerId;   // pokeball → catch(rate 1x); potion → heal (needs sim hook, see 14)
   holdable: boolean; consumable: boolean;
-  teaches?: MoveId;                 // TMs/HMs (reusable in Gen 5+, so consumable=false)
 }
 ```
 
-**Region TM list:** `Region.moveMachines: { item: ItemId; move: MoveId; label: 'TM01' | 'HM01' }[]`. Compatibility comes from the species learnset.
+Machines (TMs/HMs) are region content resolved through `machine:<label>` item IDs, not items with a fixed move (see TM/HM lists above).
 
 ## Learnsets & generation
 Showdown learnsets are keyed by generation-specific sources (`8L15`, `7M`). A Region needs a **learnset policy**: "use Gen N learnsets" plus optional per-species overrides. Without it, "recreate RBY" vs "Gen 9 content" is ambiguous. This ties into the rules profile ([18](18-rules-time-and-randomness.md)).

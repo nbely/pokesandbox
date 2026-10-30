@@ -148,7 +148,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Publish as a versioned package consumed by the monorepo. Set up the monthly upstream-sync PR. Rename to `pokesandbox-showdown` after the org move (M)
 
 **Epic: Catalog**
-- [ ] Canon catalog import from Showdown (pinned version): SpeciesDefinition, MoveDefinition (per-gen data + text), Learnset (per-gen sources) into Mongo; re-runnable with diff on upgrades (L)
+- [ ] Canon catalog import from Showdown (pinned version): SpeciesDefinition, MoveDefinition (per-gen data via the resolved Dex, behavior `hooks`, text), Learnset (per-gen sources) into Mongo; re-runnable with diff on upgrades (L). Moves and learnsets drafted as E-M1-2 ([`m1-battle-core-and-catalog.md`](../backlog/m1-battle-core-and-catalog.md))
 - [ ] Catalog read service + move detail display (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
 - [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
@@ -203,7 +203,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Connections editor with two-way toggle and labels (M)
 - [ ] Condition builder UI (flat "all of" + one nesting level + templates) (L)
 - [ ] Encounter method registry + conditioned encounter tables + builder (L)
-- [ ] TM/HM list + learnset policy menu (M)
+- [ ] TM/HM list + learnset policy menu (M). TM/HM lists drafted as E-M3-1 ([`m3-region-authoring.md`](../backlog/m3-region-authoring.md))
 - [ ] Transport networks + Fly/Ferry templates (M)
 - [ ] Shops with conditioned entries and progression-priced entries (M)
 - [ ] Validator Tier 1 + basic Tier 2 + "Region Health" view (L)
