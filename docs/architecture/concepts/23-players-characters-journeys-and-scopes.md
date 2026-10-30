@@ -61,14 +61,14 @@ Journey {
 - **Creating a character is a platform action**, not a content trigger. Regions react to `journeyStarted` ([07](07-scripts-triggers-and-events.md)), whose payload says whether the character is new and how many Pokémon were carried.
 
 ## What lives on users and characters (decided Oct 2026)
-Region content can't write to users or characters, but the player, the platform, and engine bookkeeping can. Everything that lives at these levels:
+Region content can't write to users or characters, but the player, the platform, and engine bookkeeping can. This is an index of everything that lives at these levels; each row links to the concept that owns the details.
 
 **User**
 
 | State | Written by | When |
 |---|---|---|
 | Profile privacy, account settings and preferences | The player | MVP |
-| Arena teams (`TeamPreset`, cap 50) | The player | MVP (M1, [25](25-arena.md)) |
+| Arena teams (`TeamPreset`) | The player | MVP (M1, [25](25-arena.md)) |
 | Server list favorites and layout (Q19) | The player | MVP (webapp, [02](02-identity-and-references.md)) |
 | Restart cooldown (24h per region), trade rate limits | Platform | MVP |
 | `user`-scoped claim records (e.g. "first 100" rewards) | Engine, as part of a claim | Post-MVP ([24](24-shared-state-region-and-server.md#claims-decided-oct-2026)) |
