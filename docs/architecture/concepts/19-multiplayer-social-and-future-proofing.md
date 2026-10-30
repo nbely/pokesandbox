@@ -34,7 +34,7 @@
 ```ts
 RegionRules.systems.pacing?: {
   mode: 'off' | 'daily' | 'regen';             // daily reset vs gradual regeneration (regen avoids "log in at reset" pressure)
-  scope: 'journey' | 'user';                  // per journey, or per user across regions (prevents alt-region farming)
+  scope: 'journey' | 'character' | 'user';    // per journey, per persona, or per user across regions (prevents alt-region farming); same scopes as claims (04)
   capacity: number;                             // max energy
   refill: { perDay?: number; perHours?: { amount: number; every: number } };
   costs: Partial<Record<GameActionType, number>>;   // e.g. explore 1, trainer battle 2, travel 0; menus/party/shop/heal/narration free

@@ -38,7 +38,7 @@ Trigger {
     | { event: 'enterLocation'; location: ContentKey; from?: ContentKey[]; via?: ('walk' | TransportNetworkKey)[] }   // optional filters; any arrival counts by default
     | { event: 'interact'; npc: ContentKey }             // "Talk"
     | { event: 'battleEnd'; trainer: ContentKey; result: 'win' | 'lose' }
-    | { event: 'journeyStarted' }                      // onboarding
+    | { event: 'journeyStarted'; newCharacter?: boolean; carriedPokemon?: number }   // onboarding; payload lets scripts branch ("Welcome back, Ash"). MVP: always a new character, nothing carried. Creating a character is a platform action, not a content trigger.
     | { event: 'useItem'; item: ItemId; location?: ContentKey }
     | { event: 'explore'; location: ContentKey }         // e.g. Snorlax blocks Route 12
     | { event: 'gateBlocked'; gate: GateOwnerRef }       // player attempted an 'attemptable' gate and failed (see 05 §4)

@@ -106,7 +106,9 @@ Conditions read through an **evaluation context** with scopes:
 
 | Scope | Lives on | Used by |
 |---|---|---|
-| `journey` | Journey (progress, flags, bag, money, visited) | everything |
+| `journey` | the current Journey (progress, flags, bag, money, visited) | everything |
+| `character` | the persona's **other** journeys, read-only (reserved, post-MVP) | sequel gates and callbacks: "must have completed Kanto Classic" for `Region.entry`, "you sided with Team X in Kanto" dialogue ([13](13-characters-and-pokemon-instances.md#playing-more-than-one-region-post-mvp)) |
+| `user` | account-level facts, read-only (reserved, post-MVP) | event eligibility ("any journey on this server has beaten a Champion") |
 | `party` / `pokemon` | Pokémon instances | HM gates, evolution conditions, NPC reactions ("show me a Pikachu") |
 | `script` | the running script's locals | branching inside a script (`if local.choice == 'fight'`) |
 | `quest` | a quest instance's variables | quest stage gates and completion checks |

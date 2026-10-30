@@ -100,6 +100,8 @@ Conditions name their scope (`region.counter` vs `server.counter`), so a region 
   - **Claim records outlive journeys:** `user` and `character` claims stay after a journey is archived or restarted, which is what makes them restart-proof.
   - **Contributions to shared goals** ("5,000 catches on Cinnabar") aren't claims: every action increments the counter. A per-player contribution limit, if wanted, is a claim-scoped cap on contributions.
   - **Test journeys never claim.**
+- **Records and leaderboards** ("fastest to the 8th badge") are measured per journey and shown by character name. Each record declares a dedupe scope (`user` by default, `character`, or `journey`), so one player's several journeys don't fill the board.
+- **Content never writes to characters or users:** effects write to the journey, region state, server state, and claim records only; character- and user-level achievements are derived ([06](06-effects.md#what-effects-may-write-decided-oct-2026)).
 - **Region state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current region state, and region-state migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test journeys never count toward it ([01](01-content-vs-state-and-publishing.md)).
 - **Players see live numbers** where it adds tension ("37 of 100 claimed", "4,212 / 5,000 caught").
 - **Trainer ghosts** store a team snapshot, the same `PokemonSnapshot` pattern as the adventure log ([22](22-adventure-log-and-narration.md)), so they don't depend on the original Pokémon still existing.

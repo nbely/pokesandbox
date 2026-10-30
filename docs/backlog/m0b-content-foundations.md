@@ -26,7 +26,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 **Acceptance criteria**
 - `registerFact(kind, { schema, resolve(ctx, params), valueType, describe, validate, references })`.
 - Shared operators: `eq`, `neq`, `gte`, `lte`, `in`, `has`, `exists`, type-checked against the fact's `valueType`.
-- `EvaluationContext` scopes: `journey`, `party`, `script`, `quest` (reserved), `region` and `server` (reserved, shared state), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
+- `EvaluationContext` scopes: `journey`, `party`, `script`, `quest` (reserved), `character` and `user` (reserved, read-only cross-journey facts), `region` and `server` (reserved, shared state), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
 - `evaluate(condition, ctx) → boolean`. Pure, no I/O (facts read from a `JourneyView`).
 - A single zod schema is used for both validation and Mongo storage (stored as validated `Mixed`).
 - Unit tests for nesting, short-circuiting, and type errors.
