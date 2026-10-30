@@ -50,7 +50,8 @@ Trigger {
 }
 
 type Step =
-  | { say: { speaker?: SpeakerRef; text: string } }                   // waits for "Next"
+  | { passage: { blocks: PassageBlock[]; style?: StyleId } }          // prose, dialogue, and images interleaved; waits for "Next" (see Passages below)
+  | { say: { speaker?: SpeakerRef; text: string } }                   // shorthand: a one-line passage
   | { choice: { prompt: string; options: { label: string; condition?: Condition; goto: Label }[] } }
   | { battle: { trainer: ContentKey; party?: 'auto' | string; canLose?: boolean;
                 healAfter?: boolean; onWin?: Label; onLose?: Label } }
@@ -64,7 +65,24 @@ type Step =
   | { label: Label } | { goto: Label } | { end: {} };
 ```
 
-**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in `say`, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Journey.names`. It then persists `journey.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+**Runtime:** the script VM runs steps until a **blocking** step (`passage`/`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in passages, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Journey.names`. It then persists `journey.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+
+### Passages: prose and dialogue (decided Oct 2026)
+PokeSandbox is a writing-heavy game with still images, so the core text step is a **passage**: an ordered list of blocks rendered together, not one line per "Next".
+
+```ts
+PassageBlock =
+  | { prose: string }                                                            // authored prose, markdown allowed
+  | { line: { speaker: SpeakerRef; text: string; expression?: string } }         // dialogue, interleaved freely with prose
+  | { image: { url: string; caption?: string } }                                 // scene art, maps, letters
+  | { divider: {} }
+```
+- **`say` is shorthand** for a one-line passage, so templates (Gym Leader, Gift NPC) stay simple.
+- **Markdown and placeholders** (`{name:rival}`) work in every text block.
+- **A `choice` can close a passage:** the prose sets the scene and the options appear under it on the same page.
+- **Auto-paging:** the renderer splits a long passage at block boundaries to fit Discord's per-message budget ([26 § Dialogue and passages](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)). Authors write naturally and never count characters.
+- **Styles, not layouts:** a passage picks a named `style` (`dialogue` default, `prose`, later `cutscene`, `document`, `system`), and region themes set defaults. Authors never hand-build Discord components ([26](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)).
+- **Terms:** authored story text is **prose**, inside **passages**. "Narration" is reserved for what players and narration moderators write on the adventure log ([22](22-adventure-log-and-narration.md#narration)).
 
 ### How each MVP feature maps
 
@@ -104,7 +122,7 @@ type Step =
 
 ## MVP scope
 - Trigger events: `journeyStarted`, `enterLocation`, `interact`, `battleEnd`, `explore`.
-- Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `askName`, `heal`, `shop`, `travel`, `goto/label/end`. `{name:<slot>}` text placeholders.
+- Steps: `passage` (with `say` as shorthand), `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `askName`, `heal`, `shop`, `travel`, `goto/label/end`. `{name:<slot>}` text placeholders.
 - Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker.
 
 ## Decisions (Oct 2026)
@@ -112,11 +130,7 @@ type Step =
 Option B was adopted: one Script + Trigger system, **on the condition that building scripts stays easy for users**.
 
 1. **NPC interaction:** a "People here" list, where each NPC has a talk (interact) trigger. Confirmed (Oct 2026). Underneath it's the same trigger as an offered trigger, so this is a UI decision only.
-2. **Presentation:** MVP renders plain paged dialogue. Rich presentation comes later (custom embeds, **Discord Components v2** layouts: containers, sections with portrait/sprite thumbnails, media galleries). **Design for it now:** `say` (and `choice`) steps keep content separate from presentation:
-   ```ts
-   { say: { speaker?: SpeakerRef; text: string; presentation?: { style?: PresentationStyleId; portraitUrl?; imageUrl?; accentColor? } } }
-   ```
-   The MVP renderer ignores `presentation` (rendering rules: [26](26-discord-surface-and-ux-patterns.md#dialogue)). Later renderers use it, plus region-level dialogue themes, without migrating scripts.
+2. **Presentation (revised Oct 2026):** text steps are **passages** (prose, dialogue lines, and images interleaved; see Passages above), rendered as Components v2 and auto-paged. Content stays separate from presentation through named **styles**. **MVP:** passages with the `dialogue` and `prose` styles. **Later:** `cutscene`, `document`, and `system` styles, region themes, and author-defined styles, all without migrating scripts ([26](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)).
 3. **Discord-complete authoring (principle, applies to every builder feature, not just scripts):** everything must be editable in Discord, even where it's less friendly than the webapp. Some creators will never leave Discord. The webapp is an *additional* client of the same `libs/authoring` commands, never the only place a feature can be edited. For scripts this means a Discord **step-list editor** (list steps, add/insert/move/delete, edit a step via modal, pick step types from select menus), on top of templates. It leans on Components v2 where it helps: sections with per-step edit accessories, separators between labels, and text displays for long dialogue previews.
 4. **Guardrails:** confirmed. No script-calls-script in MVP (add `call` later with a depth limit), and a step cap per dispatch so a bad `goto` can't loop forever.
 

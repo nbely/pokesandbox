@@ -49,6 +49,8 @@ TurnDigest { turn: number; actions: { side; pokemon; action: 'move' | 'switch' |
 - Written by the engine from domain events, inside the same transaction as the state change, so the log never disagrees with the game.
 
 ## Narration
+"Narration" always means prose written by **players** (and narration moderators or, later, AI drafts) about what happened. Story text written by region **authors** inside scripts is called **prose**, inside **passages** ([07](07-scripts-triggers-and-events.md#passages-prose-and-dialogue-decided-oct-2026)).
+
 ```ts
 Narration {
   _id; entryId; turn?: number;                 // attach to a whole entry or one turn of a battle

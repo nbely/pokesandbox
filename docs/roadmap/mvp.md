@@ -222,7 +222,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 
 ## M4: Interaction Engine (Q16)
 - [ ] Script + Trigger models (M)
-- [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/askName/heal/shop/travel/goto/end`, `{name:<slot>}` placeholders (L)
+- [ ] Script VM: steps `passage` (prose, dialogue lines, images; `say` as shorthand) and `choice/if/effects/battle/wildBattle/npcTrade/askName/heal/shop/travel/goto/end`, `{name:<slot>}` placeholders (L)
 - [ ] Mode machine + persisted script cursor + resume on input (M)
 - [ ] Trigger dispatch: journeyStarted (payload: `newCharacter`, `carriedPokemon`), enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
@@ -233,6 +233,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 ## M5: Adventure Core
 - [ ] Journey + PokemonInstance models, OCC, transactions (M)
 - [ ] Character creation (with an `idNo`; the character is the original trainer of Pokémon it obtains) + journey start (1 active journey per user per region) + name slots (`Journey.names`; Kanto Classic names the rival) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
+- [ ] Passage renderer: Components v2, `dialogue` and `prose` styles, markdown, auto-paging by text/component budget, choices on the last page (M)
 - [ ] `/play` hub renderer (mode-aware): claims the session (newest wins), resumes any mode incl. mid-battle requests and pending prompts, and shuts down superseded sessions cleanly (L)
 - [ ] Travel action (conditions, locked explanations, enter triggers, visited tracking) (M)
 - [ ] Transport action (Fly menu): destinations grouped by area, fares shown, unaffordable options locked with the reason (S)

@@ -36,10 +36,25 @@
   - a battle press during a process handover replies "Battle is resuming, press again in a moment" ([15](15-persistence-concurrency-and-runtime.md#sharding-deploys-and-who-owns-live-state-decided-oct-2026)).
 - **Rewards render themselves.** Effects produce events ("You received a Potion!"), so authors never write that text ([06](06-effects.md)).
 
-## Dialogue
-- **MVP:** plain paged dialogue (`say`, "Next"). Choices as buttons or a select.
-- **Later:** rich presentation (custom embeds, Components v2 sections with portrait or sprite thumbnails, region dialogue themes). Script steps already keep content separate from presentation (`say.presentation`), so this needs no script migration ([07](07-scripts-triggers-and-events.md#decisions-oct-2026)).
+## Dialogue and passages
+Script text is authored as **passages**: prose, dialogue lines, and images interleaved ([07](07-scripts-triggers-and-events.md#passages-prose-and-dialogue-decided-oct-2026)). The renderer turns them into Components v2 messages.
+
+- **Always Components v2 under the hood.** Every renderer emits Components v2. What's limited is author customization: authors choose named styles and themes; they never hand-write component layouts. Raw layouts can't be edited sensibly in Discord modals (Discord-complete authoring), break when Discord changes its component rules, and would fight the engine's paging and choice placement.
+- **Styles** (mapped to Components v2 by the renderer):
+
+  | Style | Renders as | Use | When |
+  |---|---|---|---|
+  | `dialogue` (default) | The speaker's portrait as a section thumbnail beside the text | Conversations | MVP |
+  | `prose` | Full-width text, no portrait, optional banner image | Scene-setting, travel, story beats | MVP |
+  | `cutscene` | Large media at the top, prose below | Arrivals, legendary encounters | Later |
+  | `document` | A bordered container with a title | Signs, letters, books, Pokédex entries, journals | Later |
+  | `system` | A compact, muted line | "You received…", tutorials | Later |
+
+- **Region themes (later)** set defaults: accent color, header image, the style each kind of step uses. A passage can override its style.
+- **Author-defined styles (later)** combine a fixed set of slots (accent, header image, portrait position, thumbnail, title), so "make it look like my game" never needs raw JSON.
+- **Auto-paging by budget.** A Components v2 message allows at most **40 components counting nested ones** and roughly **4,000 characters of text** (sources differ on whether that counts only text displays). Images go in section thumbnails (one per section) and media galleries (the per-gallery item limit, often cited as 10, is to be verified against Discord's docs when building the renderer). A Components v2 message can't also carry embeds or plain content. Text length and component count bind long before images do, so the renderer fills each page up to a text and component budget, splits only between blocks, and puts choices on the last page.
 - **Name placeholders** (`{name:rival}`) are filled at render time from the journey's name slots ([23](23-players-characters-journeys-and-scopes.md)).
+- **Choices** render as buttons (few options) or a select (many), under the passage's last page.
 
 ## Battles
 - **Battle view (decided Oct 2026):** each turn shows the turn's messages, then both active Pokémon with level, HP, and status. **MVP:** the two sprites as separate images in a Components v2 layout (thumbnails or a media gallery), with no image service. **Post-MVP:** one composed image per matchup with both sprites side by side (player's left, opponent's right), cached because sprite URLs are stable.
@@ -59,10 +74,10 @@ Builder-specific UX (Region Health, "used by" before deletes, templates over raw
 
 ## MVP scope
 - Ephemeral `/play` hub and its renderers; locked-option explanations; grouped, paginated lists with costs.
-- Plain paged dialogue with name placeholders.
+- Passages (prose, dialogue, images) with the `dialogue` and `prose` styles, auto-paging, markdown, and name placeholders.
 - Battle view with separate sprite images and Showdown battle text.
 - Stable custom IDs for every surface that must survive restarts; the fixed engine-response wording.
-- Not MVP: thread and channel play modes, highlights channel, Discord lookup commands, rich dialogue presentation, composed battle images, command shortcuts.
+- Not MVP: thread and channel play modes, highlights channel, Discord lookup commands, the `cutscene` / `document` / `system` styles, region themes and author-defined styles, composed battle images, command shortcuts.
 
 ## Open questions
 - Should the highlights channel and release notes share one "announcements" setting, or stay separate?
