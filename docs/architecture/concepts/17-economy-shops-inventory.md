@@ -14,7 +14,7 @@ Region.currency: { name: 'Pokédollar'; symbol: '₽'; startingAmount: 3000 }
 Shop {
   key; regionId; name; locations: ContentKey[]; condition?: Condition;
   entries: { key: ContentKey; item: ItemId; price?: number; currency?: ProgressionKey; condition?: Condition;   // no currency = money
-             limit?: { count: number; per: 'character' } }[];   // reserved, post-MVP: purchase limits; later also per: 'server', restock schedules
+             limit?: { count: number; per: 'journey' } }[];   // reserved, post-MVP: purchase limits; later also per: 'server', restock schedules
   buyback: { enabled: boolean; rate: number /* default 0.5 */ };
   clerk?: ContentKey;   // optional NPC for flavor dialogue
 }
@@ -25,7 +25,7 @@ Shop {
 - **Special vendors** (the Magikarp salesman) are scripts with `choice` + `effects`.
 
 ## Inventory
-- `Character.bag: Record<ItemId, number>`. Pockets come from ItemDefinition. Key items are capped at 1 and can't be sold or tossed.
+- `Journey.bag: Record<ItemId, number>`. Pockets come from ItemDefinition. Key items are capped at 1 and can't be sold or tossed.
 - Bag capacity: unlimited (modern) vs Gen 1's 20 slots is a rule toggle ([18](18-rules-time-and-randomness.md)).
 - Use / give / take outside battle → `useItem` action → ItemDefinition `fieldUse` effects/handlers.
 
@@ -39,4 +39,4 @@ Shop {
 
 ## Open questions
 - ~~Multiple currencies?~~ **Decided (Oct 2026):** money is the only built-in currency. Anything else is a numeric progression that shop entries can be priced in (see above).
-- ~~Limited or restocking stock?~~ **Decided (Oct 2026):** post-MVP. Gen 1 shops (Celadon's TMs included) sell without limit. The `limit` field is reserved: per-character purchase limits first (counted in a reserved flag `shop:<shopKey>:<entryKey>:bought`, keyed by the entry's stable key so limits survive republishes), then restocking and server-wide stock.
+- ~~Limited or restocking stock?~~ **Decided (Oct 2026):** post-MVP. Gen 1 shops (Celadon's TMs included) sell without limit. The `limit` field is reserved: per-journey purchase limits first (counted in a reserved flag `shop:<shopKey>:<entryKey>:bought`, keyed by the entry's stable key so limits survive republishes), then restocking and server-wide stock.

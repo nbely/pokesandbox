@@ -1,6 +1,6 @@
 # 01: Content vs State, and Publishing
 
-> **TL;DR:** Separate *what the admin authored* (content) from *what the player has done* (state), and put an immutable **published release** between authoring and play. Characters play against a release version, so admins can keep building without breaking live saves.
+> **TL;DR:** Separate *what the admin authored* (content) from *what the player has done* (state), and put an immutable **published release** between authoring and play. Journeys play against a release version, so admins can keep building without breaking live saves.
 
 **MVP impact:** High · **Cost to change later:** Very high (every runtime read path depends on it)
 
@@ -12,7 +12,7 @@ A game engine has three kinds of data with very different lifecycles:
 |---|---|---|---|---|
 | **Catalog** (global) | species, moves, items, abilities, learnsets | devs / seed / Showdown upgrades | everyone | rarely |
 | **Content** (per region) | locations, edges, encounter tables, NPCs, trainers, scripts, shops, progression defs | admins | runtime (hot path) | bursts while authoring |
-| **State** (per character) | location, party, bag, money, progress, flags, active script/battle | engine | engine, profile views | constantly |
+| **State** (per journey) | location, party, bag, money, progress, flags, active script/battle | engine | engine, profile views | constantly |
 
 Today catalog and content live in Mongo docs that are edited in place, and `Region.deployed` decides whether players can see them. That means:
 
@@ -24,7 +24,7 @@ Today catalog and content live in Mongo docs that are edited in place, and `Regi
 
 - `Region.deployed: boolean`, `Region.deployable: boolean` (stored, never computed).
 - Admin commands write directly to `Region` / `Location`.
-- No `Character` yet, so no damage has been done. This is the cheapest moment to decide.
+- No `Character` or `Journey` yet, so no damage has been done. This is the cheapest moment to decide.
 
 ## Options
 
@@ -32,7 +32,7 @@ Today catalog and content live in Mongo docs that are edited in place, and `Regi
 Admins must undeploy to edit. Deploy runs validation.
 - ✅ Simplest. No extra storage.
 - ❌ Every content tweak means downtime for all players in the region. Fixing one typo kicks everyone out.
-- ❌ Deleting content still corrupts saves (e.g. a character standing in a deleted location).
+- ❌ Deleting content still corrupts saves (e.g. a journey standing in a deleted location).
 - ❌ The runtime still reads mutable docs.
 
 ### B. Live editing with guarded deletes + per-entity soft-delete
@@ -52,7 +52,7 @@ Admin edits ──► draft docs (Region, Location, Npc, Script, …)
                      ▼
      RegionRelease { regionId, version: 7, publishedAt, content: {...}, indexes: {...} }
                      ▼
- Engine: loads release v7 into memory (immutable, safe to share); characters record releaseVersion
+ Engine: loads release v7 into memory (immutable, safe to share); journeys record releaseVersion
 ```
 
 - ✅ Admins edit freely. Players never see half-built content.
@@ -60,7 +60,7 @@ Admin edits ──► draft docs (Region, Location, Npc, Script, …)
 - ✅ **Rollback** is "re-point to v6".
 - ✅ Release diffs give you a free changelog ("v8: added Route 3, rebalanced Brock") to post to players.
 - ✅ The same compiled bundle is the **import/export / template format** (see [16](16-authoring-validation-and-portability.md)).
-- ❌ Needs a **save migration step** when a release removes something a character references. For example, if the current location is gone, move the character to the last heal point. This logic is small, explicit, and testable, unlike option B's defensive code everywhere.
+- ❌ Needs a **save migration step** when a release removes something a journey references. For example, if the current location is gone, move the journey to the last heal point. This logic is small, explicit, and testable, unlike option B's defensive code everywhere.
 - ❌ Storage: a Kanto-sized region compiles to a few MB. Mongo's 16 MB document limit means chunking by content type (`RegionReleaseChunk { releaseId, type, data }`) or GridFS. Both are easy.
 
 ### D. Event-sourced content
@@ -73,17 +73,17 @@ Every authoring edit is an event, and a release is a projection.
 **Option C.** It doesn't need to be fancy in MVP:
 
 1. **MVP:** `publish` = validate → serialize all region content → store `RegionRelease` (chunked) → set `Region.publishedVersion`. The engine reads via a `ContentProvider.getRelease(regionId)` interface backed by an in-memory LRU of immutable objects. `deployed` becomes "has a published version and is not paused". `deployable` becomes a computed validator result shown in the builder.
-2. **MVP save migration:** a small set of rules run when a character loads with `releaseVersion < current`:
+2. **MVP save migration:** a small set of rules run when a journey loads with `releaseVersion < current`:
    - The current location is missing → move to respawn.
    - An active script is missing → abort it.
    - Unknown progression keys → keep but ignore.
-3. **Later:** release notes/diff, rollback UI, scheduled publishes for server events, and "preview as player" for unpublished drafts. Preview is a killer authoring feature: an admin can play the draft with a throwaway character.
+3. **Later:** release notes/diff, rollback UI, scheduled publishes for server events, and "preview as player" for unpublished drafts. Preview is a killer authoring feature: an admin can play the draft with a throwaway journey.
 
 ### Interaction with in-flight sessions
 Active battles and scripts pin the release they started on and finish there. The next action loads the newest release. Keep N-1 and N in memory.
 
 ## MVP scope
-- `RegionRelease` model, the publish command, the validator hook, the `ContentProvider` interface, and `Character.releaseVersion` plus 2–3 migration rules.
+- `RegionRelease` model, the publish command, the validator hook, the `ContentProvider` interface, and `Journey.releaseVersion` plus 2–3 migration rules.
 - Not in MVP: diff UI, rollback UI, preview mode.
 
 ## Decisions (Oct 2026)
@@ -107,7 +107,7 @@ On publish, if enabled, the bot posts `authored ?? rendered(generated)` to `chan
 **2. Deployment and discovery are separate axes.** Deploy state controls *play*. Discovery controls *visibility*. An undeployed, in-progress region can be discoverable (sneak peeks, recruiting testers), and a deployed region can be unlisted.
 ```ts
 Region.deployment: {
-  status: 'draft' | 'live' | 'paused';   // draft = never published; live = playable; paused = undeployed (characters frozen)
+  status: 'draft' | 'live' | 'paused';   // draft = never published; live = playable; paused = undeployed (journeys frozen)
   publishedVersion?: number;             // release served while live
   pausedAt?: Date; pauseMessage?: string;
 }
@@ -117,17 +117,17 @@ Region.discovery: {
   showStatus: boolean;                   // show "In development" / "Live" / "Paused" badge on the discovery page
 }
 ```
-- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Characters are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. Arena PvP is server-scoped and **unaffected** by pausing a region (see [14](14-battle-system-and-showdown.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped)). Only Phase 3 in-game PvP with adventure parties is region-bound, and those battles are frozen like any other battle.
+- **Paused (undeployed)** means the engine rejects all player actions for the region with the pause message. Journeys are frozen exactly where they are (mode, battle, script cursor), and resuming continues from there. Arena PvP is server-scoped and **unaffected** by pausing a region (see [14](14-battle-system-and-showdown.md#arena-formats-decided-oct-2026-server-scoped-not-region-scoped)). Only Phase 3 in-game PvP with adventure parties is region-bound, and those battles are frozen like any other battle.
 - `Server.discovery` stays as the *server-level* listing. `Region.discovery` is the per-region listing within it. The discovery page shows a region only if both are enabled.
 - This replaces the old `deployed` / `deployable` booleans. "Deployable" is the computed validator result.
 
 **3. Draft preview is later, designed for now.** To keep it cheap later:
 - Releases can be compiled *from the current draft without being published*: `compileRelease(regionId, { mode: 'preview' })` produces an ephemeral release that is never set as `publishedVersion`.
-- `Character.isTest: boolean` plus `Character.releaseRef: { kind: 'published', version } | { kind: 'preview', id }`.
-- Test characters are excluded from discovery stats, leaderboards, trading, and PvP.
+- `Journey.isTest: boolean` plus `Journey.releaseRef: { kind: 'published', version } | { kind: 'preview', id }`.
+- Test journeys are excluded from discovery stats, leaderboards, trading, and PvP.
 
 **4. Publish checks state, not just content.** The publish review ([16](16-authoring-validation-and-portability.md)) checks what the new release would do to existing state, and migration rules handle what it changes:
-- **Character saves (MVP):** the migration rules above run lazily when a character loads on a newer release. Rule changes that would break saves need a fix-up rule ([18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
+- **Journey saves (MVP):** the migration rules above run lazily when a journey loads on a newer release. Rule changes that would break saves need a fix-up rule ([18](18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
 - **Region state (post-MVP, with the living region in [04](04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)):** checked against the region's current `RegionState` at review time. Region-state migrations run **once, at publish, inside the publish transaction**, not lazily, because the state is shared. Server state (`ServerState`) is never migrated by a region publish.
 
   | Change in the release | Review result |

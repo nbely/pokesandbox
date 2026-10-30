@@ -63,12 +63,12 @@ RegionRules {
 
 Each option declares its constraints (`requires`, `incompatibleWith`), and the validator blocks publishing an invalid mix with an explanation. The builder only offers compatible options.
 
-**Changing rules on a live region (decided Oct 2026).** Rules live in the release, so a rule change reaches players only through a publish, like any other content. Characters move to the new release on their next action, and battles already in progress finish on the release they started on. The publish review ([16](16-authoring-validation-and-portability.md)) classifies each rule change:
+**Changing rules on a live region (decided Oct 2026).** Rules live in the release, so a rule change reaches players only through a publish, like any other content. Journeys move to the new release on their next action, and battles already in progress finish on the release they started on. The publish review ([16](16-authoring-validation-and-portability.md)) classifies each rule change:
 
 | Kind | Examples | At publish |
 |---|---|---|
-| **Takes effect cleanly** | EXP/catch/escape/payout formulas, whiteout penalty, `storage.access` | Warning: "Changes rules for N characters mid-game." Never blocks. |
-| **Breaks existing saves** | Fewer boxes than characters already use, a smaller `bagCapacity` than characters already carry, a smaller party size | **Error**, unless the change ships with a fix-up rule (e.g. "overflow Pokémon move to a new box", "excess items go to the PC"). Fix-up rules run in the release migration step ([01](01-content-vs-state-and-publishing.md)). |
+| **Takes effect cleanly** | EXP/catch/escape/payout formulas, whiteout penalty, `storage.access` | Warning: "Changes rules for N journeys mid-game." Never blocks. |
+| **Breaks existing saves** | Fewer boxes than journeys already use, a smaller `bagCapacity` than journeys already carry, a smaller party size | **Error**, unless the change ships with a fix-up rule (e.g. "overflow Pokémon move to a new box", "excess items go to the PC"). Fix-up rules run in the release migration step ([01](01-content-vs-state-and-publishing.md)). |
 | **Swaps the battle system** | `battle.mechanicsGen`, stat model (single Special → split), type chart | Warning plus the compatibility check above, because every existing Pokémon's stats and matchups behave differently afterward. |
 
 There is no hard lock on rules after publish: real balance fixes must stay possible, and the review step stops accidents.
@@ -119,7 +119,7 @@ Unit-test vectors for formula implementations. Gen 1 vectors are worked from pok
 - The engine reads time only through an injected `Clock` (tests can fix time; the validator can simulate all day parts).
 
 ## Randomness
-- All rolls (encounters, catch, run, loot, AI tie-breaks) go through an injected `Rng`, seeded per action (`hash(characterId, actionId)`) or per battle (Showdown seeds).
+- All rolls (encounters, catch, run, loot, AI tie-breaks) go through an injected `Rng`, seeded per action (`hash(journeyId, actionId)`) or per battle (Showdown seeds).
 - This gives:
   - Reproducible bug reports ("replay action #1234").
   - Testable odds.

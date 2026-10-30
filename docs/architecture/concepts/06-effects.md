@@ -1,6 +1,6 @@
 # 06: Effects
 
-> **TL;DR:** An **Effect** is a typed, declarative state change (a discriminated union, registry-backed like predicates). Effects run in an **all-or-nothing transaction** against a character, emit `GameEvent`s for rendering, and are **idempotent per firing**. Costs are just effects with a precondition. Dialogue, choices, and battles are *not* effects; they're script steps (see [07](07-scripts-triggers-and-events.md)).
+> **TL;DR:** An **Effect** is a typed, declarative state change (a discriminated union, registry-backed like predicates). Effects run in an **all-or-nothing transaction** against a journey, emit `GameEvent`s for rendering, and are **idempotent per firing**. Costs are just effects with a precondition. Dialogue, choices, and battles are *not* effects; they're script steps (see [07](07-scripts-triggers-and-events.md)).
 
 **MVP impact:** High · **Cost to change later:** Medium
 
@@ -26,9 +26,9 @@ type Effect =
 ```
 
 ### Execution semantics (the parts that bite later if undecided)
-1. **Atomic.** All effects in a list apply or none do. The engine applies them to an in-memory draft of the character, validates the result (no negative item counts, no negative money (never below 0), party overflow → PC), then commits with one write (or one transaction if Pokémon instances are touched).
+1. **Atomic.** All effects in a list apply or none do. The engine applies them to an in-memory draft of the journey, validates the result (no negative item counts, no negative money (never below 0), party overflow → PC), then commits with one write (or one transaction if Pokémon instances are touched).
 2. **Preflight for costs.** A list containing `currency: -500` fails cleanly with an explanation ("You need ₽500") instead of half-applying. "Entry cost" = condition + effects, so no separate cost model is needed.
-3. **Idempotent.** Every firing carries an `executionId` (e.g. `scriptRun:<id>:step:<n>`) recorded on the character's recent-executions ring buffer. Retries after a crash or a double-click don't double-grant.
+3. **Idempotent.** Every firing carries an `executionId` (e.g. `scriptRun:<id>:step:<n>`) recorded on the journey's recent-executions ring buffer. Retries after a crash or a double-click don't double-grant.
 4. **Observable.** Each effect yields events (`itemsChanged`, `pokemonGranted`…). The renderer produces "You received a Potion!" automatically. Admins never write that text.
 5. **Clamped by definitions.** Numeric progression respects `min/max/overflow`. Sequential milestones refuse out-of-order grants.
 

@@ -15,7 +15,7 @@ progressionDefinitions: Map<key, {
 }>
 ```
 
-Character state is planned as `progress: Map<key, number | boolean | string[]>`.
+Journey state is planned as `progress: Map<key, number | boolean | string[]>`.
 
 ## Gaps
 
@@ -33,7 +33,7 @@ Character state is planned as `progress: Map<key, number | boolean | string[]>`.
 | Option | Description | Pros | Cons |
 |---|---|---|---|
 | A. Everything is a progression | Admin defines a hidden boolean per event | One concept | Authoring burden explodes. Definitions bloat. |
-| B. **Two layers** (chosen) | **Progressions** = curated, displayable, author-defined meters. **Flags** = an open keyspace written by scripts and engine bookkeeping, never displayed. Character stores `flags: string[]` (set semantics). | Matches real Pokémon engines (pokeemerald has ~2,300 event flags and a handful of "progression" vars). Zero authoring cost for one-offs. | Two concepts to explain. |
+| B. **Two layers** (chosen) | **Progressions** = curated, displayable, author-defined meters. **Flags** = an open keyspace written by scripts and engine bookkeeping, never displayed. Journey stores `flags: string[]` (set semantics). | Matches real Pokémon engines (pokeemerald has ~2,300 event flags and a handful of "progression" vars). Zero authoring cost for one-offs. | Two concepts to explain. |
 | C. Flags only, progressions as views | Everything is a flag/var. "Badges" is a UI grouping over flags. | Most uniform | Loses typed metadata (min/max, ordinal, visibility). Harder authoring. |
 
 With option B, engine-managed flags use reserved prefixes:
@@ -46,7 +46,7 @@ Admin-authored flags are free-form (`rocket_hideout_cleared`). Conditions can te
 
 ## Recommendation
 - Add `choice` now (small change).
-- Adopt option B. `Character.flags: string[]` (or a `Map<string, true>`) plus `Character.progress: Map<key, value>`.
+- Adopt option B. `Journey.flags: string[]` (or a `Map<string, true>`) plus `Journey.progress: Map<key, value>`.
 - All mutations go through **effects** (`setProgression`, `incrementProgression`, `grantMilestone`, `setChoice`, `setFlag`, `clearFlag`). Nothing else writes progress.
 - Add `overflow: 'clamp' | 'reject'` to numeric.
 - Later kinds slot in without schema surgery: `tiered` (named bands over numeric), `set` (open collection), `timer` (cooldowns, "can rematch after 24h").
@@ -70,7 +70,7 @@ A region that remembers what happens in it, driven by what players collectively 
 | **Server** (`ServerState`, one doc per server) | What the community does across all its regions | Server events and giveaways spanning regions, server-wide goals ("10,000 catches across all our regions"), a server Hall of Fame, Arena records and leaderboards | Server-scoped keys, defined with server events or the server library. Region publishes never migrate it; the publish review only warns about references to server keys that don't exist. |
 | **Player across regions** (later, Phase 3–4) | One player's history carrying between regions | Sequels: "beat Kanto Classic" unlocks something in Kanto 2; carrying a Pokémon or title over (like Gen 3 → Gen 4 transfers) | User ID + server-scoped keys |
 
-Conditions name their scope (`region.counter` vs `server.counter`), so a region can gate on a server event ("during the Halloween event, Gengar appears in Lavender"), and regions can write to server state through effects (a catch counting toward a server-wide goal). Test characters count toward neither. The rest of this section is about region state.
+Conditions name their scope (`region.counter` vs `server.counter`), so a region can gate on a server event ("during the Halloween event, Gengar appears in Lavender"), and regions can write to server state through effects (a catch counting toward a server-wide goal). Test journeys count toward neither. The rest of this section is about region state.
 
 **Examples**
 
@@ -84,16 +84,16 @@ Conditions name their scope (`region.counter` vs `server.counter`), so a region 
 
 **Design notes**
 - **Facts and effects:** shared-state facts (`region.counter`, `region.flag`, `region.stage`, `region.claimed`, and the same under `server.*`) join the condition registry ([05](05-requirements.md)), and shared-state effects (`regionIncrement`, `regionClaim`, `serverIncrement`, `serverClaim`) join the effect registry ([06](06-effects.md)). Encounter tables, party variants, dialogue, and gates read them like any other fact.
-- **"First X" claims are atomic and per character:** a conditional increment that only succeeds while the count is below X, plus a per-character claim record, so double presses and races can't over-grant (the same idempotency rules as effects).
-- **Region state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current region state, and region-state migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test characters never count toward it ([01](01-content-vs-state-and-publishing.md)).
+- **"First X" claims are atomic and per user:** a conditional increment that only succeeds while the count is below X, plus a per-user claim record (one claim per player, however many characters or journeys they have), so double presses and races can't over-grant (the same idempotency rules as effects).
+- **Region state is state, not content.** It survives publishes, is keyed by content keys, and can be reset by admins. Each publish review checks the release against the current region state, and region-state migrations run once at publish ([01 § Decisions](01-content-vs-state-and-publishing.md#decisions-oct-2026)). Test journeys never count toward it ([01](01-content-vs-state-and-publishing.md)).
 - **Players see live numbers** where it adds tension ("37 of 100 claimed", "4,212 / 5,000 caught").
 - **Trainer ghosts** store a team snapshot, the same `PokemonSnapshot` pattern as the adventure log ([22](22-adventure-log-and-narration.md)), so they don't depend on the original Pokémon still existing.
 - **Contention:** hot shared counters (a popular route's catch count) should use atomic `$inc` and can be batched or sharded if they ever bottleneck. That's not a concern at MVP scale.
 
 ## Open questions
-- ~~Region-scoped flags?~~ **Decided:** character flags are per character, per region. Shared state lives outside characters: `RegionState` per region and `ServerState` per server (see Living region above, post-MVP).
+- ~~Region-scoped flags?~~ **Decided:** flags are per journey (one character's playthrough of one region, [13](13-characters-and-pokemon-instances.md#characters-and-journeys-decided-oct-2026)). Shared state lives outside journeys: `RegionState` per region and `ServerState` per server (see Living region above, post-MVP).
 - ~~Can a player lose a milestone?~~ **Decided: yes**, as numeric progressions can decrease. Milestones are revoked with the `milestone` effect (`grant: false`).
   - Conditions evaluate **current** state, so revoking genuinely removes access.
   - Gates that should stay open use `latch: true` ([05 §4](05-requirements.md)).
   - `sequential` checks the **current** holdings ("has N-1 now"). Revoking an earlier milestone does not cascade-revoke later ones.
-- ~~Staff flag tools?~~ **Decided: not MVP** (view/edit a character's flags). The MVP runs on the owner's server, and maintainers fix records directly.
+- ~~Staff flag tools?~~ **Decided: not MVP** (view/edit a journey's flags). The MVP runs on the owner's server, and maintainers fix records directly.

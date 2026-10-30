@@ -97,7 +97,7 @@ interface BattlePort {
 // libs/battle calls back into the game only via an injected resolver for external choices:
 interface ExternalActionResolver { resolve(ctx: ExternalActionContext): Promise<ExternalOutcome> }  // bag item, catch, run → engine applies rules (catch formula, item effects)
 ```
-- `libs/battle` emits `BattleEvent`s (move, damage, `faint`, request-for-choice, ended). The engine reacts, e.g. on `faint` it computes EXP with `libs/core` formulas and calls `inject(levelUp)`. Battle code never computes EXP or reads characters.
+- `libs/battle` emits `BattleEvent`s (move, damage, `faint`, request-for-choice, ended). The engine reacts, e.g. on `faint` it computes EXP with `libs/core` formulas and calls `inject(levelUp)`. Battle code never computes EXP or reads journeys.
 - Catch/escape/item formulas live in `libs/core` (pure). The engine's `ExternalActionResolver` uses them, so the battle library stays free of game rules.
 
 ## BattleService (in `libs/battle`)

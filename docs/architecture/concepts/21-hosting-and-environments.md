@@ -79,8 +79,8 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 |---|---|---|
 | Catalog (species, moves, learnsets, items) | **~10–20 MB** (measured: 1,371 dex entries ≈ 3.7 MB JSON; Showdown's learnsets ≈ 3.5 MB and moves + move text ≈ 1 MB as source) | Moves and learnsets live in the DB catalog (overrides, custom learnsets, TM/HM assignment, move details). Per-gen variants add a little. Sprites are URLs. |
 | Region draft content (Kanto-sized) | ~1–3 MB per region | Locations, NPCs, trainers, scripts, encounter tables |
-| Region releases | ~1–3 MB each uncompressed, ~0.2–0.5 MB **gzip-compressed** | **Must have a retention policy**: keep the last N plus any referenced by characters/clones/templates |
-| Character | ~5–20 KB | Flags grow over a playthrough |
+| Region releases | ~1–3 MB each uncompressed, ~0.2–0.5 MB **gzip-compressed** | **Must have a retention policy**: keep the last N plus any referenced by journeys/clones/templates |
+| Journey | ~5–20 KB | Flags grow over a playthrough |
 | Pokémon instances | ~0.5–1 KB each; 50–300 per engaged player | ≈ 50–300 KB per player at endgame |
 | Battle records (seed + input log) | ~5–20 KB per battle | **Biggest risk.** 100 players × 30 battles/day × 10 KB ≈ 30 MB/day without cleanup |
 | Adventure log (permanent) | ~0.5–2 KB per entry; ~5–15 KB/day per active player with wild rollups | ≈ 0.2–0.5 GB/year for 100 active players (see [22](22-adventure-log-and-narration.md)) |
@@ -90,7 +90,7 @@ Atlas tiers: **Free = 512 MB**, **Flex = up to ~5 GB**, **M10 = 10 GB** default 
 - **Full battle records:** adventure battles are compressed after the battle and kept for a 7-day support window, then deleted (PvP/Arena per the replay policy). The **permanent adventure log** keeps a compact summary (with turn digests for trainer battles) forever. See [22](22-adventure-log-and-narration.md).
 - **Wild battles roll up** into one log entry per visit. Catches, trainer battles, milestones, and evolutions get their own entries.
 - **Debug-level events** go to application logs, not Mongo (or a short TTL index, e.g. 48h).
-- **Releases:** gzip-compress, keep the last ~10 per region plus every release still referenced (characters on it, clone bases, template versions).
+- **Releases:** gzip-compress, keep the last ~10 per region plus every release still referenced (journeys on it, clone bases, template versions).
 
 **When the limits bite (rough, with retention in place):**
 | Stage | Data | Throughput | Tier |

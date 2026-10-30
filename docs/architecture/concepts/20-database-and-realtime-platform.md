@@ -14,11 +14,11 @@
 | Tick rate | None. Event-driven, human-paced (button press every few seconds; battle turns every 10–90 s) | 10–60 Hz simulation |
 | Latency floor | **Discord API rate limits** and interaction round-trips (hundreds of ms) | Network RTT (tens of ms) |
 | Shared mutable state | Small: trades, GTS listings, breeding pool, PvP battles, server events / boss HP | Large: positions, physics, continuous simulation state |
-| Hard concurrency problem | **Correctness**: no dupes, no lost progress, atomic multi-entity changes (trade = 2 characters + 2 Pokémon) | **Throughput and fan-out** of state updates |
+| Hard concurrency problem | **Correctness**: no dupes, no lost progress, atomic multi-entity changes (trade = 2 journeys + 2 Pokémon) | **Throughput and fan-out** of state updates |
 
 Rough peak load: 200 servers × 50 concurrently active players × 1 action per 5 s ≈ **2,000 actions/s** in an optimistic future. A single modest MongoDB or Postgres node handles that with room to spare. The bottleneck will be Discord, not the database.
 
-So the database requirements are: **transactions across a few documents, per-character serialization, durable history, flexible nested content, and good TypeScript ergonomics.** Raw realtime throughput is not on the list.
+So the database requirements are: **transactions across a few documents, per-journey serialization, durable history, flexible nested content, and good TypeScript ergonomics.** Raw realtime throughput is not on the list.
 
 ## Options
 
@@ -29,7 +29,7 @@ So the database requirements are: **transactions across a few documents, per-cha
 - ✅ **Change streams** give push notifications (e.g. "your trade offer was accepted", "boss HP changed") without polling. That's the realtime feature you actually need.
 - ✅ Atlas has a free tier, point-in-time backups, and easy hosting.
 - ❌ No foreign keys or relational constraints. Integrity comes from the validator ([16](16-authoring-validation-and-portability.md)) and code discipline.
-- ❌ Transactions have caveats: 60 s default limit, retry on transient errors, and a higher cost than single-doc writes. Design so most actions are single-document (Character), and only trades, battle results, and publishes use transactions.
+- ❌ Transactions have caveats: 60 s default limit, retry on transient errors, and a higher cost than single-doc writes. Design so most actions are single-document (Journey), and only trades, battle results, and publishes use transactions.
 - ❌ Ad-hoc analytics ("most-used starter across servers") is clunkier than SQL. Use aggregation pipelines or export.
 
 ### B. PostgreSQL (+ Drizzle/Kysely, JSONB for content): strongest alternative
@@ -82,8 +82,8 @@ Why it's a poor fit here:
    - Declare unique indexes.
    - Use transactions only for multi-entity operations.
    - Use change streams for push notifications.
-   - Add a per-character lock plus optimistic concurrency.
-2. **Keep the database swappable.** `libs/engine` talks to `CharacterRepo`, `PokemonRepo`, `TradeRepo`, `ContentProvider`, etc., and never imports Mongoose. That's the real hedge. If you move to Postgres later, it's a repository rewrite, not an engine rewrite.
+   - Add a per-journey lock plus optimistic concurrency.
+2. **Keep the database swappable.** `libs/engine` talks to `JourneyRepo`, `PokemonRepo`, `TradeRepo`, `ContentProvider`, etc., and never imports Mongoose. That's the real hedge. If you move to Postgres later, it's a repository rewrite, not an engine rewrite.
 3. **Add Redis when you run more than one bot process** (Discord sharding): distributed locks, cache, pub/sub between shards, and live-battle routing. Not before.
 4. **Phase 3 checkpoint:** before building trading, GTS, and breeding pools, re-evaluate Postgres. Trigger it if Mongo transactions prove painful, if you need marketplace-style queries (filtering GTS listings by complex criteria), or if analytics becomes important.
 5. **SpacetimeDB is shelved** (see the decision above). It's only relevant to a future real-time webapp play surface. If you want to test it, timebox a 2-day spike: run one PvP battle (Showdown sim) inside a TypeScript module, with the bot as a subscriber. That would turn the open questions above into facts.

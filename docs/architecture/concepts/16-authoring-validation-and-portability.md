@@ -19,7 +19,7 @@ Issue { code: 'EDGE_TARGET_MISSING' | 'UNREACHABLE_LOCATION' | …; severity; su
 **Tier 1: structural (MVP)**
 - Every referenced key exists (edges, NPC locations, trainer refs, script labels, items, species in the regional dex).
 - Every condition and effect passes its registry `validate()`.
-- Starting location set. The starter gift is reachable from the start via `characterCreated` or an `enterLocation` trigger (your roadmap item).
+- Starting location set. The starter gift is reachable from the start via `journeyStarted` or an `enterLocation` trigger (your roadmap item).
 - Trainer parties: species legal, levels 1–100, moves learnable (warning).
 - Encounter tables: species in the regional dex, weights > 0.
 
@@ -50,7 +50,7 @@ These are **warnings**, never blockers, so creative non-standard games still pub
 - The builder should surface **"used by"** before deletes ("Badges is used by 4 conditions. Delete anyway?").
 - A **"Region Health"** button on `/region` shows validator output grouped by severity, with jump links into the relevant menu.
 - **Templates over raw editors** (Gym Leader, Route, Pokémon Center, Starter Gift) keep the "learn by building" goal while preventing 30-step setups.
-- **Preview/playtest:** "Play draft as test character". It's the fastest feedback loop for authors (later, but design the engine to support it: a release built from the draft, and a character flagged `isTest`).
+- **Preview/playtest:** "Play draft as test journey". It's the fastest feedback loop for authors (later, but design the engine to support it: a release built from the draft, and a journey flagged `isTest`).
 - Discord is good for quick edits and poor for 200-node graphs, which is why targeted webapp editors are in the MVP (see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026)).
 
 ## MVP scope

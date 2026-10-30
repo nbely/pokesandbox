@@ -38,7 +38,7 @@ Trigger {
     | { event: 'enterLocation'; location: ContentKey; from?: ContentKey[]; via?: ('walk' | TransportNetworkKey)[] }   // optional filters; any arrival counts by default
     | { event: 'interact'; npc: ContentKey }             // "Talk"
     | { event: 'battleEnd'; trainer: ContentKey; result: 'win' | 'lose' }
-    | { event: 'characterCreated' }                      // onboarding
+    | { event: 'journeyStarted' }                      // onboarding
     | { event: 'useItem'; item: ItemId; location?: ContentKey }
     | { event: 'explore'; location: ContentKey }         // e.g. Snorlax blocks Route 12
     | { event: 'gateBlocked'; gate: GateOwnerRef }       // player attempted an 'attemptable' gate and failed (see 05 §4)
@@ -57,20 +57,20 @@ type Step =
   | { wildBattle: { spec: PokemonSpec; canRun?: boolean; onCatch?: Label; onDefeat?: Label; onRun?: Label } }
   | { effects: Effect[] }
   | { if: { condition: Condition; then: Label; else?: Label } }
-  | { askName: { slot: string; prompt: string; default?: string } }   // fills Character.names[slot] (confirm step; default offered), e.g. naming the rival
+  | { askName: { slot: string; prompt: string; default?: string } }   // fills Journey.names[slot] (confirm step; default offered), e.g. naming the rival
   | { npcTrade: { want: SpeciesId; give: { species: SpeciesId; nickname?: string; ot: { name: string; id: number }; moves?: MoveId[] };
                 onTrade?: Label; onDecline?: Label; onNoMatch?: Label } }   // in-game trade (MVP)
   | { shop: ContentKey } | { heal: {} } | { travel: LocationRef }
   | { label: Label } | { goto: Label } | { end: {} };
 ```
 
-**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in `say`, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Character.names`. It then persists `character.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+**Runtime:** the script VM runs steps until a **blocking** step (`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in `say`, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Journey.names`. It then persists `journey.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
 
 ### How each MVP feature maps
 
 | Roadmap feature | As content |
 |---|---|
-| Pick-1 starter | `characterCreated` trigger (forced) → `say` (Oak) → `choice` (3 options) → each branch: `effects[givePokemon, choice starterChoice=x]` |
+| Pick-1 starter | `journeyStarted` trigger (forced) → `say` (Oak) → `choice` (3 options) → each branch: `effects[givePokemon, choice starterChoice=x]` |
 | Rival setup + party variants | Trainer `rival` with parties conditioned on `choice starterChoice` and story flags (see [11](11-npcs-trainers-and-battle-definitions.md)). `battle: { trainer: rival }` picks the variant automatically. |
 | Forced rival battle on Route 22 | `enterLocation route-22` trigger, `once`, condition `not flag …` → `say` → `battle canLose: true` → `say` |
 | Gym leader | NPC Brock → `interact` trigger → `say` → `battle` → `onWin: effects[milestone boulder, item tm34, flag]` → `say` (TM explanation). Gym-leader tier is just the trainer's AI profile plus rewards. |
@@ -103,7 +103,7 @@ type Step =
 - The validator checks that labels exist, referenced trainers/NPCs/items exist, and there's no unreachable `end`. It also warns if a `battle canLose:false` has no `onLose` (whiteout default).
 
 ## MVP scope
-- Trigger events: `characterCreated`, `enterLocation`, `interact`, `battleEnd`, `explore`.
+- Trigger events: `journeyStarted`, `enterLocation`, `interact`, `battleEnd`, `explore`.
 - Steps: `say`, `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `askName`, `heal`, `shop`, `travel`, `goto/label/end`. `{name:<slot>}` text placeholders.
 - Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker.
 

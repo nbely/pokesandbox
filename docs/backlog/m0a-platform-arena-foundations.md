@@ -113,7 +113,7 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Acceptance criteria**
 - A logger interface in `libs/core`, with an implementation in the apps. Libs never import a concrete logger.
-- Fields: `env`, `actionId`, `characterId`, `battleId`, `regionId`, `level`.
+- Fields: `env`, `actionId`, `journeyId`, `battleId`, `regionId`, `level`.
 - Log level configured per environment.
 
 **Refs:** [21 § Retention](../architecture/concepts/21-hosting-and-environments.md)
@@ -150,36 +150,36 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 - `createEngine(ports): Engine`, with no module-level singletons.
 - Port interfaces are defined with serializable inputs and outputs.
 - `GameAction` and `GameEvent` base discriminated unions (an extensible pattern; a no-op `ping` action for tests).
-- The character `mode` type (`overworld` | `script` | `battle`, with `participants[]`).
+- The journey `mode` type (`overworld` | `script` | `battle`, with `participants[]`).
 - A README explaining how apps wire the engine.
 
 **Refs:** [03](../architecture/concepts/03-engine-boundary-and-game-loop.md)
 
-### M0A-12 · `dispatch()` with a per-character DB lease, revisions, preconditions, and session claims
+### M0A-12 · `dispatch()` with a per-journey DB lease, revisions, preconditions, and session claims
 `Type: Task` · `Parent: E-M0A-2` · `Priority: P0` · `Size: L` · `Labels: area:engine` · `Blocked by: M0A-11` · `agent-ready: no` · `Owner: senior`
 
-**Summary:** The engine's write path, with all four checks from [03 § Per-character serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026). Consider splitting the session claim into its own PR.
+**Summary:** The engine's write path, with all four checks from [03 § Per-journey serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md#per-journey-serialization-revisions-preconditions-and-sessions-decided-oct-2026). Consider splitting the session claim into its own PR.
 
 **Acceptance criteria**
-- `dispatch(characterId, action)` acquires a short lease (`locks` collection with a TTL index, via a `LockPort`), runs the handler, and releases.
+- `dispatch(journeyId, action)` acquires a short lease (`locks` collection with a TTL index, via a `LockPort`), runs the handler, and releases.
 - Lease contention waits up to ~1s, then returns `actionRejected: busy`.
-- **Revisions:** `Character.rev` increments once per action that writes any of the character's game data (Character, PokemonInstances, bag, flags), in the same transaction. Actions declare whether they're view-dependent. A view-dependent action with a stale `rev` is not applied and returns a `staleView` result so the client re-renders.
-- **Preconditions:** each action declares its allowed modes. A precondition hook evaluates rules and content requirements (the first user is box access: `RegionRules.systems.storage.access` + location `services`). `availableActions(character)` returns each action's availability with an explanation.
-- **Session claim:** `claimSession(characterId, client)` sets `Character.activeSession` under the lease (newest wins). Session-bound actions with a non-active session ID are rejected as `sessionSuperseded`. Game-driven events and non-session clients are exempt.
+- **Revisions:** `Journey.rev` increments once per action that writes any of the journey's game data (Journey, PokemonInstances, bag, flags), in the same transaction. Actions declare whether they're view-dependent. A view-dependent action with a stale `rev` is not applied and returns a `staleView` result so the client re-renders.
+- **Preconditions:** each action declares its allowed modes. A precondition hook evaluates rules and content requirements (the first user is box access: `RegionRules.systems.storage.access` + location `services`). `availableActions(journey)` returns each action's availability with an explanation.
+- **Session claim:** `claimSession(journeyId, client)` sets `Journey.activeSession` under the lease (newest wins). Session-bound actions with a non-active session ID are rejected as `sessionSuperseded`. Game-driven events and non-session clients are exempt.
 - An optimistic-concurrency conflict retries once, only for actions without a `rev`.
 - An action-cost step exists (always returns 0; reserved for pacing).
 - An idempotency hook: an `actionId` is recorded and replays are ignored.
 - A typed error model (`actionRejected` with an explanation vs internal errors).
 - Tests: double dispatch (second press is stale, applied once), conflict retry (only for actions without a `rev`), lease expiry, a precondition rejection with its explanation, and a session takeover rejecting the old session.
 
-**Refs:** [03 § Per-character serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
+**Refs:** [03 § Per-journey serialization](../architecture/concepts/03-engine-boundary-and-game-loop.md), [15](../architecture/concepts/15-persistence-caching-concurrency.md)
 
 ### M0A-13 · `Clock` and seeded `Rng`
 `Type: Task` · `Parent: E-M0A-2` · `Priority: P1` · `Size: S` · `Labels: area:engine` · `Blocked by: M0A-09` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
 - `Clock` port: a system implementation and a fixed/test implementation.
-- `Rng` port: a deterministic PRNG seeded by `hash(characterId, actionId)`, with `int`, `float`, `pick`, and `weighted` helpers.
+- `Rng` port: a deterministic PRNG seeded by `hash(journeyId, actionId)`, with `int`, `float`, `pick`, and `weighted` helpers.
 - Tests prove the same seed gives the same sequence.
 
 **Refs:** [18 § Randomness](../architecture/concepts/18-rules-time-and-randomness.md)
@@ -189,7 +189,7 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 
 **Acceptance criteria**
 - In-memory implementations of every engine port, plus a `createTestEngine({ fixtures })` helper.
-- Fixture builders for a tiny region (2–3 locations) and a character.
+- Fixture builders for a tiny region (2–3 locations) and a journey.
 - An example test dispatches an action and asserts on the emitted events.
 
 ### M0A-15 · Scaffold `libs/battle` with its interfaces

@@ -1,6 +1,6 @@
 # 15: Persistence, Caching & Concurrency
 
-> **TL;DR:** Cache only **immutable** things (published releases, catalog). Never share mutable Mongoose documents across sessions. Player state writes go through the engine with a **per-character lock + optimistic concurrency**, and multi-document writes use **transactions** (run Mongo as a replica set, even locally). Add unique indexes now.
+> **TL;DR:** Cache only **immutable** things (published releases, catalog). Never share mutable Mongoose documents across sessions. Player state writes go through the engine with a **per-journey lock + optimistic concurrency**, and multi-document writes use **transactions** (run Mongo as a replica set, even locally). Add unique indexes now.
 
 **MVP impact:** High · **Cost to change later:** Medium (but bugs found later are expensive: dupes and lost progress)
 
@@ -24,23 +24,23 @@
 
 1. **Cache policy**
    - Cache: `RegionRelease` (immutable, see [01](01-content-vs-state-and-publishing.md)), catalog data, Discord metadata.
-   - Don't cache: Character, PokemonInstance, draft content being edited. Fetch fresh, and keep docs short-lived per action.
+   - Don't cache: Journey, PokemonInstance, draft content being edited. Fetch fresh, and keep docs short-lived per action.
    - If caching documents for reads, cache `lean()` plain objects (frozen in dev) rather than hydrated docs.
 2. **Writes to player state**
-   - Per-character lock in `engine.dispatch` as a **short DB lease** (`locks` collection with TTL index), because the bot and webapp both run the engine (see [03 § Process topology](03-engine-boundary-and-game-loop.md#process-topology-should-the-engine-be-its-own-container-decided-oct-2026-option-c)). Redis later if lock traffic grows.
-   - `optimisticConcurrency: true` on Character (Mongoose throws on a version mismatch). The engine retries once **only for actions that don't depend on the rendered view**; view-dependent actions carry the character `rev` and are re-rendered instead, so a duplicate press is never applied twice. Revisions, preconditions, and the one-active-session rule are in [03 § Per-character serialization](03-engine-boundary-and-game-loop.md#per-character-serialization-revisions-preconditions-and-sessions-decided-oct-2026).
+   - Per-journey lock in `engine.dispatch` as a **short DB lease** (`locks` collection with TTL index), because the bot and webapp both run the engine (see [03 § Process topology](03-engine-boundary-and-game-loop.md#process-topology-should-the-engine-be-its-own-container-decided-oct-2026-option-c)). Redis later if lock traffic grows.
+   - `optimisticConcurrency: true` on Journey (Mongoose throws on a version mismatch). The engine retries once **only for actions that don't depend on the rendered view**; view-dependent actions carry the journey `rev` and are re-rendered instead, so a duplicate press is never applied twice. Revisions, preconditions, and the one-active-session rule are in [03 § Per-journey serialization](03-engine-boundary-and-game-loop.md#per-journey-serialization-revisions-preconditions-and-sessions-decided-oct-2026).
    - Prefer atomic operators for hot counters (`$inc` money with a `$gte` guard) where they fit.
 3. **Transactions**
-   - Run Mongo as a single-node **replica set** in docker-compose (one flag plus init) so `session.withTransaction` works locally and in prod. Needed for battle results (Character + up to 6 PokemonInstances), trades, and publish.
+   - Run Mongo as a single-node **replica set** in docker-compose (one flag plus init) so `session.withTransaction` works locally and in prod. Needed for battle results (Journey + up to 6 PokemonInstances), trades, and publish.
 4. **Indexes** (declare in schemas, verify in CI):
    - `Server.serverId` unique, `User.userId` unique.
-   - `Location {regionId, ordinal}`, `Character {userId, regionId}` unique.
-   - `PokemonInstance {ownerCharacterId, 'storage.kind'}`, `RegionRelease {regionId, version}` unique.
+   - `Location {regionId, ordinal}`, `Journey {userId, regionId}` unique among active journeys.
+   - `PokemonInstance {ownerJourneyId, 'storage.kind'}`, `RegionRelease {regionId, version}` unique.
 5. **Draft authoring writes**: atomic `$set` on paths (e.g. `progressionDefinitions.<key>`) instead of load-mutate-save of the whole Region. Concurrent admins then can't clobber each other's sections.
 6. **Scale path** (design for it, don't build it): sharded bot processes need a Redis cache, Redis locks, and battles pinned to a process (or worker pool) by `battleId`. Keep those behind interfaces (`ICacheService` already is).
 
 ## MVP scope
-- Replica set, indexes, cache policy change, per-character lock, OCC on Character, transactions for battle results/trades/publish.
+- Replica set, indexes, cache policy change, per-journey lock, OCC on Journey, transactions for battle results/trades/publish.
 
 ## Open questions
 - ~~Hosting target and backups?~~ **Decided (Q30):** one always-on bot process on a managed host, Atlas Free plus nightly `mongodump` for MVP, then Atlas Flex or DigitalOcean Managed MongoDB (daily backups) before opening to other servers. See [21](21-hosting-and-environments.md).

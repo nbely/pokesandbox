@@ -89,7 +89,7 @@ Location.traversal?: {
 The **first pass** must satisfy both `firstPass` and `everyPass`. Later passes only need `everyPass`. Locations without `traversal` are free to cross.
 
 How it maps onto existing primitives (no special engine path):
-- The engine keeps per-character **location progress**: `{ cleared: boolean; lifetime: Counters; visit: Counters }`, where `visit` resets on each entry. Updated by engine event listeners: wild battle finished, trainer defeated, explore pressed.
+- The engine keeps per-journey **location progress**: `{ cleared: boolean; lifetime: Counters; visit: Counters }`, where `visit` resets on each entry. Updated by engine event listeners: wild battle finished, trainer defeated, explore pressed.
 - Condition facts `location.cleared` and `location.visit.<counter>`, scoped to the location being exited, are added to the **MVP fact list** ([05](05-requirements.md#mvp-scope)).
 - The builder compiles `traversal` into **gates on the exit edges** (`presentation: 'attemptable'`, explanation e.g. "Defeat Bug Catcher Rick and 1 more trainer to continue", "Keep exploring: 2 more steps to get through Mt. Moon"). Reaching `firstPass` sets `cleared = true`.
 - Unavoidable trainers can also use `engagement: 'onEnter'` (they battle you as you arrive). Traversal is for "you can't leave until…".

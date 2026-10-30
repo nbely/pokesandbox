@@ -20,7 +20,7 @@ PokeSandbox grew out of forum text-RPGs. Players narrated their adventures in th
 ## Adventure log entry
 ```ts
 AdventureLogEntry {
-  _id; characterId; regionId; at: Date; releaseVersion;
+  _id; journeyId; regionId; at: Date; releaseVersion;
   kind: 'trainerBattle' | 'wildBattle' | 'catch' | 'travel' | 'scene' | 'milestone' | 'evolution' | 'moveLearned'
       | 'gift' | 'trade' | 'release' | 'pvp' | 'whiteout' | 'rollup';
   location: ContentKey;
@@ -82,7 +82,7 @@ The original forum flow (player narrates a move, moderator resolves it with a ca
 - Ephemeral opponent Pokémon (recipes → battle-only; catch → PokemonInstance).
 - `AdventureLogEntry` written by the engine (trainer battles with turn digests, catches, trades, releases, wild rollups, milestones, evolutions, scenes), with Pokémon stored as snapshots.
 - Compressed battle records for live recovery + a 7-day support window (Arena replays per policy).
-- A basic adventure log view on the webapp character page.
+- A basic adventure log view on the webapp character page, per journey.
 - Later: Narration model + UI (webapp first, then thread capture), AI narration drafts, narrated battle mode.
 
 ## Open questions (post-MVP)

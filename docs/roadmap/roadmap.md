@@ -26,7 +26,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 
 | Area | Deliverable | Concept |
 |---|---|---|
-| Engine | `libs/engine` package skeleton: `dispatch(action) → events`, per-character lock, state revisions, action preconditions, one active `/play` session per character, injected Clock/Rng, in-memory test harness | [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [18](../architecture/concepts/18-rules-time-and-randomness.md) |
+| Engine | `libs/engine` package skeleton: `dispatch(action) → events`, per-journey lock, state revisions, action preconditions, one active `/play` session per journey, injected Clock/Rng, in-memory test harness | [03](../architecture/concepts/03-engine-boundary-and-game-loop.md), [18](../architecture/concepts/18-rules-time-and-randomness.md) |
 | Primitives | Condition tree + predicate registry (evaluate/explain/validate/references); Effect union + executor (atomic, idempotent) | [05](../architecture/concepts/05-requirements.md), [06](../architecture/concepts/06-effects.md) |
 | Identity | ContentKey type, Showdown-ID references, remove bidirectional arrays, indexes | [02](../architecture/concepts/02-identity-and-references.md) |
 | Persistence | Mongo replica set (transactions), cache policy (immutable only), OCC helpers | [15](../architecture/concepts/15-persistence-caching-concurrency.md) |
@@ -35,7 +35,7 @@ The ordering principle: **build each primitive once, at the earliest phase that 
 
 Hosting and production operations are **not** Phase 0. They're the launch-readiness step at the end of Phase 1.
 
-**Exit criteria:** an engine unit test can evaluate a condition tree and apply an effect list to an in-memory character. The fork builds from upstream plus patches, with a passing sim test for HP injection.
+**Exit criteria:** an engine unit test can evaluate a condition tree and apply an effect list to an in-memory journey. The fork builds from upstream plus patches, with a passing sim test for HP injection.
 
 ---
 
@@ -79,8 +79,8 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 - Region export/import (JSON bundle) → the official "Kanto Classic" template (generator script for bulk data, builder tools for story, repo bundle as the source of truth).
 
 ### Playing
-- Character creation (1 per region; restart archives the old one with a 24h cooldown), onboarding via a `characterCreated` script, starter pick, rival setup.
-- `/play` hub (the only player command; ephemeral): location view, travel (with locked-edge explanations), Fly/transport. One active session per character, and a new one resumes wherever the character is, mid-battle included.
+- Character creation and journey start (one active journey per user per region; restart archives the old journey with a 24h cooldown), onboarding via a `journeyStarted` script, starter pick, rival setup.
+- `/play` hub (the only player command; ephemeral): location view, travel (with locked-edge explanations), Fly/transport. One active session per journey, and a new one resumes wherever the journey is, mid-battle included.
 - Explore: weighted outcomes (wild, trainer, hidden item) by method; traversal costs; Repel.
 - Battles: fight, switch, **bag items, catch, run** (needs the patch set's external choice hook); trainer battles; rival; gyms; Elite 4 gauntlet; whiteout → respawn.
 - EXP and level-ups applied mid-battle (authentic), move learning prompts, evolution after battle (level/stone) and after trades.
@@ -114,7 +114,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 | Living region | Region state players shape together: first-X NPCs and gifts, NPCs that remember, shared goals, story chapters, trainer ghosts | `RegionState`, region facts/effects ([04](../architecture/concepts/04-progression-and-flags.md#living-region-shared-state-post-mvp-direction-oct-2026)) |
 | Environment | Weather/terrain by location, swarms, visible-spawn UI | Encounter conditions |
 | Staff ops | Grant items/Pokémon/money/TMs with audit log | Effect executor |
-| Webapp | Full builder beyond the MVP editors, battle replays, richer character and log views | MVP webapp editors, adventure log, region bundles |
+| Webapp | Full builder beyond the MVP editors, battle replays, richer journey and log views | MVP webapp editors, adventure log, region bundles |
 | Narration | Narration on adventure log entries by the owner, invited co-authors, and narration moderators; thread capture; AI drafts | Adventure log ([22](../architecture/concepts/22-adventure-log-and-narration.md)) |
 | Arena + adventure | Arena battles with copies of adventure Pokémon (format level scaling, stat-investment overrides) | PokemonInstance in Showdown set shape |
 | Systems | Shop purchase limits and restocking, timed script waits (`timer` kind), level scaling, configurable trade evolution without trading, regional forms for Gen 2+ regions, `/bag`/`/party` shortcuts | Reserved fields in shops and `RegionRules` |
@@ -125,7 +125,7 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 |---|---|
 | Co-op (raids, 2-player doubles, co-op story) | `participants[]` on mode records; Showdown multi battles; 4+ players needs fork surgery |
 | Energy/pacing toggle | Action cost hook in `dispatch` |
-| Cross-region / cross-server travel | Character keyed by (user, region); portable Pokémon instances |
+| Cross-region / cross-server travel, carry-over between regions, event regions | Character (persona) separate from Journey (per region); original trainer = character; Pokémon move between journeys |
 | Configurable narration effects (approved roleplay boosts friendship or encounter odds) | Script approval step + adventure log |
 | Webapp as a full play surface | `libs/engine` |
 | Minigames at locations | Script steps / custom step types |
@@ -138,5 +138,5 @@ Hosting and production operations are **not** Phase 0. They're the launch-readin
 ## Cross-cutting tracks (run alongside every phase)
 - **Docs & onboarding:** admin guides per builder menu, template walkthroughs, player help.
 - **Quality:** engine unit tests per predicate/effect/step; validator tests; Showdown patch tests; e2e smoke on a test guild.
-- **Observability:** structured logs keyed by `characterId`/`battleId`/`actionId`; error reporting; basic metrics (active players, battles/hour).
+- **Observability:** structured logs keyed by `journeyId`/`battleId`/`actionId`; error reporting; basic metrics (active players, battles/hour).
 - **Community:** alpha server, feedback channels, release notes generated from region and bot releases.

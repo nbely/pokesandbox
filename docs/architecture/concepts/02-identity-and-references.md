@@ -1,6 +1,6 @@
 # 02: Identity & References
 
-> **TL;DR:** Reference *content* by stable **string keys**. Use Showdown IDs for canon data (`bulbasaur`, `potion`, `thunderbolt`) and generated keys for authored data. Keep ObjectIds for *documents* (characters, Pokémon instances, servers). Store each relationship in **one direction only** (child → parent).
+> **TL;DR:** Reference *content* by stable **string keys**. Use Showdown IDs for canon data (`bulbasaur`, `potion`, `thunderbolt`) and generated keys for authored data. Keep ObjectIds for *documents* (characters, journeys, Pokémon instances, servers). Store each relationship in **one direction only** (child → parent).
 
 **MVP impact:** High · **Cost to change later:** High (every stored reference)
 
@@ -11,7 +11,7 @@
 | Region → Locations | `Region.locations: ObjectId[]` **and** `Location.regionId` | Two sources of truth, non-atomic updates |
 | Server → Regions | `Server.regions: ObjectId[]` only | Region doesn't know its server, so ownership checks need a reverse lookup |
 | Server ↔ Users | `Server.playerList[]` **and** `User.servers[]` | Duplicated and unbounded |
-| Region → Characters | `Region.characterList[]` | Unbounded (thousands of players) |
+| Region → Journeys | `Region.characterList[]` | Unbounded (thousands of players) |
 | Encounter slot → species | `speciesId: ObjectId` (DexEntry) | Not portable. Showdown needs the string ID anyway. |
 | Requirement → item | `itemId: ObjectId` (`Item` model doesn't exist) | Same |
 | Connection → location | `toLocationId: ObjectId` | Fine at runtime. Painful for templates/import (needs remapping). |
@@ -19,7 +19,7 @@
 
 ## Principles
 
-1. **Documents vs content entries.** A *document* has independent lifecycle and concurrency (Character, PokemonInstance, Server, User, RegionRelease). A *content entry* is part of a region's authored package (location, NPC, script, shop, encounter table).
+1. **Documents vs content entries.** A *document* has independent lifecycle and concurrency (Character, Journey, PokemonInstance, Server, User, RegionRelease). A *content entry* is part of a region's authored package (location, NPC, script, shop, encounter table).
    - Documents use ObjectIds.
    - Content entries use a **key that is unique within the region** and survives export/import/clone.
 2. **Canon catalog uses Showdown IDs.** Showdown's `toID()` keys (`mrmime`, `kingsrock`, `hiddenpowerfire`) are what the simulator, the team validator, `@smogon/calc`, and sprite CDNs all use. Storing `speciesId: "pikachu"` means no translation layer on the battle hot path.
@@ -55,7 +55,7 @@ The second property is the reason a separate key exists at all. If references us
 
 - Introduce a shared `ContentKey` type (opaque, ~10-char `nanoid`) and generator. Use it for locations, NPCs, trainers, scripts, shops, transport networks, and encounter tables. Keep the existing progression/milestone UUIDs (already valid opaque keys).
 - Content cross-references use keys: `connection.to: ContentKey`, `encounterSlot.species: SpeciesId`, `itemCondition.item: ItemId`.
-- Drop `Region.locations`, `Region.characterList`, `Region.shops`, `Region.quests`, and `Server.playerList`. Add `Region.serverId`. Add indexes (`{ regionId, key }` unique, `Location {regionId, ordinal}`, `Character {userId, regionId}` unique, etc.).
+- Drop `Region.locations`, `Region.characterList`, `Region.shops`, `Region.quests`, and `Server.playerList`. Add `Region.serverId`. Add indexes (`{ regionId, key }` unique, `Location {regionId, ordinal}`, `Journey {userId, regionId}` unique among active journeys, etc.).
 
 ### A user's server list (decided Oct 2026)
 Replaces `User.servers` / `Server.playerList` (no bidirectional arrays). The webapp's left nav (Discord-style) combines two sources:
@@ -74,10 +74,13 @@ UserNavLayout {             // one doc per user (or embedded on User; it's bound
 }
 ```
 - Rendering = `items` order first, then any member/favorite servers not yet placed (appended in default order). Stale entries (server deleted, membership gone and not favorited) are pruned lazily.
-- This is a **one-directional user preference** (user → servers). Servers never list users. "Players in this server" comes from Characters or a membership query.
+- This is a **one-directional user preference** (user → servers). Servers never list users. "Players in this server" comes from Journeys or a membership query.
 
 ### Do authored content entries stay as separate Mongo docs?
 Yes, for the **draft** (one doc per location/NPC/script keeps authoring writes small and concurrent-safe). The **release** compiles them into a keyed bundle (see [01](01-content-vs-state-and-publishing.md)). The engine resolves references against the bundle's in-memory maps, never with populates.
+
+### Event regions (post-MVP)
+Server event content that isn't specific to one region (e.g. an event island every player visits) lives in an **event region**: a server-owned region of kind `event`. Its content keys are its own, so the identity rules above apply unchanged: nothing about events needs server-global content keys. Journeys visit it temporarily (see [13 § Event regions and visiting](13-characters-and-pokemon-instances.md#event-regions-and-visiting-post-mvp)).
 
 ## MVP scope
 - ContentKey type and generator. Migrate Location to have a `key`. Species and item references become Showdown IDs. Remove the bidirectional arrays. Add indexes.

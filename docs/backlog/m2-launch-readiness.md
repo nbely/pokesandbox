@@ -93,7 +93,7 @@ Everything needed to run the bot and webapp for real players: a managed host for
 `Type: Task` · `Parent: E-M2-1` · `Priority: P1` · `Size: S` · `Labels: area:infra` · `Blocked by: M2-01` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
-- Sentry (free tier) wired into the bot and webapp. Errors are tagged with environment, `characterId`/`actionId`/`battleId` where available, and release version.
+- Sentry (free tier) wired into the bot and webapp. Errors are tagged with environment, `journeyId`/`actionId`/`battleId` where available, and release version.
 - An uptime check on the webapp plus a bot heartbeat (e.g. a health endpoint or a periodic ping), alerting the owner.
 
 ### M2-07 · Staging environment

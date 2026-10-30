@@ -22,7 +22,7 @@ requirement = {
 | No OR | "Has Badge 3 **or** has the Card Key" |
 | No NOT | "Rival **not** yet defeated here" (needed for one-time encounters and party variants) |
 | `equals` is ambiguous | For a milestone, does `equals: ['boulder']` mean exactly that set or contains it? Count semantics vs specific-milestone semantics share `min/max`. |
-| Missing predicate types | time of day, visited location (`is_in_visited`), flag, choice, currency, party species/type/level, character in location, random chance, day of week (Gen 2 weekly NPCs), weather |
+| Missing predicate types | time of day, visited location (`is_in_visited`), flag, choice, currency, party species/type/level, current location, random chance, day of week (Gen 2 weekly NPCs), weather |
 | No contextual targets | Fly's "destination must be visited" needs to refer to *the candidate destination* |
 | No explanations | The UI can't tell the player *why* a path is locked |
 | Two schema definitions | Zod and a Mongoose `Mixed` map drift apart |
@@ -55,7 +55,7 @@ Each predicate type is registered once:
 ```ts
 registerPredicate('milestone', {
   schema,                              // zod (the single source; Mongo stores it as validated Mixed)
-  evaluate(p, ctx) → boolean,          // ctx = { character, release, target?, rng, clock }
+  evaluate(p, ctx) → boolean,          // ctx = { journey, release, target?, rng, clock }
   explain(p, ctx) → string,            // "Requires the Boulder Badge"
   validate(p, release) → Issue[],      // key exists? milestone exists?
   references(p) → Ref[],               // for "used by" lookups and dependency graphs
@@ -106,7 +106,7 @@ Conditions read through an **evaluation context** with scopes:
 
 | Scope | Lives on | Used by |
 |---|---|---|
-| `character` | Character (progress, flags, bag, money, visited) | everything |
+| `journey` | Journey (progress, flags, bag, money, visited) | everything |
 | `party` / `pokemon` | Pokémon instances | HM gates, evolution conditions, NPC reactions ("show me a Pikachu") |
 | `script` | the running script's locals | branching inside a script (`if local.choice == 'fight'`) |
 | `quest` | a quest instance's variables | quest stage gates and completion checks |
@@ -206,7 +206,7 @@ The condition is the same everywhere. What differs is how the caller uses the re
   - `party.size`: covered by the starter choice/flag.
   - Script `var`: MVP branching uses choice labels.
   - `dex.caught`; plus everything already listed as post-MVP (quest vars, region/server state, single-Pokémon facts, weekday, weather, `party.maxLevel`).
-- **Not a fact: the blackout/respawn point.** It's character *state* (`Character.location.respawn`), written by the `setRespawn` effect and automatically by using a `heal` service. The engine reads it directly on whiteout, per `RegionRules.whiteout`. It only becomes a fact if some condition ever needs to ask "where is my respawn?", which no known content does.
+- **Not a fact: the blackout/respawn point.** It's journey *state* (`Journey.location.respawn`), written by the `setRespawn` effect and automatically by using a `heal` service. The engine reads it directly on whiteout, per `RegionRules.whiteout`. It only becomes a fact if some condition ever needs to ask "where is my respawn?", which no known content does.
 - Evaluator, explainer, validator, and builder (flat list + one nesting level).
 
 ## Open questions

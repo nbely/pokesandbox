@@ -26,8 +26,8 @@ One gating primitive for everything: a condition tree of fact + operator + value
 **Acceptance criteria**
 - `registerFact(kind, { schema, resolve(ctx, params), valueType, describe, validate, references })`.
 - Shared operators: `eq`, `neq`, `gte`, `lte`, `in`, `has`, `exists`, type-checked against the fact's `valueType`.
-- `EvaluationContext` scopes: `character`, `party`, `script`, `quest` (reserved), `region` and `server` (reserved, shared state), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
-- `evaluate(condition, ctx) → boolean`. Pure, no I/O (facts read from a `CharacterView`).
+- `EvaluationContext` scopes: `journey`, `party`, `script`, `quest` (reserved), `region` and `server` (reserved, shared state), `target`/`subject`, `clock`. Unknown scopes and facts fail validation, not evaluation.
+- `evaluate(condition, ctx) → boolean`. Pure, no I/O (facts read from a `JourneyView`).
 - A single zod schema is used for both validation and Mongo storage (stored as validated `Mixed`).
 - Unit tests for nesting, short-circuiting, and type errors.
 
@@ -58,7 +58,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 **Acceptance criteria**
 - Facts: `bag.count` (item ID), `visited` (location key **or `$target`**), `party.knowsMove` (move ID), `party.hasSpecies` (species ID), `dex.caughtCount`.
 - `$target` is resolved from the context's `target` scope. Tested with a Fly-style "destination must be visited" condition.
-- They read only from the `CharacterView` port (no Pokémon persistence needed yet; fakes in tests).
+- They read only from the `JourneyView` port (no Pokémon persistence needed yet; fakes in tests).
 
 ### M0B-05 · Facts batch 3: location progress
 `Type: Task` · `Parent: E-M0B-1` · `Priority: P1` · `Size: M` · `Labels: area:engine, domain:map` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
@@ -95,8 +95,8 @@ Typed, declarative state changes, applied atomically and idempotently, which emi
 
 **Acceptance criteria**
 - An `Effect` discriminated union plus `registerEffect(type, { schema, apply(draft, params, ctx), validate, references })`.
-- `applyEffects(list, ctx)` works on an in-memory **character draft**: all-or-nothing, with post-validation (no negative counts or money, definition clamps). Commits through the repository port in one write (or a transaction when several documents are involved).
-- Idempotent per `executionId` (recent-executions ring buffer on the character).
+- `applyEffects(list, ctx)` works on an in-memory **journey draft**: all-or-nothing, with post-validation (no negative counts or money, definition clamps). Commits through the repository port in one write (or a transaction when several documents are involved).
+- Idempotent per `executionId` (recent-executions ring buffer on the journey).
 - Emits `GameEvent`s per effect (`itemsChanged`, `progressChanged`, …) for renderers.
 - Tests: rollback on a failing effect, idempotent replay, event emission.
 
@@ -160,7 +160,7 @@ Region-scoped content keys, one-directional references, and the progression/flag
 - `kind: 'choice'` with `options: { key; label; imageUrl? }[]` in the zod and Mongo schemas (the builder UI is M0B-12).
 - `numeric.overflow: 'clamp' | 'reject'` (default `clamp`) in the schema plus a builder field.
 - `sequential` semantics documented in code: checks current holdings, revocation doesn't cascade.
-- Character progress state shape defined in core (`progress: Record<key, number | boolean | string | string[]>`, `flags: string[]`).
+- Journey progress state shape defined in core (`progress: Record<key, number | boolean | string | string[]>`, `flags: string[]`).
 
 ### M0B-14 · Flag conventions and the region flag index
 `Type: Task` · `Parent: E-M0B-3` · `Priority: P1` · `Size: S` · `Labels: area:engine, domain:progression` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
@@ -237,9 +237,9 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 - Otherwise it compiles draft content into an immutable `RegionRelease` (gzip, chunked if large) with `version`, `publishedAt`, a catalog/library version pin, and a generated diff summary (for release notes).
 - Sets `deployment.publishedVersion`. If `Server.settings.releaseNotes.enabled`, posts notes to the configured channel.
 - `ContentProvider.getRelease(regionId, version?)` returns an immutable in-memory object (LRU). It keeps N and N-1 resident.
-- Retention: keep the last 10 releases plus any referenced (characters, clones, templates). Older ones are pruned by a job.
+- Retention: keep the last 10 releases plus any referenced (journeys, clones, templates). Older ones are pruned by a job.
 - `compileRelease(regionId, { mode: 'preview' })` exists (unused yet) for future draft preview.
-- `Character.releaseVersion` plus a migration-rule hook (rules implemented in M5). The review diff lists rule changes (`RegionRules`) explicitly, with the affected character count; save-breaking rule changes are errors unless they ship with a fix-up rule ([18](../architecture/concepts/18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
+- `Journey.releaseVersion` plus a migration-rule hook (rules implemented in M5). The review diff lists rule changes (`RegionRules`) explicitly, with the affected journey count; save-breaking rule changes are errors unless they ship with a fix-up rule ([18](../architecture/concepts/18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
 
 **Refs:** [01](../architecture/concepts/01-content-vs-state-and-publishing.md), [21 § Retention](../architecture/concepts/21-hosting-and-environments.md)
 

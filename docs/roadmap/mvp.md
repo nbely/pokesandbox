@@ -14,7 +14,7 @@ This doc breaks Phases 0–2 of [`roadmap.md`](roadmap.md) into **GitHub milesto
 | M2 | **Arena Release (Pre-MVP)** 🚀 | Public PvP/PvAI in Discord; hosting & operations (launch readiness) | M1 |
 | M3 | **Region Authoring** | Locations, encounters, transport, shops, rules, validate | M0b (parallel with M1/M2) |
 | M4 | **Interaction Engine** | Scripts, triggers, NPCs, trainers, templates | M0b, M3 |
-| M5 | **Adventure Core** | Character, travel, explore, wild/trainer battles, party/PC/bag, progression | M1, M3, M4 |
+| M5 | **Adventure Core** | Journey, travel, explore, wild/trainer battles, party/PC/bag, progression | M1, M3, M4 |
 | M6 | **Kanto Classic & MVP Release** 🚀 | Kanto built with the tools, playtested, released | M5 |
 
 ```
@@ -69,7 +69,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 ### Playing
 | Feature | Status | Milestone |
 |---|---|---|
-| Create character (1/region), onboarding, starter, rival setup | ❌ | M5 (+M4 scripts) |
+| Create character + start journey (1 active journey per user per region), onboarding, starter, rival setup | ❌ | M5 (+M4 scripts) |
 | Travel graph with gating; map/current location | ❌ | M5 |
 | Fly / transport | ❌ | M5 |
 | Wild encounters (random, fishing, time) | ❌ | M5 |
@@ -101,7 +101,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 **Epic: Engine Skeleton** (Q18)
 - [ ] Structured logging port; debug events out of Mongo (S)
 - [ ] Scaffold `libs/engine` (pure TS, no discord.js) with repository and ContentProvider interfaces (M)
-- [ ] `dispatch(characterId, action)` with per-character lock, revisions, action preconditions, session claims, action/event types, and error model (L)
+- [ ] `dispatch(journeyId, action)` with per-journey lock, revisions, action preconditions, session claims, action/event types, and error model (L)
 - [ ] Injected `Clock` and seeded `Rng` (S)
 - [ ] In-memory test harness (M)
 - [ ] Scaffold `libs/core` (shared schemas, registries home) (S)
@@ -218,21 +218,21 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Trainer party editor with conditioned variants; unset moves default to the last 4 level-up moves from the region's learnsets (M)
 - [ ] Script step editor (L)
 - [ ] Region Health view (read-only) (S)
-- [ ] Player profile + character pages with privacy settings (M)
+- [ ] Player profile + character pages (with their journeys) and privacy settings (M)
 
 ## M4: Interaction Engine (Q16)
 - [ ] Script + Trigger models (M)
 - [ ] Script VM: steps `say/choice/if/effects/battle/wildBattle/npcTrade/askName/heal/shop/travel/goto/end`, `{name:<slot>}` placeholders (L)
 - [ ] Mode machine + persisted script cursor + resume on input (M)
-- [ ] Trigger dispatch: characterCreated, enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
+- [ ] Trigger dispatch: journeyStarted, enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
 - [ ] NPC model (location, visibility, interact, trainer, engagement) (M)
 - [ ] Script step-list editor in Discord (L)
 - [ ] Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker (L)
 
 ## M5: Adventure Core
-- [ ] Character + PokemonInstance models, OCC, transactions (M)
-- [ ] Character creation (1 per region) + name slots (`Character.names`; Kanto Classic names the rival) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
+- [ ] Journey + PokemonInstance models, OCC, transactions (M)
+- [ ] Character creation (with an `idNo`; the character is the original trainer of Pokémon it obtains) + journey start (1 active journey per user per region) + name slots (`Journey.names`; Kanto Classic names the rival) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
 - [ ] `/play` hub renderer (mode-aware): claims the session (newest wins), resumes any mode incl. mid-battle requests and pending prompts, and shuts down superseded sessions cleanly (L)
 - [ ] Travel action (conditions, locked explanations, enter triggers, visited tracking) (M)
 - [ ] Transport action (Fly menu): destinations grouped by area, fares shown, unaffordable options locked with the reason (S)
@@ -248,7 +248,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Heal points (restore HP, status, and PP) + respawn (S)
 - [ ] Profile: badge case, milestones, visited, dex (M)
 - [ ] **Trading** (Q35): `Trade` record + shared trade message + private Pokémon pickers (reusing the M2 Arena surface patterns), confirm-reset on offer change, expiry (M)
-- [ ] Two-character engine action: ordered leases, re-checks, owner swap in one transaction, both revisions and Pokédexes updated; `trading.access` precondition; per-character rate limit (M)
+- [ ] Two-journey engine action: ordered leases, re-checks, owner swap in one transaction, both revisions and Pokédexes updated; `trading.access` precondition; per-user rate limit (M)
 - [ ] Adventure log: engine-written entries (trainer battles with turn digests, catches, trades, releases, wild rollups, milestones, evolutions, scenes; Pokémon stored as snapshots so entries survive the 30-day release purge) + webapp log view; ephemeral opponent Pokémon from recipes (M)
 
 ## M6: Kanto Classic & MVP Release 🚀
