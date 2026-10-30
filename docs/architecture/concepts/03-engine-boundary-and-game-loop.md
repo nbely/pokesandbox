@@ -118,6 +118,17 @@ The engine exposes `availableActions(journey)` with explanations (the condition 
 
   The extraction is: wrap `dispatch` and BattleService in an API, move the battle host into the new container, and have the bot subscribe to events. No game logic changes.
 
+### Sharding, deploys, and who owns live state (decided Oct 2026)
+**When Discord forces sharding:** one gateway connection (shard) serves at most **2,500 servers**; beyond that Discord refuses to connect without sharding (`/gateway/bot` recommends a count, roughly one shard per 1,000 servers). Each server's events, interactions included, go to exactly one shard: `(guildId >> 22) % shardCount`. Sharding doesn't require multiple processes: discord.js **internal sharding** (`shards: 'auto'`) runs several shards in one process, which typically holds well past 2,500 servers. Expected timeline: no sharding through the MVP and early public use → internal sharding at 2,500 servers (nothing else changes) → multiple processes only if one process runs out of CPU or memory.
+
+**The nearer risk is deploys.** Managed hosts often start the new instance before stopping the old one. For a Discord bot that's two live processes for a moment, both receiving events and both recovering battles on boot, which would duplicate turns, timers, and rewards. One design covers deploy overlap and multi-process sharding alike:
+1. **Every live record carries its server:** battles, turn timers, challenges, and trades have a `guildId`. Everything stateful already lives within one server (Arena, trades, journeys, even event regions).
+2. **Ownership follows the shard:** a single `ownsGuild(guildId)` function decides whether this process is responsible for a server. One process returns `true` for everything; multiple processes apply Discord's shard formula. A battle stays with the process that receives its server's button presses, so nothing needs routing between processes.
+3. **Battle leases:** a process runs a battle only while it holds that battle's lease (`ownerInstance`, renewed by heartbeat), the same DB lease mechanism as journey locks. On boot it recovers only battles of servers it owns whose lease it can take. During a deploy overlap the old process keeps its leases until it stops, and the new one takes over as they expire, so each battle runs in exactly one place.
+4. **Resharding is a restart:** a new shard count changes the server-to-shard mapping, and every battle (seed + input log, injections included) and timer (a stored deadline) is recovered by its new owner, the same path as after any restart ([14](14-battle-system-and-showdown.md)).
+5. **Deploy setting:** the bot's service is configured for **no overlap** (stop the old instance, then start the new) where the host allows it, with one replica until multi-process sharding is real. The leases are the safety net if an overlap happens anyway.
+6. **The webapp never runs battles or timers**, so none of this affects it.
+
 ### Package layout & encapsulation rules (decided Oct 2026)
 Option C is only safe if the boundaries are enforced, so the engine (and the battle host) can be pulled into their own containers later without untangling code.
 

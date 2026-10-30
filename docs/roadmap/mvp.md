@@ -164,7 +164,7 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 
 **Epic: BattleService**
 - [ ] BattleService start/choose/events API, in-process (L)
-- [ ] Battle persistence (seed + input log), recovery on boot, compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
+- [ ] Battle persistence (seed + input log, `guildId`), battle leases (`ownerInstance` + heartbeat) and `ownsGuild` ownership, recovery on boot of owned unleased battles only (test: two overlapping processes run each battle once), compressed retention (7-day support window for adventure battles; Arena per replay policy) (M)
 - [ ] Protocol → GameEvent translation; battle text from Showdown's text data, not hand-written strings (M)
 - [ ] Discord battle view builders (pure `BattleView` → Components v2: turn messages, both actives with level/HP/status, the two sprites as separate images, choice prompts; a composed side-by-side image is post-MVP). The Arena wiring is in M2 E-M2-2 (L)
 - [ ] Turn timers and timeout policy in BattleService: persisted per-side deadlines, `default` choice on timeout, forfeit after 3 consecutive, fresh window on recovery, `choose` with `rqid` + per-battle queue (M). Contract in [14 § Ownership](../architecture/concepts/14-battle-system-and-showdown.md#ownership)

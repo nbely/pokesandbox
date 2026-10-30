@@ -46,6 +46,7 @@ Everything needed to run the bot and webapp for real players: a managed host for
 
 **Acceptance criteria**
 - The host supports always-on Node processes (Discord gateway + in-memory battles) and Docker images.
+- The bot service is configured for **no deploy overlap** (stop old, then start new) and one replica, where the host allows it ([03 § Sharding](../architecture/concepts/03-engine-boundary-and-game-loop.md#sharding-deploys-and-who-owns-live-state-decided-oct-2026)). If it doesn't, document that battle leases cover the overlap.
 - The prod bot and webapp run from images built in CI, with secrets in the host's secret store.
 - The webapp has a domain with TLS. The Discord OAuth redirect URIs are updated.
 - Cost and plan details are recorded in [21](../architecture/concepts/21-hosting-and-environments.md).
@@ -188,5 +189,6 @@ The Discord side of PvP and PvAI, following [14 § Multiplayer boundary](../arch
 - Headless tests for scenarios 1–8, using BattleService with a fake `Clock`/scheduler and the fake `BattleSurface`: 90s timeout → default move, 3 consecutive → forfeit, the counter resets on a real choice, parallel accepts, and spectator presses.
 - A restart test: stop the game host mid-turn, recover, and assert the same `messageId` is edited, deadlines are fresh, and the interrupted window isn't counted as a timeout.
 - A manual drill on the dev server, documented in the PR: kill the bot mid-battle, restart, and finish the battle in the same message.
+- An overlap test: start a second game host while the first is mid-battle, and assert each battle runs in exactly one process (one turn resolution, one timer, one reward), with the second taking over only after the first releases or its lease expires.
 
 **Refs:** [14 § Acceptance scenarios](../architecture/concepts/14-battle-system-and-showdown.md#acceptance-scenarios)
