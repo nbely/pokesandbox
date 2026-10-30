@@ -9,6 +9,52 @@ Refs: concept [12](../architecture/concepts/12-content-catalog-species-moves-ite
 
 Import every canon move and learnset from a pinned Showdown version into the DB catalog, with per-generation data, so authoring, display, validation, and TM/HM lists ([E-M3-1](m3-region-authoring.md)) can read them. Showdown stays the battle engine; the catalog holds data only ([12 § Moves](../architecture/concepts/12-content-catalog-species-moves-items.md#moves-import-overrides-and-showdown-callbacks-decided-oct-2026)).
 
+### Start here (no prior context needed)
+
+**What you're building, in Pokémon terms.** PokeSandbox lets Discord servers build their own Pokémon regions (Kanto remakes, fan regions) and play them in Discord. Regions can follow any generation's rules piece by piece, so the app needs every canon move and every species' learnset **for every generation**: Gen 1 Bite is Normal-type with a 10% flinch, Gen 2+ Bite is Dark; Gen 1 Pikachu learns Thunderbolt by TM, and so on. This epic imports that data into our MongoDB so the rest of the app can read it. Then E-M3-1 lets each region define its own TM/HM case (Gen 1's TM24 is Thunderbolt; other generations number differently).
+
+**Where things live in this repo**
+| What | Where | Copy the pattern from |
+|---|---|---|
+| Models (Zod + Mongoose) | `shared/src/models/` (export new ones from `index.ts`) | `dexentry.model.ts`; `region/region.model.ts` for `zMapHydrator` (in `models/utils.ts`) |
+| DTOs (read shapes for the bot/webapp) | `shared/src/dtos/` | `region.dto.ts` |
+| Seed data and loader | `scripts/seed/data/*.json`, registered in `scripts/seed/collections.ts` (`collectionSeedMap`) | the `dexentries` entry |
+| Pokédex builder menus (for M1-04) | `apps/bot/src/interactions/guilds/<dev guild>/slashCommands/regionManagement/pokedex/` | `managePokedex.ts`, `pokedex.embeds.ts` |
+| Design decisions | `docs/architecture/concepts/12-content-catalog-species-moves-items.md` | sections "Moves" and "Learnsets" |
+
+Local setup: `npm run setup` (env file, Mongo in Docker, seed), then `npm run db:seed` after changing seed data. Tests run with Jest through Nx (e.g. `npx nx test shared`). One PR per issue; every PR is reviewed by the owner.
+
+**Pokémon Showdown in five minutes**
+- Showdown is the open-source battle simulator behind play.pokemonshowdown.com. It has complete, maintained data for every generation, which is why we import from it. It also runs our battles later, but this epic only reads its data.
+- It's on npm as `pokemon-showdown`. Install an exact version as a dev dependency for the import scripts (e.g. `npm i -D pokemon-showdown@<exact version>`), and record that version on every imported record.
+- **IDs:** everything is keyed by an ID: lowercase, alphanumeric only. `toID('Thunder Bolt') === 'thunderbolt'`, `toID('Mr. Mime') === 'mrmime'`. Ours use the same IDs (`moveId`, `speciesId`).
+- **Per-generation data:** each older generation is a "mod" (`data/mods/gen1` … `gen8`) that only stores what differs from the next generation up, with base `data/` being Gen 9. **You never need to read those files.** Ask the API for a generation and it hands you fully resolved data:
+  ```ts
+  import { Dex, toID } from 'pokemon-showdown';
+
+  const gen1 = Dex.mod('gen1');                 // Dex.mod('gen2') … Dex.mod('gen8'); plain `Dex` is Gen 9
+  const bite = gen1.moves.get('bite');
+  bite.type;          // 'Normal' in Gen 1 (Dex.moves.get('bite').type is 'Dark')
+  bite.category;      // per-gen correct (pre-Gen 4 categories come from type)
+  bite.shortDesc;     // the description text for that generation
+  bite.isNonstandard; // null when the move exists in this gen; 'Past' (removed) / 'Future' (not yet) / 'CAP' (fan-made: skip)
+
+  gen1.moves.all();                              // every move as that generation sees it
+  gen1.data.Moves['bite'];                       // the raw resolved entry: plain data plus any callback functions
+  ```
+- **Callbacks:** some moves have functions in their data (`basePowerCallback`, `onHit`, `onModifyType`, …). Those are battle behavior. We **don't** copy them, only record their names (the `hooks` field), e.g. from `Object.keys(entry).filter(k => typeof entry[k] === 'function')`.
+- **Learnsets:** `dex.species.getLearnsetData(speciesId).learnset` (the API name in 0.11.x; check the pinned version) gives `moveId → source codes`, e.g. `thunderbolt: ['9M', '8M', …, '1M']`. The code is `<gen><method><detail>`: `L15` level 15, `M` TM/HM, `T` tutor, `E` egg, `S0` event, `V` Virtual Console. So `1L15` = learned at level 15 in Gen 1.
+- **Learnset gotchas:**
+  - Some forms have no learnset of their own and share their base species' (Showdown marks the link with `changesFrom` / `baseSpecies`). Store the base species' learnset under the form's ID, or record the fallback, so no form ends up with an empty move list.
+  - A species' learnset doesn't include moves only its pre-evolution learns. That's correct for display (it matches the games' level-up lists), so don't merge them.
+  - Gen 1 and Gen 2 learnsets live in the same data with `1…` and `2…` codes, so filter by the leading digit.
+
+**Words used in these issues**
+- **Catalog:** global, canon game data shared by every region (species, moves, learnsets, items).
+- **`GenId`:** `'gen1'` … `'gen9'`.
+- **`ResolvedLearnset`:** a learnset already filtered to one generation and grouped by method (`levelUp`, `machine`, `tutor`, `egg`, `event`). Everything outside the catalog reads this, never raw codes.
+- **Region content:** things a region's admins author (locations, NPCs, its TM/HM list). It's published as versioned releases. You only touch it in E-M3-1.
+
 **Notes for whoever picks this up**
 - **Where models live for now:** `shared/src/models`, next to `DexEntry`. They move to `libs/core` when M0A-09 lands; keep them free of Discord and bot imports so the move is mechanical.
 - **Model conventions:** the Zod schema is the source of truth (`moveDefinitionSchema`), mirrored by the Mongoose schema (`moveDefinitionDbSchema`). Embedded sub-schemas are standalone `Schema` consts with `{ _id: false }`. Map fields are parsed with `zMapHydrator`.
@@ -50,7 +96,7 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 - `base` = the resolved Gen 9 record; `genOverrides[gen]` = only the fields that differ from `base`. Functions are dropped; their names go into `hooks[gen]`.
 - `availability[gen]` from `isNonstandard` (`Past`, `Future`). CAP and other non-canon moves (`isNonstandard: 'CAP'` etc.) are excluded.
 - Text from `data/text/moves.ts`, including per-gen blocks.
-- Output is deterministic (sorted keys) and written to `scripts/seed/data/moves.json`, so a re-import is a readable diff. The seed loader inserts it.
+- Output is deterministic (sorted keys) and written to `scripts/seed/data/moves.json`, so a re-import is a readable diff. Register it in `scripts/seed/collections.ts` so `npm run db:seed` loads it. The script lives under `scripts/` with a `package.json` script entry (e.g. `catalog:import`).
 - Tests against the generated data (worth verifying each against the source when writing them):
   - Bite: Normal type and 10% flinch in Gen 1; Dark from Gen 2.
   - Gust: Normal in Gen 1.
@@ -69,7 +115,7 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 
 **Acceptance criteria**
 - `Learnset { speciesId; moves: Record<MoveId, string[]>; source: { showdownVersion } }` with the model conventions above; unique index on `speciesId`.
-- Imported through the resolved Dex like M1-02 (base learnsets plus any old-generation mod learnset files, e.g. `data/mods/gen2/learnsets.ts`), deterministic output to `scripts/seed/data/learnsets.json`.
+- Imported through the Showdown API per generation, like M1-02 (`Dex.mod('genN').species.getLearnsetData(id)`; the API already merges old-generation learnset data, so no raw files are read). Forms without their own learnset get their base species' (see the gotchas in Start here). Deterministic output to `scripts/seed/data/learnsets.json`, registered in `scripts/seed/collections.ts`.
 - `resolveLearnset(learnset, gen) → ResolvedLearnset` (`levelUp` sorted by level, `machine`, `tutor`, `egg`, `event`), the shape every consumer uses ([12 § Learnsets](../architecture/concepts/12-content-catalog-species-moves-items.md#learnsets--generation-decided-oct-2026)). Nothing outside the catalog reads raw source codes. Override patches are post-MVP, but the resolved shape is what they'll patch.
 - Every species ID matches an existing `DexEntry` (a test fails on orphans). Coordinate with M0A-19 if it lands at the same time.
 - Tests (verify each against the source): Pikachu's Gen 1 resolved learnset has Thunderbolt in `machine`; Bulbasaur's Gen 1 `levelUp` includes Vine Whip; a move that only exists from Gen 2 never appears in Gen 1 results.

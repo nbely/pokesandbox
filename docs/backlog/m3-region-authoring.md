@@ -9,6 +9,8 @@ Refs: concept [12 § TM/HM lists](../architecture/concepts/12-content-catalog-sp
 
 Each region defines its own TM/HM list: machine labels mapped to moves, with Gen 1's single-use TMs and reusable HMs. Machine numbering differs per generation, so machines are **region content**, not global items. Bag items use the reserved `machine:<label>` namespace and resolve through the region's list. Compatibility comes from the region's learnset generation ([12 § TM/HM lists](../architecture/concepts/12-content-catalog-species-moves-items.md#tmhm-lists-decided-oct-2026)).
 
+**New to the project?** Read the "Start here" section of [E-M1-2](m1-battle-core-and-catalog.md#start-here-no-prior-context-needed) first; it covers the repo layout, Showdown, and the terms used here. In Pokémon terms: every region gets its own TM case, so "TM24" means whatever that region says (Thunderbolt in Gen 1), and HMs are reusable while Gen 1 TMs are single-use.
+
 Using a TM from the bag (teaching it to a Pokémon) belongs to the M5 bag work, and shops selling TMs to the M3 shops work; both read this list.
 
 **Changes once foundations land.** M3-04 is already blocked on the authoring layer, so it's built once, on the final foundation. The others start earlier and get small follow-ups (also listed on the triggering foundation issues):
