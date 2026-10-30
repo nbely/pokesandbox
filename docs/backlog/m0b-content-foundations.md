@@ -205,6 +205,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 **Acceptance criteria**
 - Pokédex menu actions (add slot, edit, swap, forms) call `authoring.execute`. No direct model writes in handlers.
 - Behavior unchanged (manual test checklist in the PR).
+- **Follow-up:** if the read-only move views (M1-04) already exist in these menus, keep them working (they need no authoring commands).
 
 ### M0B-18 · Migrate the progression builder to authoring commands
 `Type: Task` · `Parent: E-M0B-4` · `Priority: P1` · `Size: M` · `Labels: area:bot, area:authoring` · `Blocked by: M0B-16` · `agent-ready: yes` · `Owner: junior`
@@ -242,6 +243,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 - Retention: keep the last 10 releases plus any referenced (journeys, clones, templates). Older ones are pruned by a job.
 - `compileRelease(regionId, { mode: 'preview' })` exists (unused yet) for future draft preview.
 - `Journey.releaseVersion` plus a migration-rule hook (rules implemented in M5). The review diff lists rule changes (`RegionRules`) explicitly, with the affected journey count; save-breaking rule changes are errors unless they ship with a fix-up rule ([18](../architecture/concepts/18-rules-time-and-randomness.md#decisions-oct-2026-piecemeal-rules-gen-1-first)).
+- **Follow-up:** include `Region.moveMachines` (M3-01) in the compiled release, and point machine lookups at the release (M3-03).
 
 **Refs:** [01](../architecture/concepts/01-content-vs-state-and-publishing.md), [21 § Retention](../architecture/concepts/21-hosting-and-environments.md)
 

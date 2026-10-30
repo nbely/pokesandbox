@@ -128,6 +128,7 @@ Create `libs/core`, `libs/engine`, and `libs/battle` with enforced layering and 
 - An Nx library `libs/core` with a path alias `@core/*`, Jest, and lint.
 - Folders for `schemas/`, `registries/`, `formulas/`, `validation/`, and `ports/`, each with an `index.ts`.
 - No dependencies on mongoose, discord.js, or Showdown (enforced by M0A-10).
+- **Follow-up:** move catalog models and helpers created earlier in `shared/` (M1-01, M1-03, M3-01, M3-03) into `libs/core`, as a separate PR if this one is already large.
 
 **Refs:** [03 § Package layout](../architecture/concepts/03-engine-boundary-and-game-loop.md#package-layout--encapsulation-rules-decided-oct-2026)
 
@@ -255,6 +256,7 @@ Make the data layer safe for real player state: transactions, constraints, a saf
 - Seed fix: `Unown-!` / `Unown-?` use Showdown's IDs `unownexclamation` / `unownquestion` (currently `unown!` / `unown?`). A test asserts every seed `speciesId` equals Showdown's `toID` of its Showdown name.
 - A migration script for existing databases (rename the field, convert ObjectId references to IDs).
 - `docs/erd.md` regenerated.
+- **Follow-up:** if `Learnset` (M1-03) already exists, switch its orphan test from `showdownName` to `speciesId`.
 
 **Refs:** [02](../architecture/concepts/02-identity-and-references.md), [12](../architecture/concepts/12-content-catalog-species-moves-items.md)
 

@@ -145,13 +145,13 @@ Legend: ✅ exists · 🟡 partial · ❌ missing
 - [ ] Patch: external choice hook (bag/catch/run consume turn) + `caught`/`ran` end reasons (L)
 - [ ] Patch: isolated custom-data dexes (per content hash) for `Battle` + `TeamValidator`, evolved from `dynamic-dex-data` (L)
 - [ ] Remove debug code (`pause`/`resume`/`sendToJSON`) (S)
-- [ ] Publish as a versioned package consumed by the monorepo. Set up the monthly upstream-sync PR. Rename to `pokesandbox-showdown` after the org move (M)
+- [ ] Publish as a versioned package consumed by the monorepo (then re-point the catalog imports M1-02/M1-03 at it and re-run). Set up the monthly upstream-sync PR. Rename to `pokesandbox-showdown` after the org move (M)
 
 **Epic: Catalog**
 - [ ] Canon catalog import from Showdown (pinned version): SpeciesDefinition, MoveDefinition (per-gen data via the resolved Dex, behavior `hooks`, text), Learnset (per-gen sources) into Mongo; re-runnable with diff on upgrades (L). Moves and learnsets drafted as E-M1-2 ([`m1-battle-core-and-catalog.md`](../backlog/m1-battle-core-and-catalog.md))
 - [ ] Catalog read service + move detail display (M)
 - [ ] ItemDefinition model + Gen 1 item seed (pockets, prices, field/battle handlers) (L)
-- [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation (M)
+- [ ] Piecemeal `RegionRules` model (holistic battle mechanics gen + per-dimension data/formula/graphics choices + gimmick toggles) with compatibility validation; then switch M1-04 and M3-03 from their "default Gen 1" to the region's rules (M)
 - [ ] Gen 1 implementations for every dimension: Gen 1 mechanics (Showdown `gen1`), species stats, types, moves, learnsets, catch rates, EXP/catch/escape/payout formulas, original sprites, DVs/Stat Exp, the four Gen 1 growth curves (floored, level 1 clamped: intended behavior, no glitches). Reference: pret/pokered, with test vectors ([18](../architecture/concepts/18-rules-time-and-randomness.md#reference-test-vectors)). "Classic Gen 1" preset (L)
 - [ ] Assemble per-release data mixes from Showdown gen mods into isolated custom-data dexes (M)
 

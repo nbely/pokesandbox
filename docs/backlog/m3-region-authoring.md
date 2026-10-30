@@ -11,6 +11,15 @@ Each region defines its own TM/HM list: machine labels mapped to moves, with Gen
 
 Using a TM from the bag (teaching it to a Pokémon) belongs to the M5 bag work, and shops selling TMs to the M3 shops work; both read this list.
 
+**Changes once foundations land.** M3-04 is already blocked on the authoring layer, so it's built once, on the final foundation. The others start earlier and get small follow-ups (also listed on the triggering foundation issues):
+
+| When this lands | Follow-up | Affects |
+|---|---|---|
+| `libs/core` (M0A-09/M0A-10) | Move the model and helpers into `libs/core`. | M3-01, M3-03 |
+| Content keys and model cleanup (M0B-10, M0B-11) | Re-check that `moveMachines` survives the `Region` model cleanup (it holds move IDs, not ObjectIds, so it should carry over unchanged). | M3-01 |
+| Region releases (M0B-21) | Include `moveMachines` in the compiled release, and have play-time lookups read the release instead of the draft region. | M3-01, M3-03 |
+| `RegionRules` (M1) | Replace the "default Gen 1" learnset generation with the region's `rules.data.learnsets`, and the move-availability check with `rules.data.moves`. | M3-03 |
+
 ### M3-01 · `Region.moveMachines` model and machine item resolution
 `Type: Task` · `Parent: E-M3-1` · `Priority: P0` · `Size: S` · `Labels: area:shared-models, domain:catalog` · `Blocked by: M1-01` · `agent-ready: yes` · `Owner: any`
 
@@ -21,6 +30,8 @@ Using a TM from the bag (teaching it to a Pokémon) belongs to the M5 bag work, 
 - `machineItemId(label) → 'machine:tm01'` and `resolveMachine(region, itemId) → { label, kind, move, reusable } | null`, with tests.
 - `isMachineItem(itemId)` recognizes the reserved `machine:` namespace, so the item catalog never needs one document per machine.
 - Included in the region's draft content (and, once M0B-21 exists, in the compiled release).
+
+**Changes later:** moves to `libs/core`; compiled into releases with M0B-21; re-checked against the M0B-10/M0B-11 model cleanup.
 
 **Refs:** [12 § TM/HM lists](../architecture/concepts/12-content-catalog-species-moves-items.md#tmhm-lists-decided-oct-2026)
 
@@ -45,6 +56,8 @@ Using a TM from the bag (teaching it to a Pokémon) belongs to the M5 bag work, 
 - `compatibleSpecies(region, label)` and `canLearnMachine(region, speciesId, label)`, using the region's learnset generation and machine sources (Gen 1: `1M`). Until `RegionRules` exists (M1), the learnset generation defaults to Gen 1.
 - Validator checks registered with the M0B-22 registry: duplicate labels (error), a move that doesn't exist or isn't available in the region's move generation (error), a machine no species in the regional dex can learn (warning).
 - Tests with the Gen 1 preset: Pikachu can learn TM24 Thunderbolt; a species without a `1M` source for a machine can't.
+
+**Changes later:** reads the generation from `RegionRules`; play-time lookups read the compiled release (M0B-21); moves to `libs/core`.
 
 **Refs:** [12 § TM/HM lists](../architecture/concepts/12-content-catalog-species-moves-items.md#tmhm-lists-decided-oct-2026), [16](../architecture/concepts/16-authoring-validation-and-portability.md)
 

@@ -15,6 +15,16 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 - **Which Showdown:** until the fork is published as a package (fork modernization epic), import from the upstream `pokemon-showdown` npm package at an exact pinned version, as a dev dependency of the import script. Record the version on every imported record.
 - **IDs:** moves and species are keyed by Showdown IDs (`toID`), never ObjectIds. Species use the same string `DexEntry.showdownName` holds today; M0A-19 renames that field to `speciesId`.
 
+**Changes once foundations land.** This epic starts before the foundations it will eventually sit on, so some issues get small follow-ups. Each one is also listed on the foundation issue that triggers it, so it isn't lost:
+
+| When this lands | Follow-up | Affects |
+|---|---|---|
+| `libs/core` (M0A-09) + module boundaries (M0A-10) | Move the catalog models and helpers from `shared/` into `libs/core`. Mechanical if they stay free of Discord/bot imports. | M1-01, M1-03 (and M3-01) |
+| The fork is published as a package (M1 fork modernization) | Point the import scripts at the fork package instead of upstream `pokemon-showdown`, re-run, and review the diff. | M1-02, M1-03 |
+| The `speciesId` rename (M0A-19) | Learnsets already use `speciesId`; the orphan test switches from `DexEntry.showdownName` to `DexEntry.speciesId`. | M1-03 |
+| `RegionRules` (M1) | Replace the "default Gen 1" generation choice with the region's `rules.data.moves` / `rules.data.learnsets`. | M1-04 |
+| Pokédex builder on authoring commands (M0B-17) | The move views stay read-only (no authoring commands needed), but they live in the same menus M0B-17 restructures. Whichever lands second rebases onto the other. | M1-04 |
+
 ### M1-01 · `MoveDefinition` model
 `Type: Task` · `Parent: E-M1-2` · `Priority: P0` · `Size: S` · `Labels: area:shared-models, domain:catalog` · `Blocked by: —` · `agent-ready: yes` · `Owner: any`
 
@@ -25,6 +35,8 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 - `MoveData` covers the data fields Showdown uses: type, category, basePower, accuracy (`number | true`), pp, priority, target, flags, secondary/secondaries, critRatio, multihit, recoil, drain, and any other plain-data field present in the source. No functions.
 - A helper `resolveMove(def, gen) → MoveData` that applies `genOverrides[gen]` over `base`, with unit tests.
 - Unique index on `moveId`. A DTO for the read path.
+
+**Changes later:** moves to `libs/core` with M0A-09/M0A-10.
 
 **Refs:** [12](../architecture/concepts/12-content-catalog-species-moves-items.md)
 
@@ -46,6 +58,8 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
   - Low Kick has `basePowerCallback` in its hooks for the generations where its power is weight-based.
   - A move removed from Gen 8+ games is `Past` there and available in earlier generations.
 
+**Changes later:** re-point to the fork package once it's published, then re-run and review the diff.
+
 **Refs:** [12 § Moves](../architecture/concepts/12-content-catalog-species-moves-items.md#moves-import-overrides-and-showdown-callbacks-decided-oct-2026)
 
 ### M1-03 · `Learnset` model and import
@@ -60,6 +74,8 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 - Every species ID matches an existing `DexEntry` (a test fails on orphans). Coordinate with M0A-19 if it lands at the same time.
 - Tests (verify each against the source): Pikachu learns Thunderbolt by machine in Gen 1 (`1M`); Bulbasaur's Gen 1 level-up list includes Vine Whip; a move that only exists from Gen 2 never appears in Gen 1 results.
 
+**Changes later:** moves to `libs/core` (M0A-09/M0A-10); re-point to the fork package; the orphan test follows the M0A-19 rename.
+
 **Refs:** [12 § Layering](../architecture/concepts/12-content-catalog-species-moves-items.md#layering-revised-oct-2026)
 
 ### M1-04 · Move details in the Pokédex builder (read-only)
@@ -72,5 +88,7 @@ Import every canon move and learnset from a pinned Showdown version into the DB 
 - Selecting a move shows its details for that generation: type, category, power, accuracy, PP, priority, and the short description (the generation's text block when there is one).
 - Reads through a small catalog read service (`getMove(moveId, gen)`, `getLearnset(speciesId, gen)`) in `shared/`, not direct queries from the menu.
 - Locked or unavailable options follow [26 § Menus and feedback](../architecture/concepts/26-discord-surface-and-ux-patterns.md#menus-and-feedback).
+
+**Changes later:** the generation comes from `RegionRules` once it exists; rebase alongside M0B-17's Pokédex builder migration.
 
 **Refs:** [12](../architecture/concepts/12-content-catalog-species-moves-items.md), [26](../architecture/concepts/26-discord-surface-and-ux-patterns.md)
