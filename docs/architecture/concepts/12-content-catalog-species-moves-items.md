@@ -1,6 +1,6 @@
 # 12: Content Catalog: Species, Moves, Items, TMs
 
-> **TL;DR:** Treat **Showdown's dex as the canonical catalog** for battle data (species, moves, abilities, items, learnsets, typechart) and key everything by Showdown ID. Keep Mongo `DexEntry` as *enrichment* (sprites, flavor, catch rate, EXP yield, growth rate, which Showdown lacks) and as the store for custom species. Add an **ItemDefinition** layer for overworld behavior (bag pocket, price, field use), since Showdown items only know battle effects. Region-level overlays (pokedex, TM list, item availability, prices) live in region content.
+> **TL;DR:** The **DB catalog is the record** for species, moves, learnsets, and items, imported from a pinned Showdown version with per-generation data and keyed by Showdown ID. Showdown stays the **battle engine**: it receives assembled data per battle and runs all move behavior. **ItemDefinition** adds overworld behavior (bag pocket, price, field use) that Showdown items lack. Custom content lives in a **server library** (original and linked entries). Region-level choices (regional dex, TM/HM list, item availability, prices) are region content.
 
 **MVP impact:** High · **Cost to change later:** Medium
 
