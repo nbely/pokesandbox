@@ -188,7 +188,7 @@ A species ID names what a Pokémon *is*. It is **not** a unique document key: a 
 2. Keep data fields only (type, category, base power, accuracy, PP, priority, target, flags, secondary effects, crit ratio, multi-hit, recoil/drain, …) and drop functions.
 3. Store the Gen 9 record as `base` and each older generation's **differences** as `genOverrides[gen]`. `isNonstandard` is one of the data fields, so per-gen availability (`Past`, `Future`) comes along in the overrides.
 4. Record **`hooks`** per generation: the names of the move's behavior callbacks (`['basePowerCallback', 'onModifyType']`). Just names, no code. The builder uses them to explain which fields an override can't change.
-5. Text: `desc` and `shortDesc` as resolved by each generation's Dex (from `data/text/moves.ts`), stored as `MoveData` fields so per-gen text is just another override.
+5. Text: `desc` and `shortDesc` as resolved by each generation's Dex (from `data/text/moves.ts`), stored in `text`, with older generations' differences in `text.genOverrides`.
 6. Main-series mods only (`gen1`–`gen8` + base). Side mods (`gen1stadium`, `gen7letsgo`, `gen8bdsp`, …) are skipped for now; they're candidates for later rule presets. Output is deterministic (sorted keys) so a re-import after a Showdown upgrade is a readable diff.
 
 ```ts
@@ -198,6 +198,10 @@ MoveDefinition {
   introducedGen: number;          // Showdown's `gen` field
   base: MoveData;                 // the resolved Gen 9 record (base Dex)
   genOverrides: Partial<Record<GenId, Partial<MoveData>>>;   // per resolved gen Dex, only the fields that differ from `base`
+  text: {                         // from data/text/moves.ts, under Showdown's own field names
+    desc: string; shortDesc: string;                          // Gen 9 text
+    genOverrides?: Partial<Record<GenId, { desc?: string; shortDesc?: string }>>;   // e.g. gen1: { shortDesc: "10% chance to make the target flinch." }
+  };
   hooks: Partial<Record<GenId, string[]>>;                    // names of behavior callbacks (basePowerCallback, onHit, …); no code
   source: { showdownVersion: string };
 }
@@ -208,11 +212,9 @@ MoveData = {
   pp; priority; target; flags; secondary?; secondaries?; critRatio?; multihit?; recoil?; drain?; …;
   isNonstandard?: string | null;  // null = available; 'Past' (removed in that gen), 'Future', … Per gen via genOverrides.
                                   // Moves that are 'CAP' (fan-made) in every gen aren't imported at all.
-  // Text fields spread from data/text/moves.ts, under Showdown's own names
-  desc: string; shortDesc: string;
 }
 ```
-- **Text sits in `MoveData`**, so Showdown's per-generation text blocks (`gen1: { desc, shortDesc }`) land in `genOverrides` like any other changed field, and `resolveMove(def, gen)` returns the right description with no special case. The resolved Dex already applies Showdown's fallback (a generation without its own block uses the nearest older-generation block above it, then the current text).
+- **Text has its own sub-field**, mirroring Showdown's split between `data/moves.ts` (data) and `data/text/moves.ts` (text). `MoveData` stays exactly what a battle uses (what overrides patch and custom-move recipes change), and `text` can later become per-language without touching battle data. `resolveMove(def, gen)` merges both override maps and returns data and text together. The resolved Dex already applies Showdown's text fallback (a generation without its own block uses the nearest older-generation block above it, then the current text).
 - **Availability is `isNonstandard`**, so it's per generation through `genOverrides` too, with no separate map.
 - **Battle message templates** in the same text file (`start`, `activate`, `end`, `damage`, …) aren't stored. The battle renderer reads them from Showdown at runtime ([26](26-discord-surface-and-ux-patterns.md#battles)); custom moves (post-MVP) inherit their template move's messages.
 

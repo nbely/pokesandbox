@@ -74,7 +74,7 @@ Local setup: `npm run setup` (env file, Mongo in Docker, seed), then `npm run db
 ### M1-01 · `MoveDefinition` model
 `Type: Task` · `Parent: E-M1-2` · `Priority: P0` · `Size: S` · `Labels: area:shared-models, domain:catalog` · `Blocked by: —` · `agent-ready: yes` · `Owner: any`
 
-**Summary:** The catalog model for moves ([12 § Moves](../architecture/concepts/12-content-catalog-species-moves-items.md#moves-import-overrides-and-showdown-callbacks-decided-oct-2026)): a resolved Gen 9 `base`, per-gen `genOverrides` holding only differences, and per-gen behavior `hooks`. Text and availability are ordinary `MoveData` fields, so they vary by generation the same way.
+**Summary:** The catalog model for moves ([12 § Moves](../architecture/concepts/12-content-catalog-species-moves-items.md#moves-import-overrides-and-showdown-callbacks-decided-oct-2026)): a resolved Gen 9 `base`, per-gen `genOverrides` holding only differences, and per-gen behavior `hooks`. Availability (`isNonstandard`) is an ordinary `MoveData` field; text has its own `text` sub-field with the same per-gen override pattern.
 
 ```ts
 MoveDefinition {
@@ -83,6 +83,10 @@ MoveDefinition {
   introducedGen: number;          // Showdown's `gen` field
   base: MoveData;                 // the resolved Gen 9 record (base Dex)
   genOverrides: Partial<Record<GenId, Partial<MoveData>>>;   // per resolved gen Dex, only the fields that differ from `base`
+  text: {                         // from data/text/moves.ts, under Showdown's own field names
+    desc: string; shortDesc: string;                          // Gen 9 text
+    genOverrides?: Partial<Record<GenId, { desc?: string; shortDesc?: string }>>;   // e.g. gen1: { shortDesc: "10% chance to make the target flinch." }
+  };
   hooks: Partial<Record<GenId, string[]>>;                    // names of behavior callbacks (basePowerCallback, onHit, …); no code
   source: { showdownVersion: string };
 }
@@ -93,18 +97,16 @@ MoveData = {
   pp; priority; target; flags; secondary?; secondaries?; critRatio?; multihit?; recoil?; drain?; …;
   isNonstandard?: string | null;  // null = available; 'Past' (removed in that gen), 'Future', … Per gen via genOverrides.
                                   // Moves that are 'CAP' (fan-made) in every gen aren't imported at all.
-  // Text fields spread from data/text/moves.ts, under Showdown's own names
-  desc: string; shortDesc: string;
 }
 ```
-- **Text sits in `MoveData`**, so Showdown's per-generation text blocks (`gen1: { desc, shortDesc }`) land in `genOverrides` like any other changed field, and `resolveMove(def, gen)` returns the right description with no special case. The resolved Dex already applies Showdown's fallback (a generation without its own block uses the nearest older-generation block above it, then the current text).
+- **Text has its own sub-field**, mirroring Showdown's split between `data/moves.ts` (data) and `data/text/moves.ts` (text). `MoveData` stays exactly what a battle uses (what overrides patch and custom-move recipes change), and `text` can later become per-language without touching battle data. `resolveMove(def, gen)` merges both override maps and returns data and text together. The resolved Dex already applies Showdown's text fallback (a generation without its own block uses the nearest older-generation block above it, then the current text).
 - **Availability is `isNonstandard`**, so it's per generation through `genOverrides` too, with no separate map.
 - **Battle message templates** in the same text file (`start`, `activate`, `end`, `damage`, …) aren't stored. The battle renderer reads them from Showdown at runtime ([26](../architecture/concepts/26-discord-surface-and-ux-patterns.md#battles)); custom moves (post-MVP) inherit their template move's messages.
 
 **Acceptance criteria**
 - `moveDefinitionSchema` (Zod) and `moveDefinitionDbSchema` (Mongoose) following the model conventions above, matching the shape above. `GenId` is `'gen1' | … | 'gen9'`.
-- `MoveData` covers every plain-data field Showdown has for moves (the list above is the common ones; include any other non-function field present in the source), plus `desc` and `shortDesc`. No functions.
-- A helper `resolveMove(def, gen) → MoveData` that applies `genOverrides[gen]` over `base`, with unit tests.
+- `MoveData` covers every plain-data field Showdown has for moves (the list above is the common ones; include any other non-function field present in the source). No functions, and no text: text lives in `text`.
+- A helper `resolveMove(def, gen) → { data: MoveData; desc: string; shortDesc: string }` that applies `genOverrides[gen]` over `base` and `text.genOverrides[gen]` over `text`, with unit tests.
 - Unique index on `moveId`. A DTO for the read path.
 
 **Changes later:** moves to `libs/core` with M0A-09/M0A-10.
@@ -120,7 +122,7 @@ MoveData = {
 - For each generation 1–9, load the resolved Dex (`Dex.mod('gen1')` … `Dex.mod('gen8')`, base for Gen 9) so the inheritance merge and `scripts.ts` `init()` are applied. Main-series mods only; side mods (`gen1stadium`, `gen7letsgo`, `gen8bdsp`, …) are skipped.
 - `base` = the resolved Gen 9 record; `genOverrides[gen]` = only the fields that differ from `base`. Functions are dropped; their names go into `hooks[gen]`.
 - `isNonstandard` is imported as a data field, so per-gen availability (`Past`, `Future`) lands in `genOverrides`. Moves that are `'CAP'` in every generation aren't imported.
-- `desc` / `shortDesc` come from each generation's resolved move (`dex.moves.get(id).desc`), which already applies Showdown's per-gen text fallback from `data/text/moves.ts`; differences from Gen 9 go into `genOverrides` like any other field. Battle message templates (`start`, `activate`, …) aren't stored.
+- `desc` / `shortDesc` come from each generation's resolved move (`dex.moves.get(id).desc`), which already applies Showdown's per-gen text fallback from `data/text/moves.ts`; differences from Gen 9 go into `text.genOverrides`. Battle message templates (`start`, `activate`, …) aren't stored.
 - Output is deterministic (sorted keys) and written to `scripts/seed/data/moves.json`, so a re-import is a readable diff. Register it in `scripts/seed/collections.ts` so `npm run db:seed` loads it. The script lives under `scripts/` with a `package.json` script entry (e.g. `catalog:import`).
 - Tests against the generated data (worth verifying each against the source when writing them):
   - Bite: Normal type and 10% flinch in Gen 1; Dark from Gen 2.
@@ -128,7 +130,7 @@ MoveData = {
   - Shadow Ball: Physical in Gen 3 (Ghost was a physical type before Gen 4); Crunch: Special in Gen 3.
   - Low Kick has `basePowerCallback` in its hooks for the generations where its power is weight-based.
   - A move removed from Gen 8+ games is `Past` there and available in earlier generations.
-  - Bite's Gen 1 `shortDesc` override is the 10% flinch text, and its Gen 9 `desc` is the 30% one.
+  - Bite's `text.genOverrides.gen1.shortDesc` is the 10% flinch text, and its Gen 9 `text.desc` is the 30% one.
 
 **Changes later:** re-point to the fork package once it's published, then re-run and review the diff.
 
