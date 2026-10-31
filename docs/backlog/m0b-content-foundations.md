@@ -56,7 +56,7 @@ One gating primitive for everything: a condition tree of fact + operator + value
 `Type: Task` · `Parent: E-M0B-1` · `Priority: P0` · `Size: M` · `Labels: area:engine, domain:conditions-effects` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
-- Facts: `bag.count` (item ID), `visited` (location key **or `$target`**), `party.knowsMove` (move ID), `party.hasSpecies` (species ID), `dex.caughtCount`.
+- Facts: `bag.count` (item ID), `visited` (location key **or `$target`**; reads the engine's `visited:<key>` flag), `party.knowsMove` (move ID), `party.hasSpecies` (species ID), `dex.caughtCount`.
 - `$target` is resolved from the context's `target` scope. Tested with a Fly-style "destination must be visited" condition.
 - They read only from the `JourneyView` port (no Pokémon persistence needed yet; fakes in tests).
 
@@ -168,7 +168,7 @@ Region-scoped content keys, one-directional references, and the progression/flag
 `Type: Task` · `Parent: E-M0B-3` · `Priority: P1` · `Size: S` · `Labels: area:engine, domain:progression` · `Blocked by: M0B-02` · `agent-ready: yes` · `Owner: agent`
 
 **Acceptance criteria**
-- Reserved prefixes constant (`trainer:`, `script:`, `pickup:`, `gift:`, `gate:`). Author flags can't use them (validation).
+- Reserved prefixes constant (`trainer:`, `script:`, `pickup:`, `gift:`, `gate:`, `visited:`). Author flags can't use them (validation).
 - A `collectFlags(regionContent)` helper builds the list of every flag read or written in a region (from conditions/effects `references()`), to feed the builder dropdown.
 
 ### M0B-15 · Delete integrity: inbound edges and "used by"

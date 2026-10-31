@@ -199,7 +199,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 
 ## M3: Region Authoring
 - [ ] Region config menu: currency object, starting location, respawn, rules preset (M)
-- [ ] Location kinds, grouping (`parentKey`), description/image, services, tags (M)
+- [ ] Location kinds, grouping (`parentKey`), description/image with conditioned `descriptionVariants`, services, tags (M)
 - [ ] Connections editor with two-way toggle and labels (M)
 - [ ] Condition builder UI (flat "all of" + one nesting level + templates) (L)
 - [ ] Encounter method registry + conditioned encounter tables + builder (L)
@@ -226,7 +226,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Mode machine + persisted script cursor + resume on input (M)
 - [ ] Trigger dispatch: journeyStarted (payload: `newCharacter`, `carriedPokemon`), enterLocation (optional `from`/`via` filters; any arrival counts), interact, battleEnd, explore; once/priority/forced (M)
 - [ ] TrainerClass registry (canon seed) + Trainer with conditioned party variants (M)
-- [ ] NPC model (location, visibility, interact, trainer, engagement) (M)
+- [ ] NPC model (placements with single/everywhere presence and per-placement interact, trainer, engagement) (M)
 - [ ] Script step-list editor in Discord (L)
 - [ ] Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker (L)
 
@@ -235,7 +235,7 @@ Scheduled last on the Arena track. Development runs locally until then.
 - [ ] Character creation (with an `idNo`; the character is the original trainer of Pokémon it obtains) + journey start (1 active journey per user per region) + name slots (`Journey.names`; Kanto Classic names the rival) + restart (archive, 24h cooldown) + admin reset + onboarding trigger + release-version migration rules (M)
 - [ ] Passage renderer: Components v2, `dialogue` and `prose` styles, markdown, auto-paging by text/component budget, choices on the last page (M)
 - [ ] `/play` hub renderer (mode-aware): claims the session (newest wins), resumes any mode incl. mid-battle requests and pending prompts, and shuts down superseded sessions cleanly (L)
-- [ ] Travel action (conditions, locked explanations, enter triggers, visited tracking) (M)
+- [ ] Travel action (conditions, locked explanations, enter triggers, `visited:<key>` flags) (M)
 - [ ] Transport action (Fly menu): destinations grouped by area, fares shown, unaffordable options locked with the reason (S)
 - [ ] Explore action: weighted outcome table (wild/trainer/hidden item), Repel safe steps, trainer engagement (M)
 - [ ] Traversal requirements: location progress counters (lifetime/visit), one-time + permanent costs, compiled exit gates with explanations (M)

@@ -44,7 +44,7 @@ type Predicate =
   | { type: 'item';        item: ItemId; min?: number }
   | { type: 'currency';    min: number }
   | { type: 'party';       has: PartyMatcher; min?: number }      // move 'cut' | species | type | level ≥
-  | { type: 'visited';     location: LocationRef }                // LocationRef = ContentKey | '$target'
+  | { type: 'visited';     location: LocationRef }                // LocationRef = ContentKey | '$target'; reads the `visited:<key>` flag (08)
   | { type: 'time';        of: TimeOfDay[] } | { type: 'weekday'; in: Weekday[] }
   | { type: 'chance';      percent: number }                      // evaluated with seeded RNG
   | …;  // registry-extensible

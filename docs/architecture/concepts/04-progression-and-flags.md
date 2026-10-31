@@ -56,7 +56,7 @@ Admin-authored flags are free-form (`rocket_hideout_cleared`). Conditions can te
 - Add an optional `display` hint: `badgeCase` (grid of milestone images), `meter`, `list`, `hidden`. The profile renderer and the webapp can then make badges look like badges without special-casing the key "badges".
 
 ## Decisions (Oct 2026, Q21)
-Option B (two layers) adopted: curated **progressions** (displayable) + open **flags** (engine-reserved prefixes `trainer:`, `script:`, `pickup:`, `gift:`, `gate:`, plus author flags created inline). The builder offers a dropdown of every flag used in the region, and a "Promote to progression" action for flags that turn out to matter to players.
+Option B (two layers) adopted: curated **progressions** (displayable) + open **flags** (engine-reserved prefixes `trainer:`, `script:`, `pickup:`, `gift:`, `gate:`, `visited:`, plus author flags created inline). The builder offers a dropdown of every flag used in the region, and a "Promote to progression" action for flags that turn out to matter to players.
 
 ## Related
 - **Shared state** (what everyone in a region or server does together: first-X rewards, community goals, story chapters) is a separate system with its own rules: [24](24-shared-state-region-and-server.md). Progressions and flags here are always per journey.

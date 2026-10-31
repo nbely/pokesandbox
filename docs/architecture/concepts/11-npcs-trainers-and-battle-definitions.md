@@ -29,13 +29,25 @@ Trainer {
 }
 
 Npc {
-  key; regionId; location: ContentKey; name; spriteUrl?; ordinal;
-  visibleWhen?: Condition;      // Team Rocket grunts disappear after the hideout is cleared
+  key; regionId; name; spriteUrl?; ordinal;
+  presence: 'single' | 'everywhere';   // single (default): first matching placement wins; everywhere: every matching placement
+  placements: { location: ContentKey; condition?: Condition; interact?: ContentKey }[];   // where/when they're around; interact overrides the default script here
   trainer?: ContentKey;         // battleable
-  interact?: ContentKey;        // talk trigger/script (gym leader dialogue, item gifts)
+  interact?: ContentKey;        // default talk trigger/script (gym leader dialogue, item gifts)
   engagement?: 'onTalk' | 'onEnter' | 'onExplore';   // how trainer battles start (see game-dev note)
 }
 ```
+
+### Placements: where NPCs are (decided Oct 2026)
+**Who an NPC is** (name, sprite, talk script) is separate from **how they battle** (the Trainer and its party variants) and from **where they are** (placements). Location never lives on a party variant: the same team can appear in several places, some NPCs only talk, and moving someone shouldn't touch their team.
+- **`single` (default):** at most one location at a time, the first placement whose condition matches; no match means they're not around. Story characters who travel use this.
+  - *Gabby & Ty (Gen 3):* one NPC and one Trainer. Placements are conditioned on a numeric progression (`reportersStage`) that their after-battle script increments, so they move to the next route; party variants are conditioned on badges, so their teams scale.
+  - *The rival:* one Trainer (`rival`) with variants by starter and story stage. Fixed encounters (Route 22, the Cerulean bridge, the S.S. Anne) are scripts that call `battle: { trainer: rival }` and need no placement; where the rival can be found and talked to is placements on one NPC.
+  - *Team Rocket grunts* who leave after the hideout is cleared: one placement with a condition (what `visibleWhen` used to do).
+- **`everywhere`:** every placement whose condition matches. For role NPCs that look the same everywhere (Nurse Joy, Officer Jenny, mart clerks), services offered in several towns (move tutors, the Name Rater), event NPCs at every Pokémon Center (one identity, so one event claim), and deliberate story oddities.
+- **Per-placement `interact`** lets a shared NPC say something local ("Welcome to Cerulean's Pokémon Center") without a separate NPC and without a "current location" condition.
+- **Flags are shared across placements**, since they're keyed by the NPC's, script's, or trainer's key: "talked to Joy" is one flag wherever it happened. Per-location state, if wanted, is a flag the placement's own script sets.
+- **Validation:** a `single` NPC whose placements can match at the same time gets a warning (the first one wins, which may not be what the author meant).
 
 ### Party variants
 This covers rival teams keyed off `starterChoice`, story-stage milestones, and post-game rematches *with one evaluator* (conditions). The validator warns if no variant matches for some reachable state (e.g. you forgot the Squirtle branch). That's a strong soft-lock check.
@@ -88,7 +100,7 @@ Npc.afterDefeat?: {
 The condition uses a new MVP fact, `location.trainersDefeated` (distinct trainers defeated here), or specific trainer flags. The **Gym Leader template** exposes this as an option ("Require N gym trainers first", off by default) and generates the gate.
 
 ## MVP scope
-- TrainerClass registry (canon seed), Trainer with conditioned parties, Npc with location/visibility/interact/trainer, engagement modes (`onTalk`, `onExplore`, `onEnter`), payout formula, defeat flags, and templates (Route Trainer, Gym Leader, Rival).
+- TrainerClass registry (canon seed), Trainer with conditioned parties, Npc with placements (single/everywhere presence, per-placement interact)/interact/trainer, engagement modes (`onTalk`, `onExplore`, `onEnter`), payout formula, defeat flags, and templates (Route Trainer, Gym Leader, Rival).
 - Later: rematches (VS Seeker / Gen 2 phone), double battles with two trainers, multi-battles (tag partners).
 
 ## Open questions

@@ -26,6 +26,7 @@ Agreed in the original plan but not built: buildings and sub-areas as their own 
 ```ts
 Location {
   key: ContentKey; regionId; name; description?; imageUrl?; ordinal;
+  descriptionVariants?: { condition: Condition; text: string; imageUrl?: string }[];   // first match wins, else `description`
   kind: 'town' | 'route' | 'dungeon' | 'building' | 'gym' | 'landmark' | 'water' | string;  // registry, extensible
   parentKey?: ContentKey;                 // grouping only. Traversal still uses edges.
   condition?: Condition;                  // "can I be here at all"
@@ -36,6 +37,11 @@ Location {
 }
 Region { startingLocationKey; defaultRespawnKey?; … }
 ```
+
+### Descriptions and visits (decided Oct 2026)
+- **Visited is a flag.** Entering a location sets the engine flag `visited:<locationKey>` ([04](04-progression-and-flags.md)). The `visited` condition (incl. Fly's `$target`) and the Fly destination list read those flags. There's no separate visited list.
+- **Changing descriptions** use `descriptionVariants`: conditions over flags and progressions, first match wins ("the Rocket grunts are gone", "the gym is open now that you have 7 badges"). The description is part of the location screen, which renders on every action, so it's a conditioned field rather than a script.
+- **First visits** are a `once` `enterLocation` script ([07](07-scripts-triggers-and-events.md)) that plays the arrival passage. Its own done flag (`script:<key>:done`) is how anything later tells a returning player apart; no visit counter is needed. A plain `visited:` check doesn't work for this, because the flag is already set by the time the location renders.
 
 ### Points of interest: inside the node or separate nodes?
 - **Separate nodes** for places with their own NPCs, encounters, or gates (gyms, centers, caves, houses with events). This was agreed in the original plan. It's cheap and keeps everything uniform.
