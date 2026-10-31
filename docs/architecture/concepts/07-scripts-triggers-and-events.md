@@ -1,0 +1,140 @@
+# 07: Scripts, Triggers & Events (the Interaction Engine)
+
+> **TL;DR:** Your MVP list includes conditional triggers, NPC talk/defeat interactions, dialogue, forced battles, pick-1 gifts, battle gauntlets, rival encounters, gym leaders, and guided onboarding. All of these are **the same primitive**: *when X happens, if conditions hold, run an ordered sequence of dialogue / choices / battles / effects, possibly waiting for the player in between.* Build one small, data-driven **Script** system (a step VM with persisted cursors) and express every one of those features as content. Quest Engine v2 (active quests, tutorials, loaner Pokémon, quiz stages, RP-hurdle stages) then becomes *more step types plus a quest log*, not a rebuild.
+
+**MVP impact:** Very high · **Cost to change later:** Very high (this is the rebuild risk you asked about)
+
+## Why this is the most important recommendation
+
+Look at how real Pokémon games are built. In the pret decompilations (`pokered`, `pokeemerald`), almost every story beat is a **map script**: a list of commands (`msgbox`, `trainerbattle`, `checkflag`, `goto_if_set`, `giveitem`, `setflag`, `applymovement`) attached to an NPC, a tile trigger, or map entry. Gym leaders, rivals, starters, the Elite 4, gift Pokémon, and Snorlax are all scripts. The engine supplies a few dozen commands, and the game is content.
+
+The original plan modeled these as separate features:
+
+| Feature | Original direction | Runtime it implies |
+|---|---|---|
+| Location entry effects | `location.entryEffects` | entry executor |
+| NPC dialogue | NPC + DialogueTree (floated) | dialogue runner |
+| Forced battles / triggers | Trigger model with requirements + effects | trigger runner |
+| Rival battles | quest references Trainer ID | quest runner |
+| Pick-1 gifts | (roadmap) dedicated bundle model | gift selector |
+| Elite 4 gauntlet | BattleDefinition (floated) | gauntlet runner |
+| Onboarding / tutorial | (roadmap) active quest | quest runner |
+
+That's 5–7 runtimes, each with its own persistence ("where was the player when the bot restarted?"), its own builder UI, and its own bugs. Quest v2 then needs to compose them ("battle, then dialogue, then a choice, then a gauntlet"), which is where a rebuild happens.
+
+## Design
+
+```ts
+// Content (in the region release)
+Script {
+  key: ContentKey;
+  name: string;
+  steps: Step[];               // or a labeled list for gotos
+}
+
+Trigger {
+  key: ContentKey;
+  on:                          // the event that can start it
+    | { event: 'enterLocation'; location: ContentKey; from?: ContentKey[]; via?: ('walk' | TransportNetworkKey)[] }   // optional filters; any arrival counts by default
+    | { event: 'interact'; npc: ContentKey }             // "Talk"
+    | { event: 'battleEnd'; trainer: ContentKey; result: 'win' | 'lose' }
+    | { event: 'journeyStarted'; newCharacter?: boolean; carriedPokemon?: number }   // onboarding; payload lets scripts branch ("Welcome back, Ash"). MVP: always a new character, nothing carried. Creating a character is a platform action, not a content trigger.
+    | { event: 'useItem'; item: ItemId; location?: ContentKey }
+    | { event: 'explore'; location: ContentKey }         // e.g. Snorlax blocks Route 12
+    | { event: 'gateBlocked'; gate: GateOwnerRef }       // player attempted an 'attemptable' gate and failed (see 05 §4)
+  condition?: Condition;       // e.g. not flag script:rival-r22:done, milestone badges≥…
+  once: boolean;               // engine writes flag script:<key>:done
+  priority: number;            // multiple matches → highest wins
+  mode: 'forced' | 'offered';  // forced = runs immediately; offered = shows a button ("Talk to Oak")
+  script: ContentKey;
+}
+
+type Step =
+  | { passage: { blocks: PassageBlock[]; style?: StyleId } }          // prose, dialogue, and images interleaved; waits for "Next" (see Passages below)
+  | { say: { speaker?: SpeakerRef; text: string } }                   // shorthand: a one-line passage
+  | { choice: { prompt: string; options: { label: string; condition?: Condition; goto: Label }[] } }
+  | { battle: { trainer: ContentKey; party?: 'auto' | string; canLose?: boolean;
+                healAfter?: boolean; onWin?: Label; onLose?: Label } }
+  | { wildBattle: { spec: PokemonSpec; canRun?: boolean; onCatch?: Label; onDefeat?: Label; onRun?: Label } }
+  | { effects: Effect[] }
+  | { if: { condition: Condition; then: Label; else?: Label } }
+  | { askName: { slot: string; prompt: string; default?: string } }   // fills Journey.names[slot] (confirm step; default offered), e.g. naming the rival
+  | { npcTrade: { want: SpeciesId; give: { species: SpeciesId; nickname?: string; ot: { name: string; id: number }; moves?: MoveId[] };
+                onTrade?: Label; onDecline?: Label; onNoMatch?: Label } }   // in-game trade (MVP)
+  | { shop: ContentKey } | { heal: {} } | { travel: LocationRef }
+  | { label: Label } | { goto: Label } | { end: {} };
+```
+
+**Runtime:** the script VM runs steps until a **blocking** step (`passage`/`say`, `choice`, `battle`, `shop`, `npcTrade`, `askName`). Text in passages, `choice`, and trainer display names can include `{name:<slot>}` placeholders, filled from `Journey.names`. It then persists `journey.mode = { type: 'script', script, releaseVersion, pc, locals, startedAt }` and emits events for the bot to render. Player input resumes it. Battles return a result to the VM. Bot restarts are harmless.
+
+### Passages: prose and dialogue (decided Oct 2026)
+PokeSandbox is a writing-heavy game with still images, so the core text step is a **passage**: an ordered list of blocks rendered together, not one line per "Next".
+
+```ts
+PassageBlock =
+  | { prose: string }                                                            // authored prose, markdown allowed
+  | { line: { speaker: SpeakerRef; text: string; expression?: string } }         // dialogue, interleaved freely with prose
+  | { image: { url: string; caption?: string } }                                 // scene art, maps, letters
+  | { divider: {} }
+```
+- **`say` is shorthand** for a one-line passage, so templates (Gym Leader, Gift NPC) stay simple.
+- **Markdown and placeholders** (`{name:rival}`) work in every text block.
+- **A `choice` can close a passage:** the prose sets the scene and the options appear under it on the same page.
+- **Auto-paging:** the renderer splits a long passage at block boundaries to fit Discord's per-message budget ([26 § Dialogue and passages](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)). Authors write naturally and never count characters.
+- **Styles, not layouts:** a passage picks a named `style` (`dialogue` default, `prose`, later `cutscene`, `document`, `system`), and region themes set defaults. Authors never hand-build Discord components ([26](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)).
+- **Terms:** authored story text is **prose**, inside **passages**. "Narration" is reserved for what players and narration moderators write on the adventure log ([22](22-adventure-log-and-narration.md#narration)).
+
+### How each MVP feature maps
+
+| Roadmap feature | As content |
+|---|---|
+| Pick-1 starter | `journeyStarted` trigger (forced) → `say` (Oak) → `choice` (3 options) → each branch: `effects[givePokemon, choice starterChoice=x]` |
+| Rival setup + party variants | Trainer `rival` with parties conditioned on `choice starterChoice` and story flags (see [11](11-npcs-trainers-and-battle-definitions.md)). `battle: { trainer: rival }` picks the variant automatically. |
+| Forced rival battle on Route 22 | `enterLocation route-22` trigger, `once`, condition `not flag …` → `say` → `battle canLose: true` → `say` |
+| Gym leader | NPC Brock → `interact` trigger → `say` → `battle` → `onWin: effects[milestone boulder, item tm34, flag]` → `say` (TM explanation). Gym-leader tier is just the trainer's AI profile plus rewards. |
+| Elite 4 gauntlet | One script: `battle lorelei healAfter:false` → `battle bruno` → … `onLose: whiteout`. "No healing between" is the absence of a `heal` step. |
+| Fossils / Eevee | Same as starters, with a different trigger |
+| In-game trade (Mr. Mime for Abra, Farfetch'd for Spearow…) | NPC `interact` → `say` → `npcTrade { want: abra, give: { species: mrmime, nickname: 'Marcel', ot } }` → `say`. The player picks which party member of that species to send (`onNoMatch` if none). The received Pokémon gets the NPC's original trainer, so Gen 1 traded-Pokémon rules apply (EXP bonus, obedience), and trade evolutions fire after the trade. Gen 1: it arrives at the level of the Pokémon sent. The sent Pokémon is soft-deleted like a release (`reason: 'npcTrade'`). Trigger `once` makes it one-time. |
+| Conditional dialogue | `if` / conditioned `choice` options |
+| Snorlax / legendary static encounter | `explore` trigger → `wildBattle` → `onDefeat`/`onCatch` → `effects[flag]` |
+| Tutorial (Full roadmap) | Narrator `say` steps (speaker = narrator), the same machinery |
+| Quest v2 active quests | A script with a quest-log entry plus more step types (`loanPokemon`, `quiz`, `rpHurdle`) |
+| Quest v2 passive quests | Objective listeners on engine events (`pokemonCaught`, `battleWon`, `itemsChanged`) → completion runs a script |
+
+## Options
+
+| Option | Pros | Cons |
+|---|---|---|
+| A. Bespoke features (current trajectory) | Each builder UI is simple and specific | 5–7 runtimes and persistence models. Composition is impossible. Quest v2 rebuild. |
+| **B. Step-based Script VM + Triggers** (chosen) | One runtime, one persistence model, one test harness. Every MVP feature is content. Unlimited composition. Mirrors proven Pokémon engine design. | The builder needs a "script editor" (step list). Discord's UI is cramped for long scripts. |
+| C. Node-graph dialogue system (Ink/Yarn-like) | Great for branching narrative | Heavier to author in Discord. Battles and effects become awkward custom nodes. |
+| D. Embedded scripting language (Lua/JS sandbox) | Ultimate power | Security, sandboxing, and support burden. Admins aren't programmers. Fails the "no coding required" promise. |
+
+### Mitigating the authoring cost of option B
+1. **Templates** generate whole scripts from forms: "Gym Leader" (name, party, badge, TM, intro/defeat text), "Starter Gift" (N options), "Forced Rival Encounter", "Item Gift NPC", "Gauntlet". Most admins never see a raw step list, so the friendly builder UIs from option A survive *as templates over B*.
+2. A **step-list editor** in Discord for small edits: add/remove/reorder steps, edit a step via modal.
+3. **JSON/YAML import** for power users, and later a **webapp visual editor**. A webapp script step editor is in the MVP (Q24).
+
+## Guardrails
+- No arbitrary loops without a blocking step (the VM caps steps per dispatch to prevent infinite `goto`).
+- Scripts can't call scripts recursively in MVP (add `call` later with a depth limit).
+- The validator checks that labels exist, referenced trainers/NPCs/items exist, and there's no unreachable `end`. It also warns if a `battle canLose:false` has no `onLose` (whiteout default).
+
+## MVP scope
+- Trigger events: `journeyStarted`, `enterLocation`, `interact`, `battleEnd`, `explore`.
+- Steps: `passage` (with `say` as shorthand), `choice`, `if`, `effects`, `battle`, `wildBattle`, `npcTrade`, `askName`, `heal`, `shop`, `travel`, `goto/label/end`. `{name:<slot>}` text placeholders.
+- Templates: Gym Leader, Starter/Pick-N Gift, Forced Encounter, Gift NPC, In-game Trade, Gauntlet, Simple Talker.
+
+## Decisions (Oct 2026)
+
+Option B was adopted: one Script + Trigger system, **on the condition that building scripts stays easy for users**.
+
+1. **NPC interaction:** a "People here" list, where each NPC has a talk (interact) trigger. Confirmed (Oct 2026). Underneath it's the same trigger as an offered trigger, so this is a UI decision only.
+2. **Presentation (revised Oct 2026):** text steps are **passages** (prose, dialogue lines, and images interleaved; see Passages above), rendered as Components v2 and auto-paged. Content stays separate from presentation through named **styles**. **MVP:** passages with the `dialogue` and `prose` styles. **Later:** `cutscene`, `document`, and `system` styles, region themes, and author-defined styles, all without migrating scripts ([26](26-discord-surface-and-ux-patterns.md#dialogue-and-passages)).
+3. **Discord-complete authoring (principle, applies to every builder feature, not just scripts):** everything must be editable in Discord, even where it's less friendly than the webapp. Some creators will never leave Discord. The webapp is an *additional* client of the same `libs/authoring` commands, never the only place a feature can be edited. For scripts this means a Discord **step-list editor** (list steps, add/insert/move/delete, edit a step via modal, pick step types from select menus), on top of templates. It leans on Components v2 where it helps: sections with per-step edit accessories, separators between labels, and text displays for long dialogue previews.
+4. **Guardrails:** confirmed. No script-calls-script in MVP (add `call` later with a depth limit), and a step cap per dispatch so a bad `goto` can't loop forever.
+
+## Open questions
+- ~~Offered triggers vs People here?~~ See Decision 1.
+- ~~Cutscene presentation?~~ See Decision 2.
+- ~~Timed waits in scripts?~~ **Decided (Oct 2026):** not MVP (RBY doesn't need them). They arrive with Gen 2+ time content as the reserved `timer` progression kind ([04](04-progression-and-flags.md)), read through the injected Clock.

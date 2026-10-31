@@ -1,0 +1,165 @@
+# 16: Authoring, Validation & Portability
+
+> **TL;DR:** A region builder is only as good as its **validator**. Make "playability validation" a first-class engine module that runs on publish (and on demand as a "Region Health" report): referential integrity, graph reachability, starter reachability, softlock detection, and balance warnings. Make the compiled release **exportable/importable as JSON**. That's your template system, test fixtures, seed data, backup, and community sharing in one feature.
+
+**MVP impact:** High · **Cost to change later:** Low–medium (but missing it means shipped regions that soft-lock players)
+
+## Current shape
+- Discord menu builder (FlowCord) for pokedex, progression, and basic locations.
+- `deployable` is a stored boolean that's never computed.
+- No integrity checks on delete. Seed data is exported/imported via scripts (`db:export` / `db:seed`), which is a good starting point for a portable format.
+
+## Validator design
+
+```ts
+validateRegion(draft) → { errors: Issue[]; warnings: Issue[]; info: Issue[] }
+Issue { code: 'EDGE_TARGET_MISSING' | 'UNREACHABLE_LOCATION' | …; severity; subject: Ref; message; fixHint? }
+```
+
+**Tier 1: structural (MVP)**
+- Every referenced key exists (edges, NPC locations, trainer refs, script labels, items, species in the regional dex).
+- Every condition and effect passes its registry `validate()`.
+- Starting location set. The starter gift is reachable from the start via `journeyStarted` or an `enterLocation` trigger (your roadmap item).
+- Trainer parties: species legal, levels 1–100, moves learnable (warning).
+- Encounter tables: species in the regional dex, weights > 0.
+
+**Tier 2: graph & progression (MVP-lite → later)**
+- **Reachability**: BFS from the start, treating conditions as satisfiable if *some* reachable script/effect can grant what they need. This builds a progression dependency graph from the predicates' `references()` and the effects' writes. Flags:
+  - Locations nobody can reach.
+  - Milestones nothing grants.
+  - Conditions on flags nothing sets.
+  - **Cut/Surf soft-locks** (the HM needed to leave an area is only obtainable behind that area).
+- A heal point is reachable before the first forced battle.
+- Party-variant coverage: for the rival, every `starterChoice` option has a matching party.
+
+**Tier 3: balance hints (later)**
+- Level curve per area vs gym leader levels. Money curve vs shop prices. "Route has no encounters". Gym type coverage.
+
+These are **warnings**, never blockers, so creative non-standard games still publish.
+
+## Portability: region bundles
+- The compiled release (see [01](01-content-vs-state-and-publishing.md)) serializes to a versioned JSON (or YAML) bundle with content keys (see [02](02-identity-and-references.md)).
+- **Import** creates a new draft region from a bundle (rekeying is optional, since keys are region-scoped).
+- This gives you:
+  - **Template regions** ("Start from Kanto Classic") via the clone-wholesale approach you described in the original plan.
+  - **Seed data** and **test fixtures** (the engine test harness loads a bundle).
+  - **Backups** and moving regions between servers.
+  - Power-user authoring in a text editor, and later community sharing.
+
+## Authoring: the same pattern for region building
+
+> **Decision (Oct 2026):** Option C was adopted for gameplay. Because a webapp builder is likely (more screen space, custom controls such as graph and script editors), admin authoring follows the same pattern.
+
+Once two clients (FlowCord admin menus and the webapp) can both edit a region, any rule that lives in a client gets duplicated and drifts. Examples:
+- Delete a location → remove inbound edges.
+- The two-way connection toggle.
+- Content key generation.
+- "Used by" checks before delete.
+- Condition and effect validation.
+- Permission checks.
+
+```
+FlowCord admin menus ─┐
+                      ├─► libs/authoring ─► draft content repos (Mongo)
+Webapp builder (tRPC) ┘    commands in        │
+                           results out        └─► publish ─► validator ─► RegionRelease
+```
+
+```ts
+type AuthoringCommand =
+  | { type: 'location.create'; regionId; name; kind; parentKey? }
+  | { type: 'location.connect'; regionId; from; to; twoWay: boolean; condition? }
+  | { type: 'location.delete'; regionId; key }   // cascades inbound edges, or refuses with "used by"
+  | { type: 'progression.upsert'; regionId; key?; definition }
+  | { type: 'script.update'; regionId; key; steps }
+  | { type: 'region.publish'; regionId }
+  | …;
+
+authoring.execute(actor, command) → { ok: true; changes: ContentChange[]; warnings: Issue[]; suggestions: Suggestion[] } | { ok: false; issues: Issue[] }
+// suggestions: follow-up commands a client may offer (e.g. after adding HM Fly: "Enable traditional Fly travel?"). Empty in MVP; the hook exists so builder shortcuts are additive later.
+```
+
+**How it differs from the gameplay engine:**
+
+| | `libs/engine` (play) | `libs/authoring` (build) |
+|---|---|---|
+| Operates on | Journey state + a published release | Draft content documents |
+| Concurrency | Per-journey lock, optimistic concurrency on Journey | Per-entity optimistic concurrency (`version` per location/script/etc.). On conflict, return "this was changed by X, reload" instead of a silent overwrite. |
+| Validation | Conditions evaluated at runtime | Schema validation per command + Region Health (the full validator) on demand and at publish |
+| Output | `GameEvent[]` for renderers | `ContentChange[]` (for the audit log, cache invalidation, and the webapp's live refresh) |
+| Auth | Journey owner | `actor` = Discord user + server role check (admin/mod role IDs). The webapp resolves roles through the bot or the Discord API, never trusting the browser. |
+
+**Shared foundation.** Both packages build on one core of content schemas, the condition/effect registries, and the validator. The validator needs the registries' `validate()` and `references()`, and the engine needs `evaluate()`. Suggested layout:
+- `libs/core`: content schemas, ContentKey, registries, validator.
+- `libs/engine`: runtime.
+- `libs/authoring`: admin commands.
+
+Zod command schemas double as form schemas in the webapp and modal validation in Discord.
+
+**What each client is good for:**
+- **Discord builder:** quick edits, mobile, templates ("Add Gym Leader"), Region Health checks, publishing.
+- **Webapp builder:** the location graph canvas, script step editor, encounter-table grids, bulk edits, and JSON import/export.
+
+Both call the same commands, so either can be the "complete" one without duplicating rules.
+
+**Migration:** new builder features (connections, encounters, NPCs, scripts, shops) go through `libs/authoring` from day one. The existing pokedex, progression, and locations menus move over during M0/M3, which is also when they adopt content keys and conditions.
+
+## Builder UX notes (Discord)
+- The builder should surface **"used by"** before deletes ("Badges is used by 4 conditions. Delete anyway?").
+- A **"Region Health"** button on `/region` shows validator output grouped by severity, with jump links into the relevant menu.
+- **Templates over raw editors** (Gym Leader, Route, Pokémon Center, Starter Gift) keep the "learn by building" goal while preventing 30-step setups.
+- **Preview/playtest:** "Play draft as test journey". It's the fastest feedback loop for authors (later, but design the engine to support it: a release built from the draft, and a journey flagged `isTest`).
+- Discord is good for quick edits and poor for 200-node graphs, which is why targeted webapp editors are in the MVP (see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026)).
+
+## MVP scope
+- Tier 1 and basic Tier 2 (reachability ignoring conditions, plus "grants exist for required milestones/flags"), the Region Health view, delete-guard "used by", and JSON export/import of a region.
+
+## Official templates (decided Oct 2026)
+**Question:** should official templates like Kanto Classic be generated by a script, or built by hand on the PokeSandbox server?
+
+**Proposal: both, with the repo as the source of truth.** *Built with the tools, versioned as code.*
+
+| Step | How |
+|---|---|
+| 1. **Bulk canon data by script** | A one-time generator turns datamined game data into a region bundle: locations and connections, encounter tables (e.g. PokeAPI has Red/Blue/Yellow encounter data), trainers and parties, marts, items, TM list. Hundreds of trainers and tables by hand in Discord would take weeks and add nothing. |
+| 2. **Story and polish in the tools** | Import the generated bundle on the PokeSandbox HQ server, then author scripts, dialogue, gates, and gym templates **with the builder**. This is M6's dogfooding: every friction point found becomes a builder issue. |
+| 3. **Export to the repo** | The exported bundle (`templates/kanto-classic/`) is the canonical version. Stable content keys and `_label`s make diffs reviewable in PRs, and export must be deterministic (sorted keys, stable ordering). |
+| 4. **CI validates it** | The validator runs on the bundle, and the headless engine playthrough (to badge 2, later the whole game) runs against it. The template doubles as the MVP acceptance test. |
+| 5. **Deploy from the repo** | Releases install or update the official template from the repo bundle (a seed/migration step). Servers import it like any template. |
+
+Editing afterwards works either way: fix it in the tools on the HQ server and re-export (PR), or edit the JSON for mechanical bulk changes and re-import. **Round-trip export/import must be lossless.** That's a requirement of the bundle format and is tested in CI.
+
+| Option | For | Against |
+|---|---|---|
+| Script only | Reproducible, reviewable, fast | Doesn't exercise the builder (the MVP's real product). Scripted content can drift from what the tools can express. |
+| HQ server only | Full dogfooding | No review or history. The production DB is the only copy. Bulk data entry is slow. |
+| **Hybrid: script for bulk, tools for story, repo as truth** | Fast, reviewable, tested, and dogfoods the builder | Needs lossless, deterministic export/import (already needed for templates and backups) |
+
+**Versioning & "pull template updates" for clones.** The hybrid approach supports it:
+- Each deploy that changes the canonical bundle publishes a new **immutable template release** (v1, v2, …). Template releases are kept forever, because they're the merge bases.
+- A clone records `clonedFrom: { templateId, version }`. Pulling updates is a three-way merge **by content key**: base (the version you cloned) vs latest template vs your copy. See the worked example in [02](02-identity-and-references.md#worked-example-copying-a-template-region-to-another-server).
+- **Key stability is the one hard rule.** After the first generation, the repo bundle is the source of truth and the generator is never re-run blindly. If generation is re-run, it must **reuse existing keys** (via a natural-identity → key map committed alongside the bundle). Otherwise every clone would see "everything deleted and re-added". CI checks that no existing key disappears between template versions unless the entry was intentionally removed.
+
+**Data-source caution:** prefer openly licensed sources (e.g. PokeAPI) for generated data, and keep the generator plus its sources documented in the repo.
+
+## Webapp editors in MVP (decided Oct 2026)
+Targeted webapp editors for the authoring tasks that are **most painful in Discord**. They're built on the same `libs/authoring` commands (per-entity optimistic concurrency, role checks), so Discord stays complete.
+
+| Editor | Why Discord struggles | Webapp shape |
+|---|---|---|
+| **Script step editor** | Long ordered step lists, labels/branches, multi-paragraph dialogue | Step list with drag-reorder, inline dialogue editing, branch/label visualization, template insertion |
+| **Region map canvas** | Hundreds of locations and directional edges, grouping, traversal gates | Node-edge canvas (e.g. React Flow) with two-way edge drawing, parent grouping, gate badges on edges |
+| **Encounter table grid** | Species × level range × weight × method × condition | Spreadsheet-style grid with species search, weight-percentage preview, condition column |
+| **Trainer party editor** | Up to 6 Pokémon × moves/levels × conditioned party variants | Variant tabs, each with a party table; learnset-aware move pickers; condition per variant |
+| **Condition builder** (shared component) | Nested any/all/not trees | Tree editor used inside every editor above |
+| **Region Health** (read-only) | Long validator reports with cross-links | Grouped issue list linking to the relevant editor |
+
+Stays Discord-first (small, form-like): region settings and rules, progression definitions, Pokédex slotting (exists), shops, transport networks, NPC basics. They get webapp forms later as needed.
+
+## Principle: Discord-complete authoring (decided Oct 2026)
+Every authoring capability must be usable from Discord. The webapp builder is a richer, *additional* client for graphs, scripts, grids, and bulk edits, but never the only path. Both call the same `libs/authoring` commands (see [Authoring](#authoring-the-same-pattern-for-region-building) above), so this costs UI work, not duplicated rules. Lean on Discord Components v2 for denser, more editor-like builder screens. FlowCord supports Components v2 (confirmed Oct 2026).
+
+## Open questions
+- ~~Block publish on errors only?~~ **Decided (Oct 2026):** yes. Errors block. Warnings and info never block, but they are **shown before the publish button is pressed**: publishing is two steps, a review (validation results plus the release diff) and then a confirm. The confirm is tied to the reviewed draft, so if the draft changes in between, the review runs again.
+- ~~Official Kanto template?~~ **Decided (Q25):** yes, see [Official templates](#official-templates-decided-oct-2026).
+- ~~Webapp builder in MVP?~~ **Decided (Q24):** targeted editors, see [Webapp editors in MVP](#webapp-editors-in-mvp-decided-oct-2026).
