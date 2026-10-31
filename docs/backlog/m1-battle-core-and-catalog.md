@@ -26,7 +26,7 @@ Local setup: `npm run setup` (env file, Mongo in Docker, seed), then `npm run db
 
 **Pokémon Showdown in five minutes**
 - Showdown is the open-source battle simulator behind play.pokemonshowdown.com. It has complete, maintained data for every generation, which is why we import from it. It also runs our battles later, but this epic only reads its data.
-- It's on npm as `pokemon-showdown`. Install an exact version as a dev dependency for the import scripts (e.g. `npm i -D pokemon-showdown@<exact version>`), and record that version on every imported record.
+- It's on npm as `pokemon-showdown`. Install an exact version as a dev dependency for the import scripts (e.g. `npm i -D pokemon-showdown@<exact version>`). Each import records that version in a `CatalogVersion` and stamps the catalog version's ID on every record.
 - **IDs:** everything is keyed by an ID: lowercase, alphanumeric only. `toID('Thunder Bolt') === 'thunderbolt'`, `toID('Mr. Mime') === 'mrmime'`. Ours use the same IDs (`moveId`, `speciesId`).
 - **Per-generation data:** each older generation is a "mod" (`data/mods/gen1` … `gen8`) that only stores what differs from the next generation up, with base `data/` being Gen 9. **You never need to read those files.** Ask the API for a generation and it hands you fully resolved data:
   ```ts
@@ -58,7 +58,7 @@ Local setup: `npm run setup` (env file, Mongo in Docker, seed), then `npm run db
 **Notes for whoever picks this up**
 - **Where models live for now:** `shared/src/models`, next to `DexEntry`. They move to `libs/core` when M0A-09 lands; keep them free of Discord and bot imports so the move is mechanical.
 - **Model conventions:** the Zod schema is the source of truth (`moveDefinitionSchema`), mirrored by the Mongoose schema (`moveDefinitionDbSchema`). Embedded sub-schemas are standalone `Schema` consts with `{ _id: false }`. Map fields are parsed with `zMapHydrator`.
-- **Which Showdown:** until the fork is published as a package (fork modernization epic), import from the upstream `pokemon-showdown` npm package at an exact pinned version, as a dev dependency of the import script. Record the version on every imported record.
+- **Which Showdown:** until the fork is published as a package (fork modernization epic), import from the upstream `pokemon-showdown` npm package at an exact pinned version, as a dev dependency of the import script. Each import writes one `CatalogVersion` (M1-01) and stamps its ID on every record.
 - **IDs:** moves and species are keyed by Showdown IDs (`toID`), never ObjectIds. Species use the same string `DexEntry.showdownName` holds today; M0A-19 renames that field to `speciesId`.
 
 **Changes once foundations land.** This epic starts before the foundations it will eventually sit on, so some issues get small follow-ups. Each one is also listed on the foundation issue that triggers it, so it isn't lost:
@@ -88,7 +88,7 @@ MoveDefinition {
     genOverrides?: Partial<Record<GenId, { desc?: string; shortDesc?: string }>>;   // e.g. gen1: { shortDesc: "10% chance to make the target flinch." }
   };
   hooks: Partial<Record<GenId, string[]>>;                    // names of behavior callbacks (basePowerCallback, onHit, …); no code
-  source: { showdownVersion: string };
+  catalogVersion: string;         // the import this record came from ([12 § Catalog versions](../architecture/concepts/12-content-catalog-species-moves-items.md#catalog-versions-decided-oct-2026))
 }
 
 MoveData = {
@@ -108,6 +108,7 @@ MoveData = {
 - `MoveData` covers every plain-data field Showdown has for moves (the list above is the common ones; include any other non-function field present in the source). No functions, and no text: text lives in `text`.
 - A helper `resolveMove(def, gen) → { data: MoveData; desc: string; shortDesc: string }` that applies `genOverrides[gen]` over `base` and `text.genOverrides[gen]` over `text`, with unit tests.
 - Unique index on `moveId`. A DTO for the read path.
+- `CatalogVersion` model (`_id`, `showdownVersion`, `importedAt`, `notes?`, `counts`), shared by every catalog collection. **Why:** it keeps the catalog in sync with the Showdown version running battles, lets releases pin and embed the data they were validated against, gives overrides a base to merge upgrades from, and makes a partial import detectable ([12 § Catalog versions](../architecture/concepts/12-content-catalog-species-moves-items.md#catalog-versions-decided-oct-2026)).
 
 **Changes later:** moves to `libs/core` with M0A-09/M0A-10.
 
@@ -123,6 +124,7 @@ MoveData = {
 - `base` = the resolved Gen 9 record; `genOverrides[gen]` = only the fields that differ from `base`. Functions are dropped; their names go into `hooks[gen]`.
 - `isNonstandard` is imported as a data field, so per-gen availability (`Past`, `Future`) lands in `genOverrides`. Moves that are `'CAP'` in every generation aren't imported.
 - `desc` / `shortDesc` come from each generation's resolved move (`dex.moves.get(id).desc`), which already applies Showdown's per-gen text fallback from `data/text/moves.ts`; differences from Gen 9 go into `text.genOverrides`. Battle message templates (`start`, `activate`, …) aren't stored.
+- Each run creates one `CatalogVersion` (with the pinned `showdownVersion` and record counts) and stamps its `_id` on every record it writes. A test fails if catalog records carry more than one `catalogVersion`.
 - Output is deterministic (sorted keys) and written to `scripts/seed/data/moves.json`, so a re-import is a readable diff. Register it in `scripts/seed/collections.ts` so `npm run db:seed` loads it. The script lives under `scripts/` with a `package.json` script entry (e.g. `catalog:import`).
 - Tests against the generated data (worth verifying each against the source when writing them):
   - Bite: Normal type and 10% flinch in Gen 1; Dark from Gen 2.
@@ -142,7 +144,7 @@ MoveData = {
 **Summary:** One document per species with Showdown's per-generation source codes, so a region on Gen 1 learnsets filters to `1*` sources (`1L15` = level 15 in Gen 1, `1M` = TM/HM in Gen 1).
 
 **Acceptance criteria**
-- `Learnset { speciesId; moves: Record<MoveId, string[]>; source: { showdownVersion } }` with the model conventions above; unique index on `speciesId`.
+- `Learnset { speciesId; moves: Record<MoveId, string[]>; catalogVersion }` with the model conventions above; unique index on `speciesId`.
 - Imported through the Showdown API per generation, like M1-02 (`Dex.mod('genN').species.getLearnsetData(id)`; the API already merges old-generation learnset data, so no raw files are read). Forms without their own learnset get their base species' (see the gotchas in Start here). Deterministic output to `scripts/seed/data/learnsets.json`, registered in `scripts/seed/collections.ts`.
 - `resolveLearnset(learnset, gen) → ResolvedLearnset` (`levelUp` sorted by level, `machine`, `tutor`, `egg`, `event`), the shape every consumer uses ([12 § Learnsets](../architecture/concepts/12-content-catalog-species-moves-items.md#learnsets--generation-decided-oct-2026)). Nothing outside the catalog reads raw source codes. Override patches are post-MVP, but the resolved shape is what they'll patch.
 - Every species ID matches an existing `DexEntry` (a test fails on orphans). Coordinate with M0A-19 if it lands at the same time.

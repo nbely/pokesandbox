@@ -237,7 +237,7 @@ All admin edits flow through `libs/authoring`, and players only ever play immuta
 
 **Acceptance criteria**
 - Publishing is two steps. `region.publishReview` runs the validator (M0B-22) and returns errors, warnings, info, and the release diff, plus a review token tied to the draft's content hash. `region.publish(reviewToken)` publishes only if the draft is unchanged since that review (otherwise it returns "review again"). Errors block both steps; warnings never block but are always shown before the confirm button (Discord and webapp).
-- Otherwise it compiles draft content into an immutable `RegionRelease` (gzip, chunked if large) with `version`, `publishedAt`, a catalog/library version pin, and a generated diff summary (for release notes).
+- Otherwise it compiles draft content into an immutable `RegionRelease` (gzip, chunked if large) with `version`, `publishedAt`, the `catalogVersion` and library versions it pins (embedding the resolved catalog data the region uses, so the release is self-contained; [12 § Catalog versions](../architecture/concepts/12-content-catalog-species-moves-items.md#catalog-versions-decided-oct-2026)), and a generated diff summary (for release notes).
 - Sets `deployment.publishedVersion`. If `Server.settings.releaseNotes.enabled`, posts notes to the configured channel.
 - `ContentProvider.getRelease(regionId, version?)` returns an immutable in-memory object (LRU). It keeps N and N-1 resident.
 - Retention: keep the last 10 releases plus any referenced (journeys, clones, templates). Older ones are pruned by a job.

@@ -110,7 +110,7 @@ LibraryEntry {
   // original
   speciesId?: `${ns}:${slug}`; versions?: { version; publishedAt; data; dependencies: DefinitionRef[] }[];  // immutable once published
   // linked
-  base?: { ref: DefinitionRef; pinnedVersion: string };       // canon@<data version> or <ns>:<slug>@vN
+  base?: { ref: DefinitionRef; pinnedVersion: string; snapshot: SpeciesData };   // canon@<catalogVersion> or <ns>:<slug>@vN; snapshot = the base as patched, for upgrade merges
   patch?: Partial<SpeciesData>;                                 // field-level local changes; effective = base ⊕ patch
   detachedFrom?: DefinitionRef;                                 // provenance after "detach"
 }
@@ -203,7 +203,7 @@ MoveDefinition {
     genOverrides?: Partial<Record<GenId, { desc?: string; shortDesc?: string }>>;   // e.g. gen1: { shortDesc: "10% chance to make the target flinch." }
   };
   hooks: Partial<Record<GenId, string[]>>;                    // names of behavior callbacks (basePowerCallback, onHit, …); no code
-  source: { showdownVersion: string };
+  catalogVersion: string;         // the import this record came from (see Catalog versions)
 }
 
 MoveData = {
@@ -269,7 +269,7 @@ Machines (TMs/HMs) are region content resolved through `machine:<label>` item ID
 ### Canon: Showdown's source codes, one document per species
 ```ts
 Learnset { speciesId: 'pikachu'; moves: Record<MoveId, string[]>;     // e.g. thunderbolt: ['9M', …, '1M'], thundershock: ['9L1', …, '1L1']
-           source: { showdownVersion } }
+           catalogVersion }   // see Catalog versions
 ```
 Each code is `<gen><method><detail>`: `1L15` = Gen 1 level-up at 15, `1M` = Gen 1 TM/HM, `2T` = Gen 2 tutor, `3E` = Gen 3 egg move, `4S0` = Gen 4 event (index into the species' event data), `7V` = Virtual Console transfer. One document holds every generation; the region's learnset policy (`RegionRules.data.learnsets`, [18](18-rules-time-and-randomness.md)) picks which one applies.
 
@@ -286,7 +286,7 @@ resolveLearnset(learnset, gen) → ResolvedLearnset
 Move display, trainer default movesets ([11](11-npcs-trainers-and-battle-definitions.md)), level-up move prompts, and TM/HM compatibility ([TM/HM lists](#tmhm-lists-decided-oct-2026)) all read the resolved form.
 
 ### Overrides and custom learnsets (post-MVP)
-- **A canon override** is a *linked* library entry ([Species identity](#species-identity-canon-custom-species-variants-overrides--sharing-decided-oct-2026-q19)): a pinned base (the canon learnset at a catalog version, resolved for a generation) plus a **patch on the resolved form**:
+- **A canon override** is a *linked* library entry ([Species identity](#species-identity-canon-custom-species-variants-overrides--sharing-decided-oct-2026-q19)): a pinned base (the canon learnset at a catalog version, resolved for a generation, with a snapshot of it kept on the entry for upgrade merges; see [Catalog versions](#catalog-versions-decided-oct-2026)) plus a **patch on the resolved form**:
   ```ts
   LearnsetPatch {
     add?:     { move: MoveId; method: 'levelUp' | 'machine' | 'tutor' | 'egg'; level?: number }[];
@@ -306,6 +306,29 @@ Your roadmap wants "custom fakemon, forms, and types per server: predictable, si
 1. Custom content is stored in Mongo as server library entries (Layer 2) with the same descriptor fields.
 2. At battle start, BattleService injects the release's or format's assembled data into an **isolated custom-data dex** (patch 4 in [14](14-battle-system-and-showdown.md#fork-strategy-options)). No mod files are generated, and nothing restarts on publish.
 3. Custom *moves/abilities* are limited to retuning existing behaviors (your "strict dynamic templates" idea): a custom move inherits an existing move's mechanics plus overrides. Designing this is post-MVP (Q28).
+
+## Catalog versions (decided Oct 2026)
+Every catalog import is a **catalog version**, and every catalog record says which one it came from:
+
+```ts
+CatalogVersion { _id: string;                 // e.g. 'cat-2026-10-31-1'
+                 showdownVersion: string;     // the exact Showdown package version imported
+                 importedAt: Date;
+                 notes?: string;              // our own import fixes (e.g. the Unown ID correction) that don't change Showdown's version
+                 counts: { species: number; moves: number; learnsets: number } }
+MoveDefinition / Learnset / SpeciesDefinition { …; catalogVersion: string }
+```
+
+**Why it matters (more than auditing):**
+1. **Catalog and battle engine stay in sync.** Players see catalog data (Thunderbolt: 90 power) while Showdown runs the battle. If a move changed upstream between the import and the Showdown version the bot runs, the screen and the battle disagree. At boot, the game host compares the installed Showdown version with the latest catalog version's `showdownVersion` and warns on a mismatch.
+2. **Releases pin it.** A published release ([01](01-content-vs-state-and-publishing.md)) must keep meaning the same thing after a re-import. Each release records the `catalogVersion` it was validated against and **embeds the catalog data it uses** (the resolved species, moves, and learnsets its rules select), so a release is self-contained. That also keeps battle recovery deterministic: replaying a battle's input log uses exactly the data the battle started with.
+3. **Overrides can merge upgrades.** A linked override (a tweaked Thunderbolt, a custom learnset) records the catalog version it patched **and a snapshot of that base**. When a new import changes canon, the three-way merge compares old base, new base, and the local patch to tell "upstream changed this" from "the author changed this". Snapshots mean old catalog versions never need to be kept around.
+4. **Partial imports are caught.** A failed or half-finished import is visible (records with different `catalogVersion`s), and a CI check can require every catalog record to share one.
+5. **Support and debugging.** "Why does this move say X?" traces to a specific Showdown release and import.
+
+**Rules:**
+- The live catalog collections hold the **latest** import only. Older versions live on only where something needs them: inside releases (embedded data) and inside linked overrides (base snapshots).
+- A new import never changes a published region. The region picks it up at its next publish, and the publish review lists what the catalog changed for the species and moves the region uses ([16](16-authoring-validation-and-portability.md)).
 
 ## Where canon data lives (decided Oct 2026)
 
